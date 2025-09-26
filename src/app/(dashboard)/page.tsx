@@ -1,12 +1,10 @@
 "use client"
 
 import { 
-  TrendingUp, 
   ShoppingCart, 
   Users, 
   DollarSign,
   Package,
-  AlertCircle,
   BarChart3,
   Eye,
   XCircle
@@ -139,7 +137,7 @@ export default function HomePage() {
             <Card className="rounded-lg border-gray-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Eye className="h-5 w-5 text-blue-600" />
+                  <Eye className="h-5 w-5 text-[#58ff34]" />
                   Pengunjung Mingguan
                 </CardTitle>
               </CardHeader>
@@ -150,7 +148,7 @@ export default function HomePage() {
                       <div className="w-8 text-sm text-gray-600">{data.day}</div>
                       <div className="flex-1 bg-gray-200 rounded-full h-6 relative overflow-hidden">
                         <div 
-                          className="bg-blue-500 h-full rounded-full transition-all"
+                          className="bg-[#58ff34] h-full rounded-full transition-all"
                           style={{ width: `${(data.visitors / maxVisitors) * 100}%` }}
                         />
                         <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-700">
@@ -219,7 +217,7 @@ export default function HomePage() {
                         <div className="flex items-center gap-2 mt-1">
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                             order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                            order.status === 'preparing' ? 'bg-green-100 text-green-800' :
                             order.status === 'ready' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-gray-100 text-gray-800'
                           }`}>

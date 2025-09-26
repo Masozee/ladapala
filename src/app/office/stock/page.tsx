@@ -159,7 +159,7 @@ export default function StockPage() {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button className="rounded bg-blue-600 hover:bg-blue-700">
+          <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a]">
             <Plus className="mr-2 h-4 w-4" />
             Tambah Item
           </Button>
@@ -327,7 +327,7 @@ export default function StockPage() {
                                   <Button variant="outline" className="rounded" onClick={() => setIsAdjustmentOpen(false)}>
                                     Batal
                                   </Button>
-                                  <Button className="rounded bg-blue-600 hover:bg-blue-700" onClick={() => setIsAdjustmentOpen(false)}>
+                                  <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a]" onClick={() => setIsAdjustmentOpen(false)}>
                                     Simpan Perubahan
                                   </Button>
                                 </div>

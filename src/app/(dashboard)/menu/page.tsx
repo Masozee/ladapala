@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
-import { Plus, Minus, Trash2, User, CreditCard, Receipt, Coffee, Soup, Utensils, Clock, IceCream, Sparkles, ChefHat, Wine, Edit3 } from "lucide-react"
+import { Plus, Minus, Trash2, CreditCard, Receipt, Coffee, Soup, Utensils, Clock, IceCream, Sparkles, ChefHat, Wine, Edit3 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -189,11 +188,11 @@ const menuData = {
 export default function MenuPage() {
   const [activeFilter, setActiveFilter] = useState("")
   const [menuItems, setMenuItems] = useState(() => {
-    const allItems: any[] = []
+    const allItems: typeof menuData[keyof typeof menuData] = []
     Object.values(menuData).forEach(categoryItems => {
       allItems.push(...categoryItems)
     })
-    return allItems
+    return allItems.flat()
   })
   const [tableNumber, setTableNumber] = useState("")
   const [showNotesFor, setShowNotesFor] = useState<number | null>(null)
@@ -204,7 +203,7 @@ export default function MenuPage() {
   const filteredMenuData = Object.entries(menuData).reduce((acc, [categoryName, items]) => {
     const filteredItems = activeFilter === "" ? items : items.filter(item => item.category === activeFilter)
     if (filteredItems.length > 0) {
-      acc[categoryName] = filteredItems
+      acc[categoryName as keyof typeof menuData] = filteredItems
     }
     return acc
   }, {} as typeof menuData)
@@ -306,7 +305,7 @@ export default function MenuPage() {
                 key={category.id}
                 className={`cursor-pointer transition-all hover:shadow-md rounded-none ${
                   activeFilter === category.id
-                    ? "ring-2 ring-blue-500 bg-blue-50"
+                    ? "ring-2 ring-[#58ff34] bg-green-50"
                     : "hover:bg-gray-50"
                 }`}
                 onClick={() => setActiveFilter(activeFilter === category.id ? "" : category.id)}
@@ -315,19 +314,19 @@ export default function MenuPage() {
                   <div className="flex items-center gap-2">
                     <div className={`inline-flex items-center justify-center w-7 h-7 rounded ${
                       activeFilter === category.id
-                        ? "bg-blue-500 text-white"
+                        ? "bg-[#58ff34] text-white"
                         : "bg-gray-100 text-gray-600"
                     }`}>
                       <IconComponent className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className={`font-medium text-xs ${
-                        activeFilter === category.id ? "text-blue-900" : "text-gray-900"
+                        activeFilter === category.id ? "text-gray-900" : "text-gray-900"
                       }`}>
                         {category.name}
                       </h3>
                       <p className={`text-[10px] ${
-                        activeFilter === category.id ? "text-blue-700" : "text-gray-500"
+                        activeFilter === category.id ? "text-gray-700" : "text-gray-500"
                       } hidden sm:block`}>
                         {category.description}
                       </p>
@@ -373,7 +372,7 @@ export default function MenuPage() {
                         {item.description}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-base font-bold text-blue-600">
+                        <span className="text-base font-bold text-[#58ff34]">
                           {item.price}
                         </span>
                         <div className="flex items-center gap-1">
@@ -392,7 +391,7 @@ export default function MenuPage() {
                           <Button
                             size="sm"
                             onClick={() => updateQuantity(item.id, true)}
-                            className="h-7 w-7 p-0 rounded bg-blue-600 hover:bg-blue-700"
+                            className="h-7 w-7 p-0 rounded bg-[#58ff34] hover:bg-[#4de82a]"
                           >
                             <Plus className="h-3 w-3" />
                           </Button>

@@ -10,7 +10,6 @@ import {
   Search,
   Plus,
   Edit,
-  Trash2,
   Clock,
   Users,
   ChefHat,
@@ -179,7 +178,7 @@ export default function RecipePage() {
             <BookOpen className="mr-2 h-4 w-4" />
             Import Resep
           </Button>
-          <Button className="rounded bg-blue-600 hover:bg-blue-700">
+          <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black">
             <Plus className="mr-2 h-4 w-4" />
             Tambah Resep
           </Button>

@@ -5,26 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
 import {
   TrendingUp,
   TrendingDown,
   DollarSign,
   ShoppingCart,
-  Users,
-  Calendar,
   Download,
   Filter,
   FileBarChart,
   ArrowUp,
-  ArrowDown,
-  Search,
-  MoreVertical,
-  Eye,
-  Edit,
-  Trash2,
-  ChevronLeft,
-  ChevronRight
+  ArrowDown
 } from "lucide-react"
 import {
   Select,
@@ -82,31 +72,10 @@ const popularProducts = [
   { name: "Es Teh Manis", sold: 456, revenue: 3648000 },
 ]
 
-// Extended transaction data for advanced table
-const advancedTransactionData = [
-  { id: "TRX-2024-001", date: "2024-01-15", time: "14:30", customer: "Ahmad Rizki", table: "Meja 5", items: 4, amount: 280000, payment: "Cash", status: "completed", server: "Siti", branch: "Utama" },
-  { id: "TRX-2024-002", date: "2024-01-15", time: "14:25", customer: "Budi Santoso", table: "Meja 12", items: 2, amount: 150000, payment: "Card", status: "completed", server: "Andi", branch: "Utama" },
-  { id: "TRX-2024-003", date: "2024-01-15", time: "14:20", customer: "Dewi Lestari", table: "Take Away", items: 3, amount: 95000, payment: "QRIS", status: "completed", server: "Maya", branch: "Utama" },
-  { id: "TRX-2024-004", date: "2024-01-15", time: "14:15", customer: "Joko Widodo", table: "Meja 8", items: 6, amount: 420000, payment: "Cash", status: "processing", server: "Siti", branch: "Utama" },
-  { id: "TRX-2024-005", date: "2024-01-15", time: "14:10", customer: "Mega Sari", table: "Meja 3", items: 2, amount: 180000, payment: "Card", status: "completed", server: "Andi", branch: "Barat" },
-  { id: "TRX-2024-006", date: "2024-01-15", time: "14:05", customer: "Rudi Hartono", table: "Meja 15", items: 5, amount: 320000, payment: "QRIS", status: "cancelled", server: "Maya", branch: "Utama" },
-  { id: "TRX-2024-007", date: "2024-01-15", time: "14:00", customer: "Sri Mulyani", table: "Meja 7", items: 3, amount: 220000, payment: "Cash", status: "completed", server: "Siti", branch: "Barat" },
-  { id: "TRX-2024-008", date: "2024-01-15", time: "13:55", customer: "Tono Suratno", table: "Meja 11", items: 4, amount: 380000, payment: "Card", status: "completed", server: "Andi", branch: "Utama" },
-  { id: "TRX-2024-009", date: "2024-01-15", time: "13:50", customer: "Lina Marlina", table: "Take Away", items: 1, amount: 85000, payment: "QRIS", status: "completed", server: "Maya", branch: "Barat" },
-  { id: "TRX-2024-010", date: "2024-01-15", time: "13:45", customer: "Bambang Suharto", table: "Meja 6", items: 7, amount: 550000, payment: "Cash", status: "refunded", server: "Siti", branch: "Utama" },
-  { id: "TRX-2024-011", date: "2024-01-15", time: "13:40", customer: "Ani Yudhoyono", table: "Meja 9", items: 2, amount: 165000, payment: "Card", status: "completed", server: "Andi", branch: "Barat" },
-  { id: "TRX-2024-012", date: "2024-01-15", time: "13:35", customer: "Harto Prasetyo", table: "Meja 14", items: 4, amount: 290000, payment: "QRIS", status: "completed", server: "Maya", branch: "Utama" },
-]
 
 export default function ReportPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("week")
   const [selectedBranch, setSelectedBranch] = useState("all")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(8)
-  const [sortField, setSortField] = useState<string>("")
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
-  const [statusFilter, setStatusFilter] = useState("all")
 
   const totalRevenue = mockSalesData.reduce((acc, data) => acc + data.revenue, 0)
   const totalOrders = mockSalesData.reduce((acc, data) => acc + data.orders, 0)
@@ -125,47 +94,6 @@ export default function ReportPage() {
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <Badge className="bg-green-500 text-white">Selesai</Badge>
-      case "processing":
-        return <Badge className="bg-blue-500 text-white">Proses</Badge>
-      case "cancelled":
-        return <Badge className="bg-red-500 text-white">Dibatal</Badge>
-      case "refunded":
-        return <Badge className="bg-orange-500 text-white">Refund</Badge>
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
-  }
-
-  const getPaymentBadge = (payment: string) => {
-    switch (payment) {
-      case "Cash":
-        return <Badge variant="outline" className="border-green-500 text-green-600">Tunai</Badge>
-      case "Card":
-        return <Badge variant="outline" className="border-blue-500 text-blue-600">Kartu</Badge>
-      case "QRIS":
-        return <Badge variant="outline" className="border-purple-500 text-purple-600">QRIS</Badge>
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
-  }
-
-  // Filter and sort transactions
-  const filteredTransactions = advancedTransactionData.filter(transaction => {
-    const matchesSearch = transaction.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.table.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || transaction.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
-
-  // Pagination
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + itemsPerPage)
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -202,7 +130,7 @@ export default function ReportPage() {
             <Filter className="mr-2 h-4 w-4" />
             Filter
           </Button>
-          <Button className="rounded bg-blue-600 hover:bg-blue-700">
+          <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black">
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
@@ -355,7 +283,7 @@ export default function ReportPage() {
                         <div className="flex items-center gap-2">
                           <div className="w-20 bg-gray-200 rounded-full h-2">
                             <div 
-                              className="bg-blue-500 h-2 rounded-full"
+                              className="bg-[#58ff34] h-2 rounded-full"
                               style={{ width: `${expense.percentage}%` }}
                             />
                           </div>
@@ -496,7 +424,7 @@ export default function ReportPage() {
                     <span>12:00 - 13:00</span>
                     <div className="flex items-center gap-2">
                       <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '85%' }} />
+                        <div className="bg-[#58ff34] h-2 rounded-full" style={{ width: '85%' }} />
                       </div>
                       <span className="text-sm">85%</span>
                     </div>
@@ -505,7 +433,7 @@ export default function ReportPage() {
                     <span>19:00 - 20:00</span>
                     <div className="flex items-center gap-2">
                       <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '75%' }} />
+                        <div className="bg-[#58ff34] h-2 rounded-full" style={{ width: '75%' }} />
                       </div>
                       <span className="text-sm">75%</span>
                     </div>
@@ -514,7 +442,7 @@ export default function ReportPage() {
                     <span>13:00 - 14:00</span>
                     <div className="flex items-center gap-2">
                       <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '60%' }} />
+                        <div className="bg-[#58ff34] h-2 rounded-full" style={{ width: '60%' }} />
                       </div>
                       <span className="text-sm">60%</span>
                     </div>
@@ -523,7 +451,7 @@ export default function ReportPage() {
                     <span>18:00 - 19:00</span>
                     <div className="flex items-center gap-2">
                       <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '55%' }} />
+                        <div className="bg-[#58ff34] h-2 rounded-full" style={{ width: '55%' }} />
                       </div>
                       <span className="text-sm">55%</span>
                     </div>

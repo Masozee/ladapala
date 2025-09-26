@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { Users, Clock, Receipt, Split, BarChart3, Plus, Minus, Eye, DollarSign, UserPlus, MoreHorizontal, ShoppingCart, CreditCard, Calendar } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Users, Clock, Receipt, Split, BarChart3, DollarSign, UserPlus, MoreHorizontal, ShoppingCart, CreditCard, Calendar } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -107,7 +107,7 @@ const initialTables = [
 ]
 
 export default function TablePage() {
-  const [tables, setTables] = useState(initialTables)
+  const [tables] = useState(initialTables)
   const [selectedTable, setSelectedTable] = useState<number | null>(null)
   const [showOrderDetails, setShowOrderDetails] = useState(false)
   const [showSplitBill, setShowSplitBill] = useState(false)
@@ -138,7 +138,7 @@ export default function TablePage() {
       case "occupied": return "bg-red-100 text-red-800 border-red-200"
       case "available": return "bg-green-100 text-green-800 border-green-200"
       case "reserved": return "bg-yellow-100 text-yellow-800 border-yellow-200"
-      case "cleaning": return "bg-blue-100 text-blue-800 border-blue-200"
+      case "cleaning": return "bg-green-100 text-green-800 border-green-200"
       default: return "bg-gray-100 text-gray-800 border-gray-200"
     }
   }
@@ -172,7 +172,7 @@ export default function TablePage() {
 
   const currentTable = selectedTable ? tables.find(t => t.id === selectedTable) : null
 
-  const getProcessButtonText = (table: any) => {
+  const getProcessButtonText = (table: typeof initialTables[0]) => {
     if (table.status === "available" || table.status === "cleaning") {
       return "Order"
     } else if (table.status === "occupied") {
@@ -183,7 +183,7 @@ export default function TablePage() {
     return "Process"
   }
 
-  const getProcessButtonIcon = (table: any) => {
+  const getProcessButtonIcon = (table: typeof initialTables[0]) => {
     if (table.status === "available" || table.status === "cleaning") {
       return ShoppingCart
     } else if (table.status === "occupied") {
@@ -194,7 +194,7 @@ export default function TablePage() {
     return Receipt
   }
 
-  const handleProcessAction = (table: any) => {
+  const handleProcessAction = (table: typeof initialTables[0]) => {
     if (table.status === "available" || table.status === "cleaning") {
       // Redirect to order/menu page with table number
       window.location.href = `/dashboard/menu?table=${table.number}`
@@ -237,7 +237,7 @@ export default function TablePage() {
           {joinTables.length >= 2 && (
             <Button
               onClick={handleJoinTables}
-              className="bg-blue-600 hover:bg-blue-700 rounded-none"
+              className="bg-[#58ff34] hover:bg-[#4de82a] rounded-none"
             >
               <UserPlus className="h-4 w-4 mr-2" />
               Gabung Meja ({joinTables.length})
@@ -255,7 +255,7 @@ export default function TablePage() {
                 <p className="text-sm text-gray-600">Total Meja</p>
                 <p className="text-2xl font-bold">{totalTables}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-600" />
+              <Users className="h-8 w-8 text-[#58ff34]" />
             </div>
           </CardContent>
         </Card>
@@ -286,9 +286,9 @@ export default function TablePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Revenue Hari Ini</p>
-                <p className="text-lg font-bold text-blue-600">Rp {totalRevenue.toLocaleString('id-ID')}</p>
+                <p className="text-lg font-bold text-[#58ff34]">Rp {totalRevenue.toLocaleString('id-ID')}</p>
               </div>
-              <DollarSign className="h-8 w-8 text-blue-600" />
+              <DollarSign className="h-8 w-8 text-[#58ff34]" />
             </div>
           </CardContent>
         </Card>
@@ -300,7 +300,7 @@ export default function TablePage() {
           <Card 
             key={table.id} 
             className={`cursor-pointer transition-all rounded-none ${
-              joinTables.includes(table.id) ? "ring-2 ring-blue-500 bg-blue-50" : ""
+              joinTables.includes(table.id) ? "ring-2 ring-[#58ff34] bg-green-50" : ""
             }`}
           >
             <CardHeader className="pb-2">
@@ -353,7 +353,7 @@ export default function TablePage() {
                 <Button
                   size="sm"
                   onClick={() => handleProcessAction(table)}
-                  className="flex-[3] rounded text-xs h-8 bg-blue-600 hover:bg-blue-700 text-white"
+                  className="flex-[3] rounded text-xs h-8 bg-[#58ff34] hover:bg-[#4de82a] text-white"
                   disabled={table.status === "cleaning"}
                 >
                   {(() => {
@@ -491,8 +491,8 @@ export default function TablePage() {
                   />
                 </div>
                 
-                <div className="p-3 bg-blue-50 rounded">
-                  <p className="text-sm text-blue-800">
+                <div className="p-3 bg-green-50 rounded">
+                  <p className="text-sm text-green-800">
                     <strong>Per orang:</strong> Rp {Math.round(currentTable.revenue / 2).toLocaleString('id-ID')}
                   </p>
                 </div>
@@ -533,7 +533,7 @@ export default function TablePage() {
                   <CardTitle className="text-lg">Tingkat Okupansi</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
+                  <div className="text-3xl font-bold text-[#58ff34] mb-2">
                     {averageOccupancy}%
                   </div>
                   <div className="text-sm text-gray-600">

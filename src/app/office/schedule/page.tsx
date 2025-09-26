@@ -131,7 +131,6 @@ const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Jul
 export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedView, setSelectedView] = useState<"week" | "day">("week")
-  const [selectedRole, setSelectedRole] = useState("all")
 
   const getWeekDates = (date: Date) => {
     const week = []
@@ -163,7 +162,7 @@ export default function SchedulePage() {
       case "confirmed":
         return <Badge className="bg-green-500 text-white">Dikonfirmasi</Badge>
       case "completed":
-        return <Badge className="bg-blue-500 text-white">Selesai</Badge>
+        return <Badge className="bg-[#58ff34] text-white">Selesai</Badge>
       case "absent":
         return <Badge className="bg-red-500 text-white">Absen</Badge>
     }
@@ -173,7 +172,7 @@ export default function SchedulePage() {
     const colors: Record<string, string> = {
       "Kasir": "bg-purple-500",
       "Koki": "bg-orange-500",
-      "Pelayan": "bg-blue-500",
+      "Pelayan": "bg-[#58ff34]",
       "Supervisor": "bg-green-500"
     }
     return <Badge className={`${colors[role] || "bg-gray-500"} text-white`}>{role}</Badge>
@@ -193,7 +192,7 @@ export default function SchedulePage() {
             <Calendar className="mr-2 h-4 w-4" />
             Template Jadwal
           </Button>
-          <Button className="rounded bg-blue-600 hover:bg-blue-700">
+          <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black">
             <Plus className="mr-2 h-4 w-4" />
             Tambah Shift
           </Button>
@@ -442,7 +441,7 @@ export default function SchedulePage() {
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" className="rounded">Tolak</Button>
-                    <Button size="sm" className="rounded bg-blue-600 hover:bg-blue-700">Setujui</Button>
+                    <Button size="sm" className="rounded bg-[#58ff34] hover:bg-[#4de82a]">Setujui</Button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">

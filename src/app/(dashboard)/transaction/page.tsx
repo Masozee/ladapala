@@ -1,10 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { CreditCard, Smartphone, Banknote, Receipt, Delete, X, Plus, Minus, Trash2 } from "lucide-react"
+import { CreditCard, Smartphone, Banknote, Receipt, Plus, Minus, Trash2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 
 // Sample active order
@@ -214,7 +213,7 @@ export default function TransactionPage() {
               <div className="border-t pt-2">
                 <div className="flex justify-between text-xl font-bold">
                   <span>Total:</span>
-                  <span className="text-blue-600">Rp {total.toLocaleString('id-ID')}</span>
+                  <span className="text-[#58ff34]">Rp {total.toLocaleString('id-ID')}</span>
                 </div>
               </div>
             </div>
@@ -262,7 +261,7 @@ export default function TransactionPage() {
               <CardContent className="p-4">
                 <div className="mb-2">
                   <label className="text-sm text-gray-600">Uang Diterima:</label>
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-[#58ff34]">
                     Rp {cashAmount ? parseInt(cashAmount).toLocaleString('id-ID') : '0'}
                   </div>
                 </div>
@@ -372,7 +371,7 @@ export default function TransactionPage() {
           <Card className="mb-4 rounded-lg border-gray-200 flex-1">
             <CardContent className="p-4">
               <div className="h-full flex flex-col items-center justify-center text-center">
-                <CreditCard className="h-16 w-16 text-blue-600 mb-4" />
+                <CreditCard className="h-16 w-16 text-[#58ff34] mb-4" />
                 <p className="text-lg font-semibold mb-2">Pembayaran Kartu</p>
                 <p className="text-sm text-gray-600">
                   Silakan gesek/tap kartu pada mesin EDC
