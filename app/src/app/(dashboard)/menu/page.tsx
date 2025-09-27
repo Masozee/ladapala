@@ -289,44 +289,44 @@ export default function MenuPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <>
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-6">
           {/* Menu Section - Left Side */}
-          <div className="flex-1 bg-white rounded-lg shadow-sm p-6">
+          <div className="flex-1">
       {/* Filter Categories */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Kategori Menu</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Transactions</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           {filterCategories.map((category) => {
             const IconComponent = category.icon
             return (
               <Card
                 key={category.id}
-                className={`cursor-pointer transition-all hover:shadow-md rounded-none ${
+                className={`cursor-pointer transition-all hover:shadow-md rounded-lg border-0 ${
                   activeFilter === category.id
-                    ? "ring-2 ring-[#58ff34] bg-green-50"
-                    : "hover:bg-gray-50"
+                    ? "ring-2 ring-[#58ff34] bg-[#58ff34]"
+                    : "hover:bg-gray-50 border border-gray-200"
                 }`}
                 onClick={() => setActiveFilter(activeFilter === category.id ? "" : category.id)}
               >
                 <CardContent className="p-2.5">
                   <div className="flex items-center gap-2">
-                    <div className={`inline-flex items-center justify-center w-7 h-7 rounded ${
+                    <div className={`inline-flex items-center justify-center w-8 h-8 rounded ${
                       activeFilter === category.id
-                        ? "bg-[#58ff34] text-white"
+                        ? "bg-white text-gray-900"
                         : "bg-gray-100 text-gray-600"
                     }`}>
                       <IconComponent className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className={`font-medium text-xs ${
-                        activeFilter === category.id ? "text-gray-900" : "text-gray-900"
+                      <h3 className={`font-semibold text-sm ${
+                        activeFilter === category.id ? "text-black" : "text-gray-900"
                       }`}>
                         {category.name}
                       </h3>
-                      <p className={`text-[10px] ${
-                        activeFilter === category.id ? "text-gray-700" : "text-gray-500"
+                      <p className={`text-xs ${
+                        activeFilter === category.id ? "text-black/70" : "text-gray-500"
                       } hidden sm:block`}>
                         {category.description}
                       </p>
@@ -350,7 +350,7 @@ export default function MenuPage() {
               {items.map((item) => {
                 const quantity = getItemQuantity(item.id)
                 return (
-                  <Card key={item.id} className="overflow-hidden hover:shadow-md transition-all rounded-lg border-gray-200">
+                  <Card key={item.id} className="bg-card text-card-foreground flex flex-col shadow-sm overflow-hidden hover:shadow-md transition-all rounded-lg border-0">
                     <div className="relative">
                       <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative">
                         <div className="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -372,7 +372,7 @@ export default function MenuPage() {
                         {item.description}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-base font-bold text-[#58ff34]">
+                        <span className="text-base font-bold text-black">
                           {item.price}
                         </span>
                         <div className="flex items-center gap-1">
@@ -391,9 +391,9 @@ export default function MenuPage() {
                           <Button
                             size="sm"
                             onClick={() => updateQuantity(item.id, true)}
-                            className="h-7 w-7 p-0 rounded bg-[#58ff34] hover:bg-[#4de82a]"
+                            className="h-7 w-7 p-0 rounded bg-[#58ff34] hover:bg-[#4de82a] text-black"
                           >
-                            <Plus className="h-3 w-3" />
+                            <Plus className="h-3 w-3 text-black" />
                           </Button>
                         </div>
                       </div>
@@ -407,8 +407,8 @@ export default function MenuPage() {
       </div>
           </div>
 
-          {/* POS Order Sidebar - Right Side */}
-          <div className="w-96 bg-white rounded-lg shadow-sm flex flex-col sticky top-8 h-[calc(100vh-8rem)]">
+        {/* POS Order Sidebar - Right Side */}
+        <div className="w-96 bg-white rounded-lg shadow-sm flex flex-col sticky top-8 h-[calc(100vh-8rem)]">
         {/* Header */}
         <div className="px-4 py-3 border-b bg-gray-50 flex-shrink-0 rounded-t-lg">
           <h2 className="text-lg font-bold text-gray-900">Pesanan Baru</h2>
@@ -553,8 +553,8 @@ export default function MenuPage() {
                 Batal
               </Button>
             </div>
-          </div>
-        )}
+            </div>
+          )}
           </div>
         </div>
       </div>
@@ -641,6 +641,6 @@ export default function MenuPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

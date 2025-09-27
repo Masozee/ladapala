@@ -165,9 +165,8 @@ export default function RecipePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-sm p-8 flex flex-col gap-8">
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Header Section */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Resep & Menu</h1>
@@ -185,8 +184,9 @@ export default function RecipePage() {
         </div>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Resep</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
@@ -196,7 +196,7 @@ export default function RecipePage() {
             <p className="text-xs text-muted-foreground">Resep aktif</p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Margin Rata-rata</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -208,7 +208,7 @@ export default function RecipePage() {
             <p className="text-xs text-muted-foreground">Keuntungan</p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Menu Populer</CardTitle>
             <ChefHat className="h-4 w-4 text-muted-foreground" />
@@ -220,7 +220,7 @@ export default function RecipePage() {
             <p className="text-xs text-muted-foreground">Menu favorit</p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Waktu Rata-rata</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -234,47 +234,49 @@ export default function RecipePage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="recipes" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="recipes">Daftar Resep</TabsTrigger>
-          <TabsTrigger value="categories">Kategori</TabsTrigger>
-          <TabsTrigger value="costs">Analisis Biaya</TabsTrigger>
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="recipes" className="space-y-6">
+        <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+          <TabsTrigger value="recipes" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Daftar Resep</TabsTrigger>
+          <TabsTrigger value="categories" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Kategori</TabsTrigger>
+          <TabsTrigger value="costs" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Analisis Biaya</TabsTrigger>
         </TabsList>
 
         <TabsContent value="recipes" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Resep Masakan</CardTitle>
-                <div className="flex gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Cari resep..."
-                      className="pl-8 w-[200px]"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          {/* Search and Filter Bar */}
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Resep Masakan</h2>
+              <div className="flex gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Cari resep..."
+                    className="pl-8 w-[200px]"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            </div>
+          </div>
+
+          {/* Recipe Grid */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredRecipes.map((recipe) => (
-                  <Card key={recipe.id} className="cursor-pointer hover:shadow-lg transition-shadow rounded-lg border-gray-200"
+                  <Card key={recipe.id} className="bg-white cursor-pointer hover:shadow-lg transition-shadow rounded-lg border-0 shadow-sm"
                     onClick={() => setSelectedRecipe(recipe)}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -327,17 +329,14 @@ export default function RecipePage() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
+          </div>
 
           {selectedRecipe && (
-            <Card className="rounded-lg border-gray-200">
-              <CardHeader>
-                <CardTitle>{selectedRecipe.name} - Detail Resep</CardTitle>
-                <CardDescription>Bahan dan cara pembuatan</CardDescription>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold">{selectedRecipe.name} - Detail Resep</h2>
+                <p className="text-muted-foreground">Bahan dan cara pembuatan</p>
+              </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <h3 className="font-semibold mb-2">Bahan-bahan:</h3>
@@ -372,13 +371,12 @@ export default function RecipePage() {
                     </ol>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           )}
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
+          <Card className="bg-white rounded-lg border-0 shadow-sm">
             <CardHeader>
               <CardTitle>Kategori Menu</CardTitle>
               <CardDescription>Distribusi resep berdasarkan kategori</CardDescription>
@@ -405,7 +403,7 @@ export default function RecipePage() {
         </TabsContent>
 
         <TabsContent value="costs" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
+          <Card className="bg-white rounded-lg border-0 shadow-sm">
             <CardHeader>
               <CardTitle>Analisis Biaya & Keuntungan</CardTitle>
               <CardDescription>Perbandingan biaya produksi dan harga jual</CardDescription>
@@ -449,8 +447,6 @@ export default function RecipePage() {
           </Card>
         </TabsContent>
       </Tabs>
-        </div>
-      </div>
     </div>
   )
 }

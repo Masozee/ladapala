@@ -9,7 +9,7 @@ export default function OfficeLayout({
   return (
     <div className="flex h-screen">
       <OfficeSidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-gray-50">
         <TopNavbar />
         <main className="flex-1 overflow-y-auto">
           {children}

@@ -142,9 +142,8 @@ export default function StockPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-sm p-8 flex flex-col gap-8">
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Header Section */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Manajemen Stok</h1>
@@ -166,8 +165,9 @@ export default function StockPage() {
         </div>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Item</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
@@ -177,7 +177,7 @@ export default function StockPage() {
             <p className="text-xs text-muted-foreground">Jenis bahan baku</p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Nilai Total</CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
@@ -189,7 +189,7 @@ export default function StockPage() {
             <p className="text-xs text-muted-foreground">Nilai inventori</p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
             <AlertTriangle className="h-4 w-4 text-yellow-500" />
@@ -199,7 +199,7 @@ export default function StockPage() {
             <p className="text-xs text-muted-foreground">Perlu restock</p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Stok Habis</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-500" />
@@ -212,43 +212,46 @@ export default function StockPage() {
       </div>
 
       <Tabs defaultValue="inventory" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="inventory">Inventori</TabsTrigger>
-          <TabsTrigger value="alerts">Peringatan Stok</TabsTrigger>
-          <TabsTrigger value="history">Riwayat</TabsTrigger>
+        <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+          <TabsTrigger value="inventory" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Inventori</TabsTrigger>
+          <TabsTrigger value="alerts" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Peringatan Stok</TabsTrigger>
+          <TabsTrigger value="history" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Riwayat</TabsTrigger>
         </TabsList>
 
         <TabsContent value="inventory" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Daftar Inventori</CardTitle>
-                <div className="flex gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Cari item..."
-                      className="pl-8 w-[200px]"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Kategori" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category === "all" ? "Semua Kategori" : category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          {/* Search and Filter Bar */}
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Daftar Inventori</h2>
+              <div className="flex gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Cari item..."
+                    className="pl-8 w-[200px]"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category === "all" ? "Semua Kategori" : category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="p-6">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -342,13 +345,13 @@ export default function StockPage() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+            </Table>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
+          <Card className="bg-white rounded-lg border-0 shadow-sm">
             <CardHeader>
               <CardTitle>Peringatan Stok</CardTitle>
               <CardDescription>
@@ -386,7 +389,7 @@ export default function StockPage() {
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
+          <Card className="bg-white rounded-lg border-0 shadow-sm">
             <CardHeader>
               <CardTitle>Riwayat Perubahan Stok</CardTitle>
               <CardDescription>
@@ -444,8 +447,6 @@ export default function StockPage() {
           </Card>
         </TabsContent>
       </Tabs>
-        </div>
-      </div>
     </div>
   )
 }

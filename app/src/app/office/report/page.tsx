@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -96,9 +96,8 @@ export default function ReportPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-sm p-8 flex flex-col gap-8">
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Header Section */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Laporan & Analisis</h1>
@@ -137,8 +136,9 @@ export default function ReportPage() {
         </div>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -151,7 +151,7 @@ export default function ReportPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pesanan</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
@@ -164,7 +164,7 @@ export default function ReportPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Rata-rata Pesanan</CardTitle>
             <FileBarChart className="h-4 w-4 text-muted-foreground" />
@@ -177,7 +177,7 @@ export default function ReportPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pengeluaran</CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
@@ -190,7 +190,7 @@ export default function ReportPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Laba Bersih</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -206,21 +206,21 @@ export default function ReportPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="sales" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="sales">Penjualan</TabsTrigger>
-          <TabsTrigger value="expenses">Pengeluaran</TabsTrigger>
-          <TabsTrigger value="products">Produk</TabsTrigger>
-          <TabsTrigger value="trends">Tren</TabsTrigger>
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="sales" className="space-y-6">
+        <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+          <TabsTrigger value="sales" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Penjualan</TabsTrigger>
+          <TabsTrigger value="expenses" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Pengeluaran</TabsTrigger>
+          <TabsTrigger value="products" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Produk</TabsTrigger>
+          <TabsTrigger value="trends" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Tren</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
-            <CardHeader>
-              <CardTitle>Riwayat Penjualan</CardTitle>
-              <CardDescription>Detail penjualan harian</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold">Riwayat Penjualan</h2>
+              <p className="text-muted-foreground">Detail penjualan harian</p>
+            </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -252,18 +252,16 @@ export default function ReportPage() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+            </Table>
+          </div>
         </TabsContent>
 
         <TabsContent value="expenses" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
-            <CardHeader>
-              <CardTitle>Breakdown Pengeluaran</CardTitle>
-              <CardDescription>Analisis pengeluaran per kategori</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold">Breakdown Pengeluaran</h2>
+              <p className="text-muted-foreground">Analisis pengeluaran per kategori</p>
+            </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -309,18 +307,16 @@ export default function ReportPage() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+            </Table>
+          </div>
         </TabsContent>
 
         <TabsContent value="products" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
-            <CardHeader>
-              <CardTitle>Produk Terlaris</CardTitle>
-              <CardDescription>Performa produk berdasarkan penjualan</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold">Produk Terlaris</h2>
+              <p className="text-muted-foreground">Performa produk berdasarkan penjualan</p>
+            </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -360,19 +356,17 @@ export default function ReportPage() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+            </Table>
+          </div>
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <Card className="rounded-lg border-gray-200">
-              <CardHeader>
-                <CardTitle>Tren Penjualan Mingguan</CardTitle>
-                <CardDescription>Perbandingan minggu ini vs minggu lalu</CardDescription>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold">Tren Penjualan Mingguan</h2>
+                <p className="text-muted-foreground">Perbandingan minggu ini vs minggu lalu</p>
+              </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span>Senin</span>
@@ -410,15 +404,13 @@ export default function ReportPage() {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
 
-            <Card className="rounded-lg border-gray-200">
-              <CardHeader>
-                <CardTitle>Jam Sibuk</CardTitle>
-                <CardDescription>Distribusi pesanan per jam</CardDescription>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold">Jam Sibuk</h2>
+                <p className="text-muted-foreground">Distribusi pesanan per jam</p>
+              </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span>12:00 - 13:00</span>
@@ -457,13 +449,10 @@ export default function ReportPage() {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
-        </div>
-      </div>
     </div>
   )
 }

@@ -217,9 +217,7 @@ export default function TablePage() {
   const averageOccupancy = ((occupiedTables / totalTables) * 100).toFixed(1)
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -248,7 +246,7 @@ export default function TablePage() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="rounded-none">
+        <Card className="rounded-none border-0">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -259,7 +257,7 @@ export default function TablePage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-none">
+        <Card className="rounded-none border-0">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -270,7 +268,7 @@ export default function TablePage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-none">
+        <Card className="rounded-none border-0">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -281,7 +279,7 @@ export default function TablePage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-none">
+        <Card className="rounded-none border-0">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -299,7 +297,7 @@ export default function TablePage() {
         {tables.map((table) => (
           <Card 
             key={table.id} 
-            className={`cursor-pointer transition-all rounded-none ${
+            className={`cursor-pointer transition-all rounded-none border-0 ${
               joinTables.includes(table.id) ? "ring-2 ring-[#58ff34] bg-green-50" : ""
             }`}
           >
@@ -528,7 +526,7 @@ export default function TablePage() {
             <h3 className="text-xl font-bold text-gray-900 mb-6">Analytics Meja</h3>
             
             <div className="grid grid-cols-2 gap-6 mb-6">
-              <Card className="rounded-none">
+              <Card className="rounded-none border-0">
                 <CardHeader>
                   <CardTitle className="text-lg">Tingkat Okupansi</CardTitle>
                 </CardHeader>
@@ -542,7 +540,7 @@ export default function TablePage() {
                 </CardContent>
               </Card>
               
-              <Card className="rounded-none">
+              <Card className="rounded-none border-0">
                 <CardHeader>
                   <CardTitle className="text-lg">Revenue per Meja</CardTitle>
                 </CardHeader>
@@ -671,8 +669,6 @@ export default function TablePage() {
           </div>
         </div>
       )}
-        </div>
-      </div>
     </div>
   )
 }

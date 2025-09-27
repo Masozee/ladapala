@@ -179,9 +179,8 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-sm p-8 flex flex-col gap-8">
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Header Section */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Jadwal Karyawan</h1>
@@ -199,8 +198,9 @@ export default function SchedulePage() {
         </div>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Karyawan</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -210,7 +210,7 @@ export default function SchedulePage() {
             <p className="text-xs text-muted-foreground">Karyawan aktif</p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Shift Hari Ini</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -220,7 +220,7 @@ export default function SchedulePage() {
             <p className="text-xs text-muted-foreground">Karyawan terjadwal</p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Jam Minggu Ini</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -230,7 +230,7 @@ export default function SchedulePage() {
             <p className="text-xs text-muted-foreground">Jam kerja terjadwal</p>
           </CardContent>
         </Card>
-        <Card className="rounded-lg border-gray-200">
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Kehadiran Hari Ini</CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
@@ -242,52 +242,55 @@ export default function SchedulePage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="schedule" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="schedule">Jadwal</TabsTrigger>
-          <TabsTrigger value="employees">Karyawan</TabsTrigger>
-          <TabsTrigger value="requests">Permintaan</TabsTrigger>
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="schedule" className="space-y-6">
+        <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+          <TabsTrigger value="schedule" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Jadwal</TabsTrigger>
+          <TabsTrigger value="employees" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Karyawan</TabsTrigger>
+          <TabsTrigger value="requests" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Permintaan</TabsTrigger>
         </TabsList>
 
         <TabsContent value="schedule" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Jadwal Shift</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="rounded"
-                    onClick={() => navigateWeek("prev")}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <div className="px-4 py-2 text-sm font-medium">
-                    {weekDates[0].getDate()} - {weekDates[6].getDate()} {monthNames[weekDates[6].getMonth()]} {weekDates[6].getFullYear()}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="rounded"
-                    onClick={() => navigateWeek("next")}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <Select value={selectedView} onValueChange={(value: "week" | "day") => setSelectedView(value)}>
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="week">Mingguan</SelectItem>
-                      <SelectItem value="day">Harian</SelectItem>
-                    </SelectContent>
-                  </Select>
+          {/* Schedule Header */}
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Jadwal Shift</h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded"
+                  onClick={() => navigateWeek("prev")}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="px-4 py-2 text-sm font-medium">
+                  {weekDates[0].getDate()} - {weekDates[6].getDate()} {monthNames[weekDates[6].getMonth()]} {weekDates[6].getFullYear()}
                 </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded"
+                  onClick={() => navigateWeek("next")}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Select value={selectedView} onValueChange={(value: "week" | "day") => setSelectedView(value)}>
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="week">Mingguan</SelectItem>
+                    <SelectItem value="day">Harian</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </CardHeader>
-            <CardContent>
-              {selectedView === "week" ? (
+            </div>
+          </div>
+
+          {/* Schedule Content */}
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            {selectedView === "week" ? (
                 <div className="grid grid-cols-8 gap-2">
                   <div className="font-medium text-sm text-muted-foreground">Karyawan</div>
                   {weekDates.map((date, index) => (
@@ -356,18 +359,16 @@ export default function SchedulePage() {
                     ))}
                   </TableBody>
                 </Table>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="employees" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
-            <CardHeader>
-              <CardTitle>Daftar Karyawan</CardTitle>
-              <CardDescription>Kelola informasi dan ketersediaan karyawan</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold">Daftar Karyawan</h2>
+              <p className="text-muted-foreground">Kelola informasi dan ketersediaan karyawan</p>
+            </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -420,13 +421,12 @@ export default function SchedulePage() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+            </Table>
+          </div>
         </TabsContent>
 
         <TabsContent value="requests" className="space-y-4">
-          <Card className="rounded-lg border-gray-200">
+          <Card className="bg-white rounded-lg border-0 shadow-sm">
             <CardHeader>
               <CardTitle>Permintaan Cuti & Tukar Shift</CardTitle>
               <CardDescription>Kelola permintaan dari karyawan</CardDescription>
@@ -459,8 +459,6 @@ export default function SchedulePage() {
           </Card>
         </TabsContent>
       </Tabs>
-        </div>
-      </div>
     </div>
   )
 }
