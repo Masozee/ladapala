@@ -27,7 +27,7 @@ const menuData = {
       name: "Nasi Gudeg Jogja",
       description: "Nasi dengan gudeg khas Jogja, ayam kampung, telur, dan sambal krecek",
       price: "Rp 35.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/gudeg.jpg",
       category: "lunch",
       qty: 0,
       notes: ""
@@ -37,7 +37,7 @@ const menuData = {
       name: "Nasi Padang Komplit",
       description: "Nasi dengan rendang daging, ayam pop, gulai tunjang, dan sambal hijau",
       price: "Rp 45.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/naspad.jpeg",
       category: "lunch",
       qty: 0,
       notes: ""
@@ -47,7 +47,7 @@ const menuData = {
       name: "Nasi Liwet Solo",
       description: "Nasi liwet dengan ayam kampung, telur puyuh, tahu, dan sambal krecek",
       price: "Rp 32.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/liwet.jpeg",
       category: "dinner",
       qty: 0,
       notes: ""
@@ -56,20 +56,20 @@ const menuData = {
   "Sarapan & Jajanan Pagi": [
     {
       id: 4,
-      name: "Bubur Ayam Betawi",
+      name: "Bubur Ayam",
       description: "Bubur ayam dengan suwiran ayam, kerupuk, bawang goreng, dan sambal",
       price: "Rp 18.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/bubur.jpg",
       category: "breakfast",
       qty: 0,
       notes: ""
     },
     {
       id: 5,
-      name: "Lontong Sayur Jakarta",
+      name: "Lontong Sayur",
       description: "Lontong dengan sayur labu siam, tahu goreng, tempe, dan bumbu kelapa",
       price: "Rp 15.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/lonsay.jpeg",
       category: "breakfast",
       qty: 0,
       notes: ""
@@ -79,7 +79,7 @@ const menuData = {
       name: "Soto Betawi",
       description: "Soto dengan daging sapi, jeroan, kentang, tomat dan santan",
       price: "Rp 28.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/sotobetawi.jpg",
       category: "soup",
       qty: 0,
       notes: ""
@@ -91,7 +91,7 @@ const menuData = {
       name: "Sop Buntut Bakar",
       description: "Sup buntut sapi dengan kentang, wortel, daun bawang, dan kerupuk",
       price: "Rp 55.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/sopbuntut.jpg",
       category: "soup",
       qty: 0,
       notes: ""
@@ -101,7 +101,7 @@ const menuData = {
       name: "Rawon Surabaya",
       description: "Rawon dengan daging sapi empuk, tauge, telur asin, dan kerupuk",
       price: "Rp 38.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/Rawon.jpg",
       category: "soup",
       qty: 0,
       notes: ""
@@ -110,20 +110,20 @@ const menuData = {
   "Pembuka & Camilan": [
     {
       id: 9,
-      name: "Gado-gado Jakarta",
+      name: "Gado-gado",
       description: "Sayuran segar dengan bumbu kacang, kerupuk, dan lontong",
       price: "Rp 22.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/gadogado.jpeg",
       category: "appetizer",
       qty: 0,
       notes: ""
     },
     {
       id: 10,
-      name: "Ketoprak Betawi",
+      name: "Ketoprak",
       description: "Tahu, lontong, tauge dengan bumbu kacang dan kerupuk",
       price: "Rp 18.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/ketoprak.jpeg",
       category: "appetizer",
       qty: 0,
       notes: ""
@@ -135,7 +135,7 @@ const menuData = {
       name: "Es Cendol Durian",
       description: "Es cendol dengan santan, gula merah, dan durian segar",
       price: "Rp 20.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/cendol.jpg",
       category: "dessert",
       qty: 0,
       notes: ""
@@ -145,7 +145,7 @@ const menuData = {
       name: "Klepon Pandan",
       description: "Klepon pandan isi gula merah dengan kelapa parut (5 pcs)",
       price: "Rp 15.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/klepon.jpg",
       category: "dessert",
       qty: 0,
       notes: ""
@@ -154,20 +154,20 @@ const menuData = {
   "Minuman": [
     {
       id: 13,
-      name: "Es Teh Manis Jogja",
+      name: "Es Teh Manis",
       description: "Teh manis dingin khas Jogja dengan gula batu",
       price: "Rp 8.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/esteh.jpg",
       category: "beverage",
       qty: 0,
       notes: ""
     },
     {
       id: 14,
-      name: "Jus Alpukat Segar",
+      name: "Jus Alpukat",
       description: "Jus alpukat murni dengan susu kental manis",
       price: "Rp 18.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/jusalpukat.jpg",
       category: "beverage",
       qty: 0,
       notes: ""
@@ -177,7 +177,7 @@ const menuData = {
       name: "Wedang Jahe Merah",
       description: "Minuman hangat jahe merah dengan gula aren",
       price: "Rp 12.000",
-      image: "/api/placeholder/300/200",
+      image: "/menu/wedang.jpg",
       category: "beverage",
       qty: 0,
       notes: ""
@@ -352,8 +352,19 @@ export default function MenuPage() {
                 return (
                   <Card key={item.id} className="bg-card text-card-foreground flex flex-col shadow-sm overflow-hidden hover:shadow-md transition-all rounded-lg border-0">
                     <div className="relative">
-                      <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative">
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                      <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                        {item.image && !item.image.includes('/api/placeholder') ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                            }}
+                          />
+                        ) : null}
+                        <div className={`absolute inset-0 flex items-center justify-center text-gray-400 ${item.image && !item.image.includes('/api/placeholder') ? 'hidden' : ''}`}>
                           <Utensils className="h-12 w-12 opacity-50" />
                         </div>
                       </div>
