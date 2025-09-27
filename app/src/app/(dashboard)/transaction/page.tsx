@@ -74,6 +74,195 @@ export default function TransactionPage() {
   const cashReceived = parseFloat(cashAmount) || 0
   const change = cashReceived - total
 
+  // Print receipt function
+  const printReceipt = () => {
+    const receiptWindow = window.open('', '', 'width=300,height=600')
+    if (!receiptWindow) return
+
+    const receiptDate = new Date()
+    const receiptTime = receiptDate.toLocaleString('id-ID', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
+
+    const receiptHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt</title>
+        <style>
+          @media print {
+            @page {
+              size: 80mm auto;
+              margin: 0;
+            }
+          }
+          body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 10px;
+            margin: 0;
+            width: 280px;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+          }
+          .header p {
+            margin: 2px 0;
+            font-size: 11px;
+          }
+          .info {
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+          }
+          .info p {
+            margin: 2px 0;
+            font-size: 11px;
+          }
+          .items {
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+          }
+          .item {
+            margin-bottom: 5px;
+          }
+          .item-name {
+            font-weight: bold;
+            font-size: 11px;
+          }
+          .item-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-left: 10px;
+          }
+          .item-notes {
+            font-size: 10px;
+            margin-left: 10px;
+            font-style: italic;
+            color: #666;
+          }
+          .totals {
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+          }
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+            font-size: 11px;
+          }
+          .total-row.bold {
+            font-weight: bold;
+            font-size: 13px;
+            margin-top: 5px;
+          }
+          .payment {
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+          }
+          .payment p {
+            margin: 3px 0;
+            font-size: 11px;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 10px;
+          }
+          .footer p {
+            margin: 2px 0;
+            font-size: 10px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>LADAPALA</h1>
+          <p>Restaurant POS System</p>
+          <p>Jl. Contoh No. 123</p>
+          <p>Tel: (021) 12345678</p>
+        </div>
+        
+        <div class="info">
+          <p>No: ${sampleOrder.id}</p>
+          <p>Tanggal: ${receiptTime}</p>
+          <p>Meja: ${sampleOrder.tableNumber}</p>
+          <p>Pelanggan: ${customerName}</p>
+          <p>Kasir: Admin</p>
+        </div>
+        
+        <div class="items">
+          ${orderItems.map(item => `
+            <div class="item">
+              <div class="item-name">${item.name}</div>
+              <div class="item-details">
+                <span>${item.qty} x Rp ${item.price.toLocaleString('id-ID')}</span>
+                <span>Rp ${(item.qty * item.price).toLocaleString('id-ID')}</span>
+              </div>
+              ${item.notes ? `<div class="item-notes">${item.notes}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        
+        <div class="totals">
+          <div class="total-row">
+            <span>Subtotal:</span>
+            <span>Rp ${subtotal.toLocaleString('id-ID')}</span>
+          </div>
+          <div class="total-row">
+            <span>Pajak (10%):</span>
+            <span>Rp ${tax.toLocaleString('id-ID')}</span>
+          </div>
+          <div class="total-row bold">
+            <span>TOTAL:</span>
+            <span>Rp ${total.toLocaleString('id-ID')}</span>
+          </div>
+        </div>
+        
+        <div class="payment">
+          <p>Metode: ${paymentMethod === 'cash' ? 'TUNAI' : paymentMethod === 'card' ? 'KARTU' : 'QRIS'}</p>
+          ${paymentMethod === 'cash' ? `
+            <p>Bayar: Rp ${cashReceived.toLocaleString('id-ID')}</p>
+            <p style="font-weight: bold;">Kembali: Rp ${Math.round(change).toLocaleString('id-ID')}</p>
+          ` : ''}
+        </div>
+        
+        <div class="footer">
+          <p>===========================</p>
+          <p>Terima Kasih</p>
+          <p>Atas Kunjungan Anda</p>
+          <p>===========================</p>
+        </div>
+      </body>
+      </html>
+    `
+
+    receiptWindow.document.write(receiptHTML)
+    receiptWindow.document.close()
+    
+    // Wait for content to load then print
+    receiptWindow.onload = () => {
+      receiptWindow.print()
+      receiptWindow.close()
+    }
+  }
+
   // Process payment
   const handlePayment = () => {
     if (paymentMethod === "cash" && cashReceived < total) {
@@ -96,6 +285,10 @@ export default function TransactionPage() {
     })
 
     setShowPaymentSuccess(true)
+    
+    // Print receipt automatically after payment
+    printReceipt()
+    
     setTimeout(() => {
       // Reset after success
       setOrderItems([])
