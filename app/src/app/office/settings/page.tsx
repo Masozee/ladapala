@@ -574,12 +574,12 @@ export default function SettingsPage() {
                   
                   <div className="flex items-center justify-between">
                     <Label>Wajib Karakter Khusus</Label>
-                    <Switch defaultChecked />
+                    <Switch checked={true} onCheckedChange={() => {}} />
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <Label>Wajib Angka</Label>
-                    <Switch defaultChecked />
+                    <Switch checked={true} onCheckedChange={() => {}} />
                   </div>
                 </div>
               </div>
@@ -618,7 +618,7 @@ export default function SettingsPage() {
                       <Label>Enkripsi Data</Label>
                       <p className="text-sm text-muted-foreground">Enkripsi data sensitif</p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch checked={true} onCheckedChange={() => {}} />
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -626,7 +626,7 @@ export default function SettingsPage() {
                       <Label>Anonymize Logs</Label>
                       <p className="text-sm text-muted-foreground">Anonimkan data personal di logs</p>
                     </div>
-                    <Switch defaultChecked />
+                    <Switch checked={true} onCheckedChange={() => {}} />
                   </div>
                 </div>
               </div>
