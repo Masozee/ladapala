@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import * as Dialog from '@radix-ui/react-dialog';
 import { 
   Calendar, 
@@ -817,7 +818,7 @@ const BookingsPage = () => {
         ordering: sortOrder === 'asc' ? sortField : `-${sortField}`
       });
       
-      const response = await fetch(`http://localhost:8000/api/reservations/?${params}`);
+      const response = await fetch(buildApiUrl(`reservations/?${params}`));
       if (!response.ok) {
         throw new Error('Failed to fetch reservations');
       }
@@ -871,7 +872,7 @@ const BookingsPage = () => {
         ordering: 'number' // Order rooms by room number
       });
       
-      const response = await fetch(`http://localhost:8000/api/rooms/?${params}`);
+      const response = await fetch(buildApiUrl(`rooms/?${params}`));
       if (!response.ok) {
         throw new Error('Failed to fetch rooms');
       }
@@ -915,7 +916,7 @@ const BookingsPage = () => {
   // Room assignment and reservation actions
   const confirmReservation = async (reservationId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/reservations/${reservationId}/confirm/`, {
+      const response = await fetch(buildApiUrl(`reservations/${reservationId}/confirm/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -936,7 +937,7 @@ const BookingsPage = () => {
 
   const cancelReservation = async (reservationId: number, reason: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/reservations/${reservationId}/cancel/`, {
+      const response = await fetch(buildApiUrl(`reservations/${reservationId}/cancel/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -958,7 +959,7 @@ const BookingsPage = () => {
 
   const checkInGuest = async (reservationId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/reservations/${reservationId}/check_in/`, {
+      const response = await fetch(buildApiUrl(`reservations/${reservationId}/check_in/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -979,7 +980,7 @@ const BookingsPage = () => {
 
   const checkOutGuest = async (reservationId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/reservations/${reservationId}/check_out/`, {
+      const response = await fetch(buildApiUrl(`reservations/${reservationId}/check_out/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1031,7 +1032,7 @@ const BookingsPage = () => {
   }) => {
     try {
       // First create or get the guest
-      const guestResponse = await fetch('http://localhost:8000/api/guests/', {
+      const guestResponse = await fetch(buildApiUrl('guests/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1044,7 +1045,7 @@ const BookingsPage = () => {
         guest = await guestResponse.json();
       } else {
         // Guest might already exist, try to find by email
-        const existingGuestResponse = await fetch(`http://localhost:8000/api/guests/?email=${reservationData.guest.email}`);
+        const existingGuestResponse = await fetch(buildApiUrl(`guests/?email=${reservationData.guest.email}`));
         if (existingGuestResponse.ok) {
           const guestData = await existingGuestResponse.json();
           guest = guestData.results?.[0] || guestData[0];
@@ -1066,7 +1067,7 @@ const BookingsPage = () => {
         room_assignments: reservationData.room_assignments || [],
       };
 
-      const response = await fetch('http://localhost:8000/api/reservations/', {
+      const response = await fetch(buildApiUrl('reservations/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1103,7 +1104,7 @@ const BookingsPage = () => {
 
       // Fetch all rooms with enhanced data (availability + pricing)
       console.log('Fetching rooms from API...');
-      const response = await fetch('http://localhost:8000/api/rooms/');
+      const response = await fetch(buildApiUrl('rooms/'));
       if (!response.ok) {
         console.error('Failed to fetch rooms:', response.status, response.statusText);
         throw new Error('Failed to fetch rooms');
@@ -1159,7 +1160,7 @@ const BookingsPage = () => {
       
       const roomPromises = roomsToCheck.map(async (room: any) => {
         try {
-          const roomDetailResponse = await fetch(`http://localhost:8000/api/rooms/${room.id}/`);
+          const roomDetailResponse = await fetch(buildApiUrl(`rooms/${room.id}/`));
           if (!roomDetailResponse.ok) {
             console.warn(`Failed to fetch details for room ${room.id}: ${roomDetailResponse.status}`);
             return null;

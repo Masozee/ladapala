@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import { 
   Search,
   Users,
@@ -172,7 +173,7 @@ interface DjangoReservationResponse {
 // Fetch guest reservations
 const fetchGuestReservations = async (guestId: number): Promise<GuestStay[]> => {
   try {
-    const response = await fetch(`http://localhost:8000/api/reservations/?guest=${guestId}`, {
+    const response = await fetch(buildApiUrl(`reservations/?guest=${guestId}`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -218,7 +219,7 @@ const mapReservationStatus = (status: string): 'completed' | 'cancelled' | 'no_s
 // API fetch functions
 const fetchGuests = async (): Promise<Guest[]> => {
   try {
-    const response = await fetch('http://localhost:8000/api/guests/', {
+    const response = await fetch(buildApiUrl('guests/'), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -627,7 +628,7 @@ const GuestsPage = () => {
     setCreateError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/guests/', {
+      const response = await fetch(buildApiUrl('guests/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

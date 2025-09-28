@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   Search,
   Plus,
@@ -165,7 +166,7 @@ export default function NewReservationPage() {
 
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/guests/?search=${encodeURIComponent(query)}`);
+      const response = await fetch(buildApiUrl(`guests/?search=${encodeURIComponent(query)}`));
       if (response.ok) {
         const data = await response.json();
         setSearchResults(data.results || data);
@@ -181,7 +182,7 @@ export default function NewReservationPage() {
   const createNewGuest = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/guests/', {
+      const response = await fetch(buildApiUrl('guests/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +230,7 @@ export default function NewReservationPage() {
       }
 
       // Fetch all rooms
-      const response = await fetch('http://localhost:8000/api/rooms/');
+      const response = await fetch(buildApiUrl('rooms/'));
       if (response.ok) {
         const data = await response.json();
         const rooms = data.results || data;
@@ -299,7 +300,7 @@ export default function NewReservationPage() {
         }]
       };
 
-      const response = await fetch('http://localhost:8000/api/reservations/', {
+      const response = await fetch(buildApiUrl('reservations/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

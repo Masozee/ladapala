@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, EyeOff, Hotel, Lock, Mail, User, Shield, CheckCircle } from 'lucide-react';
+import { buildApiUrl } from '@/lib/config';
 
 const LoginPage = () => {
   const router = useRouter();
@@ -31,7 +32,7 @@ const LoginPage = () => {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login/', {
+      const response = await fetch(buildApiUrl('auth/login/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

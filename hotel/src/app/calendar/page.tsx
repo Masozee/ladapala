@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   Calendar,
   ChevronLeft,
@@ -75,7 +76,7 @@ const CalendarPage = () => {
       if (month) params.append('month', month.toString());
       if (year) params.append('year', year.toString());
       
-      const response = await fetch(`http://localhost:8000/api/calendar/events/?${params}`);
+      const response = await fetch(buildApiUrl(`calendar/events/?${params}`));
       if (!response.ok) throw new Error('Failed to fetch events');
       
       const data = await response.json();
@@ -92,7 +93,7 @@ const CalendarPage = () => {
       const params = new URLSearchParams();
       if (year) params.append('year', year.toString());
       
-      const response = await fetch(`http://localhost:8000/api/calendar/holidays/?${params}`);
+      const response = await fetch(buildApiUrl(`calendar/holidays/?${params}`));
       if (!response.ok) throw new Error('Failed to fetch holidays');
       
       const data = await response.json();

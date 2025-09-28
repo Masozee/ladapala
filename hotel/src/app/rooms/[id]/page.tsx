@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import { 
   ArrowLeft,
   Calendar,
@@ -55,7 +56,7 @@ interface DjangoRoomType {
 
 const fetchRoomType = async (id: string): Promise<RoomType | null> => {
   try {
-    const response = await fetch(`http://localhost:8000/api/room-types/${id}/`, {
+    const response = await fetch(buildApiUrl(`room-types/${id}/`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

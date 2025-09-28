@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import * as Dialog from '@radix-ui/react-dialog';
 import { 
   ArrowLeft,
@@ -337,13 +338,13 @@ const BookingDetailPage = () => {
       setLoading(true);
       try {
         // Try to find reservation by reservation number first
-        const searchResponse = await fetch(`http://localhost:8000/api/reservations/?reservation_number=${params.reservation_number}`);
+        const searchResponse = await fetch(buildApiUrl(`reservations/?reservation_number=${params.reservation_number}`));
         if (searchResponse.ok) {
           const searchData = await searchResponse.json();
           if (searchData.results && searchData.results.length > 0) {
             // Found reservation, now fetch full details using the ID
             const reservationId = searchData.results[0].id;
-            const detailResponse = await fetch(`http://localhost:8000/api/reservations/${reservationId}/`);
+            const detailResponse = await fetch(buildApiUrl(`reservations/${reservationId}/`));
             if (detailResponse.ok) {
               const detailData = await detailResponse.json();
               setBooking(detailData);
@@ -353,7 +354,7 @@ const BookingDetailPage = () => {
             }
           } else {
             // No results found by reservation number, try as direct ID for backward compatibility
-            const idResponse = await fetch(`http://localhost:8000/api/reservations/${params.reservation_number}/`);
+            const idResponse = await fetch(buildApiUrl(`reservations/${params.reservation_number}/`));
             if (idResponse.ok) {
               const idData = await idResponse.json();
               setBooking(idData);
@@ -364,7 +365,7 @@ const BookingDetailPage = () => {
           }
         } else {
           // Search endpoint failed, fallback to direct ID approach
-          const idResponse = await fetch(`http://localhost:8000/api/reservations/${params.reservation_number}/`);
+          const idResponse = await fetch(buildApiUrl(`reservations/${params.reservation_number}/`));
           if (idResponse.ok) {
             const idData = await idResponse.json();
             setBooking(idData);

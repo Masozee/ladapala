@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import Link from 'next/link';
 import { 
   Search,
@@ -133,7 +134,7 @@ interface ComplaintsResponse {
 // API functions
 const fetchComplaints = async (): Promise<ComplaintsResponse> => {
   try {
-    const response = await fetch('http://localhost:8000/api/hotel/complaints/');
+    const response = await fetch(buildApiUrl('hotel/complaints/'));
     if (!response.ok) {
       if (response.status === 401) {
         throw new Error('Authentication required');

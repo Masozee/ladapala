@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import { 
   Search,
   Users,
@@ -189,7 +190,7 @@ const GuestDetailPage = () => {
   useEffect(() => {
     const fetchGuest = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/guests/${params.id}/`, {
+        const response = await fetch(buildApiUrl(`guests/${params.id}/`), {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

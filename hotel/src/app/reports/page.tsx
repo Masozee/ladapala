@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   BarChart3,
   Calendar,
@@ -79,8 +80,8 @@ interface CategoryBreakdown {
 // API functions
 const fetchDailyReport = async (date?: string): Promise<DailyReport> => {
   const url = date 
-    ? `http://localhost:8000/api/hotel/reports/daily/?date=${date}`
-    : 'http://localhost:8000/api/hotel/reports/daily/';
+    ? buildApiUrl(`hotel/reports/daily/?date=${date}`)
+    : buildApiUrl('hotel/reports/daily/');
   
   const response = await fetch(url);
   if (!response.ok) throw new Error('Failed to fetch daily report');
@@ -88,18 +89,18 @@ const fetchDailyReport = async (date?: string): Promise<DailyReport> => {
 };
 
 const fetchDailyReportsRange = async (days: number = 7): Promise<DailyReport[]> => {
-  const response = await fetch(`http://localhost:8000/api/hotel/reports/daily-range/?days=${days}`);
+  const response = await fetch(buildApiUrl(`hotel/reports/daily-range/?days=${days}`));
   if (!response.ok) throw new Error('Failed to fetch daily reports range');
   return response.json();
 };
 
 const fetchMonthlyReport = async (month?: number, year?: number): Promise<MonthlyReport> => {
-  let url = 'http://localhost:8000/api/hotel/reports/monthly/';
+  let endpoint = 'hotel/reports/monthly/';
   if (month && year) {
-    url += `?month=${month}&year=${year}`;
+    endpoint += `?month=${month}&year=${year}`;
   }
   
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(endpoint));
   if (!response.ok) throw new Error('Failed to fetch monthly report');
   return response.json();
 };

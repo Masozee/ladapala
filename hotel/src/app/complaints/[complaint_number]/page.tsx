@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import { getAuthHeaders, isAuthenticated, getAuthUser } from '@/lib/auth';
 import { 
   ArrowLeft,
@@ -187,7 +188,7 @@ const ComplaintDetailPage = () => {
     const loadComplaint = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/api/hotel/complaints/by-number/${params.complaint_number}/`, {
+        const response = await fetch(buildApiUrl(`hotel/complaints/by-number/${params.complaint_number}/`), {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -284,7 +285,7 @@ const ComplaintDetailPage = () => {
     setResponseSuccess(null);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/complaints/${complaint.complaint_number}/responses/`, {
+      const response = await fetch(buildApiUrl(`complaints/${complaint.complaint_number}/responses/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -303,7 +304,7 @@ const ComplaintDetailPage = () => {
       }
 
       // Reload the complaint to get updated data
-      const complaintResponse = await fetch(`http://localhost:8000/api/complaints/${complaint.complaint_number}/`, {
+      const complaintResponse = await fetch(buildApiUrl(`complaints/${complaint.complaint_number}/`), {
         headers: getAuthHeaders()
       });
       if (complaintResponse.ok) {
@@ -333,7 +334,7 @@ const ComplaintDetailPage = () => {
     setStatusSuccess(null);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/complaints/${complaint.complaint_number}/`, {
+      const response = await fetch(buildApiUrl(`complaints/${complaint.complaint_number}/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -407,7 +408,7 @@ const ComplaintDetailPage = () => {
       }
       formData.append('is_evidence', isEvidence.toString());
       
-      const response = await fetch('http://localhost:8000/api/complaint-images/', {
+      const response = await fetch(buildApiUrl('complaint-images/'), {
         method: 'POST',
         headers: {
           ...getAuthHeaders()
@@ -427,7 +428,7 @@ const ComplaintDetailPage = () => {
       setImageUploadSuccess('Image uploaded successfully!');
       
       // Reload complaint data
-      const complaintResponse = await fetch(`http://localhost:8000/api/complaints/${complaint.complaint_number}/`, {
+      const complaintResponse = await fetch(buildApiUrl(`complaints/${complaint.complaint_number}/`), {
         headers: getAuthHeaders()
       });
       if (complaintResponse.ok) {
@@ -448,7 +449,7 @@ const ComplaintDetailPage = () => {
     if (!complaint) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/complaint-images/${imageId}/`, {
+      const response = await fetch(buildApiUrl(`complaint-images/${imageId}/`), {
         method: 'DELETE',
         headers: {
           ...getAuthHeaders()
@@ -460,7 +461,7 @@ const ComplaintDetailPage = () => {
       }
       
       // Reload complaint data
-      const complaintResponse = await fetch(`http://localhost:8000/api/complaints/${complaint.complaint_number}/`, {
+      const complaintResponse = await fetch(buildApiUrl(`complaints/${complaint.complaint_number}/`), {
         headers: getAuthHeaders()
       });
       if (complaintResponse.ok) {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   Search,
   Plus,
@@ -58,7 +59,7 @@ export default function CustomersPage() {
         ...(search && { search: search })
       });
 
-      const response = await fetch(`http://localhost:8000/api/guests/?${params}`);
+      const response = await fetch(buildApiUrl(`guests/?${params}`));
       if (response.ok) {
         const data = await response.json();
         
