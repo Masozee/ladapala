@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-w=swvwob)&%m-%1s7tqzl%45rxcfvgdawfvpr%#*%2(s5t+v3*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'api.parlemenkita.org', 'parlemenkita.org']
 
 
 # Application definition
@@ -39,7 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'django_filters',
     'apps.restaurant',
+    'apps.hotel',
+    'apps.user',
 ]
 
 MIDDLEWARE = [
@@ -126,13 +129,16 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Custom User Model
+AUTH_USER_MODEL = 'user.User'
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
@@ -142,6 +148,15 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://localhost:3002", 
+    "http://localhost:3003",
+    "https://parlemenkita.org",
+    "https://www.parlemenkita.org",
+    "https://api.parlemenkita.org",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Allow all origins for API access (development/testing)
+CORS_ALLOW_ALL_ORIGINS = True
