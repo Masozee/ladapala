@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { buildApiUrl } from '@/lib/config';
 
 interface BasicMetrics {
   total_rooms: number;
@@ -98,12 +99,7 @@ export function useDashboardData(): UseDashboardDataReturn {
       setLoading(true);
       setError(null);
 
-      const apiUrl = process.env.NEXT_PUBLIC_DASHBOARD_API_URL;
-      if (!apiUrl) {
-        throw new Error('Dashboard API URL not configured');
-      }
-
-      const response = await fetch(apiUrl, {
+      const response = await fetch(buildApiUrl('hotel/main/'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -120,6 +116,77 @@ export function useDashboardData(): UseDashboardDataReturn {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
       console.error('Dashboard API Error:', err);
+      
+      // Set fallback data if API fails
+      setData({
+        basic_metrics: {
+          total_rooms: 150,
+          occupancy_rate: 75,
+          active_guests: 112,
+          todays_checkins: 8,
+          adr: 850000,
+          revpar: 637500
+        },
+        visitor_demographics: {
+          total_visitors: 112,
+          data: [
+            { nationality: 'Indonesia', count: 45, percentage: 40 },
+            { nationality: 'Singapore', count: 23, percentage: 20 },
+            { nationality: 'Malaysia', count: 18, percentage: 16 },
+            { nationality: 'Australia', count: 14, percentage: 12 },
+            { nationality: 'Others', count: 12, percentage: 12 }
+          ]
+        },
+        weekly_comparison: {
+          current_week: {
+            period: 'Current Week',
+            data: [
+              { day: 'Monday', date: '2024-01-15', occupancy: 72, occupied_rooms: 108 },
+              { day: 'Tuesday', date: '2024-01-16', occupancy: 68, occupied_rooms: 102 },
+              { day: 'Wednesday', date: '2024-01-17', occupancy: 75, occupied_rooms: 112 },
+              { day: 'Thursday', date: '2024-01-18', occupancy: 80, occupied_rooms: 120 },
+              { day: 'Friday', date: '2024-01-19', occupancy: 85, occupied_rooms: 127 },
+              { day: 'Saturday', date: '2024-01-20', occupancy: 90, occupied_rooms: 135 },
+              { day: 'Sunday', date: '2024-01-21', occupancy: 78, occupied_rooms: 117 }
+            ]
+          },
+          previous_month_week: {
+            period: 'Previous Month',
+            data: [
+              { day: 'Monday', date: '2023-12-18', occupancy: 78, occupied_rooms: 117 },
+              { day: 'Tuesday', date: '2023-12-19', occupancy: 74, occupied_rooms: 111 },
+              { day: 'Wednesday', date: '2023-12-20', occupancy: 82, occupied_rooms: 123 },
+              { day: 'Thursday', date: '2023-12-21', occupancy: 88, occupied_rooms: 132 },
+              { day: 'Friday', date: '2023-12-22', occupancy: 92, occupied_rooms: 138 },
+              { day: 'Saturday', date: '2023-12-23', occupancy: 95, occupied_rooms: 142 },
+              { day: 'Sunday', date: '2023-12-24', occupancy: 85, occupied_rooms: 127 }
+            ]
+          }
+        },
+        latest_news: [
+          {
+            id: 1,
+            title: 'New WiFi Upgrade Completed',
+            description: 'High-speed internet now available in all rooms',
+            date: '2024-01-20',
+            time: '09:00',
+            type: 'system',
+            location: 'All Areas'
+          },
+          {
+            id: 2,
+            title: 'Restaurant Menu Update',
+            description: 'New seasonal dishes available',
+            date: '2024-01-19',
+            time: '18:30',
+            type: 'food',
+            location: 'Restaurant'
+          }
+        ],
+        upcoming_events: [],
+        holidays_this_month: [],
+        last_updated: new Date().toISOString()
+      });
     } finally {
       setLoading(false);
     }
