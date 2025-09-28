@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-w=swvwob)&%m-%1s7tqzl%45rxcfvgdawfvpr%#*%2(s5t+v3*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'api.parlemenkita.org', 'parlemenkita.org']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'api.parlemenkita.org', 'parlemenkita.org', 'kapulaga-iota.vercel.app']
 
 
 # Application definition
@@ -154,6 +154,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://parlemenkita.org",
     "https://www.parlemenkita.org",
     "https://api.parlemenkita.org",
+    "https://kapulaga-iota.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
