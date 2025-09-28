@@ -19,4 +19,29 @@ export const buildApiUrl = (endpoint: string): string => {
   return `${API_CONFIG.BASE_URL}/${cleanEndpoint}`;
 };
 
+// Default headers for API requests
+export const getDefaultHeaders = (): HeadersInit => ({
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Referrer-Policy': 'no-referrer-when-downgrade',
+});
+
+// Helper function for API fetch requests with proper headers
+export const apiFetch = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
+  const url = buildApiUrl(endpoint);
+  const defaultHeaders = getDefaultHeaders();
+  
+  const config: RequestInit = {
+    ...options,
+    headers: {
+      ...defaultHeaders,
+      ...options.headers,
+    },
+    // Explicitly set referrer policy for cross-origin requests
+    referrerPolicy: 'no-referrer-when-downgrade',
+  };
+  
+  return fetch(url, config);
+};
+
 export default API_CONFIG;
