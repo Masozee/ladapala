@@ -1,0 +1,101 @@
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+
+from ..models import RoomType, Room
+from ..serializers import (
+    RoomTypeSerializer, RoomSerializer, RoomListSerializer
+)
+
+
+class RoomTypeViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing room types"""
+    queryset = RoomType.objects.all()
+    serializer_class = RoomTypeSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['is_active', 'max_occupancy']
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'base_price', 'max_occupancy', 'created_at']
+    ordering = ['name']
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Get only active room types"""
+        room_types = self.get_queryset().filter(is_active=True)
+        serializer = self.get_serializer(room_types, many=True)
+        return Response(serializer.data)
+
+
+class RoomViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing rooms"""
+    queryset = Room.objects.select_related('room_type')
+    serializer_class = RoomSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['room_type', 'floor', 'status', 'is_active']
+    search_fields = ['number', 'room_type__name']
+    ordering_fields = ['number', 'floor', 'created_at']
+    ordering = ['number']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return RoomListSerializer
+        return RoomSerializer
+
+    @action(detail=False, methods=['get'])
+    def available(self, request):
+        """Get available rooms for check-in"""
+        available_rooms = self.get_queryset().filter(
+            status='AVAILABLE',
+            is_active=True
+        )
+        serializer = RoomListSerializer(available_rooms, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def by_floor(self, request):
+        """Get rooms grouped by floor"""
+        floor = request.query_params.get('floor')
+        if floor:
+            try:
+                floor = int(floor)
+                rooms = self.get_queryset().filter(floor=floor)
+                serializer = RoomListSerializer(rooms, many=True)
+                return Response({
+                    'floor': floor,
+                    'rooms': serializer.data
+                })
+            except ValueError:
+                return Response({'error': 'Invalid floor number'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+        
+        # Group all rooms by floor
+        rooms_by_floor = {}
+        for room in self.get_queryset():
+            if room.floor not in rooms_by_floor:
+                rooms_by_floor[room.floor] = []
+            rooms_by_floor[room.floor].append(RoomListSerializer(room).data)
+        
+        return Response(rooms_by_floor)
+
+    @action(detail=True, methods=['patch'])
+    def update_status(self, request, pk=None):
+        """Update room status"""
+        room = self.get_object()
+        new_status = request.data.get('status')
+        
+        if not new_status:
+            return Response({'error': 'status field is required'}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate status choice
+        valid_statuses = [choice[0] for choice in Room.STATUS_CHOICES]
+        if new_status not in valid_statuses:
+            return Response({'error': 'Invalid status'}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+        
+        room.status = new_status
+        room.save(update_fields=['status', 'updated_at'])
+        
+        serializer = RoomListSerializer(room)
+        return Response(serializer.data)

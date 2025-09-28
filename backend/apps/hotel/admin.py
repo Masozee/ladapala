@@ -1,0 +1,70 @@
+from django.contrib import admin
+from .models import (
+    RoomType, Room, Guest, Reservation, Payment, Complaint, 
+    CheckIn, Holiday, InventoryItem
+)
+
+
+@admin.register(RoomType)
+class RoomTypeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'base_price', 'max_occupancy', 'size_sqm', 'is_active']
+    list_filter = ['is_active', 'max_occupancy']
+    search_fields = ['name', 'description']
+
+
+@admin.register(Room)
+class RoomAdmin(admin.ModelAdmin):
+    list_display = ['number', 'room_type', 'floor', 'status', 'is_active']
+    list_filter = ['room_type', 'status', 'floor', 'is_active']
+    search_fields = ['number', 'room_type__name']
+
+
+@admin.register(Guest)
+class GuestAdmin(admin.ModelAdmin):
+    list_display = ['full_name', 'email', 'phone', 'nationality', 'is_vip', 'loyalty_points']
+    list_filter = ['is_vip', 'nationality', 'gender']
+    search_fields = ['first_name', 'last_name', 'email', 'phone']
+
+
+@admin.register(Reservation)
+class ReservationAdmin(admin.ModelAdmin):
+    list_display = ['reservation_number', 'guest', 'room', 'check_in_date', 'check_out_date', 'status']
+    list_filter = ['status', 'booking_source', 'check_in_date']
+    search_fields = ['reservation_number', 'guest__first_name', 'guest__last_name']
+    date_hierarchy = 'check_in_date'
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ['reservation', 'amount', 'payment_method', 'status', 'payment_date']
+    list_filter = ['payment_method', 'status', 'payment_date']
+    search_fields = ['reservation__reservation_number', 'transaction_id']
+
+
+@admin.register(Complaint)
+class ComplaintAdmin(admin.ModelAdmin):
+    list_display = ['complaint_number', 'title', 'category', 'priority', 'status', 'created_at']
+    list_filter = ['category', 'priority', 'status', 'created_at']
+    search_fields = ['complaint_number', 'title', 'description']
+
+
+@admin.register(CheckIn)
+class CheckInAdmin(admin.ModelAdmin):
+    list_display = ['reservation', 'actual_check_in_time', 'status', 'room_key_issued']
+    list_filter = ['status', 'early_check_in', 'late_check_in', 'room_key_issued']
+    search_fields = ['reservation__reservation_number', 'reservation__guest__first_name']
+
+
+@admin.register(Holiday)
+class HolidayAdmin(admin.ModelAdmin):
+    list_display = ['name', 'name_id', 'date', 'holiday_type', 'is_work_day']
+    list_filter = ['holiday_type', 'is_work_day', 'date']
+    search_fields = ['name', 'name_id', 'description']
+    date_hierarchy = 'date'
+
+
+@admin.register(InventoryItem)
+class InventoryItemAdmin(admin.ModelAdmin):
+    list_display = ['name', 'category', 'current_stock', 'minimum_stock', 'unit_price', 'is_low_stock']
+    list_filter = ['category', 'is_active']
+    search_fields = ['name', 'description', 'supplier']

@@ -4,19 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ladapala is a Point of Sale (POS) system for Indonesian restaurants featuring a Next.js frontend and Django REST API backend. The project is structured as a monorepo with separate `app/` (frontend) and `backend/` directories.
+Ladapala is a Point of Sale (POS) system for Indonesian restaurants featuring a Next.js frontend and Django REST API backend. The project is structured as a monorepo with separate `resto/` (frontend) and `backend/` directories.
 
 ## Development Commands
 
 ### Frontend (Next.js App)
 ```bash
-cd app
+cd resto
 
 # Install dependencies
 npm install
 
-# Development server with Turbopack
-npm run dev
+# Development server (using bun)
+bun dev
 
 # Build for production
 npm run build
@@ -53,7 +53,7 @@ python manage.py kitchen_printer --branch 1 --mode live --interval 10
 
 ## Architecture
 
-### Frontend Structure (`app/`)
+### Frontend Structure (`resto/`)
 - **Framework**: Next.js 15.5.3 with App Router and React 19
 - **Styling**: Tailwind CSS v4 with shadcn/ui components
 - **Typography**: Geist font family (Sans & Mono)
