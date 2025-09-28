@@ -1,9 +1,9 @@
 'use client';
 
 import AppLayout from '@/components/AppLayout';
-import { Hotel, TrendingUp, Users, Calendar, Phone, AlertTriangle, Newspaper, ChevronRight, PieChart as PieChartIcon, RefreshCw, BarChart3, UserCog, DollarSign, Package, FileText, Shield, Building2 } from 'lucide-react';
+import { Hotel, TrendingUp, Users, Calendar, Phone, AlertTriangle, Newspaper, ChevronRight, PieChart as PieChartIcon, RefreshCw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { useDashboardData } from '@/hooks/useDashboardData';
 
 export default function Home() {
@@ -191,95 +191,6 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white shadow">
-          <div className="p-6 bg-[#005357] text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-white">Office Management</h3>
-                <p className="text-sm text-gray-100 mt-1">Administrative and operational tools</p>
-              </div>
-              <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-[#005357]" />
-              </div>
-            </div>
-          </div>
-          <div className="p-4 bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <a href="/office/analytics" className="p-4 text-left bg-white hover:bg-gray-50 transition-colors rounded group">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="w-8 h-8 bg-blue-100 flex items-center justify-center rounded group-hover:bg-blue-200 transition-colors">
-                    <BarChart3 className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <h3 className="font-medium text-gray-900">Analytics</h3>
-                </div>
-                <p className="text-sm text-gray-600">Performance insights and reports</p>
-              </a>
-              <a href="/office/employees" className="p-4 text-left bg-white hover:bg-gray-50 transition-colors rounded group">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="w-8 h-8 bg-green-100 flex items-center justify-center rounded group-hover:bg-green-200 transition-colors">
-                    <UserCog className="h-4 w-4 text-green-600" />
-                  </div>
-                  <h3 className="font-medium text-gray-900">Employees</h3>
-                </div>
-                <p className="text-sm text-gray-600">Staff management and scheduling</p>
-              </a>
-              <a href="/office/financial" className="p-4 text-left bg-white hover:bg-gray-50 transition-colors rounded group">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="w-8 h-8 bg-yellow-100 flex items-center justify-center rounded group-hover:bg-yellow-200 transition-colors">
-                    <DollarSign className="h-4 w-4 text-yellow-600" />
-                  </div>
-                  <h3 className="font-medium text-gray-900">Financial</h3>
-                </div>
-                <p className="text-sm text-gray-600">Revenue and expense tracking</p>
-              </a>
-              <a href="/office/warehouse" className="p-4 text-left bg-white hover:bg-gray-50 transition-colors rounded group">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="w-8 h-8 bg-purple-100 flex items-center justify-center rounded group-hover:bg-purple-200 transition-colors">
-                    <Package className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <h3 className="font-medium text-gray-900">Warehouse</h3>
-                </div>
-                <p className="text-sm text-gray-600">Inventory and supply management</p>
-              </a>
-              <a href="/office/schedules" className="p-4 text-left bg-white hover:bg-gray-50 transition-colors rounded group">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="w-8 h-8 bg-indigo-100 flex items-center justify-center rounded group-hover:bg-indigo-200 transition-colors">
-                    <Calendar className="h-4 w-4 text-indigo-600" />
-                  </div>
-                  <h3 className="font-medium text-gray-900">Schedules</h3>
-                </div>
-                <p className="text-sm text-gray-600">Event and maintenance scheduling</p>
-              </a>
-              <a href="/office/reports" className="p-4 text-left bg-white hover:bg-gray-50 transition-colors rounded group">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="w-8 h-8 bg-red-100 flex items-center justify-center rounded group-hover:bg-red-200 transition-colors">
-                    <FileText className="h-4 w-4 text-red-600" />
-                  </div>
-                  <h3 className="font-medium text-gray-900">Reports</h3>
-                </div>
-                <p className="text-sm text-gray-600">Generate detailed reports</p>
-              </a>
-              <a href="/office/admin" className="p-4 text-left bg-white hover:bg-gray-50 transition-colors rounded group">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="w-8 h-8 bg-gray-100 flex items-center justify-center rounded group-hover:bg-gray-200 transition-colors">
-                    <Shield className="h-4 w-4 text-gray-600" />
-                  </div>
-                  <h3 className="font-medium text-gray-900">Administration</h3>
-                </div>
-                <p className="text-sm text-gray-600">System configuration and security</p>
-              </a>
-              <a href="/office" className="p-4 text-left bg-white hover:bg-gray-50 transition-colors rounded group border-2 border-[#005357]">
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center rounded">
-                    <Building2 className="h-4 w-4 text-white" />
-                  </div>
-                  <h3 className="font-medium text-gray-900">Office Dashboard</h3>
-                </div>
-                <p className="text-sm text-gray-600">Complete office management portal</p>
-              </a>
-            </div>
-          </div>
-        </div>
 
         {/* Bento Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
@@ -475,8 +386,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Emergency Contact Card - 1/3 width */}
-          <div className="bg-white shadow md:col-span-1 lg:col-span-2">
+          {/* Emergency Contact Card - 2/3 width */}
+          <div className="bg-white shadow md:col-span-2 lg:col-span-4">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>

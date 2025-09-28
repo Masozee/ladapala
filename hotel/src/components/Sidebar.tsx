@@ -52,6 +52,20 @@ const Sidebar = () => {
   ];
 
   const bottomActions: MenuItem[] = [
+    { 
+      name: 'Office', 
+      icon: Building2, 
+      submenu: [
+        { name: 'Office Dashboard', icon: Building2, href: '/office' },
+        { name: 'Analytics', icon: TrendingUp, href: '/office/analytics' },
+        { name: 'Employees', icon: UserCog, href: '/office/employees' },
+        { name: 'Financial', icon: CreditCard, href: '/office/financial' },
+        { name: 'Warehouse', icon: Package, href: '/office/warehouse' },
+        { name: 'Schedules', icon: Clock, href: '/office/schedules' },
+        { name: 'Reports', icon: FileText, href: '/office/reports' },
+        { name: 'Administration', icon: Shield, href: '/office/admin' },
+      ]
+    },
     { name: 'Calendar', icon: Calendar, href: '/calendar' },
     { name: 'Settings', icon: Settings, href: '/settings' },
     { name: 'Profile', icon: User, href: '/profile' },
