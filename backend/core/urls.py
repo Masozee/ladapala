@@ -23,5 +23,8 @@ router = routers.DefaultRouter()
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.restaurant.urls')),
+    path('api/hotel/', include('apps.hotel.urls')),
+    path('api/user/', include('apps.user.urls')),
+    path('api/', include('apps.hotel.urls_public')),  # Public hotel API endpoints
     path('api-auth/', include('rest_framework.urls')),
 ]

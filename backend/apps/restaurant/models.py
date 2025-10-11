@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from decimal import Decimal
@@ -52,7 +52,7 @@ class StaffRole(models.TextChoices):
 
 
 class Staff(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='staff')
     role = models.CharField(max_length=20, choices=StaffRole.choices)
     phone = models.CharField(max_length=20, blank=True)
@@ -68,11 +68,11 @@ class Staff(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.get_full_name() or self.user.username} - {self.role}"
+        return f"{self.user.get_full_name() or self.user.email} - {self.role}"
 
     class Meta:
         verbose_name_plural = "Staff"
-        ordering = ['branch', 'user__username']
+        ordering = ['branch', 'user__email']
 
 
 class Category(models.Model):
@@ -167,7 +167,7 @@ class InventoryTransaction(models.Model):
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     unit_cost = models.DecimalField(max_digits=10, decimal_places=2)
     reference_number = models.CharField(max_length=100, blank=True)
-    performed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
