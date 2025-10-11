@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -9,12 +10,14 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+bun.lock
 
 # testing
 /coverage
 
 # next.js
 /.next/
+/**/next/
 /out/
 
 # production
@@ -32,6 +35,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +43,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Django
+*.pyc
+__pycache__/
+*.sqlite3
+*.db
+db_*.sqlite3
+*.pid
+
+# Backups
+*.zip
+backup_*
+
+# IDE
+.vscode/
+.idea/
