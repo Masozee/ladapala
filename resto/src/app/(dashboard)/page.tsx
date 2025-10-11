@@ -1,11 +1,10 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   UserIcon,
   Package01Icon,
-  Clock01Icon,
-  CancelCircleIcon,
   Wallet01Icon,
   CreditCardIcon,
   EyeIcon,
@@ -13,11 +12,13 @@ import {
   ArrowRight01Icon,
   CheckmarkCircle01Icon,
   AlertCircleIcon,
-  KitchenUtensilsIcon
+  KitchenUtensilsIcon,
+  CancelCircleIcon
 } from "@hugeicons/core-free-icons"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { api, type Order, type DashboardData } from "@/lib/api"
 
 interface StatCard {
   title: string
@@ -27,243 +28,122 @@ interface StatCard {
   trend: "up" | "down" | "neutral"
 }
 
-const stats: StatCard[] = [
-  {
-    title: "Total Penjualan Hari Ini",
-    value: "Rp 12.450.000",
-    change: "+12.3%",
-    icon: Wallet01Icon,
-    trend: "up"
-  },
-  {
-    title: "Transaksi",
-    value: "145",
-    change: "+8.2%",
-    icon: CreditCardIcon,
-    trend: "up"
-  },
-  {
-    title: "Pengunjung",
-    value: "324",
-    change: "-2.4%",
-    icon: UserIcon,
-    trend: "down"
-  },
-  {
-    title: "Menu Terjual",
-    value: "482",
-    change: "+15.3%",
-    icon: Package01Icon,
-    trend: "up"
-  }
-]
-
-const recentOrders = [
-  { 
-    id: "ORD008", 
-    table: "Meja 2", 
-    amount: "Rp 185.000", 
-    status: "preparing", 
-    time: "10:35",
-    items: [
-      { name: "Nasi Gudeg", qty: 2, price: "Rp 45.000" },
-      { name: "Teh Manis", qty: 2, price: "Rp 10.000" },
-      { name: "Kerupuk", qty: 3, price: "Rp 15.000" }
-    ],
-    customerCount: 2,
-    estimatedTime: "15 menit",
-    waiter: "Sari"
-  },
-  { 
-    id: "ORD009", 
-    table: "Meja 6", 
-    amount: "Rp 320.000", 
-    status: "ready", 
-    time: "10:30",
-    items: [
-      { name: "Rendang", qty: 2, price: "Rp 75.000" },
-      { name: "Nasi Putih", qty: 3, price: "Rp 8.000" },
-      { name: "Es Jeruk", qty: 3, price: "Rp 12.000" }
-    ],
-    customerCount: 3,
-    estimatedTime: "Siap disajikan",
-    waiter: "Budi"
-  },
-  { 
-    id: "ORD010", 
-    table: "Take Away", 
-    amount: "Rp 95.000", 
-    status: "completed", 
-    time: "10:25",
-    items: [
-      { name: "Mie Ayam", qty: 2, price: "Rp 25.000" },
-      { name: "Es Teh", qty: 2, price: "Rp 8.000" }
-    ],
-    customerCount: 1,
-    estimatedTime: "Selesai",
-    waiter: "Andi"
-  },
-  { 
-    id: "ORD011", 
-    table: "Meja 4", 
-    amount: "Rp 210.000", 
-    status: "pending", 
-    time: "10:20",
-    items: [
-      { name: "Soto Betawi", qty: 2, price: "Rp 35.000" },
-      { name: "Kerak Telor", qty: 2, price: "Rp 25.000" },
-      { name: "Es Cendol", qty: 3, price: "Rp 18.000" }
-    ],
-    customerCount: 2,
-    estimatedTime: "Menunggu konfirmasi",
-    waiter: "Dewi"
-  },
-  { 
-    id: "ORD012", 
-    table: "Meja 9", 
-    amount: "Rp 275.000", 
-    status: "preparing", 
-    time: "10:15",
-    items: [
-      { name: "Ikan Bakar", qty: 1, price: "Rp 85.000" },
-      { name: "Sayur Kangkung", qty: 2, price: "Rp 20.000" },
-      { name: "Nasi Putih", qty: 3, price: "Rp 8.000" }
-    ],
-    customerCount: 3,
-    estimatedTime: "20 menit",
-    waiter: "Rini"
-  },
-]
-
-const unavailableMenuItems = [
-  { name: "Ayam Bakar Madu", reason: "Habis madu", estimatedTime: "2 jam" },
-  { name: "Ikan Gurame Asam Manis", reason: "Stok ikan habis", estimatedTime: "Besok" },
-  { name: "Soto Betawi", reason: "Santan habis", estimatedTime: "1 jam" },
-  { name: "Rujak Buah", reason: "Buah belum datang", estimatedTime: "3 jam" },
-]
-
-// Mock data for unpaid tables with detailed transaction info
-const unpaidTables = [
-  { 
-    tableNumber: "Meja 5", 
-    amount: "Rp 250.000", 
-    duration: "45 menit", 
-    orderTime: "09:30", 
-    status: "dining",
-    orderId: "ORD001",
-    items: [
-      { name: "Nasi Gudeg", qty: 2, price: "Rp 45.000" },
-      { name: "Ayam Bakar", qty: 1, price: "Rp 65.000" },
-      { name: "Es Teh Manis", qty: 3, price: "Rp 15.000" },
-      { name: "Kerupuk", qty: 2, price: "Rp 10.000" }
-    ],
-    customerCount: 3
-  },
-  { 
-    tableNumber: "Meja 12", 
-    amount: "Rp 180.000", 
-    duration: "32 menit", 
-    orderTime: "09:58", 
-    status: "dining",
-    orderId: "ORD002",
-    items: [
-      { name: "Soto Betawi", qty: 2, price: "Rp 35.000" },
-      { name: "Kerak Telor", qty: 1, price: "Rp 25.000" },
-      { name: "Es Cendol", qty: 2, price: "Rp 18.000" }
-    ],
-    customerCount: 2
-  },
-  { 
-    tableNumber: "Meja 3", 
-    amount: "Rp 320.000", 
-    duration: "1 jam 15 menit", 
-    orderTime: "08:45", 
-    status: "dining",
-    orderId: "ORD003",
-    items: [
-      { name: "Rendang", qty: 2, price: "Rp 75.000" },
-      { name: "Nasi Putih", qty: 4, price: "Rp 8.000" },
-      { name: "Sayur Asem", qty: 2, price: "Rp 25.000" },
-      { name: "Es Jeruk", qty: 4, price: "Rp 12.000" }
-    ],
-    customerCount: 4
-  },
-  { 
-    tableNumber: "Meja 8", 
-    amount: "Rp 150.000", 
-    duration: "28 menit", 
-    orderTime: "10:02", 
-    status: "dining",
-    orderId: "ORD004",
-    items: [
-      { name: "Gado-gado", qty: 2, price: "Rp 30.000" },
-      { name: "Lontong Sayur", qty: 1, price: "Rp 25.000" },
-      { name: "Teh Tarik", qty: 2, price: "Rp 15.000" }
-    ],
-    customerCount: 2
-  },
-  { 
-    tableNumber: "Meja 15", 
-    amount: "Rp 95.000", 
-    duration: "18 menit", 
-    orderTime: "10:12", 
-    status: "dining",
-    orderId: "ORD005",
-    items: [
-      { name: "Mie Ayam", qty: 1, price: "Rp 25.000" },
-      { name: "Pangsit Goreng", qty: 1, price: "Rp 15.000" },
-      { name: "Es Teh", qty: 2, price: "Rp 8.000" }
-    ],
-    customerCount: 1
-  },
-  { 
-    tableNumber: "Meja 7", 
-    amount: "Rp 275.000", 
-    duration: "52 menit", 
-    orderTime: "09:18", 
-    status: "dining",
-    orderId: "ORD006",
-    items: [
-      { name: "Ikan Bakar", qty: 1, price: "Rp 85.000" },
-      { name: "Nasi Putih", qty: 3, price: "Rp 8.000" },
-      { name: "Sayur Kangkung", qty: 2, price: "Rp 20.000" },
-      { name: "Es Kelapa Muda", qty: 3, price: "Rp 18.000" }
-    ],
-    customerCount: 3
-  },
-  { 
-    tableNumber: "Meja 10", 
-    amount: "Rp 135.000", 
-    duration: "24 menit", 
-    orderTime: "10:06", 
-    status: "dining",
-    orderId: "ORD007",
-    items: [
-      { name: "Bakso Malang", qty: 2, price: "Rp 28.000" },
-      { name: "Siomay", qty: 1, price: "Rp 20.000" },
-      { name: "Es Teh Manis", qty: 3, price: "Rp 10.000" }
-    ],
-    customerCount: 2
-  },
-]
-
-
 export default function HomePage() {
-  const today = new Date().toLocaleDateString("id-ID", { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [unpaidOrders, setUnpaidOrders] = useState<Order[]>([])
+  const [recentOrders, setRecentOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+
+      // Fetch dashboard summary
+      const summary = await api.getDashboardSummary()
+      setDashboardData(summary)
+
+      // Fetch unpaid orders (CONFIRMED status = dining)
+      const unpaidResponse = await api.getOrders({ status: 'CONFIRMED' })
+      setUnpaidOrders(unpaidResponse.results)
+
+      // Fetch recent orders
+      const recentResponse = await api.getTodayOrders()
+      setRecentOrders(recentResponse.results.slice(0, 5))
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const today = new Date().toLocaleDateString("id-ID", {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   })
 
-  const totalUnpaidAmount = unpaidTables.reduce((sum, table) => {
-    const amount = parseInt(table.amount.replace(/[^\d]/g, ''))
-    return sum + amount
+  const totalUnpaidAmount = unpaidOrders.reduce((sum, order) => {
+    return sum + parseFloat(order.total_amount || '0')
   }, 0)
-  
-  const handlePaymentRedirect = (table: typeof unpaidTables[0]) => {
-    // Redirect to transaction page with table info
-    window.location.href = `/transaction?table=${encodeURIComponent(table.tableNumber)}&orderId=${table.orderId}`
+
+  const stats: StatCard[] = [
+    {
+      title: "Total Penjualan Hari Ini",
+      value: `Rp ${parseFloat(dashboardData?.total_revenue_today || '0').toLocaleString('id-ID')}`,
+      change: "+12.3%",
+      icon: Wallet01Icon,
+      trend: "up"
+    },
+    {
+      title: "Transaksi",
+      value: dashboardData?.total_orders_today?.toString() || "0",
+      change: "+8.2%",
+      icon: CreditCardIcon,
+      trend: "up"
+    },
+    {
+      title: "Meja Aktif",
+      value: dashboardData?.active_tables?.toString() || "0",
+      change: "-2.4%",
+      icon: UserIcon,
+      trend: "down"
+    },
+    {
+      title: "Stok Rendah",
+      value: dashboardData?.low_stock_items?.toString() || "0",
+      change: "+15.3%",
+      icon: Package01Icon,
+      trend: "up"
+    }
+  ]
+
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'COMPLETED':
+        return { bg: 'bg-green-100', text: 'text-green-800', label: 'Selesai', icon: CheckmarkCircle01Icon, iconColor: 'text-green-600' }
+      case 'PREPARING':
+        return { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Diproses', icon: ChefHatIcon, iconColor: 'text-blue-600' }
+      case 'READY':
+        return { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Siap', icon: KitchenUtensilsIcon, iconColor: 'text-yellow-600' }
+      case 'CONFIRMED':
+        return { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Dikonfirmasi', icon: CheckmarkCircle01Icon, iconColor: 'text-purple-600' }
+      default:
+        return { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Menunggu', icon: AlertCircleIcon, iconColor: 'text-gray-600' }
+    }
+  }
+
+  const formatCurrency = (value: string | number) => {
+    return `Rp ${parseFloat(value.toString()).toLocaleString('id-ID')}`
+  }
+
+  const getTimeDiff = (createdAt: string) => {
+    const created = new Date(createdAt)
+    const now = new Date()
+    const diffMs = now.getTime() - created.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+
+    if (diffMins < 60) {
+      return `${diffMins} menit`
+    } else {
+      const hours = Math.floor(diffMins / 60)
+      const mins = diffMins % 60
+      return `${hours} jam ${mins} menit`
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-500">Loading...</div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -275,50 +155,56 @@ export default function HomePage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => {
-          return (
-            <Card key={stat.title} className="rounded-lg border border-gray-200 shadow-none hover:border-[#58ff34] transition-colors cursor-pointer">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <HugeiconsIcon icon={stat.icon} size={32} strokeWidth={2} className="text-gray-400" />
-                  <span className={`text-sm font-medium ${
-                    stat.trend === "up" ? "text-green-600" :
-                    stat.trend === "down" ? "text-red-600" :
-                    "text-gray-600"
-                  }`}>
-                    {stat.change}
-                  </span>
-                </div>
-                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                <div className="text-sm text-gray-500">{stat.title}</div>
-              </CardContent>
-            </Card>
-          )
-        })}
+        {stats.map((stat) => (
+          <Card key={stat.title} className="rounded-lg border border-gray-200 shadow-none hover:border-[#58ff34] transition-colors cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <HugeiconsIcon icon={stat.icon} size={32} strokeWidth={2} className="text-gray-400" />
+                <span className={`text-sm font-medium ${
+                  stat.trend === "up" ? "text-green-600" :
+                  stat.trend === "down" ? "text-red-600" :
+                  "text-gray-600"
+                }`}>
+                  {stat.change}
+                </span>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+              <div className="text-sm text-gray-500">{stat.title}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Transactions Section */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Transactions</h2>
-        
-        {/* Unpaid Tables - 2 Rows Layout */}
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Transaksi Belum Bayar</h2>
+
+        {/* Unpaid Tables */}
         <div className="grid grid-cols-4 gap-4 mb-6">
-          {unpaidTables.map((table) => (
-            <Dialog key={table.tableNumber}>
+          {unpaidOrders.map((order) => (
+            <Dialog key={order.id}>
               <DialogTrigger asChild>
                 <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-[#58ff34] cursor-pointer transition-colors">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
                       <span className="text-sm font-semibold text-orange-700">
-                        {table.tableNumber.split(' ')[1]}
+                        {order.table_number || 'TA'}
                       </span>
                     </div>
-                    <div className="text-sm font-medium text-gray-900">{table.tableNumber}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {order.table_number ? `Meja ${order.table_number}` : order.order_type}
+                    </div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-lg font-semibold text-gray-900">{table.amount}</div>
-                    <div className="text-sm text-orange-600 font-medium">{table.duration}</div>
-                    <div className="text-xs text-gray-500">Mulai: {table.orderTime}</div>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {formatCurrency(order.total_amount || 0)}
+                    </div>
+                    <div className="text-sm text-orange-600 font-medium">
+                      {getTimeDiff(order.created_at!)}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Order: {order.order_number}
+                    </div>
                   </div>
                 </div>
               </DialogTrigger>
@@ -327,10 +213,10 @@ export default function HomePage() {
                   <DialogTitle className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
                       <span className="text-sm font-semibold text-orange-700">
-                        {table.tableNumber.split(' ')[1]}
+                        {order.table_number || 'TA'}
                       </span>
                     </div>
-                    Detail Transaksi {table.tableNumber}
+                    Detail Transaksi {order.order_number}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -338,72 +224,76 @@ export default function HomePage() {
                   <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                     <div>
                       <div className="text-sm text-gray-500">Order ID</div>
-                      <div className="font-medium">{table.orderId}</div>
+                      <div className="font-medium">{order.order_number}</div>
                     </div>
                     <div>
-                      <div className="text-sm text-gray-500">Jumlah Tamu</div>
-                      <div className="font-medium">{table.customerCount} orang</div>
+                      <div className="text-sm text-gray-500">Customer</div>
+                      <div className="font-medium">{order.customer_name}</div>
                     </div>
                     <div>
-                      <div className="text-sm text-gray-500">Waktu Mulai</div>
-                      <div className="font-medium">{table.orderTime}</div>
+                      <div className="text-sm text-gray-500">Waktu</div>
+                      <div className="font-medium">
+                        {new Date(order.created_at!).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                     <div>
                       <div className="text-sm text-gray-500">Durasi</div>
-                      <div className="font-medium text-orange-600">{table.duration}</div>
+                      <div className="font-medium text-orange-600">{getTimeDiff(order.created_at!)}</div>
                     </div>
                   </div>
-                  
+
                   {/* Order Items */}
                   <div>
                     <div className="flex items-center gap-2 mb-3">
-                      <HugeiconsIcon icon={ChefHatIcon} size={32} strokeWidth={2} className="text-gray-500" />
+                      <HugeiconsIcon icon={ChefHatIcon} size={20} strokeWidth={2} className="text-gray-500" />
                       <span className="text-sm font-medium text-gray-700">Item Pesanan</span>
                     </div>
                     <div className="space-y-2">
-                      {table.items.map((item, index) => (
+                      {order.items?.map((item, index) => (
                         <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                           <div>
-                            <div className="font-medium text-sm">{item.name}</div>
-                            <div className="text-xs text-gray-500">Qty: {item.qty}</div>
+                            <div className="font-medium text-sm">{item.product_name}</div>
+                            <div className="text-xs text-gray-500">Qty: {item.quantity}</div>
                           </div>
-                          <div className="font-medium text-sm">{item.price}</div>
+                          <div className="font-medium text-sm">{formatCurrency(item.subtotal || 0)}</div>
                         </div>
                       ))}
                     </div>
                   </div>
-                  
+
                   {/* Total */}
                   <div className="p-4 bg-orange-50 rounded-lg">
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-700">Total Tagihan:</span>
-                      <span className="text-xl font-bold text-orange-600">{table.amount}</span>
+                      <span className="text-xl font-bold text-orange-600">
+                        {formatCurrency(order.total_amount || 0)}
+                      </span>
                     </div>
                   </div>
-                  
+
                   {/* Payment Button */}
                   <Button
-                    onClick={() => handlePaymentRedirect(table)}
+                    onClick={() => window.location.href = `/transaction?orderId=${order.id}`}
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
                     size="lg"
                   >
-                    <HugeiconsIcon icon={CreditCardIcon} size={32} strokeWidth={2} className="mr-2" />
+                    <HugeiconsIcon icon={CreditCardIcon} size={20} strokeWidth={2} className="mr-2" />
                     Proses Pembayaran
-                    <HugeiconsIcon icon={ArrowRight01Icon} size={32} strokeWidth={2} className="ml-2" />
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={20} strokeWidth={2} className="ml-2" />
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
           ))}
         </div>
-        
+
         {/* Total Summary */}
         <Card className="rounded-lg border border-gray-200 shadow-none hover:border-[#58ff34] transition-colors cursor-pointer">
           <CardContent className="p-4">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-600">Total Belum Bayar:</span>
               <span className="text-xl font-bold text-orange-600">
-                Rp {totalUnpaidAmount.toLocaleString('id-ID')}
+                {formatCurrency(totalUnpaidAmount)}
               </span>
             </div>
           </CardContent>
@@ -415,200 +305,136 @@ export default function HomePage() {
         <div className="lg:col-span-2">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Pesanan Terbaru</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {recentOrders.map((order) => (
-              <Dialog key={order.id}>
-                <DialogTrigger asChild>
-                  <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-[#58ff34] cursor-pointer transition-colors">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          order.status === 'completed' ? 'bg-green-100' :
-                          order.status === 'preparing' ? 'bg-blue-100' :
-                          order.status === 'ready' ? 'bg-yellow-100' :
-                          'bg-gray-100'
-                        }`}>
-                          {order.status === 'completed' ? <HugeiconsIcon icon={CheckmarkCircle01Icon} size={32} strokeWidth={2} className="text-green-600" /> :
-                           order.status === 'preparing' ? <HugeiconsIcon icon={ChefHatIcon} size={32} strokeWidth={2} className="text-blue-600" /> :
-                           order.status === 'ready' ? <HugeiconsIcon icon={KitchenUtensilsIcon} size={32} strokeWidth={2} className="text-yellow-600" /> :
-                           <HugeiconsIcon icon={AlertCircleIcon} size={32} strokeWidth={2} className="text-gray-600" />}
+            {recentOrders.map((order) => {
+              const statusInfo = getStatusBadge(order.status)
+              return (
+                <Dialog key={order.id}>
+                  <DialogTrigger asChild>
+                    <div className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-[#58ff34] cursor-pointer transition-colors">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${statusInfo.bg}`}>
+                            <HugeiconsIcon icon={statusInfo.icon} size={20} strokeWidth={2} className={statusInfo.iconColor} />
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">{order.order_number}</div>
+                            <div className="text-sm text-gray-500">
+                              {order.table_number ? `Meja ${order.table_number}` : order.order_type}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium text-gray-900">{order.id}</div>
-                          <div className="text-sm text-gray-500">{order.table}</div>
-                        </div>
-                      </div>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'ready' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {order.status === 'completed' ? 'Selesai' :
-                         order.status === 'preparing' ? 'Diproses' :
-                         order.status === 'ready' ? 'Siap' :
-                         'Menunggu'}
-                      </span>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-lg font-semibold text-gray-900">{order.amount}</div>
-                      <div className="text-sm text-gray-600">{order.estimatedTime}</div>
-                      <div className="text-xs text-gray-500">Waktu: {order.time}</div>
-                    </div>
-                  </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        order.status === 'completed' ? 'bg-green-100' :
-                        order.status === 'preparing' ? 'bg-blue-100' :
-                        order.status === 'ready' ? 'bg-yellow-100' :
-                        'bg-gray-100'
-                      }`}>
-                        {order.status === 'completed' ? <HugeiconsIcon icon={CheckmarkCircle01Icon} size={32} strokeWidth={2} className="text-green-600" /> :
-                         order.status === 'preparing' ? <HugeiconsIcon icon={ChefHatIcon} size={32} strokeWidth={2} className="text-blue-600" /> :
-                         order.status === 'ready' ? <HugeiconsIcon icon={KitchenUtensilsIcon} size={32} strokeWidth={2} className="text-yellow-600" /> :
-                         <HugeiconsIcon icon={AlertCircleIcon} size={32} strokeWidth={2} className="text-gray-600" />}
-                      </div>
-                      Detail Pesanan {order.id}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    {/* Order Info */}
-                    <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <div className="text-sm text-gray-500">Meja</div>
-                        <div className="font-medium">{order.table}</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-500">Pelayan</div>
-                        <div className="font-medium">{order.waiter}</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-500">Waktu Order</div>
-                        <div className="font-medium">{order.time}</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-500">Jumlah Tamu</div>
-                        <div className="font-medium">{order.customerCount} orang</div>
-                      </div>
-                    </div>
-                    
-                    {/* Status */}
-                    <div className="p-3 rounded-lg border">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">Status:</span>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                          order.status === 'ready' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {order.status === 'completed' ? 'Selesai' :
-                           order.status === 'preparing' ? 'Diproses' :
-                           order.status === 'ready' ? 'Siap Disajikan' :
-                           'Menunggu Konfirmasi'}
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg} ${statusInfo.text}`}>
+                          {statusInfo.label}
                         </span>
                       </div>
-                      <div className="mt-2 text-sm text-gray-600">{order.estimatedTime}</div>
-                    </div>
-                    
-                    {/* Order Items */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <HugeiconsIcon icon={ChefHatIcon} size={32} strokeWidth={2} className="text-gray-500" />
-                        <span className="text-sm font-medium text-gray-700">Item Pesanan</span>
+                      <div className="space-y-1">
+                        <div className="text-lg font-semibold text-gray-900">
+                          {formatCurrency(order.total_amount || 0)}
+                        </div>
+                        <div className="text-sm text-gray-600">{order.customer_name}</div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(order.created_at!).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        {order.items.map((item, index) => (
-                          <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                            <div>
-                              <div className="font-medium text-sm">{item.name}</div>
-                              <div className="text-xs text-gray-500">Qty: {item.qty}</div>
-                            </div>
-                            <div className="font-medium text-sm">{item.price}</div>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Detail Pesanan {order.order_number}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div>
+                          <div className="text-sm text-gray-500">Meja/Tipe</div>
+                          <div className="font-medium">
+                            {order.table_number ? `Meja ${order.table_number}` : order.order_type}
                           </div>
-                        ))}
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-500">Status</div>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bg} ${statusInfo.text}`}>
+                            {statusInfo.label}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <HugeiconsIcon icon={ChefHatIcon} size={20} strokeWidth={2} className="text-gray-500" />
+                          <span className="text-sm font-medium text-gray-700">Item Pesanan</span>
+                        </div>
+                        <div className="space-y-2">
+                          {order.items?.map((item, index) => (
+                            <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                              <div>
+                                <div className="font-medium text-sm">{item.product_name}</div>
+                                <div className="text-xs text-gray-500">Qty: {item.quantity}</div>
+                              </div>
+                              <div className="font-medium text-sm">{formatCurrency(item.subtotal || 0)}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-gray-700">Total:</span>
+                          <span className="text-xl font-bold text-blue-600">
+                            {formatCurrency(order.total_amount || 0)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    
-                    {/* Total */}
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-gray-700">Total Pesanan:</span>
-                        <span className="text-xl font-bold text-blue-600">{order.amount}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Action Buttons */}
-                    <div className="grid grid-cols-2 gap-3">
-                      {order.status === 'pending' && (
-                        <Button className="bg-green-600 hover:bg-green-700 text-white">
-                          <HugeiconsIcon icon={CheckmarkCircle01Icon} size={32} strokeWidth={2} className="mr-2" />
-                          Konfirmasi
-                        </Button>
-                      )}
-                      {order.status === 'ready' && (
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                          <HugeiconsIcon icon={KitchenUtensilsIcon} size={32} strokeWidth={2} className="mr-2" />
-                          Sajikan
-                        </Button>
-                      )}
-                      {(order.status === 'pending' || order.status === 'ready') && (
-                        <Button variant="outline">
-                          <HugeiconsIcon icon={EyeIcon} size={32} strokeWidth={2} className="mr-2" />
-                          Lihat Detail
-                        </Button>
-                      )}
-                      {order.status === 'preparing' && (
-                        <>
-                          <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
-                            <HugeiconsIcon icon={CheckmarkCircle01Icon} size={32} strokeWidth={2} className="mr-2" />
-                            Siap
-                          </Button>
-                          <Button variant="outline">
-                            <HugeiconsIcon icon={Clock01Icon} size={32} strokeWidth={2} className="mr-2" />
-                            Update Status
-                          </Button>
-                        </>
-                      )}
-                      {order.status === 'completed' && (
-                        <Button variant="outline" className="col-span-2">
-                          <HugeiconsIcon icon={EyeIcon} size={32} strokeWidth={2} className="mr-2" />
-                          Lihat Riwayat
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            ))}
+                  </DialogContent>
+                </Dialog>
+              )
+            })}
           </div>
         </div>
 
-        {/* Unavailable Menu */}
-        <Card className="rounded-lg border border-gray-200 shadow-none hover:border-[#58ff34] transition-colors cursor-pointer">
+        {/* System Info */}
+        <Card className="rounded-lg border border-gray-200 shadow-none">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <HugeiconsIcon icon={CancelCircleIcon} size={32} strokeWidth={2} className="text-red-500" />
-              Menu Tidak Tersedia
+              <HugeiconsIcon icon={AlertCircleIcon} size={20} strokeWidth={2} className="text-blue-500" />
+              Informasi Sistem
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {unavailableMenuItems.map((item) => (
-                <div key={item.name} className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium text-gray-900">{item.name}</div>
-                    <div className="text-sm text-gray-500">{item.reason}</div>
-                  </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      {item.estimatedTime}
-                    </span>
-                  </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-gray-900">Pesanan Pending</div>
+                  <div className="text-sm text-gray-500">Menunggu konfirmasi</div>
                 </div>
-              ))}
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-gray-900">
+                    {dashboardData?.pending_orders || 0}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-gray-900">Stok Rendah</div>
+                  <div className="text-sm text-gray-500">Perlu restok</div>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-orange-600">
+                    {dashboardData?.low_stock_items || 0}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-gray-900">Staff Bertugas</div>
+                  <div className="text-sm text-gray-500">Hari ini</div>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-green-600">
+                    {dashboardData?.staff_on_duty || 0}
+                  </span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
