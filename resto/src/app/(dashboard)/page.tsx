@@ -10,13 +10,11 @@ import {
   CreditCardIcon,
   EyeIcon,
   ChefHatIcon,
-  Calendar01Icon,
   ArrowRight01Icon,
   CheckmarkCircle01Icon,
   AlertCircleIcon,
   KitchenUtensilsIcon
 } from "@hugeicons/core-free-icons"
-import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -251,9 +249,6 @@ const unpaidTables = [
 
 
 export default function HomePage() {
-  const [selectedTable, setSelectedTable] = useState<typeof unpaidTables[0] | null>(null)
-  const [selectedOrder, setSelectedOrder] = useState<typeof recentOrders[0] | null>(null)
-  
   const today = new Date().toLocaleDateString("id-ID", { 
     weekday: 'long', 
     year: 'numeric', 

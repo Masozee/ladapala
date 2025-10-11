@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,8 +16,6 @@ import {
 } from "@/components/ui/select"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  Settings01Icon,
-  Store01Icon,
   Notification01Icon,
   SecurityCheckIcon,
   Database01Icon,

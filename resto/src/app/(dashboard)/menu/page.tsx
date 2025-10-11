@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon, Remove01Icon, Delete01Icon, CreditCardIcon, Invoice01Icon, Coffee01Icon, Dish01Icon, KitchenUtensilsIcon, Clock01Icon, IceCream01Icon, SparklesIcon, ChefHatIcon, DrinkIcon, Edit01Icon } from "@hugeicons/core-free-icons"
+import { Add01Icon, Remove01Icon, CreditCardIcon, Invoice01Icon, Coffee01Icon, Dish01Icon, KitchenUtensilsIcon, Clock01Icon, IceCream01Icon, SparklesIcon, ChefHatIcon, DrinkIcon, Edit01Icon } from "@hugeicons/core-free-icons"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -232,16 +233,6 @@ export default function MenuPage() {
     )
   }
 
-  const removeItem = (itemId: number) => {
-    setMenuItems(prevItems =>
-      prevItems.map(item => {
-        if (item.id === itemId) {
-          return { ...item, qty: 0 }
-        }
-        return item
-      })
-    )
-  }
 
   const getItemQuantity = (itemId: number) => {
     const item = menuItems.find(item => item.id === itemId)
@@ -354,19 +345,18 @@ export default function MenuPage() {
                     <div className="relative">
                       <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                         {item.image && !item.image.includes('/api/placeholder') ? (
-                          <img
+                          <Image
                             src={item.image}
                             alt={item.name}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none'
-                              e.currentTarget.nextElementSibling?.classList.remove('hidden')
-                            }}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           />
-                        ) : null}
-                        <div className={`absolute inset-0 flex items-center justify-center text-gray-400 ${item.image && !item.image.includes('/api/placeholder') ? 'hidden' : ''}`}>
-                          <HugeiconsIcon icon={KitchenUtensilsIcon} size={48} strokeWidth={2} className="opacity-50 size-12" />
-                        </div>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                            <HugeiconsIcon icon={KitchenUtensilsIcon} size={48} strokeWidth={2} className="opacity-50 size-12" />
+                          </div>
+                        )}
                       </div>
                       <Badge 
                         variant="secondary" 
