@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from .models import (
     Restaurant, Branch, Staff, StaffRole,
     Category, Product, Inventory, InventoryTransaction,
@@ -8,12 +8,16 @@ from .models import (
     Promotion, Schedule, Report
 )
 
+User = get_user_model()
+
 
 class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
-        read_only_fields = ['id']
+        fields = ['id', 'email', 'first_name', 'last_name', 'full_name', 'is_active']
+        read_only_fields = ['id', 'full_name']
 
 
 class RestaurantSerializer(serializers.ModelSerializer):

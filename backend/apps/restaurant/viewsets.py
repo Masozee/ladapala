@@ -60,28 +60,38 @@ class StaffViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Allow public access for frontend
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name']
     filterset_fields = ['restaurant', 'is_active']
     ordering_fields = ['display_order', 'name']
     ordering = ['display_order']
 
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated()]
+        return [AllowAny()]
+
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Allow public access for frontend
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description', 'sku']
     filterset_fields = ['restaurant', 'category', 'is_available']
     ordering_fields = ['name', 'price', 'created_at']
-    
+
     @action(detail=False, methods=['get'])
     def available(self, request):
         available_products = self.get_queryset().filter(is_available=True)
         serializer = self.get_serializer(available_products, many=True)
         return Response(serializer.data)
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated()]
+        return [AllowAny()]
 
 
 class InventoryViewSet(viewsets.ModelViewSet):
@@ -132,17 +142,17 @@ class InventoryTransactionViewSet(viewsets.ModelViewSet):
 class TableViewSet(viewsets.ModelViewSet):
     queryset = Table.objects.all()
     serializer_class = TableSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Allow public access for frontend
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['branch', 'is_available']
-    
+
     @action(detail=True, methods=['post'])
     def set_available(self, request, pk=None):
         table = self.get_object()
         table.is_available = True
         table.save()
         return Response({'status': 'table set as available'})
-    
+
     @action(detail=True, methods=['post'])
     def set_occupied(self, request, pk=None):
         table = self.get_object()
@@ -150,13 +160,23 @@ class TableViewSet(viewsets.ModelViewSet):
         table.save()
         return Response({'status': 'table set as occupied'})
 
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'set_available', 'set_occupied']:
+            return [IsAuthenticated()]
+        return [AllowAny()]
+
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Allow public access for frontend
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['branch', 'order_type', 'status', 'table']
     ordering = ['-created_at']
+
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsAuthenticated()]
+        return [AllowAny()]
     
     def get_serializer_class(self):
         if self.action == 'create':
