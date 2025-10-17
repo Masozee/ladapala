@@ -641,6 +641,36 @@ class ApiClient {
     return this.fetch(`/cashier-sessions/check_schedule/?cashier_id=${cashierId}&shift_type=${shiftType}`);
   }
 
+  // Staff
+  async getStaff(params?: { branch?: number; role?: string; is_active?: boolean }): Promise<{ count: number; results: Staff[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.branch) searchParams.set('branch', params.branch.toString());
+    if (params?.role) searchParams.set('role', params.role);
+    if (params?.is_active !== undefined) searchParams.set('is_active', params.is_active.toString());
+
+    const query = searchParams.toString();
+    return this.fetch(`/staff/${query ? `?${query}` : ''}`);
+  }
+
+  async getStaffMember(id: number): Promise<Staff> {
+    return this.fetch(`/staff/${id}/`);
+  }
+
+  // Schedules
+  async getSchedules(params?: { staff?: number; date?: string; shift_type?: string }): Promise<{ count: number; results: Shift[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.staff) searchParams.set('staff', params.staff.toString());
+    if (params?.date) searchParams.set('date', params.date);
+    if (params?.shift_type) searchParams.set('shift_type', params.shift_type);
+
+    const query = searchParams.toString();
+    return this.fetch(`/schedules/${query ? `?${query}` : ''}`);
+  }
+
+  async getSchedule(id: number): Promise<Shift> {
+    return this.fetch(`/schedules/${id}/`);
+  }
+
   // Inventory
   async getInventory(params?: { branch?: number; search?: string; status?: string }): Promise<{ count: number; results: Inventory[] }> {
     const searchParams = new URLSearchParams();
