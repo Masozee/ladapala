@@ -66,8 +66,9 @@ class Command(BaseCommand):
         warehouse_staff = list(staff_members.filter(role='WAREHOUSE'))
         admins = list(staff_members.filter(role='ADMIN'))
 
-        # Start from today
-        start_date = timezone.now().date()
+        # Start from 30 days ago to include back dates for historical view
+        today = timezone.now().date()
+        start_date = today - timedelta(days=30)
         schedules_created = 0
 
         self.stdout.write(self.style.SUCCESS(f'\n📅 Generating schedules from {start_date} for {days} days...'))

@@ -661,10 +661,12 @@ class ApiClient {
   }
 
   // Schedules
-  async getSchedules(params?: { staff?: number; date?: string; shift_type?: string }): Promise<{ count: number; results: Shift[] }> {
+  async getSchedules(params?: { staff?: number; date?: string; date_gte?: string; date_lte?: string; shift_type?: string }): Promise<{ count: number; results: Shift[] }> {
     const searchParams = new URLSearchParams();
     if (params?.staff) searchParams.set('staff', params.staff.toString());
     if (params?.date) searchParams.set('date', params.date);
+    if (params?.date_gte) searchParams.set('date__gte', params.date_gte);
+    if (params?.date_lte) searchParams.set('date__lte', params.date_lte);
     if (params?.shift_type) searchParams.set('shift_type', params.shift_type);
 
     const query = searchParams.toString();

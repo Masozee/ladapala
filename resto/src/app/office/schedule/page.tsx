@@ -72,21 +72,21 @@ export default function SchedulePage() {
       const staffResponse = await api.getStaff({ branch: 4, is_active: true })
       setStaff(staffResponse.results)
 
-      // Fetch schedules for the current week
+      // Fetch schedules for the current week using date range filter
       const weekDates = getWeekDates(selectedDate)
       const startDate = weekDates[0].toISOString().split('T')[0]
       const endDate = weekDates[6].toISOString().split('T')[0]
 
-      // Fetch all schedules in the date range
-      const schedulesResponse = await api.getSchedules({})
+      console.log(`Fetching schedules from ${startDate} to ${endDate}`)
 
-      // Filter schedules for the current week
-      const filteredSchedules = schedulesResponse.results.filter(schedule => {
-        const scheduleDate = new Date(schedule.shift_date)
-        return scheduleDate >= weekDates[0] && scheduleDate <= weekDates[6]
+      // Fetch schedules with date range filter (backend filtering)
+      const schedulesResponse = await api.getSchedules({
+        date_gte: startDate,
+        date_lte: endDate
       })
 
-      setSchedules(filteredSchedules)
+      console.log(`Fetched ${schedulesResponse.results.length} schedules`)
+      setSchedules(schedulesResponse.results)
     } catch (error) {
       console.error('Error fetching schedule data:', error)
     } finally {
