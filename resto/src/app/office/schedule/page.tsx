@@ -275,74 +275,124 @@ export default function SchedulePage() {
           </div>
 
           {/* Schedule Content */}
-          <div className="bg-white p-6 rounded-lg shadow-sm overflow-x-auto">
+          <div className="bg-white rounded-lg shadow-sm">
             {selectedView === "week" ? (
-              <div className="grid grid-cols-8 gap-2 min-w-[1000px]">
-                <div className="font-medium text-sm text-muted-foreground">Karyawan</div>
-                {weekDates.map((date, index) => (
-                  <div key={index} className="text-center">
-                    <div className="font-medium text-sm">{daysOfWeek[date.getDay()]}</div>
-                    <div className="text-xs text-muted-foreground">{date.getDate()}</div>
-                  </div>
-                ))}
-
-                {staff.map(employee => {
-                  const fullName = `${employee.user.first_name} ${employee.user.last_name}`
-                  return (
-                    <React.Fragment key={employee.id}>
-                      <div className="font-medium text-sm py-4 flex items-center">
-                        <div>
-                          <div>{fullName}</div>
-                          <div className="text-xs">{getRoleBadge(employee.role)}</div>
-                        </div>
+              <div className="relative">
+                {/* Scrollable Container */}
+                <div className="overflow-x-auto">
+                  <div className="inline-flex">
+                    {/* Frozen Employee Column */}
+                    <div className="sticky left-0 z-20 bg-white border-r border-gray-200">
+                      {/* Header */}
+                      <div className="h-16 px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center">
+                        <div className="font-semibold text-sm text-gray-700">Karyawan</div>
                       </div>
-                      {weekDates.map((date, index) => {
-                        const shift = getShiftForEmployeeAndDate(employee.id, date)
+                      {/* Employee Rows */}
+                      {staff.map(employee => {
+                        const fullName = `${employee.user.first_name} ${employee.user.last_name}`
                         return (
-                          <div key={`${employee.id}-${index}`} className="border border-gray-200 rounded-lg p-2 min-h-[80px]">
-                            {shift && (
-                              <div className="text-xs space-y-1">
-                                <div className="font-medium">{shift.start_time.slice(0,5)} - {shift.end_time.slice(0,5)}</div>
-                                <div className="text-[10px] text-gray-500">{shift.shift_type}</div>
-                                {getStatusBadge(shift.has_attendance)}
-                                <div className="text-[10px] text-gray-500">{shift.hours_scheduled}h</div>
-                              </div>
-                            )}
+                          <div
+                            key={`name-${employee.id}`}
+                            className="h-24 px-4 py-3 border-b border-gray-200 flex items-center"
+                            style={{ minWidth: '200px' }}
+                          >
+                            <div>
+                              <div className="font-medium text-sm text-gray-900">{fullName}</div>
+                              <div className="mt-1">{getRoleBadge(employee.role)}</div>
+                            </div>
                           </div>
                         )
                       })}
-                    </React.Fragment>
-                  )
-                })}
+                    </div>
+
+                    {/* Scrollable Date Columns */}
+                    <div className="flex">
+                      {weekDates.map((date, dateIndex) => {
+                        const isToday = date.toDateString() === new Date().toDateString()
+                        return (
+                          <div key={dateIndex} className="border-r border-gray-200 last:border-r-0" style={{ minWidth: '180px' }}>
+                            {/* Date Header */}
+                            <div className={`h-16 px-3 py-2 border-b border-gray-200 text-center ${isToday ? 'bg-[#58ff34]/10' : 'bg-gray-50'}`}>
+                              <div className={`font-semibold text-sm ${isToday ? 'text-[#58ff34]' : 'text-gray-900'}`}>
+                                {daysOfWeek[date.getDay()]}
+                              </div>
+                              <div className={`text-xs mt-1 ${isToday ? 'text-[#58ff34]' : 'text-gray-500'}`}>
+                                {date.getDate()} {monthNames[date.getMonth()].slice(0, 3)}
+                              </div>
+                            </div>
+                            {/* Schedule Cells */}
+                            {staff.map(employee => {
+                              const shift = getShiftForEmployeeAndDate(employee.id, date)
+                              return (
+                                <div
+                                  key={`${employee.id}-${dateIndex}`}
+                                  className={`h-24 px-3 py-2 border-b border-gray-200 ${isToday ? 'bg-[#58ff34]/5' : ''}`}
+                                >
+                                  {shift ? (
+                                    <div className="h-full flex flex-col justify-center space-y-1.5">
+                                      <div className="text-xs font-semibold text-gray-900">
+                                        {shift.start_time.slice(0,5)} - {shift.end_time.slice(0,5)}
+                                      </div>
+                                      <div className="text-[10px] text-gray-600 font-medium">
+                                        {shift.shift_type}
+                                      </div>
+                                      {getStatusBadge(shift.has_attendance)}
+                                      <div className="text-[10px] text-gray-500">
+                                        {shift.hours_scheduled} jam
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="h-full flex items-center justify-center">
+                                      <span className="text-xs text-gray-300">-</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Waktu</TableHead>
-                    <TableHead>Karyawan</TableHead>
-                    <TableHead>Posisi</TableHead>
-                    <TableHead>Shift</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Jam</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {todaySchedules.map((shift) => {
-                    const employee = staff.find(s => s.id === shift.employee)
-                    return (
-                      <TableRow key={shift.id}>
-                        <TableCell className="font-medium">{shift.start_time.slice(0,5)} - {shift.end_time.slice(0,5)}</TableCell>
-                        <TableCell>{shift.employee_name}</TableCell>
-                        <TableCell>{employee && getRoleBadge(employee.role)}</TableCell>
-                        <TableCell><Badge variant="outline">{shift.shift_type}</Badge></TableCell>
-                        <TableCell>{getStatusBadge(shift.has_attendance)}</TableCell>
-                        <TableCell>{shift.hours_scheduled} jam</TableCell>
+              <div className="p-6">
+                {todaySchedules.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 text-lg mb-2">Tidak ada jadwal hari ini</div>
+                    <p className="text-sm text-gray-500">Pilih tanggal lain atau tambah shift baru</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[150px]">Waktu</TableHead>
+                        <TableHead>Karyawan</TableHead>
+                        <TableHead>Posisi</TableHead>
+                        <TableHead>Shift</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Jam</TableHead>
                       </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {todaySchedules.map((shift) => {
+                        const employee = staff.find(s => s.id === shift.employee)
+                        return (
+                          <TableRow key={shift.id}>
+                            <TableCell className="font-semibold">{shift.start_time.slice(0,5)} - {shift.end_time.slice(0,5)}</TableCell>
+                            <TableCell className="font-medium">{shift.employee_name}</TableCell>
+                            <TableCell>{employee && getRoleBadge(employee.role)}</TableCell>
+                            <TableCell><Badge variant="outline">{shift.shift_type}</Badge></TableCell>
+                            <TableCell>{getStatusBadge(shift.has_attendance)}</TableCell>
+                            <TableCell className="text-right font-medium">{shift.hours_scheduled} jam</TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
             )}
           </div>
         </TabsContent>
