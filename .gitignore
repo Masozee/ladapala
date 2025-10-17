@@ -60,3 +60,10 @@ backup_*
 # IDE
 .vscode/
 .idea/
+
+# Documentation and scripts (keep only CLAUDE.md and README.md)
+*.md
+!CLAUDE.md
+!README.md
+*.sh
+*.bat
