@@ -124,6 +124,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Media files (User uploaded content)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -161,3 +165,26 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Allow all origins for API access (development/testing)
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Session and CSRF settings for cross-origin authentication
+SESSION_COOKIE_SAMESITE = 'Lax'  # Use 'Lax' for local development without HTTPS
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_DOMAIN = None  # Allow cookies to work on localhost
+
+CSRF_COOKIE_SAMESITE = 'Lax'  # Use 'Lax' for local development without HTTPS
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Must be False for JS to read it
+CSRF_COOKIE_DOMAIN = None  # Allow cookies to work on localhost
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "https://parlemenkita.org",
+    "https://www.parlemenkita.org",
+    "https://api.parlemenkita.org",
+    "https://kapulaga-iota.vercel.app",
+]

@@ -73,29 +73,317 @@ export interface DashboardData {
   staff_on_duty: number;
 }
 
+export interface User {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  is_staff: boolean;
+  is_superuser: boolean;
+}
+
+export interface Employee {
+  id: number;
+  employee_id: string;
+  full_name: string;
+  position: string;
+  department: {
+    id: number;
+    name: string;
+  } | null;
+}
+
+export interface UserProfile {
+  role: string;
+  system_access: string;
+  phone: string;
+  bio?: string;
+  address?: string;
+  date_of_birth?: string | null;
+}
+
+export interface Staff {
+  id: number;
+  employee_id: string;
+  role: 'ADMIN' | 'MANAGER' | 'CASHIER' | 'KITCHEN' | 'WAREHOUSE';
+  branch: {
+    id: number;
+    name: string;
+  };
+  phone: string;
+  is_active: boolean;
+}
+
+export interface AuthResponse {
+  message?: string;
+  user: User;
+  employee?: Employee | null;
+  profile?: UserProfile | null;
+  staff?: Staff | null;
+}
+
+export interface SessionCheckResponse {
+  authenticated: boolean;
+  user?: User;
+  employee?: Employee | null;
+  profile?: UserProfile | null;
+  staff?: Staff | null;
+}
+
+export interface Payment {
+  id: number;
+  order: number;
+  amount: string;
+  payment_method: 'CASH' | 'CARD' | 'MOBILE' | 'OTHER';
+  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserProfileData {
+  id?: number;
+  role: string;
+  system_access: string;
+  phone: string;
+  bio: string;
+  address: string;
+  date_of_birth: string | null;
+  avatar: string | null;
+}
+
+export interface ProfileUpdateData {
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  bio?: string;
+  address?: string;
+  date_of_birth?: string | null;
+  avatar?: File;
+}
+
+export interface Shift {
+  id: number;
+  employee: number;
+  employee_name: string;
+  employee_id_display: string;
+  shift_date: string;
+  start_time: string;
+  end_time: string;
+  shift_type: string;
+  shift_type_display: string;
+  break_duration: number;
+  hours_scheduled: number;
+  has_attendance: boolean;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CashierSession {
+  id: number;
+  cashier: number;
+  cashier_name: string;
+  cashier_id: string;
+  branch: number;
+  branch_name: string;
+  shift_type: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'NIGHT';
+  opened_at: string;
+  closed_at: string | null;
+  status: 'OPEN' | 'CLOSED';
+  opening_cash: string;
+  expected_cash: string | null;
+  actual_cash: string | null;
+  cash_difference: string | null;
+  settlement_data: {
+    total_transactions: number;
+    completed_transactions: number;
+    cancelled_transactions: number;
+    cash_payments: { total: number; count: number };
+    card_payments: { total: number; count: number };
+    mobile_payments: { total: number; count: number };
+    total_revenue: number;
+  } | null;
+  closed_by: number | null;
+  closed_by_name: string | null;
+  duration_hours: number | null;
+  notes: string;
+}
+
+export interface CashierSessionOpen {
+  cashier: number;
+  branch: number;
+  shift_type: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'NIGHT';
+  opening_cash: string;
+  notes?: string;
+  override_by?: number;
+  override_reason?: string;
+}
+
+export interface ScheduleCheck {
+  has_schedule: boolean;
+  is_confirmed: boolean;
+  schedule: {
+    id: number;
+    date: string;
+    shift_type: string;
+    start_time: string;
+    end_time: string;
+    is_confirmed: boolean;
+    notes: string;
+  } | null;
+  message: string;
+  warning?: string;
+}
+
+export interface Inventory {
+  id: number;
+  branch: number;
+  branch_name: string;
+  name: string;
+  quantity: number;
+  min_quantity: number;
+  cost_per_unit: string;
+  supplier: string;
+  unit: string;
+  category: string;
+  needs_restock: boolean;
+  total_value: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InventoryCreate {
+  branch: number;
+  name: string;
+  quantity: number;
+  min_quantity: number;
+  cost_per_unit: string;
+  supplier?: string;
+  unit?: string;
+  category?: string;
+}
+
+export interface InventoryUpdate {
+  name?: string;
+  min_quantity?: number;
+  cost_per_unit?: string;
+  supplier?: string;
+  unit?: string;
+  category?: string;
+}
+
+export interface InventoryTransaction {
+  id: number;
+  inventory: number;
+  inventory_name: string;
+  branch: number;
+  branch_name: string;
+  transaction_type: 'IN' | 'OUT' | 'ADJUST' | 'WASTE';
+  transaction_type_display: string;
+  quantity: number;
+  unit_cost: string;
+  total_cost: string;
+  reference_number: string;
+  notes: string;
+  performed_by: number;
+  performed_by_name: string;
+  created_at: string;
+}
+
+export interface InventoryTransactionCreate {
+  inventory: number;
+  transaction_type: 'IN' | 'OUT' | 'ADJUST' | 'WASTE';
+  quantity: number;
+  unit_cost: string;
+  reference_number?: string;
+  notes?: string;
+}
+
+export interface CashierSessionClose {
+  actual_cash: string;
+  notes?: string;
+  closed_by?: number;
+}
+
+export interface SessionValidation {
+  can_close: boolean;
+  message: string;
+  unsettled_orders?: Array<{
+    id: number;
+    order_number: string;
+    status: string;
+    table_number: string | null;
+    total_amount: number;
+  }>;
+  count?: number;
+}
+
+export interface SessionReport {
+  session: CashierSession;
+  transactions: Array<{
+    order_number: string;
+    table_number: string | null;
+    customer_name: string;
+    total_amount: number;
+    payment_method: string;
+    status: string;
+    created_at: string;
+    items: Array<{
+      product_name: string;
+      quantity: number;
+      unit_price: number;
+      subtotal: number;
+    }>;
+  }>;
+  summary: CashierSession['settlement_data'];
+}
+
 class ApiClient {
   private baseUrl: string;
   private branchId: string;
+  private csrfToken: string | null = null;
 
   constructor() {
     this.baseUrl = API_URL;
     this.branchId = BRANCH_ID;
   }
 
+  private getCsrfToken(): string | null {
+    if (typeof document === 'undefined') return null;
+
+    const name = 'csrftoken';
+    const cookies = document.cookie.split(';');
+
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + '=')) {
+        return decodeURIComponent(cookie.substring(name.length + 1));
+      }
+    }
+    return null;
+  }
+
   private async fetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
+
+    // Get CSRF token from cookie
+    const csrfToken = this.getCsrfToken();
 
     try {
       const response = await fetch(url, {
         ...options,
+        credentials: 'include', // Important for session cookies
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
           ...options?.headers,
         },
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `API Error: ${response.status} ${response.statusText}`);
       }
 
       return await response.json();
@@ -126,7 +414,7 @@ class ApiClient {
 
   // Categories
   async getCategories(): Promise<{ count: number; results: Category[] }> {
-    return this.fetch(`/categories/?restaurant=${this.branchId}`);
+    return this.fetch(`/categories/`);
   }
 
   async getCategory(id: number): Promise<Category> {
@@ -177,6 +465,14 @@ class ApiClient {
     return this.fetch('/orders/today/');
   }
 
+  async getUnpaidOrders(): Promise<{ count: number; total_amount: number; results: Order[] }> {
+    return this.fetch(`/orders/unpaid/?branch_id=${this.branchId}`);
+  }
+
+  async getProcessingOrders(): Promise<{ count: number; results: Order[] }> {
+    return this.fetch(`/orders/processing/?branch_id=${this.branchId}`);
+  }
+
   async createOrder(order: Omit<Order, 'id' | 'order_number' | 'created_at' | 'updated_at' | 'total_amount' | 'status'>): Promise<Order> {
     return this.fetch('/orders/', {
       method: 'POST',
@@ -212,10 +508,212 @@ class ApiClient {
     amount: string;
     payment_method: 'CASH' | 'CARD' | 'MOBILE' | 'OTHER';
     status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
-  }): Promise<any> {
+  }): Promise<Payment> {
     return this.fetch('/payments/', {
       method: 'POST',
       body: JSON.stringify(payment),
+    });
+  }
+
+  // Authentication
+  async getCsrfCookie(): Promise<void> {
+    // Request CSRF cookie from backend
+    await this.fetch('/user/login/', {
+      method: 'GET',
+    });
+  }
+
+  async login(email: string, password: string): Promise<AuthResponse> {
+    // Ensure we have CSRF token
+    await this.getCsrfCookie();
+
+    return this.fetch('/user/login/', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async logout(): Promise<{ message: string }> {
+    return this.fetch('/user/logout/', {
+      method: 'POST',
+    });
+  }
+
+  async checkSession(): Promise<SessionCheckResponse> {
+    return this.fetch('/user/check-session/');
+  }
+
+  async getUserProfile(): Promise<AuthResponse> {
+    return this.fetch('/user/profile/');
+  }
+
+  async updateUserProfile(data: ProfileUpdateData): Promise<{ message: string; user: AuthResponse }> {
+    // If avatar is included, use FormData
+    if (data.avatar) {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value as string | Blob);
+        }
+      });
+
+      const csrfToken = this.getCsrfToken();
+      const response = await fetch(`${this.baseUrl}/user/profile/`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `API Error: ${response.status}`);
+      }
+
+      return await response.json();
+    }
+
+    // Otherwise use JSON
+    return this.fetch('/user/profile/', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getUserShifts(params?: { from_date?: string; to_date?: string }): Promise<{ shifts: Shift[]; employee: Employee }> {
+    const searchParams = new URLSearchParams();
+    if (params?.from_date) searchParams.set('from_date', params.from_date);
+    if (params?.to_date) searchParams.set('to_date', params.to_date);
+
+    const query = searchParams.toString();
+    return this.fetch(`/user/shifts/${query ? `?${query}` : ''}`);
+  }
+
+  // Cashier Sessions
+  async getCashierSessions(params?: { cashier?: number; branch?: number; status?: string }): Promise<{ count: number; results: CashierSession[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.cashier) searchParams.set('cashier', params.cashier.toString());
+    if (params?.branch) searchParams.set('branch', params.branch.toString());
+    if (params?.status) searchParams.set('status', params.status);
+
+    return this.fetch(`/cashier-sessions/?${searchParams.toString()}`);
+  }
+
+  async getCashierSession(id: number): Promise<CashierSession> {
+    return this.fetch(`/cashier-sessions/${id}/`);
+  }
+
+  async getActiveCashierSession(cashierId?: number): Promise<CashierSession[]> {
+    const searchParams = new URLSearchParams();
+    if (cashierId) searchParams.set('cashier_id', cashierId.toString());
+    searchParams.set('branch_id', this.branchId);
+
+    return this.fetch(`/cashier-sessions/active/?${searchParams.toString()}`);
+  }
+
+  async openCashierSession(data: CashierSessionOpen): Promise<CashierSession> {
+    return this.fetch('/cashier-sessions/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async validateSessionSettlement(sessionId: number): Promise<SessionValidation> {
+    return this.fetch(`/cashier-sessions/${sessionId}/validate_settlement/`);
+  }
+
+  async closeCashierSession(sessionId: number, data: CashierSessionClose): Promise<CashierSession> {
+    return this.fetch(`/cashier-sessions/${sessionId}/close/`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getSessionReport(sessionId: number): Promise<SessionReport> {
+    return this.fetch(`/cashier-sessions/${sessionId}/report/`);
+  }
+
+  async checkSchedule(cashierId: number, shiftType: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'NIGHT'): Promise<ScheduleCheck> {
+    return this.fetch(`/cashier-sessions/check_schedule/?cashier_id=${cashierId}&shift_type=${shiftType}`);
+  }
+
+  // Inventory
+  async getInventory(params?: { branch?: number; search?: string; status?: string }): Promise<{ count: number; results: Inventory[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.branch) searchParams.set('branch', params.branch.toString());
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.status) {
+      // status filter: 'low' (needs restock), 'out' (quantity = 0), 'normal'
+      if (params.status === 'low') {
+        searchParams.set('needs_restock', 'true');
+      } else if (params.status === 'out') {
+        searchParams.set('quantity', '0');
+      }
+    }
+
+    const query = searchParams.toString();
+    return this.fetch(`/inventory/${query ? `?${query}` : ''}`);
+  }
+
+  async getInventoryItem(id: number): Promise<Inventory> {
+    return this.fetch(`/inventory/${id}/`);
+  }
+
+  async getLowStockInventory(branch?: number): Promise<{ count: number; results: Inventory[] }> {
+    const searchParams = new URLSearchParams();
+    if (branch) searchParams.set('branch', branch.toString());
+
+    const query = searchParams.toString();
+    return this.fetch(`/inventory/low_stock/${query ? `?${query}` : ''}`);
+  }
+
+  async createInventory(data: InventoryCreate): Promise<Inventory> {
+    return this.fetch('/inventory/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateInventory(id: number, data: InventoryUpdate): Promise<Inventory> {
+    return this.fetch(`/inventory/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteInventory(id: number): Promise<void> {
+    return this.fetch(`/inventory/${id}/`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Inventory Transactions
+  async getInventoryTransactions(params?: {
+    branch?: number;
+    inventory?: number;
+    transaction_type?: string;
+    start_date?: string;
+    end_date?: string;
+    performed_by?: number;
+  }): Promise<{ count: number; results: InventoryTransaction[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.branch) searchParams.set('branch', params.branch.toString());
+    if (params?.inventory) searchParams.set('inventory', params.inventory.toString());
+    if (params?.transaction_type) searchParams.set('transaction_type', params.transaction_type);
+    if (params?.start_date) searchParams.set('start_date', params.start_date);
+    if (params?.end_date) searchParams.set('end_date', params.end_date);
+    if (params?.performed_by) searchParams.set('performed_by', params.performed_by.toString());
+
+    const query = searchParams.toString();
+    return this.fetch(`/inventory-transactions/${query ? `?${query}` : ''}`);
+  }
+
+  async createInventoryTransaction(data: InventoryTransactionCreate): Promise<InventoryTransaction> {
+    return this.fetch('/inventory-transactions/', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 }

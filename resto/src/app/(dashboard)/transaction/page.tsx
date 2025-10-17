@@ -1,55 +1,115 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { CreditCardIcon, SmartPhone01Icon, DollarCircleIcon, Invoice01Icon, Add01Icon, Remove01Icon, Delete01Icon } from "@hugeicons/core-free-icons"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-// Sample active order
-const sampleOrder = {
-  id: "TRX001",
-  tableNumber: 3,
-  customerName: "",
-  items: [
-    { id: 1, name: "Nasi Gudeg Jogja", price: 35000, qty: 2, notes: "Pedas sedang, tambah kerupuk" },
-    { id: 2, name: "Es Teh Manis", price: 8000, qty: 2, notes: "" },
-    { id: 3, name: "Jus Alpukat", price: 18000, qty: 1, notes: "Tanpa gula tambahan" },
-    { id: 4, name: "Soto Betawi", price: 28000, qty: 1, notes: "" },
-    { id: 5, name: "Rawon Surabaya", price: 38000, qty: 1, notes: "Extra daging, tanpa tauge" }
-  ],
-  timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-}
+import { api, type Order } from "@/lib/api"
+import { Receipt, type ReceiptData } from "@/components/receipt"
 
 export default function TransactionPage() {
-  const [orderItems, setOrderItems] = useState(sampleOrder.items)
+  const [pendingOrders, setPendingOrders] = useState<Order[]>([])
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "qris">("cash")
   const [cashAmount, setCashAmount] = useState("")
   const [customerName, setCustomerName] = useState("")
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
+  const [shouldPrint, setShouldPrint] = useState(false)
 
-  // Calculate totals
-  const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.qty), 0)
+  useEffect(() => {
+    fetchPendingOrders()
+
+    // Auto-refresh every 10 seconds to show latest orders
+    const interval = setInterval(() => {
+      fetchPendingOrders()
+    }, 10000)
+
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const fetchPendingOrders = async () => {
+    try {
+      setLoading(true)
+      console.log('Fetching active orders...')
+      // Fetch all active orders (CONFIRMED, PREPARING, READY, COMPLETED)
+      const response = await api.getOrders({})
+      console.log('Orders received:', response)
+
+      // Filter to show only active orders (not CANCELLED)
+      // COMPLETED means food delivered to customer, waiting for payment
+      const activeOrders = response.results.filter(
+        order => ['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status)
+      )
+      setPendingOrders(activeOrders)
+
+      // Check if current selected order is still active
+      if (selectedOrder) {
+        const stillActive = activeOrders.find(o => o.id === selectedOrder.id)
+        if (!stillActive) {
+          // Current order is no longer active (completed/cancelled), clear it
+          console.log('Current order is no longer active, clearing selection')
+          setSelectedOrder(null)
+          setCustomerName("")
+        }
+      }
+
+      // Auto-select first COMPLETED order if available (delivered, waiting payment), otherwise READY, then first order
+      // Only auto-select if no order is currently selected
+      if (!selectedOrder || activeOrders.findIndex(o => o.id === selectedOrder.id) === -1) {
+        const firstCompletedOrder = activeOrders.find(o => o.status === 'COMPLETED')
+        const firstReadyOrder = activeOrders.find(o => o.status === 'READY')
+        const orderToSelect = firstCompletedOrder || firstReadyOrder || activeOrders[0]
+
+        if (orderToSelect) {
+          console.log('Auto-selecting order:', orderToSelect)
+          setSelectedOrder(orderToSelect)
+          setCustomerName(orderToSelect.customer_name)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching active orders:', error)
+      alert('Gagal memuat pesanan aktif: ' + (error as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Calculate totals from selected order
+  const subtotal = selectedOrder
+    ? selectedOrder.items.reduce((sum, item) => sum + (parseFloat(item.unit_price) * item.quantity), 0)
+    : 0
   const tax = Math.round(subtotal * 0.1)
   const total = subtotal + tax
 
   // Update item quantity
   const updateQuantity = (itemId: number, increment: boolean) => {
-    setOrderItems(prevItems =>
-      prevItems.map(item => {
+    if (!selectedOrder) return
+
+    setSelectedOrder({
+      ...selectedOrder,
+      items: selectedOrder.items.map(item => {
         if (item.id === itemId) {
-          const newQty = increment ? item.qty + 1 : Math.max(1, item.qty - 1)
-          return { ...item, qty: newQty }
+          const newQty = increment ? item.quantity + 1 : Math.max(1, item.quantity - 1)
+          return { ...item, quantity: newQty }
         }
         return item
       })
-    )
+    })
   }
 
   // Remove item
   const removeItem = (itemId: number) => {
-    setOrderItems(prevItems => prevItems.filter(item => item.id !== itemId))
+    if (!selectedOrder) return
+
+    setSelectedOrder({
+      ...selectedOrder,
+      items: selectedOrder.items.filter(item => item.id !== itemId)
+    })
   }
 
   // Handle number pad input
@@ -75,197 +135,31 @@ export default function TransactionPage() {
   const cashReceived = parseFloat(cashAmount) || 0
   const change = cashReceived - total
 
-  // Print receipt function
-  const printReceipt = () => {
-    const receiptWindow = window.open('', '', 'width=300,height=600')
-    if (!receiptWindow) return
+  // Prepare receipt data for printing
+  const prepareReceiptData = (): ReceiptData | null => {
+    if (!selectedOrder) return null
 
-    const receiptDate = new Date()
-    const receiptTime = receiptDate.toLocaleString('id-ID', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric',
-      hour: '2-digit', 
-      minute: '2-digit' 
-    })
-
-    const receiptHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Receipt</title>
-        <style>
-          @media print {
-            @page {
-              size: 80mm auto;
-              margin: 0;
-            }
-          }
-          body {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.4;
-            padding: 10px;
-            margin: 0;
-            width: 280px;
-          }
-          .header {
-            text-align: center;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-          }
-          .header h1 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: bold;
-          }
-          .header p {
-            margin: 2px 0;
-            font-size: 11px;
-          }
-          .info {
-            margin-bottom: 10px;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 10px;
-          }
-          .info p {
-            margin: 2px 0;
-            font-size: 11px;
-          }
-          .items {
-            margin-bottom: 10px;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 10px;
-          }
-          .item {
-            margin-bottom: 5px;
-          }
-          .item-name {
-            font-weight: bold;
-            font-size: 11px;
-          }
-          .item-details {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            margin-left: 10px;
-          }
-          .item-notes {
-            font-size: 10px;
-            margin-left: 10px;
-            font-style: italic;
-            color: #666;
-          }
-          .totals {
-            margin-bottom: 10px;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 10px;
-          }
-          .total-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 3px 0;
-            font-size: 11px;
-          }
-          .total-row.bold {
-            font-weight: bold;
-            font-size: 13px;
-            margin-top: 5px;
-          }
-          .payment {
-            margin-bottom: 10px;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 10px;
-          }
-          .payment p {
-            margin: 3px 0;
-            font-size: 11px;
-          }
-          .footer {
-            text-align: center;
-            margin-top: 10px;
-          }
-          .footer p {
-            margin: 2px 0;
-            font-size: 10px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>LADAPALA</h1>
-          <p>Restaurant POS System</p>
-          <p>Jl. Contoh No. 123</p>
-          <p>Tel: (021) 12345678</p>
-        </div>
-        
-        <div class="info">
-          <p>No: ${sampleOrder.id}</p>
-          <p>Tanggal: ${receiptTime}</p>
-          <p>Meja: ${sampleOrder.tableNumber}</p>
-          <p>Pelanggan: ${customerName}</p>
-          <p>Kasir: Admin</p>
-        </div>
-        
-        <div class="items">
-          ${orderItems.map(item => `
-            <div class="item">
-              <div class="item-name">${item.name}</div>
-              <div class="item-details">
-                <span>${item.qty} x Rp ${item.price.toLocaleString('id-ID')}</span>
-                <span>Rp ${(item.qty * item.price).toLocaleString('id-ID')}</span>
-              </div>
-              ${item.notes ? `<div class="item-notes">${item.notes}</div>` : ''}
-            </div>
-          `).join('')}
-        </div>
-        
-        <div class="totals">
-          <div class="total-row">
-            <span>Subtotal:</span>
-            <span>Rp ${subtotal.toLocaleString('id-ID')}</span>
-          </div>
-          <div class="total-row">
-            <span>Pajak (10%):</span>
-            <span>Rp ${tax.toLocaleString('id-ID')}</span>
-          </div>
-          <div class="total-row bold">
-            <span>TOTAL:</span>
-            <span>Rp ${total.toLocaleString('id-ID')}</span>
-          </div>
-        </div>
-        
-        <div class="payment">
-          <p>Metode: ${paymentMethod === 'cash' ? 'TUNAI' : paymentMethod === 'card' ? 'KARTU' : 'QRIS'}</p>
-          ${paymentMethod === 'cash' ? `
-            <p>Bayar: Rp ${cashReceived.toLocaleString('id-ID')}</p>
-            <p style="font-weight: bold;">Kembali: Rp ${Math.round(change).toLocaleString('id-ID')}</p>
-          ` : ''}
-        </div>
-        
-        <div class="footer">
-          <p>===========================</p>
-          <p>Terima Kasih</p>
-          <p>Atas Kunjungan Anda</p>
-          <p>===========================</p>
-        </div>
-      </body>
-      </html>
-    `
-
-    receiptWindow.document.write(receiptHTML)
-    receiptWindow.document.close()
-    
-    // Wait for content to load then print
-    receiptWindow.onload = () => {
-      receiptWindow.print()
-      receiptWindow.close()
+    return {
+      order_number: selectedOrder.order_number || '',
+      table_number: selectedOrder.table_number,
+      customer_name: customerName,
+      items: selectedOrder.items,
+      subtotal: subtotal,
+      tax: tax,
+      total: total,
+      payment_method: paymentMethod,
+      cash_received: paymentMethod === 'cash' ? cashReceived : undefined,
+      change: paymentMethod === 'cash' ? change : undefined,
     }
   }
 
   // Process payment
-  const handlePayment = () => {
+  const handlePayment = async () => {
+    if (!selectedOrder) {
+      alert("Tidak ada pesanan dipilih!")
+      return
+    }
+
     if (paymentMethod === "cash" && cashReceived < total) {
       alert("Uang tidak cukup!")
       return
@@ -276,27 +170,67 @@ export default function TransactionPage() {
       return
     }
 
-    // Process the payment
-    console.log("Processing payment:", {
-      customer: customerName,
-      method: paymentMethod,
-      total: total,
-      cashReceived: paymentMethod === "cash" ? cashReceived : null,
-      change: paymentMethod === "cash" ? change : null
-    })
+    try {
+      // Create payment via API
+      await api.createPayment({
+        order: selectedOrder.id!,
+        amount: total.toString(),
+        payment_method: paymentMethod.toUpperCase() as 'CASH' | 'CARD' | 'MOBILE',
+        status: 'COMPLETED'
+      })
 
-    setShowPaymentSuccess(true)
-    
-    // Print receipt automatically after payment
-    printReceipt()
-    
-    setTimeout(() => {
-      // Reset after success
-      setOrderItems([])
-      setCashAmount("")
-      setCustomerName("")
-      setShowPaymentSuccess(false)
-    }, 3000)
+      // Update order status to COMPLETED after successful payment
+      await api.updateOrderStatus(selectedOrder.id!, 'COMPLETED')
+
+      // Prepare and trigger receipt printing
+      const receipt = prepareReceiptData()
+      if (receipt) {
+        setReceiptData(receipt)
+        setShouldPrint(true)
+      }
+
+      // Show success message briefly
+      setShowPaymentSuccess(true)
+
+      // Immediately refresh the order list to remove completed order
+      await fetchPendingOrders()
+
+      // Reset form after a short delay
+      setTimeout(() => {
+        setCashAmount("")
+        setCustomerName("")
+        setShowPaymentSuccess(false)
+        setShouldPrint(false)
+        setReceiptData(null)
+      }, 2000)
+    } catch (error) {
+      console.error('Payment error:', error)
+      alert("Gagal memproses pembayaran. Silakan coba lagi.")
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-96">
+          <p className="text-gray-500">Memuat pesanan aktif...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (pendingOrders.length === 0) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <HugeiconsIcon icon={Invoice01Icon} size={64} strokeWidth={2} className="mx-auto mb-4 text-gray-300" />
+            <p className="text-xl text-gray-600">Tidak ada pesanan aktif</p>
+            <p className="text-sm text-gray-500 mt-2">Pesanan baru akan muncul di sini</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -305,11 +239,72 @@ export default function TransactionPage() {
         {/* Left Side - Order List */}
         <div className="flex-1 flex flex-col">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Kasir</h1>
-          <p className="text-sm text-gray-600">
-            Meja {sampleOrder.tableNumber} • {sampleOrder.timestamp} • ID: {sampleOrder.id}
-          </p>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900">Kasir</h1>
+            <Button
+              onClick={fetchPendingOrders}
+              variant="outline"
+              size="sm"
+              className="rounded"
+              disabled={loading}
+            >
+              {loading ? "Memuat..." : "Refresh"}
+            </Button>
+          </div>
+          {selectedOrder && (
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm text-gray-600">
+                {selectedOrder.table_number ? `Meja ${selectedOrder.table_number}` : 'Takeaway'} • ID: {selectedOrder.order_number}
+              </p>
+              <span className={`text-xs px-2 py-1 rounded ${
+                selectedOrder.status === 'COMPLETED'
+                  ? 'bg-green-100 text-green-700'
+                  : selectedOrder.status === 'READY'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : selectedOrder.status === 'PREPARING'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-purple-100 text-purple-700'
+              }`}>
+                {selectedOrder.status === 'COMPLETED' ? 'SUDAH DIANTAR' :
+                 selectedOrder.status === 'READY' ? 'SIAP DIANTAR' :
+                 selectedOrder.status === 'PREPARING' ? 'SEDANG DIMASAK' : 'DIKONFIRMASI'}
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* Order Selection */}
+        {pendingOrders.length > 1 && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Pilih Pesanan ({pendingOrders.filter(o => o.status === 'READY').length} siap bayar):
+            </label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded"
+              value={selectedOrder?.id}
+              onChange={(e) => {
+                const order = pendingOrders.find(o => o.id === parseInt(e.target.value))
+                if (order) {
+                  setSelectedOrder(order)
+                  setCustomerName(order.customer_name)
+                }
+              }}
+            >
+              {pendingOrders.map(order => {
+                const statusLabel =
+                  order.status === 'COMPLETED' ? '✓ SUDAH DIANTAR - SIAP BAYAR' :
+                  order.status === 'READY' ? '🍽️ SIAP DIANTAR' :
+                  order.status === 'PREPARING' ? '⏳ SEDANG DIMASAK' :
+                  '📋 DIKONFIRMASI'
+                return (
+                  <option key={order.id} value={order.id}>
+                    {statusLabel} - {order.table_number ? `Meja ${order.table_number}` : 'Takeaway'} - {order.order_number}
+                  </option>
+                )
+              })}
+            </select>
+          </div>
+        )}
 
         {/* Customer Name */}
         <div className="mb-4">
@@ -329,20 +324,20 @@ export default function TransactionPage() {
           </CardHeader>
           <CardContent className="p-0 flex-1 overflow-hidden">
             <div className="overflow-y-auto h-full">
-              {orderItems.length === 0 ? (
+              {!selectedOrder || selectedOrder.items.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
                   <HugeiconsIcon icon={Invoice01Icon} size={32} strokeWidth={2} className="mx-auto mb-3 text-gray-300" />
                   <p>Belum ada item</p>
                 </div>
               ) : (
                 <div className="divide-y">
-                  {orderItems.map((item) => (
+                  {selectedOrder.items.map((item) => (
                     <div key={item.id} className="p-4 hover:bg-gray-50">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{item.name}</h4>
+                          <h4 className="font-medium text-gray-900">{item.product_name}</h4>
                           <p className="text-sm text-gray-600">
-                            @ Rp {item.price.toLocaleString('id-ID')}
+                            @ Rp {parseFloat(item.unit_price).toLocaleString('id-ID')}
                           </p>
                           {item.notes && (
                             <p className="text-xs text-orange-600 mt-1 italic">
@@ -351,36 +346,10 @@ export default function TransactionPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateQuantity(item.id, false)}
-                              className="h-8 w-8 p-0 rounded"
-                            >
-                              <HugeiconsIcon icon={Remove01Icon} size={32} strokeWidth={2} />
-                            </Button>
-                            <span className="font-medium w-8 text-center">{item.qty}</span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateQuantity(item.id, true)}
-                              className="h-8 w-8 p-0 rounded"
-                            >
-                              <HugeiconsIcon icon={Add01Icon} size={32} strokeWidth={2} />
-                            </Button>
-                          </div>
+                          <span className="font-medium w-12 text-center">x{item.quantity}</span>
                           <div className="w-24 text-right font-semibold">
-                            Rp {(item.price * item.qty).toLocaleString('id-ID')}
+                            Rp {(parseFloat(item.unit_price) * item.quantity).toLocaleString('id-ID')}
                           </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => removeItem(item.id)}
-                            className="h-8 w-8 p-0 rounded text-red-600 hover:text-red-700"
-                          >
-                            <HugeiconsIcon icon={Delete01Icon} size={32} strokeWidth={2} />
-                          </Button>
                         </div>
                       </div>
                     </div>
@@ -596,18 +565,89 @@ export default function TransactionPage() {
           </Card>
         )}
 
+        {/* Status Warning for orders not yet delivered */}
+        {selectedOrder && selectedOrder.status !== 'COMPLETED' && (
+          <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded">
+            <p className="text-sm text-orange-800 mb-3">
+              <strong>⚠️ Pesanan belum diantar ke pelanggan</strong>
+              <br />
+              Status: {selectedOrder.status === 'READY' ? 'Siap diantar' :
+                       selectedOrder.status === 'PREPARING' ? 'Sedang dimasak' : 'Dikonfirmasi'}
+            </p>
+            {selectedOrder.status === 'READY' && (
+              <Button
+                onClick={async () => {
+                  if (!selectedOrder) return
+                  try {
+                    await api.updateOrderStatus(selectedOrder.id!, 'COMPLETED')
+                    await fetchPendingOrders()
+                    alert('Status: Pesanan sudah diantar ke pelanggan')
+                  } catch (error) {
+                    console.error('Error updating status:', error)
+                    alert('Gagal mengubah status pesanan')
+                  }
+                }}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                size="sm"
+              >
+                Tandai Sudah Diantar
+              </Button>
+            )}
+            {selectedOrder.status === 'PREPARING' && (
+              <Button
+                onClick={async () => {
+                  if (!selectedOrder) return
+                  try {
+                    await api.updateOrderStatus(selectedOrder.id!, 'READY')
+                    await fetchPendingOrders()
+                    alert('Status: Pesanan siap diantar')
+                  } catch (error) {
+                    console.error('Error updating status:', error)
+                    alert('Gagal mengubah status pesanan')
+                  }
+                }}
+                className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+                size="sm"
+              >
+                Tandai Siap Diantar
+              </Button>
+            )}
+            {selectedOrder.status === 'CONFIRMED' && (
+              <Button
+                onClick={async () => {
+                  if (!selectedOrder) return
+                  try {
+                    await api.updateOrderStatus(selectedOrder.id!, 'PREPARING')
+                    await fetchPendingOrders()
+                    alert('Status: Pesanan mulai dimasak')
+                  } catch (error) {
+                    console.error('Error updating status:', error)
+                    alert('Gagal mengubah status pesanan')
+                  }
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                size="sm"
+              >
+                Mulai Masak
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* Process Payment Button */}
         <Button
           onClick={handlePayment}
           disabled={
-            orderItems.length === 0 ||
+            !selectedOrder ||
+            selectedOrder.items.length === 0 ||
             !customerName.trim() ||
-            (paymentMethod === "cash" && cashReceived < total)
+            (paymentMethod === "cash" && cashReceived < total) ||
+            selectedOrder.status !== 'COMPLETED'
           }
-          className="w-full h-14 rounded bg-green-600 hover:bg-green-700 text-white text-lg font-semibold"
+          className="w-full h-14 rounded bg-green-600 hover:bg-green-700 text-white text-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           <HugeiconsIcon icon={Invoice01Icon} size={32} strokeWidth={2} className="mr-2" />
-          BAYAR
+          {selectedOrder && selectedOrder.status === 'COMPLETED' ? 'BAYAR' : 'BELUM DIANTAR'}
         </Button>
           </div>
 
@@ -627,6 +667,17 @@ export default function TransactionPage() {
             <p className="text-sm text-gray-500 mt-2">Mencetak struk...</p>
           </div>
         </div>
+      )}
+
+      {/* Receipt Component for Auto-Printing */}
+      {receiptData && shouldPrint && (
+        <Receipt
+          data={receiptData}
+          autoPrint={true}
+          onPrintComplete={() => {
+            console.log('Receipt printed successfully')
+          }}
+        />
       )}
       </div>
     </div>

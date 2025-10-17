@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Avg, Count
-from .models import Department, Employee, Attendance, Shift
+from .models import Department, Employee, Attendance, Shift, User, UserProfile
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -209,3 +209,53 @@ class EmployeePerformanceSerializer(serializers.Serializer):
     total_days_worked = serializers.IntegerField()
     late_count = serializers.IntegerField()
     absent_count = serializers.IntegerField()
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """Serializer for UserProfile"""
+    avatar_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            'id', 'role', 'system_access', 'avatar', 'avatar_url',
+            'bio', 'phone', 'address', 'date_of_birth',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+    def get_avatar_url(self, obj):
+        if obj.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+        return None
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for User"""
+    full_name = serializers.CharField(read_only=True)
+    profile = UserProfileSerializer(source='userprofile', read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'full_name',
+            'is_staff', 'is_superuser', 'is_active',
+            'date_joined', 'last_login', 'profile'
+        ]
+        read_only_fields = ['email', 'is_staff', 'is_superuser', 'date_joined', 'last_login']
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating user basic info"""
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name']
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating user profile"""
+    class Meta:
+        model = UserProfile
+        fields = ['phone', 'bio', 'address', 'date_of_birth', 'avatar']

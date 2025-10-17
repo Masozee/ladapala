@@ -1,13 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Home01Icon,
   Building02Icon,
   Logout01Icon,
+  LogoutCircle01Icon,
+  LoginCircle01Icon,
   Store01Icon,
   UserIcon,
   MenuRestaurantIcon,
@@ -22,6 +24,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useAuth } from "@/contexts/auth-context"
+import { api } from "@/lib/api"
 
 interface SidebarItem {
   name: string
@@ -54,7 +58,50 @@ const mainItems: SidebarItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { logout, staff } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [hasActiveSession, setHasActiveSession] = useState(false)
+  const [isCheckingSession, setIsCheckingSession] = useState(false)
+
+  // Check for active cashier session
+  useEffect(() => {
+    checkActiveSession()
+  }, [staff])
+
+  const checkActiveSession = async () => {
+    if (!staff) {
+      setHasActiveSession(false)
+      return
+    }
+
+    try {
+      setIsCheckingSession(true)
+      const sessions = await api.getActiveCashierSession()
+      setHasActiveSession(sessions.length > 0)
+    } catch (error) {
+      console.error('Error checking session:', error)
+      setHasActiveSession(false)
+    } finally {
+      setIsCheckingSession(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+
+    setIsLoggingOut(true)
+    setIsMenuOpen(false)
+
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      setIsLoggingOut(false)
+    }
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -145,15 +192,53 @@ export function Sidebar() {
 
                 <div className="border-t border-gray-200 my-2" />
 
+                {/* Cashier Session Management */}
+                {staff && (
+                  <>
+                    {!hasActiveSession ? (
+                      <Link
+                        href="/session/open"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <HugeiconsIcon icon={LoginCircle01Icon} size={20} strokeWidth={2} className="text-green-600 size-5" />
+                        <span className="text-sm text-green-600">Buka Kasir</span>
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/shift-closing"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <HugeiconsIcon icon={LogoutCircle01Icon} size={20} strokeWidth={2} className="text-orange-600 size-5" />
+                        <span className="text-sm text-orange-600">Tutup Kasir</span>
+                      </Link>
+                    )}
+                    <div className="border-t border-gray-200 my-2" />
+                  </>
+                )}
+
+                {/* Show session status indicator */}
+                {staff && hasActiveSession && (
+                  <div className="px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                      <span className="text-xs text-gray-500">Sesi Aktif</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-t border-gray-200 my-2" />
+
                 <button
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors w-full text-left"
-                  onClick={() => {
-                    setIsMenuOpen(false)
-                    console.log("Logout clicked")
-                  }}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors w-full text-left disabled:opacity-50"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
                 >
                   <HugeiconsIcon icon={Logout01Icon} size={20} strokeWidth={2} className="text-red-600 size-5" />
-                  <span className="text-sm text-red-600">Keluar</span>
+                  <span className="text-sm text-red-600">
+                    {isLoggingOut ? 'Keluar...' : 'Keluar'}
+                  </span>
                 </button>
               </div>
             </>

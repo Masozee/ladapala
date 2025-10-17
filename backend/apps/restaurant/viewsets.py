@@ -7,11 +7,11 @@ from django.utils import timezone
 from django.db.models import Sum, Count, Q, F
 from datetime import datetime, timedelta
 from .models import (
-    Restaurant, Branch, Staff, 
+    Restaurant, Branch, Staff,
     Category, Product, Inventory, InventoryTransaction,
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
-    Promotion, Schedule, Report
+    Promotion, Schedule, Report, CashierSession
 )
 from .serializers import (
     RestaurantSerializer, BranchSerializer, StaffSerializer,
@@ -20,7 +20,8 @@ from .serializers import (
     OrderItemSerializer, PaymentSerializer, TableSerializer,
     KitchenOrderSerializer, KitchenOrderItemSerializer,
     PromotionSerializer, ScheduleSerializer, ReportSerializer,
-    DashboardSerializer
+    DashboardSerializer, CashierSessionSerializer, CashierSessionOpenSerializer,
+    CashierSessionCloseSerializer
 )
 from .permissions import IsManagerOrAdmin, IsKitchenStaff, IsWarehouseStaff
 
@@ -229,6 +230,46 @@ class OrderViewSet(viewsets.ModelViewSet):
         orders = self.get_queryset().filter(created_at__date=today)
         serializer = self.get_serializer(orders, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def unpaid(self, request):
+        """Get unpaid orders (READY status)"""
+        branch_id = request.query_params.get('branch_id')
+
+        queryset = self.get_queryset().filter(status='READY')
+
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+
+        orders = queryset.order_by('-created_at')
+        serializer = self.get_serializer(orders, many=True)
+
+        # Calculate total amount
+        total_amount = sum(order.total_amount for order in orders)
+
+        return Response({
+            'count': orders.count(),
+            'total_amount': float(total_amount),
+            'results': serializer.data
+        })
+
+    @action(detail=False, methods=['get'])
+    def processing(self, request):
+        """Get processing orders (PREPARING/CONFIRMED status)"""
+        branch_id = request.query_params.get('branch_id')
+
+        queryset = self.get_queryset().filter(status__in=['PREPARING', 'CONFIRMED'])
+
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+
+        orders = queryset.order_by('-created_at')
+        serializer = self.get_serializer(orders, many=True)
+
+        return Response({
+            'count': orders.count(),
+            'results': serializer.data
+        })
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
@@ -606,3 +647,305 @@ class DashboardViewSet(viewsets.ViewSet):
         
         serializer = DashboardSerializer(data)
         return Response(serializer.data)
+
+
+class CashierSessionViewSet(viewsets.ModelViewSet):
+    queryset = CashierSession.objects.all()
+    serializer_class = CashierSessionSerializer
+    permission_classes = [AllowAny]  # Allow public access for frontend
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['cashier', 'branch', 'status', 'shift_type']
+    ordering = ['-opened_at']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CashierSessionOpenSerializer
+        return CashierSessionSerializer
+
+    def perform_create(self, serializer):
+        """Validate schedule before creating session and create audit logs"""
+        from .models import SessionAuditLog
+
+        cashier = serializer.validated_data.get('cashier')
+        shift_type = serializer.validated_data.get('shift_type')
+        override_by_id = serializer.validated_data.pop('override_by', None)
+        override_reason = serializer.validated_data.pop('override_reason', '')
+
+        # Check if cashier has a schedule for today with matching shift
+        today = timezone.now().date()
+        schedule = Schedule.objects.filter(
+            staff=cashier,
+            date=today,
+            shift_type=shift_type
+        ).first()
+
+        # Handle manager override
+        override_staff = None
+        if override_by_id:
+            override_staff = Staff.objects.get(id=override_by_id)
+            serializer.validated_data['override_by'] = override_staff
+            serializer.validated_data['override_reason'] = override_reason
+
+        # Create session
+        session = serializer.save()
+
+        # Create audit log for session opening
+        SessionAuditLog.objects.create(
+            session=session,
+            event_type='SESSION_OPENED',
+            performed_by=cashier,
+            event_data={
+                'shift_type': shift_type,
+                'opening_cash': str(session.opening_cash),
+                'has_schedule': schedule is not None,
+                'schedule_confirmed': schedule.is_confirmed if schedule else False,
+                'has_override': override_staff is not None
+            }
+        )
+
+        # Log manager override if present
+        if override_staff:
+            SessionAuditLog.objects.create(
+                session=session,
+                event_type='OVERRIDE_APPLIED',
+                performed_by=override_staff,
+                notes=f'Manager override oleh {override_staff.user.get_full_name()}: {override_reason}',
+                event_data={
+                    'override_by_id': override_staff.id,
+                    'override_by_name': override_staff.user.get_full_name(),
+                    'override_by_role': override_staff.role,
+                    'reason': override_reason
+                }
+            )
+
+        # Log schedule warnings
+        if not schedule:
+            SessionAuditLog.objects.create(
+                session=session,
+                event_type='SCHEDULE_WARNING',
+                performed_by=cashier,
+                notes=f'Tidak ada jadwal terdaftar untuk shift {shift_type} pada {today}'
+            )
+        elif not schedule.is_confirmed:
+            SessionAuditLog.objects.create(
+                session=session,
+                event_type='SCHEDULE_WARNING',
+                performed_by=cashier,
+                notes=f'Jadwal shift {shift_type} pada {today} belum dikonfirmasi'
+            )
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Get active (open) session for current user or cashier"""
+        cashier_id = request.query_params.get('cashier_id')
+        branch_id = request.query_params.get('branch_id')
+
+        queryset = self.get_queryset().filter(status='OPEN')
+
+        if cashier_id:
+            queryset = queryset.filter(cashier_id=cashier_id)
+        if branch_id:
+            queryset = queryset.filter(branch_id=branch_id)
+
+        sessions = queryset.order_by('-opened_at')
+        serializer = self.get_serializer(sessions, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def check_schedule(self, request):
+        """Check if cashier has schedule for opening session"""
+        cashier_id = request.query_params.get('cashier_id')
+        shift_type = request.query_params.get('shift_type')
+
+        if not cashier_id or not shift_type:
+            return Response({
+                'error': 'cashier_id and shift_type are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            cashier = Staff.objects.get(id=cashier_id)
+        except Staff.DoesNotExist:
+            return Response({
+                'error': 'Cashier not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Check today's schedule
+        today = timezone.now().date()
+        schedule = Schedule.objects.filter(
+            staff=cashier,
+            date=today,
+            shift_type=shift_type
+        ).first()
+
+        if schedule:
+            return Response({
+                'has_schedule': True,
+                'is_confirmed': schedule.is_confirmed,
+                'schedule': {
+                    'id': schedule.id,
+                    'date': schedule.date,
+                    'shift_type': schedule.shift_type,
+                    'start_time': schedule.start_time,
+                    'end_time': schedule.end_time,
+                    'is_confirmed': schedule.is_confirmed,
+                    'notes': schedule.notes
+                },
+                'message': 'Jadwal ditemukan' if schedule.is_confirmed else 'Jadwal ditemukan tetapi belum dikonfirmasi'
+            })
+        else:
+            return Response({
+                'has_schedule': False,
+                'is_confirmed': False,
+                'schedule': None,
+                'message': f'Tidak ada jadwal terdaftar untuk shift {shift_type} hari ini',
+                'warning': 'Anda dapat membuka sesi tanpa jadwal, tetapi akan dicatat sebagai peringatan'
+            })
+
+    @action(detail=True, methods=['get'])
+    def validate_settlement(self, request, pk=None):
+        """Check if session is ready to be closed (all orders settled)"""
+        session = self.get_object()
+
+        if session.status == 'CLOSED':
+            return Response({'error': 'Session already closed'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get all payments in this session
+        payment_order_ids = session.payments.values_list('order_id', flat=True)
+        orders = Order.objects.filter(id__in=payment_order_ids)
+
+        # Check for unsettled orders (not COMPLETED or CANCELLED)
+        unsettled_orders = orders.exclude(status__in=['COMPLETED', 'CANCELLED'])
+
+        if unsettled_orders.exists():
+            unsettled_list = []
+            for order in unsettled_orders:
+                unsettled_list.append({
+                    'id': order.id,
+                    'order_number': order.order_number,
+                    'status': order.status,
+                    'table_number': order.table.number if order.table else None,
+                    'total_amount': float(order.total_amount)
+                })
+
+            return Response({
+                'can_close': False,
+                'message': 'Cannot close session: unsettled orders exist',
+                'unsettled_orders': unsettled_list,
+                'count': unsettled_orders.count()
+            })
+
+        return Response({
+            'can_close': True,
+            'message': 'All orders settled, ready to close session'
+        })
+
+    @action(detail=True, methods=['post'])
+    def close(self, request, pk=None):
+        """Close the cashier session (settlement)"""
+        from .models import SessionAuditLog
+
+        session = self.get_object()
+
+        if session.status == 'CLOSED':
+            return Response({'error': 'Session already closed'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate all orders are settled
+        payment_order_ids = session.payments.values_list('order_id', flat=True)
+        orders = Order.objects.filter(id__in=payment_order_ids)
+        unsettled_orders = orders.exclude(status__in=['COMPLETED', 'CANCELLED'])
+
+        if unsettled_orders.exists():
+            return Response({
+                'error': 'Cannot close session: unsettled orders exist',
+                'unsettled_count': unsettled_orders.count()
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Parse request data
+        close_serializer = CashierSessionCloseSerializer(data=request.data)
+        if not close_serializer.is_valid():
+            return Response(close_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Calculate settlement
+        expected_cash, settlement_data = session.calculate_settlement()
+
+        # Update session
+        session.actual_cash = close_serializer.validated_data['actual_cash']
+        session.expected_cash = expected_cash
+        session.cash_difference = session.actual_cash - expected_cash
+        session.settlement_data = settlement_data
+        session.closed_at = timezone.now()
+        session.status = 'CLOSED'
+
+        if 'closed_by' in close_serializer.validated_data:
+            session.closed_by = Staff.objects.get(id=close_serializer.validated_data['closed_by'])
+        if 'notes' in close_serializer.validated_data:
+            session.notes = close_serializer.validated_data['notes']
+
+        session.save()
+
+        # Create audit log for session closing
+        SessionAuditLog.objects.create(
+            session=session,
+            event_type='SESSION_CLOSED',
+            performed_by=session.closed_by or session.cashier,
+            event_data={
+                'expected_cash': str(expected_cash),
+                'actual_cash': str(session.actual_cash),
+                'cash_difference': str(session.cash_difference),
+                'settlement_data': settlement_data
+            }
+        )
+
+        # Log cash discrepancy if significant
+        if abs(session.cash_difference) > 1000:  # More than Rp 1,000 difference
+            SessionAuditLog.objects.create(
+                session=session,
+                event_type='CASH_DISCREPANCY',
+                performed_by=session.closed_by or session.cashier,
+                notes=f'Selisih kas: Rp {session.cash_difference:,.2f}',
+                event_data={
+                    'expected': str(expected_cash),
+                    'actual': str(session.actual_cash),
+                    'difference': str(session.cash_difference)
+                }
+            )
+
+        serializer = self.get_serializer(session)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def report(self, request, pk=None):
+        """Get detailed session report with all transactions"""
+        session = self.get_object()
+
+        # Get all payments and related orders
+        payments = session.payments.all()
+        transactions = []
+
+        for payment in payments:
+            order = payment.order
+            items = []
+            for item in order.items.all():
+                items.append({
+                    'product_name': item.product.name,
+                    'quantity': item.quantity,
+                    'unit_price': float(item.unit_price),
+                    'subtotal': float(item.subtotal)
+                })
+
+            transactions.append({
+                'order_number': order.order_number,
+                'table_number': order.table.number if order.table else None,
+                'customer_name': order.customer_name,
+                'total_amount': float(order.total_amount),
+                'payment_method': payment.payment_method,
+                'status': order.status,
+                'created_at': order.created_at.isoformat(),
+                'items': items
+            })
+
+        return Response({
+            'session': self.get_serializer(session).data,
+            'transactions': transactions,
+            'summary': session.settlement_data
+        })

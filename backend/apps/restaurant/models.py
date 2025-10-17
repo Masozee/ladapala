@@ -270,20 +270,22 @@ class Payment(models.Model):
         ('MOBILE', 'Mobile Payment'),
         ('OTHER', 'Other'),
     ]
-    
+
     PAYMENT_STATUS = [
         ('PENDING', 'Pending'),
         ('COMPLETED', 'Completed'),
         ('FAILED', 'Failed'),
         ('REFUNDED', 'Refunded'),
     ]
-    
+
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='PENDING')
     transaction_id = models.CharField(max_length=100, unique=True, blank=True)
     processed_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True)
+    cashier_session = models.ForeignKey('CashierSession', on_delete=models.SET_NULL, null=True, blank=True,
+                                       related_name='payments')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -434,6 +436,139 @@ class Schedule(models.Model):
         unique_together = ['staff', 'date', 'shift_type']
 
 
+class CashierSession(models.Model):
+    SESSION_STATUS = [
+        ('OPEN', 'Open'),
+        ('CLOSED', 'Closed'),
+    ]
+
+    cashier = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='cashier_sessions',
+                               limit_choices_to={'role': StaffRole.CASHIER})
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='cashier_sessions')
+    shift_type = models.CharField(max_length=20, choices=Schedule.SHIFT_TYPES)
+
+    # Session tracking
+    opened_at = models.DateTimeField(auto_now_add=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=SESSION_STATUS, default='OPEN')
+
+    # Opening balance
+    opening_cash = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    # Closing data (calculated at settlement)
+    expected_cash = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    actual_cash = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    cash_difference = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    # Summary data (JSON for flexibility)
+    settlement_data = models.JSONField(null=True, blank=True)
+
+    # Settlement metadata
+    closed_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name='closed_sessions')
+    notes = models.TextField(blank=True)
+
+    # Override tracking (for manager overrides)
+    override_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='session_overrides',
+                                   help_text='Manager who authorized session without schedule')
+    override_reason = models.TextField(blank=True, help_text='Reason for override')
+
+    def clean(self):
+        # Validate only one open session per cashier
+        if self.status == 'OPEN' and not self.pk:
+            existing_open = CashierSession.objects.filter(
+                cashier=self.cashier,
+                status='OPEN'
+            ).exists()
+            if existing_open:
+                raise ValidationError(f"{self.cashier} already has an open session")
+
+    def calculate_settlement(self):
+        """Calculate settlement data for this session"""
+        from django.db.models import Sum, Count, Q
+
+        # Get all payments in this session
+        payments = self.payments.filter(status='COMPLETED')
+
+        # Calculate by payment method
+        cash_total = payments.filter(payment_method='CASH').aggregate(
+            total=Sum('amount'), count=Count('id')
+        )
+        card_total = payments.filter(payment_method='CARD').aggregate(
+            total=Sum('amount'), count=Count('id')
+        )
+        mobile_total = payments.filter(payment_method='MOBILE').aggregate(
+            total=Sum('amount'), count=Count('id')
+        )
+
+        # Get orders related to this session
+        order_ids = payments.values_list('order_id', flat=True)
+        orders = Order.objects.filter(id__in=order_ids)
+
+        completed_count = orders.filter(status='COMPLETED').count()
+        cancelled_count = orders.filter(status='CANCELLED').count()
+
+        # Calculate expected cash
+        cash_sales = cash_total['total'] or Decimal('0')
+        expected_cash = self.opening_cash + cash_sales
+
+        settlement_data = {
+            'total_transactions': orders.count(),
+            'completed_transactions': completed_count,
+            'cancelled_transactions': cancelled_count,
+            'cash_payments': {
+                'total': float(cash_total['total'] or 0),
+                'count': cash_total['count'] or 0
+            },
+            'card_payments': {
+                'total': float(card_total['total'] or 0),
+                'count': card_total['count'] or 0
+            },
+            'mobile_payments': {
+                'total': float(mobile_total['total'] or 0),
+                'count': mobile_total['count'] or 0
+            },
+            'total_revenue': float(
+                (cash_total['total'] or 0) +
+                (card_total['total'] or 0) +
+                (mobile_total['total'] or 0)
+            )
+        }
+
+        return expected_cash, settlement_data
+
+    def __str__(self):
+        return f"{self.cashier} - {self.shift_type} - {self.opened_at.date()} ({self.status})"
+
+    class Meta:
+        ordering = ['-opened_at']
+
+
+class SessionAuditLog(models.Model):
+    """Audit log for cashier session events"""
+    EVENT_TYPES = [
+        ('SESSION_OPENED', 'Session Opened'),
+        ('SESSION_CLOSED', 'Session Closed'),
+        ('OVERRIDE_APPLIED', 'Manager Override Applied'),
+        ('SCHEDULE_WARNING', 'Schedule Warning'),
+        ('CASH_DISCREPANCY', 'Cash Discrepancy Detected'),
+    ]
+
+    session = models.ForeignKey(CashierSession, on_delete=models.CASCADE, related_name='audit_logs')
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
+    performed_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True)
+    event_data = models.JSONField(null=True, blank=True, help_text='Additional event details')
+    notes = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.event_type} - {self.session} - {self.timestamp}"
+
+    class Meta:
+        ordering = ['-timestamp']
+
+
 class Report(models.Model):
     REPORT_TYPES = [
         ('DAILY', 'Daily Report'),
@@ -442,7 +577,7 @@ class Report(models.Model):
         ('INVENTORY', 'Inventory Report'),
         ('SALES', 'Sales Report'),
     ]
-    
+
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='reports')
     report_type = models.CharField(max_length=20, choices=REPORT_TYPES)
     start_date = models.DateField()

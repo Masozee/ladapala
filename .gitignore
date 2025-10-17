@@ -17,7 +17,7 @@ bun.lock
 
 # next.js
 /.next/
-/**/next/
+/**/.next/
 /out/
 
 # production
@@ -51,6 +51,7 @@ __pycache__/
 *.db
 db_*.sqlite3
 *.pid
+/backend/media/
 
 # Backups
 *.zip

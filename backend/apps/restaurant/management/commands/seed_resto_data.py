@@ -115,6 +115,7 @@ class Command(BaseCommand):
                 'price': Decimal('35000'),
                 'cost': Decimal('20000'),
                 'preparation_time': 15,
+                'image': 'products/gudeg.jpg',
                 'is_available': True
             },
             {
@@ -124,6 +125,7 @@ class Command(BaseCommand):
                 'price': Decimal('45000'),
                 'cost': Decimal('28000'),
                 'preparation_time': 20,
+                'image': 'products/naspad.jpeg',
                 'is_available': True
             },
             {
@@ -133,6 +135,7 @@ class Command(BaseCommand):
                 'price': Decimal('32000'),
                 'cost': Decimal('18000'),
                 'preparation_time': 15,
+                'image': 'products/liwet.jpeg',
                 'is_available': True
             },
 
@@ -144,6 +147,7 @@ class Command(BaseCommand):
                 'price': Decimal('18000'),
                 'cost': Decimal('10000'),
                 'preparation_time': 10,
+                'image': 'products/bubur.jpg',
                 'is_available': True
             },
             {
@@ -153,6 +157,7 @@ class Command(BaseCommand):
                 'price': Decimal('15000'),
                 'cost': Decimal('8000'),
                 'preparation_time': 10,
+                'image': 'products/lonsay.jpeg',
                 'is_available': True
             },
             {
@@ -162,6 +167,7 @@ class Command(BaseCommand):
                 'price': Decimal('28000'),
                 'cost': Decimal('16000'),
                 'preparation_time': 15,
+                'image': 'products/sotobetawi.jpg',
                 'is_available': True
             },
 
@@ -173,6 +179,7 @@ class Command(BaseCommand):
                 'price': Decimal('55000'),
                 'cost': Decimal('35000'),
                 'preparation_time': 25,
+                'image': 'products/sopbuntut.jpg',
                 'is_available': True
             },
             {
@@ -182,6 +189,7 @@ class Command(BaseCommand):
                 'price': Decimal('38000'),
                 'cost': Decimal('22000'),
                 'preparation_time': 20,
+                'image': 'products/Rawon.jpg',
                 'is_available': True
             },
 
@@ -193,6 +201,7 @@ class Command(BaseCommand):
                 'price': Decimal('22000'),
                 'cost': Decimal('12000'),
                 'preparation_time': 10,
+                'image': 'products/gadogado.jpeg',
                 'is_available': True
             },
             {
@@ -202,6 +211,7 @@ class Command(BaseCommand):
                 'price': Decimal('18000'),
                 'cost': Decimal('10000'),
                 'preparation_time': 10,
+                'image': 'products/ketoprak.jpeg',
                 'is_available': True
             },
 
@@ -213,6 +223,7 @@ class Command(BaseCommand):
                 'price': Decimal('20000'),
                 'cost': Decimal('12000'),
                 'preparation_time': 5,
+                'image': 'products/cendol.jpg',
                 'is_available': True
             },
             {
@@ -222,6 +233,7 @@ class Command(BaseCommand):
                 'price': Decimal('15000'),
                 'cost': Decimal('8000'),
                 'preparation_time': 5,
+                'image': 'products/klepon.jpg',
                 'is_available': True
             },
 
@@ -233,6 +245,7 @@ class Command(BaseCommand):
                 'price': Decimal('8000'),
                 'cost': Decimal('3000'),
                 'preparation_time': 2,
+                'image': 'products/esteh.jpg',
                 'is_available': True
             },
             {
@@ -242,6 +255,7 @@ class Command(BaseCommand):
                 'price': Decimal('18000'),
                 'cost': Decimal('10000'),
                 'preparation_time': 5,
+                'image': 'products/jusalpukat.jpg',
                 'is_available': True
             },
             {
@@ -251,6 +265,7 @@ class Command(BaseCommand):
                 'price': Decimal('12000'),
                 'cost': Decimal('6000'),
                 'preparation_time': 5,
+                'image': 'products/wedang.jpg',
                 'is_available': True
             },
         ]

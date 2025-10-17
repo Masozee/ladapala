@@ -4,7 +4,7 @@ from .models import (
     Category, Product, Inventory, InventoryTransaction,
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
-    Promotion, Schedule, Report
+    Promotion, Schedule, Report, CashierSession, SessionAuditLog
 )
 
 
@@ -110,6 +110,22 @@ class ScheduleAdmin(admin.ModelAdmin):
     list_display = ['staff', 'date', 'shift_type', 'start_time', 'end_time', 'is_confirmed']
     list_filter = ['shift_type', 'date', 'is_confirmed']
     search_fields = ['staff__user__username']
+
+
+@admin.register(CashierSession)
+class CashierSessionAdmin(admin.ModelAdmin):
+    list_display = ['cashier', 'branch', 'shift_type', 'status', 'opened_at', 'closed_at', 'opening_cash', 'cash_difference', 'override_by']
+    list_filter = ['status', 'shift_type', 'branch', 'opened_at']
+    search_fields = ['cashier__user__username', 'cashier__employee_id']
+    readonly_fields = ['opened_at', 'closed_at', 'expected_cash', 'cash_difference', 'settlement_data']
+
+
+@admin.register(SessionAuditLog)
+class SessionAuditLogAdmin(admin.ModelAdmin):
+    list_display = ['session', 'event_type', 'performed_by', 'timestamp']
+    list_filter = ['event_type', 'timestamp']
+    search_fields = ['session__cashier__user__username', 'performed_by__user__username']
+    readonly_fields = ['timestamp']
 
 
 @admin.register(Report)

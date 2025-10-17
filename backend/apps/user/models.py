@@ -177,16 +177,20 @@ class Shift(models.Model):
     @property
     def hours_scheduled(self):
         """Calculate scheduled hours for the shift"""
+        # Return 0 if required fields are not set
+        if not self.shift_date or not self.start_time or not self.end_time:
+            return 0
+
         start_datetime = datetime.combine(self.shift_date, self.start_time)
         end_datetime = datetime.combine(self.shift_date, self.end_time)
-        
+
         # Handle overnight shifts
         if self.end_time < self.start_time:
             end_datetime += timedelta(days=1)
-        
+
         duration = end_datetime - start_datetime
         hours = duration.total_seconds() / 3600
-        
+
         # Subtract break duration
         break_hours = self.break_duration / 60
         return max(0, hours - break_hours)

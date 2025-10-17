@@ -36,6 +36,13 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchData()
+
+    // Auto-refresh every 30 seconds to show latest data
+    const interval = setInterval(() => {
+      fetchData()
+    }, 30000)
+
+    return () => clearInterval(interval)
   }, [])
 
   const fetchData = async () => {
@@ -46,13 +53,25 @@ export default function HomePage() {
       const summary = await api.getDashboardSummary()
       setDashboardData(summary)
 
-      // Fetch unpaid orders (CONFIRMED status = dining)
-      const unpaidResponse = await api.getOrders({ status: 'CONFIRMED' })
-      setUnpaidOrders(unpaidResponse.results)
+      // Fetch unpaid orders (COMPLETED status = food delivered, waiting for payment)
+      // Note: COMPLETED means food has been delivered to customer, now waiting for payment
+      const unpaidResponse = await api.getOrders({ status: 'COMPLETED' })
+      const sortedUnpaid = unpaidResponse.results.sort((a, b) => {
+        const tableA = parseInt(a.table_number || '999')
+        const tableB = parseInt(b.table_number || '999')
+        return tableA - tableB
+      })
+      setUnpaidOrders(sortedUnpaid)
 
-      // Fetch recent orders
-      const recentResponse = await api.getTodayOrders()
-      setRecentOrders(recentResponse.results.slice(0, 5))
+      // Fetch recent orders - show orders in progress (CONFIRMED, PREPARING, READY)
+      // COMPLETED orders are shown in "Transaksi Belum Bayar" section above
+      // Note: Fetch ALL orders, not just today's, to match transaction page behavior
+      const allOrdersResponse = await api.getOrders({})
+      const filteredRecent = allOrdersResponse.results
+        .filter(order => ['CONFIRMED', 'PREPARING', 'READY'].includes(order.status || ''))
+        .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
+        .slice(0, 5)
+      setRecentOrders(filteredRecent)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -107,9 +126,9 @@ export default function HomePage() {
       case 'COMPLETED':
         return { bg: 'bg-green-100', text: 'text-green-800', label: 'Selesai', icon: CheckmarkCircle01Icon, iconColor: 'text-green-600' }
       case 'PREPARING':
-        return { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Diproses', icon: ChefHatIcon, iconColor: 'text-blue-600' }
+        return { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Sedang Dimasak', icon: ChefHatIcon, iconColor: 'text-blue-600' }
       case 'READY':
-        return { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Siap', icon: KitchenUtensilsIcon, iconColor: 'text-yellow-600' }
+        return { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Siap Diantar', icon: KitchenUtensilsIcon, iconColor: 'text-yellow-600' }
       case 'CONFIRMED':
         return { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Dikonfirmasi', icon: CheckmarkCircle01Icon, iconColor: 'text-purple-600' }
       default:
@@ -148,9 +167,20 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">{today}</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-2">{today}</p>
+        </div>
+        <Button
+          onClick={fetchData}
+          variant="outline"
+          disabled={loading}
+          className="flex items-center gap-2"
+        >
+          <HugeiconsIcon icon={ArrowRight01Icon} size={20} strokeWidth={2} className={loading ? "animate-spin" : ""} />
+          {loading ? "Memuat..." : "Refresh"}
+        </Button>
       </div>
 
       {/* Stats Grid */}
@@ -382,6 +412,89 @@ export default function HomePage() {
                           <span className="text-xl font-bold text-blue-600">
                             {formatCurrency(order.total_amount || 0)}
                           </span>
+                        </div>
+                      </div>
+
+                      {/* Status Update Buttons */}
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium text-gray-700 mb-2">Ubah Status Pesanan:</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {order.status === 'CONFIRMED' && (
+                            <Button
+                              onClick={async () => {
+                                try {
+                                  await api.updateOrderStatus(order.id!, 'PREPARING')
+                                  await fetchData()
+                                  alert('Status diubah ke PREPARING')
+                                } catch (error) {
+                                  console.error('Error:', error)
+                                  alert('Gagal mengubah status')
+                                }
+                              }}
+                              className="bg-blue-600 hover:bg-blue-700"
+                              size="sm"
+                            >
+                              <HugeiconsIcon icon={ChefHatIcon} size={16} strokeWidth={2} className="mr-1" />
+                              Mulai Siapkan
+                            </Button>
+                          )}
+                          {order.status === 'PREPARING' && (
+                            <Button
+                              onClick={async () => {
+                                try {
+                                  await api.updateOrderStatus(order.id!, 'READY')
+                                  await fetchData()
+                                  alert('Status diubah ke READY - Siap diantar')
+                                } catch (error) {
+                                  console.error('Error:', error)
+                                  alert('Gagal mengubah status')
+                                }
+                              }}
+                              className="bg-yellow-600 hover:bg-yellow-700"
+                              size="sm"
+                            >
+                              <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} strokeWidth={2} className="mr-1" />
+                              Siap Diantar
+                            </Button>
+                          )}
+                          {order.status === 'READY' && (
+                            <Button
+                              onClick={async () => {
+                                try {
+                                  await api.updateOrderStatus(order.id!, 'COMPLETED')
+                                  await fetchData()
+                                  alert('Pesanan sudah diantar ke pelanggan')
+                                } catch (error) {
+                                  console.error('Error:', error)
+                                  alert('Gagal mengubah status')
+                                }
+                              }}
+                              className="bg-green-600 hover:bg-green-700"
+                              size="sm"
+                            >
+                              <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} strokeWidth={2} className="mr-1" />
+                              Sudah Diantar
+                            </Button>
+                          )}
+                          <Button
+                            onClick={async () => {
+                              if (!confirm('Batalkan pesanan ini?')) return
+                              try {
+                                await api.updateOrderStatus(order.id!, 'CANCELLED')
+                                await fetchData()
+                                alert('Pesanan dibatalkan')
+                              } catch (error) {
+                                console.error('Error:', error)
+                                alert('Gagal membatalkan pesanan')
+                              }
+                            }}
+                            variant="outline"
+                            className="border-red-300 text-red-600 hover:bg-red-50"
+                            size="sm"
+                          >
+                            <HugeiconsIcon icon={CancelCircleIcon} size={16} strokeWidth={2} className="mr-1" />
+                            Batalkan
+                          </Button>
                         </div>
                       </div>
                     </div>

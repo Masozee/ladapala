@@ -1,22 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  Search01Icon,
-  Add01Icon,
-  Download01Icon,
-  Upload01Icon,
   Package01Icon,
   Alert01Icon,
   AnalyticsDownIcon,
+  ArrowRight01Icon,
+  Add01Icon,
+  Download01Icon,
   Edit01Icon,
-  Delete01Icon
+  PackageReceiveIcon,
+  PackageSentIcon,
+  FileEditIcon,
+  Delete02Icon
 } from "@hugeicons/core-free-icons"
 import {
   Table,
@@ -26,428 +26,322 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { useAuth } from "@/contexts/auth-context"
+import { RoleGuard } from "@/components/role-guard"
+import { api, Inventory, InventoryTransaction } from "@/lib/api"
 
-interface StockItem {
-  id: string
-  name: string
-  category: string
-  unit: string
-  quantity: number
-  minimumStock: number
-  price: number
-  lastUpdated: string
-  status: "normal" | "low" | "out"
-}
+export default function StockDashboard() {
+  const router = useRouter()
+  const { staff } = useAuth()
 
-const mockStockItems: StockItem[] = [
-  {
-    id: "1",
-    name: "Beras Jasmine",
-    category: "Bahan Pokok",
-    unit: "kg",
-    quantity: 150,
-    minimumStock: 50,
-    price: 15000,
-    lastUpdated: "2024-01-15",
-    status: "normal"
-  },
-  {
-    id: "2",
-    name: "Minyak Goreng",
-    category: "Bahan Pokok",
-    unit: "liter",
-    quantity: 25,
-    minimumStock: 30,
-    price: 18000,
-    lastUpdated: "2024-01-14",
-    status: "low"
-  },
-  {
-    id: "3",
-    name: "Ayam Potong",
-    category: "Daging",
-    unit: "kg",
-    quantity: 0,
-    minimumStock: 20,
-    price: 35000,
-    lastUpdated: "2024-01-15",
-    status: "out"
-  },
-  {
-    id: "4",
-    name: "Cabai Merah",
-    category: "Sayuran",
-    unit: "kg",
-    quantity: 8,
-    minimumStock: 10,
-    price: 45000,
-    lastUpdated: "2024-01-15",
-    status: "low"
-  },
-  {
-    id: "5",
-    name: "Garam",
-    category: "Bumbu",
-    unit: "kg",
-    quantity: 50,
-    minimumStock: 10,
-    price: 5000,
-    lastUpdated: "2024-01-13",
-    status: "normal"
-  }
-]
+  const [inventory, setInventory] = useState<Inventory[]>([])
+  const [lowStock, setLowStock] = useState<Inventory[]>([])
+  const [recentTransactions, setRecentTransactions] = useState<InventoryTransaction[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-export default function StockPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [stockItems] = useState<StockItem[]>(mockStockItems)
-  const [isAdjustmentOpen, setIsAdjustmentOpen] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<StockItem | null>(null)
+  const canModify = staff && ['ADMIN', 'MANAGER', 'WAREHOUSE'].includes(staff.role)
 
-  const categories = ["all", "Bahan Pokok", "Daging", "Sayuran", "Bumbu", "Minuman"]
+  useEffect(() => {
+    fetchData()
+  }, [staff])
 
-  const filteredItems = stockItems.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || item.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+  const fetchData = async () => {
+    try {
+      setIsLoading(true)
 
-  const lowStockItems = stockItems.filter(item => item.status === "low" || item.status === "out")
-  const totalValue = stockItems.reduce((acc, item) => acc + (item.quantity * item.price), 0)
+      const [inventoryRes, lowStockRes, transactionsRes] = await Promise.all([
+        api.getInventory({ branch: staff?.branch?.id }),
+        api.getLowStockInventory(staff?.branch?.id),
+        api.getInventoryTransactions({ branch: staff?.branch?.id })
+      ])
 
-  const getStatusBadge = (status: StockItem["status"]) => {
-    switch (status) {
-      case "normal":
-        return <Badge className="bg-green-500">Normal</Badge>
-      case "low":
-        return <Badge className="bg-yellow-500">Rendah</Badge>
-      case "out":
-        return <Badge className="bg-red-500">Habis</Badge>
+      setInventory(inventoryRes.results)
+      setLowStock(lowStockRes.results)
+      setRecentTransactions(transactionsRes.results.slice(0, 10))
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
+  const totalValue = inventory.reduce((acc, item) =>
+    acc + (item.quantity * parseFloat(item.cost_per_unit)), 0
+  )
+
+  const todayTransactions = recentTransactions.filter(t => {
+    const today = new Date().toISOString().split('T')[0]
+    const txDate = new Date(t.created_at).toISOString().split('T')[0]
+    return today === txDate
+  }).length
+
+  const getTransactionTypeBadge = (type: string) => {
+    switch (type) {
+      case "IN":
+        return <Badge className="bg-green-500">Masuk</Badge>
+      case "OUT":
+        return <Badge className="bg-red-500">Keluar</Badge>
+      case "ADJUST":
+        return <Badge className="bg-blue-500">Koreksi</Badge>
+      case "WASTE":
+        return <Badge className="bg-orange-500">Rusak</Badge>
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Memuat data...</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header Section */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Manajemen Stok</h1>
-          <p className="text-muted-foreground">Kelola inventori dan stok bahan baku</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="rounded">
-            <HugeiconsIcon icon={Upload01Icon} size={16} strokeWidth={2} className="mr-2" />
-            Import
-          </Button>
-          <Button variant="outline" className="rounded">
-            <HugeiconsIcon icon={Download01Icon} size={16} strokeWidth={2} className="mr-2" />
-            Export
-          </Button>
-          <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a]">
-            <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} className="mr-2" />
-            Tambah Item
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Item</CardTitle>
-            <HugeiconsIcon icon={Package01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stockItems.length}</div>
-            <p className="text-xs text-muted-foreground">Jenis bahan baku</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nilai Total</CardTitle>
-            <HugeiconsIcon icon={AnalyticsDownIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              Rp {totalValue.toLocaleString("id-ID")}
-            </div>
-            <p className="text-xs text-muted-foreground">Nilai inventori</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
-            <HugeiconsIcon icon={Alert01Icon} size={16} strokeWidth={2} className="text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{lowStockItems.filter(i => i.status === "low").length}</div>
-            <p className="text-xs text-muted-foreground">Perlu restock</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Stok Habis</CardTitle>
-            <HugeiconsIcon icon={Alert01Icon} size={16} strokeWidth={2} className="text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{lowStockItems.filter(i => i.status === "out").length}</div>
-            <p className="text-xs text-muted-foreground">Segera restock</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="inventory" className="space-y-4">
-        <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
-          <TabsTrigger value="inventory" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Inventori</TabsTrigger>
-          <TabsTrigger value="alerts" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Peringatan Stok</TabsTrigger>
-          <TabsTrigger value="history" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Riwayat</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="inventory" className="space-y-4">
-          {/* Search and Filter Bar */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Daftar Inventori</h2>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <HugeiconsIcon icon={Search01Icon} size={16} strokeWidth={2} className="absolute left-2 top-2.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Cari item..."
-                    className="pl-8 w-[200px]"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Kategori" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category === "all" ? "Semua Kategori" : category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+    <RoleGuard allowedRoles={['ADMIN', 'MANAGER', 'WAREHOUSE', 'CASHIER', 'KITCHEN']}>
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard Stok</h1>
+            <p className="text-muted-foreground">Kelola inventori dan pergerakan stok</p>
           </div>
+        </div>
 
-          {/* Table */}
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="p-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nama Item</TableHead>
-                    <TableHead>Kategori</TableHead>
-                    <TableHead>Stok</TableHead>
-                    <TableHead>Satuan</TableHead>
-                    <TableHead>Min. Stok</TableHead>
-                    <TableHead>Harga</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Terakhir Update</TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredItems.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>{item.category}</TableCell>
-                      <TableCell className="font-semibold">{item.quantity}</TableCell>
-                      <TableCell>{item.unit}</TableCell>
-                      <TableCell>{item.minimumStock}</TableCell>
-                      <TableCell>Rp {item.price.toLocaleString("id-ID")}</TableCell>
-                      <TableCell>{getStatusBadge(item.status)}</TableCell>
-                      <TableCell>{item.lastUpdated}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Dialog open={isAdjustmentOpen} onOpenChange={setIsAdjustmentOpen}>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setSelectedItem(item)}
-                              >
-                                <HugeiconsIcon icon={Edit01Icon} size={16} strokeWidth={2} />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Sesuaikan Stok</DialogTitle>
-                                <DialogDescription>
-                                  Ubah jumlah stok untuk {selectedItem?.name}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="space-y-2">
-                                  <Label>Stok Saat Ini</Label>
-                                  <Input
-                                    value={selectedItem?.quantity}
-                                    disabled
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Stok Baru</Label>
-                                  <Input
-                                    type="number"
-                                    placeholder="Masukkan jumlah stok baru"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Alasan Penyesuaian</Label>
-                                  <Select>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Pilih alasan" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="received">Penerimaan Barang</SelectItem>
-                                      <SelectItem value="damaged">Barang Rusak</SelectItem>
-                                      <SelectItem value="expired">Kadaluarsa</SelectItem>
-                                      <SelectItem value="correction">Koreksi</SelectItem>
-                                      <SelectItem value="other">Lainnya</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="flex justify-end gap-2">
-                                  <Button variant="outline" className="rounded" onClick={() => setIsAdjustmentOpen(false)}>
-                                    Batal
-                                  </Button>
-                                  <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a]" onClick={() => setIsAdjustmentOpen(false)}>
-                                    Simpan Perubahan
-                                  </Button>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          <Button variant="ghost" size="icon">
-                            <HugeiconsIcon icon={Delete01Icon} size={16} strokeWidth={2} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-            </Table>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="alerts" className="space-y-4">
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-4">
           <Card className="bg-white rounded-lg border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle>Peringatan Stok</CardTitle>
-              <CardDescription>
-                Item yang memerlukan perhatian segera
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Item</CardTitle>
+              <HugeiconsIcon icon={Package01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {lowStockItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded ${
-                        item.status === "out" ? "bg-red-100" : "bg-yellow-100"
-                      }`}>
-                        <HugeiconsIcon icon={Alert01Icon} size={20} strokeWidth={2} className={`${
-                          item.status === "out" ? "text-red-500" : "text-yellow-500"
-                        }`} />
-                      </div>
+              <div className="text-2xl font-bold">{inventory.length}</div>
+              <p className="text-xs text-muted-foreground">Jenis bahan baku</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Nilai Total</CardTitle>
+              <HugeiconsIcon icon={AnalyticsDownIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                Rp {totalValue.toLocaleString("id-ID")}
+              </div>
+              <p className="text-xs text-muted-foreground">Nilai inventori</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white rounded-lg border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/office/stock/reports')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
+              <HugeiconsIcon icon={Alert01Icon} size={16} strokeWidth={2} className="text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">
+                {(lowStock || []).length}
+              </div>
+              <p className="text-xs text-muted-foreground">Perlu direstock</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Transaksi Hari Ini</CardTitle>
+              <HugeiconsIcon icon={FileEditIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{todayTransactions}</div>
+              <p className="text-xs text-muted-foreground">Pergerakan stok</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card
+            className="bg-gradient-to-br from-blue-50 to-blue-100 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => router.push('/office/stock/items')}
+          >
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500 rounded-lg">
+                  <HugeiconsIcon icon={Package01Icon} size={24} strokeWidth={2} className="text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Master Item</CardTitle>
+                  <CardDescription>Kelola data item</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card
+            className="bg-gradient-to-br from-green-50 to-green-100 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => router.push('/office/stock/movements?tab=receipt')}
+          >
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-500 rounded-lg">
+                  <HugeiconsIcon icon={PackageReceiveIcon} size={24} strokeWidth={2} className="text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Penerimaan</CardTitle>
+                  <CardDescription>Terima barang masuk</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card
+            className="bg-gradient-to-br from-purple-50 to-purple-100 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => router.push('/office/stock/movements?tab=adjustment')}
+          >
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-500 rounded-lg">
+                  <HugeiconsIcon icon={Edit01Icon} size={24} strokeWidth={2} className="text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Koreksi Stok</CardTitle>
+                  <CardDescription>Penyesuaian stok</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card
+            className="bg-gradient-to-br from-gray-50 to-gray-100 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => router.push('/office/stock/reports')}
+          >
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gray-500 rounded-lg">
+                  <HugeiconsIcon icon={AnalyticsDownIcon} size={24} strokeWidth={2} className="text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Laporan</CardTitle>
+                  <CardDescription>Lihat laporan stok</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* Low Stock Alerts */}
+        {(lowStock || []).length > 0 && (
+          <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Peringatan Stok Rendah</CardTitle>
+                <CardDescription>Item yang perlu segera direstock</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                className="rounded"
+                onClick={() => router.push('/office/stock/reports')}
+              >
+                Lihat Semua
+                <HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2} className="ml-2" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {(lowStock || []).slice(0, 5).map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <HugeiconsIcon icon={Alert01Icon} size={20} strokeWidth={2} className="text-yellow-600" />
                       <div>
                         <h4 className="font-semibold">{item.name}</h4>
                         <p className="text-sm text-muted-foreground">
-                          Stok: {item.quantity} {item.unit} | Minimum: {item.minimumStock} {item.unit}
+                          Stok: {item.quantity} {item.unit} | Min: {item.min_quantity} {item.unit}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusBadge(item.status)}
-                      <Button size="sm">Restock</Button>
-                    </div>
+                    {canModify && (
+                      <Button
+                        size="sm"
+                        className="bg-[#58ff34] hover:bg-[#4de82a]"
+                        onClick={() => router.push('/office/stock/movements?tab=receipt&item=' + item.id)}
+                      >
+                        Restock
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        )}
 
-        <TabsContent value="history" className="space-y-4">
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle>Riwayat Perubahan Stok</CardTitle>
-              <CardDescription>
-                Log aktivitas perubahan inventori
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+        {/* Recent Transactions */}
+        <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Transaksi Terbaru</CardTitle>
+              <CardDescription>10 transaksi terakhir</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              className="rounded"
+              onClick={() => router.push('/office/stock/reports?tab=transactions')}
+            >
+              Lihat Semua
+              <HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2} className="ml-2" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {recentTransactions.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Belum ada transaksi</p>
+              </div>
+            ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Item</TableHead>
-                    <TableHead>Jenis</TableHead>
-                    <TableHead>Sebelum</TableHead>
-                    <TableHead>Perubahan</TableHead>
-                    <TableHead>Sesudah</TableHead>
-                    <TableHead>Keterangan</TableHead>
-                    <TableHead>Operator</TableHead>
+                    <TableHead>Tipe</TableHead>
+                    <TableHead>Jumlah</TableHead>
+                    <TableHead>Petugas</TableHead>
+                    <TableHead>Catatan</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell>2024-01-15 10:30</TableCell>
-                    <TableCell>Beras Jasmine</TableCell>
-                    <TableCell><Badge className="bg-green-500">Masuk</Badge></TableCell>
-                    <TableCell>100 kg</TableCell>
-                    <TableCell className="text-green-600">+50 kg</TableCell>
-                    <TableCell>150 kg</TableCell>
-                    <TableCell>Penerimaan barang</TableCell>
-                    <TableCell>Admin</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>2024-01-15 09:15</TableCell>
-                    <TableCell>Ayam Potong</TableCell>
-                    <TableCell><Badge className="bg-red-500">Keluar</Badge></TableCell>
-                    <TableCell>20 kg</TableCell>
-                    <TableCell className="text-red-600">-20 kg</TableCell>
-                    <TableCell>0 kg</TableCell>
-                    <TableCell>Penggunaan produksi</TableCell>
-                    <TableCell>Kitchen</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>2024-01-14 16:45</TableCell>
-                    <TableCell>Minyak Goreng</TableCell>
-                    <TableCell><Badge className="bg-red-500">Keluar</Badge></TableCell>
-                    <TableCell>30 L</TableCell>
-                    <TableCell className="text-red-600">-5 L</TableCell>
-                    <TableCell>25 L</TableCell>
-                    <TableCell>Penggunaan produksi</TableCell>
-                    <TableCell>Kitchen</TableCell>
-                  </TableRow>
+                  {recentTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>
+                        {new Date(transaction.created_at).toLocaleString('id-ID', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </TableCell>
+                      <TableCell className="font-medium">{transaction.inventory_name}</TableCell>
+                      <TableCell>{getTransactionTypeBadge(transaction.transaction_type)}</TableCell>
+                      <TableCell className={
+                        transaction.transaction_type === 'IN' ? 'text-green-600 font-semibold' :
+                        transaction.transaction_type === 'OUT' || transaction.transaction_type === 'WASTE' ? 'text-red-600 font-semibold' :
+                        'text-blue-600 font-semibold'
+                      }>
+                        {transaction.transaction_type === 'IN' ? '+' :
+                         transaction.transaction_type === 'OUT' || transaction.transaction_type === 'WASTE' ? '-' : ''}
+                        {transaction.quantity}
+                      </TableCell>
+                      <TableCell>{transaction.performed_by_name}</TableCell>
+                      <TableCell className="max-w-xs truncate">{transaction.notes || '-'}</TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </RoleGuard>
   )
 }
