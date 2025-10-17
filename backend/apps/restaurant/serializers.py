@@ -235,9 +235,13 @@ class ScheduleSerializer(serializers.ModelSerializer):
     employee_id_display = serializers.CharField(source='staff.employee_id', read_only=True)
     shift_date = serializers.DateField(source='date', read_only=True)
     shift_type_display = serializers.CharField(source='get_shift_type_display', read_only=True)
-    break_duration = serializers.IntegerField(default=0, read_only=True)  # Not stored in model, default to 0
+    break_duration = serializers.SerializerMethodField()  # Not stored in model, default to 0
     hours_scheduled = serializers.SerializerMethodField()
     has_attendance = serializers.BooleanField(source='is_confirmed', read_only=True)
+
+    def get_break_duration(self, obj):
+        """Default break duration"""
+        return 0
 
     # Keep original fields for write operations
     staff = serializers.PrimaryKeyRelatedField(queryset=Staff.objects.all(), write_only=True)
