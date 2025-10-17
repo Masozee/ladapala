@@ -287,7 +287,7 @@ export default function SchedulePage() {
                 ))}
 
                 {staff.map(employee => {
-                  const fullName = `${employee.user_first_name} ${employee.user_last_name}`
+                  const fullName = `${employee.user.first_name} ${employee.user.last_name}`
                   return (
                     <React.Fragment key={employee.id}>
                       <div className="font-medium text-sm py-4 flex items-center">
@@ -365,13 +365,13 @@ export default function SchedulePage() {
               </TableHeader>
               <TableBody>
                 {staff.map((employee) => {
-                  const fullName = `${employee.user_first_name} ${employee.user_last_name}`
+                  const fullName = `${employee.user.first_name} ${employee.user.last_name}`
                   return (
                     <TableRow key={employee.id}>
                       <TableCell className="font-mono text-sm">{employee.employee_id}</TableCell>
                       <TableCell className="font-medium">{fullName}</TableCell>
                       <TableCell>{getRoleBadge(employee.role)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{employee.user_email}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{employee.user.email}</TableCell>
                       <TableCell>
                         {employee.is_active ? (
                           <Badge className="bg-green-500 text-white">Aktif</Badge>

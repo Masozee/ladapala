@@ -107,12 +107,16 @@ export interface Staff {
   id: number;
   employee_id: string;
   role: 'ADMIN' | 'MANAGER' | 'CASHIER' | 'KITCHEN' | 'WAREHOUSE';
-  branch: {
-    id: number;
-    name: string;
-  };
+  branch: number;
+  branch_name?: string;
   phone: string;
   is_active: boolean;
+  user: {
+    id: number;
+    email: string;
+    first_name: string;
+    last_name: string;
+  };
 }
 
 export interface AuthResponse {
