@@ -33,6 +33,7 @@ export default function HomePage() {
   const [unpaidOrders, setUnpaidOrders] = useState<Order[]>([])
   const [recentOrders, setRecentOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeSession, setActiveSession] = useState<any>(null)
 
   useEffect(() => {
     fetchData()
@@ -49,14 +50,38 @@ export default function HomePage() {
     try {
       setLoading(true)
 
-      // Fetch dashboard summary
-      const summary = await api.getDashboardSummary()
+      // First, try to get active cashier session
+      let sessionId: number | undefined
+      try {
+        const sessions = await api.getActiveCashierSession()
+        if (sessions && sessions.length > 0) {
+          setActiveSession(sessions[0])
+          sessionId = sessions[0].id
+        } else {
+          setActiveSession(null)
+        }
+      } catch (error) {
+        console.log('No active session found, showing daily stats')
+        setActiveSession(null)
+      }
+
+      // Fetch dashboard summary (session-based if session exists, otherwise daily)
+      const summary = await api.getDashboardSummary(sessionId)
       setDashboardData(summary)
 
       // Fetch unpaid orders (COMPLETED status = food delivered, waiting for payment)
       // Note: COMPLETED means food has been delivered to customer, now waiting for payment
+      // Exclude orders that already have COMPLETED payments
+      // Only show TODAY's orders (filter out old orders from previous days)
       const unpaidResponse = await api.getOrders({ status: 'COMPLETED' })
-      const sortedUnpaid = unpaidResponse.results.sort((a, b) => {
+      const today = new Date().toDateString()
+      const filteredUnpaid = unpaidResponse.results.filter(order => {
+        const hasCompletedPayment = order.payments && order.payments.some((p: any) => p.status === 'COMPLETED')
+        const orderDate = new Date(order.created_at!).toDateString()
+        const isToday = orderDate === today
+        return !hasCompletedPayment && isToday
+      })
+      const sortedUnpaid = filteredUnpaid.sort((a, b) => {
         const tableA = parseInt(a.table_number || '999')
         const tableB = parseInt(b.table_number || '999')
         return tableA - tableB
@@ -65,10 +90,15 @@ export default function HomePage() {
 
       // Fetch recent orders - show orders in progress (CONFIRMED, PREPARING, READY)
       // COMPLETED orders are shown in "Transaksi Belum Bayar" section above
-      // Note: Fetch ALL orders, not just today's, to match transaction page behavior
+      // Only show TODAY's orders (filter out old orders from previous days)
       const allOrdersResponse = await api.getOrders({})
       const filteredRecent = allOrdersResponse.results
-        .filter(order => ['CONFIRMED', 'PREPARING', 'READY'].includes(order.status || ''))
+        .filter(order => {
+          const isActiveStatus = ['CONFIRMED', 'PREPARING', 'READY'].includes(order.status || '')
+          const orderDate = new Date(order.created_at!).toDateString()
+          const isToday = orderDate === today
+          return isActiveStatus && isToday
+        })
         .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
         .slice(0, 5)
       setRecentOrders(filteredRecent)
@@ -92,21 +122,21 @@ export default function HomePage() {
 
   const stats: StatCard[] = [
     {
-      title: "Total Penjualan Hari Ini",
+      title: activeSession ? "Total Penjualan Sesi Ini" : "Total Penjualan Hari Ini",
       value: `Rp ${parseFloat(dashboardData?.total_revenue_today || '0').toLocaleString('id-ID')}`,
       change: "+12.3%",
       icon: Wallet01Icon,
       trend: "up"
     },
     {
-      title: "Transaksi",
+      title: activeSession ? "Transaksi Sesi Ini" : "Transaksi Hari Ini",
       value: dashboardData?.total_orders_today?.toString() || "0",
       change: "+8.2%",
       icon: CreditCardIcon,
       trend: "up"
     },
     {
-      title: "Meja Aktif",
+      title: activeSession ? "Meja Aktif Sesi Ini" : "Meja Aktif",
       value: dashboardData?.active_tables?.toString() || "0",
       change: "-2.4%",
       icon: UserIcon,
@@ -171,6 +201,12 @@ export default function HomePage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-2">{today}</p>
+          {activeSession && (
+            <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span className="font-medium">Sesi Aktif: {activeSession.cashier_name} - {activeSession.shift_type}</span>
+            </div>
+          )}
         </div>
         <Button
           onClick={fetchData}

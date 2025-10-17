@@ -66,14 +66,20 @@ export default function TablePage() {
       // Fetch all tables
       const tablesResponse = await api.getTables()
 
-      // Fetch active orders (not COMPLETED or CANCELLED)
+      // Fetch active orders (not CANCELLED and not yet paid)
       // Filter on client side to ensure we only get truly active orders
+      // Only show TODAY's orders (filter out old orders from previous days)
       const ordersResponse = await api.getOrders({})
+      const today = new Date().toDateString()
       const activeOrders = ordersResponse.results.filter(
         order => {
-          const isActive = order.status !== 'COMPLETED' && order.status !== 'CANCELLED'
+          // Order is active if it's not CANCELLED and doesn't have a completed payment
+          const notCancelled = order.status !== 'CANCELLED'
           const hasTable = order.table !== null && order.table !== undefined
-          return isActive && hasTable
+          const hasCompletedPayment = order.payments && order.payments.some((p: any) => p.status === 'COMPLETED')
+          const orderDate = new Date(order.created_at!).toDateString()
+          const isToday = orderDate === today
+          return notCancelled && hasTable && !hasCompletedPayment && isToday
         }
       )
 
@@ -86,8 +92,15 @@ export default function TablePage() {
       setProcessingOrders(processingResponse.results)
 
       // Get bookings from localStorage
+      // Filter to only show today's or future bookings (not past bookings)
       const bookings = JSON.parse(localStorage.getItem('tableBookings') || '[]')
-      const reservedTableIds = bookings.map((b: any) => b.table_id)
+      const todayBookings = bookings.filter((b: any) => {
+        if (!b.booking_date) return false
+        const bookingDate = new Date(b.booking_date).toDateString()
+        const todayDate = new Date().toDateString()
+        return bookingDate >= todayDate
+      })
+      const reservedTableIds = todayBookings.map((b: any) => b.table_id)
 
       // Group orders by table
       const ordersByTable = activeOrders.reduce((acc, order) => {
@@ -117,19 +130,17 @@ export default function TablePage() {
         const currentGuests = tableOrders.length > 0 ? Math.min(tableOrders.length * 2, table.capacity) : 0
 
         // Determine table status
-        // Priority: 1) Reservations, 2) Active orders, 3) Backend is_available flag
+        // Priority: 1) Reservations, 2) Active orders (today), 3) Default to available
         let status: 'occupied' | 'available' | 'reserved' | 'cleaning' = 'available'
         if (reservedTableIds.includes(table.id)) {
           status = 'reserved'
         } else if (tableOrders.length > 0) {
-          // Has active orders - definitely occupied
+          // Has active orders (today) - definitely occupied
           status = 'occupied'
-        } else if (table.is_available) {
-          // No active orders and marked as available - available
-          status = 'available'
         } else {
-          // No active orders but marked as unavailable - could be cleaning
-          status = 'occupied'
+          // No active orders today - available
+          // We ignore backend is_available flag as it may be stale from yesterday
+          status = 'available'
         }
 
         return {

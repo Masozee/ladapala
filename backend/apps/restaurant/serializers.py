@@ -108,14 +108,20 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    payments = serializers.SerializerMethodField()
     total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     created_by_name = serializers.CharField(source='created_by.user.username', read_only=True)
     table_number = serializers.CharField(source='table.number', read_only=True)
-    
+
     class Meta:
         model = Order
         fields = '__all__'
         read_only_fields = ['order_number', 'created_at', 'updated_at', 'total_amount']
+
+    def get_payments(self, obj):
+        from .models import Payment
+        payments = Payment.objects.filter(order=obj)
+        return [{'id': p.id, 'status': p.status, 'amount': str(p.amount)} for p in payments]
 
 
 class OrderItemCreateSerializer(serializers.ModelSerializer):

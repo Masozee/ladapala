@@ -498,8 +498,10 @@ class ApiClient {
   }
 
   // Dashboard
-  async getDashboardSummary(): Promise<DashboardData> {
-    return this.fetch(`/dashboard/summary/?branch_id=${this.branchId}`);
+  async getDashboardSummary(sessionId?: number): Promise<DashboardData> {
+    const params = new URLSearchParams({ branch_id: this.branchId });
+    if (sessionId) params.set('session_id', sessionId.toString());
+    return this.fetch(`/dashboard/summary/?${params.toString()}`);
   }
 
   // Payments

@@ -588,47 +588,113 @@ class DashboardViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def summary(self, request):
         branch_id = request.query_params.get('branch_id')
-        
+        session_id = request.query_params.get('session_id')
+
         if not branch_id:
             return Response(
-                {'error': 'branch_id is required'}, 
+                {'error': 'branch_id is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         try:
             branch = Branch.objects.get(id=branch_id)
         except Branch.DoesNotExist:
             return Response(
-                {'error': 'Branch not found'}, 
+                {'error': 'Branch not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+
         today = timezone.now().date()
+
+        # If session_id provided, filter by session; otherwise show today's data
+        if session_id:
+            try:
+                session = CashierSession.objects.get(id=session_id, branch=branch)
+
+                # Count only PAID transactions in this session
+                paid_orders_session = Payment.objects.filter(
+                    cashier_session=session,
+                    status='COMPLETED'
+                ).values('order').distinct().count()
+
+                total_orders_today = paid_orders_session
+
+                # Calculate revenue from completed payments in this session
+                total_revenue_today = Payment.objects.filter(
+                    cashier_session=session,
+                    status='COMPLETED'
+                ).aggregate(total=Sum('amount'))['total'] or 0
+
+                # For session-based, count orders created during session time
+                orders_in_session = Order.objects.filter(
+                    branch=branch,
+                    created_at__gte=session.opened_at,
+                    created_at__lte=session.closed_at if session.closed_at else timezone.now()
+                )
+
+            except CashierSession.DoesNotExist:
+                return Response(
+                    {'error': 'Session not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            # Original day-based logic
+            orders_today = Order.objects.filter(
+                branch=branch,
+                created_at__date=today
+            )
+
+            orders_in_session = orders_today
+
+            # Count only PAID transactions (orders with completed payments)
+            # This represents actual completed sales, not just orders placed
+            paid_orders_today = Payment.objects.filter(
+                order__branch=branch,
+                created_at__date=today,
+                status='COMPLETED'
+            ).values('order').distinct().count()
+
+            total_orders_today = paid_orders_today
+
+            # Calculate revenue from completed payments only (not order status)
+            # This ensures we only count orders that have been paid
+            total_revenue_today = Payment.objects.filter(
+                order__branch=branch,
+                created_at__date=today,
+                status='COMPLETED'
+            ).aggregate(total=Sum('amount'))['total'] or 0
         
-        orders_today = Order.objects.filter(
-            branch=branch,
-            created_at__date=today
-        )
-        
-        total_orders_today = orders_today.count()
-        
-        total_revenue_today = orders_today.filter(
-            status='COMPLETED'
-        ).aggregate(total=Sum('payments__amount'))['total'] or 0
-        
-        pending_orders = orders_today.filter(
+        pending_orders = orders_in_session.filter(
             status__in=['PENDING', 'CONFIRMED', 'PREPARING']
         ).count()
-        
+
         low_stock_items = Inventory.objects.filter(
             branch=branch,
             quantity__lte=F('min_quantity')
         ).count()
-        
-        active_tables = Table.objects.filter(
-            branch=branch,
-            is_available=False
-        ).count()
+
+        # Active tables: count tables with unpaid orders from today/session
+        if session_id:
+            # For session-based: tables with orders created during session that haven't been paid
+            active_tables_ids = Order.objects.filter(
+                branch=branch,
+                table__isnull=False,
+                created_at__gte=session.opened_at,
+                created_at__lte=session.closed_at if session.closed_at else timezone.now()
+            ).exclude(
+                payments__status='COMPLETED'
+            ).values_list('table', flat=True).distinct()
+            active_tables = len(active_tables_ids)
+        else:
+            # For day-based: tables with orders from today that haven't been paid
+            active_tables_ids = Order.objects.filter(
+                branch=branch,
+                table__isnull=False,
+                created_at__date=today
+            ).exclude(
+                payments__status='COMPLETED'
+            ).values_list('table', flat=True).distinct()
+            active_tables = len(active_tables_ids)
         
         staff_on_duty = Schedule.objects.filter(
             staff__branch=branch,

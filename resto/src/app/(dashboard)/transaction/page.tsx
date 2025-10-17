@@ -21,20 +21,24 @@ export default function TransactionPage() {
   const [shouldPrint, setShouldPrint] = useState(false)
 
   useEffect(() => {
-    fetchPendingOrders()
+    // Initial fetch with loading state
+    fetchPendingOrders(false)
 
-    // Auto-refresh every 10 seconds to show latest orders
+    // Auto-refresh every 10 seconds in background without disrupting UI
     const interval = setInterval(() => {
-      fetchPendingOrders()
+      fetchPendingOrders(true)
     }, 10000)
 
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const fetchPendingOrders = async () => {
+  const fetchPendingOrders = async (keepSelection = true) => {
     try {
-      setLoading(true)
+      // Only show loading on initial fetch, not during auto-refresh
+      if (!keepSelection) {
+        setLoading(true)
+      }
       console.log('Fetching active orders...')
       // Fetch all active orders (CONFIRMED, PREPARING, READY, COMPLETED)
       const response = await api.getOrders({})
@@ -42,15 +46,25 @@ export default function TransactionPage() {
 
       // Filter to show only active orders (not CANCELLED)
       // COMPLETED means food delivered to customer, waiting for payment
-      const activeOrders = response.results.filter(
-        order => ['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status)
-      )
+      // Exclude orders that already have COMPLETED payments
+      // Only show TODAY's orders (filter out old orders from previous days)
+      const today = new Date().toDateString()
+      const activeOrders = response.results.filter(order => {
+        const hasActiveStatus = ['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status)
+        const hasCompletedPayment = order.payments && order.payments.some((p: any) => p.status === 'COMPLETED')
+        const orderDate = new Date(order.created_at!).toDateString()
+        const isToday = orderDate === today
+        return hasActiveStatus && !hasCompletedPayment && isToday
+      })
       setPendingOrders(activeOrders)
 
       // Check if current selected order is still active
       if (selectedOrder) {
-        const stillActive = activeOrders.find(o => o.id === selectedOrder.id)
-        if (!stillActive) {
+        const updatedOrder = activeOrders.find(o => o.id === selectedOrder.id)
+        if (updatedOrder) {
+          // Update selected order with fresh data
+          setSelectedOrder(updatedOrder)
+        } else {
           // Current order is no longer active (completed/cancelled), clear it
           console.log('Current order is no longer active, clearing selection')
           setSelectedOrder(null)
@@ -60,7 +74,7 @@ export default function TransactionPage() {
 
       // Auto-select first COMPLETED order if available (delivered, waiting payment), otherwise READY, then first order
       // Only auto-select if no order is currently selected
-      if (!selectedOrder || activeOrders.findIndex(o => o.id === selectedOrder.id) === -1) {
+      if (!selectedOrder) {
         const firstCompletedOrder = activeOrders.find(o => o.status === 'COMPLETED')
         const firstReadyOrder = activeOrders.find(o => o.status === 'READY')
         const orderToSelect = firstCompletedOrder || firstReadyOrder || activeOrders[0]
@@ -73,9 +87,13 @@ export default function TransactionPage() {
       }
     } catch (error) {
       console.error('Error fetching active orders:', error)
-      alert('Gagal memuat pesanan aktif: ' + (error as Error).message)
+      if (!keepSelection) {
+        alert('Gagal memuat pesanan aktif: ' + (error as Error).message)
+      }
     } finally {
-      setLoading(false)
+      if (!keepSelection) {
+        setLoading(false)
+      }
     }
   }
 
@@ -172,15 +190,15 @@ export default function TransactionPage() {
 
     try {
       // Create payment via API
+      // Backend automatically updates order status when payment is COMPLETED
+      // Map QRIS to MOBILE for backend
+      const backendPaymentMethod = paymentMethod === 'qris' ? 'MOBILE' : paymentMethod.toUpperCase()
       await api.createPayment({
         order: selectedOrder.id!,
         amount: total.toString(),
-        payment_method: paymentMethod.toUpperCase() as 'CASH' | 'CARD' | 'MOBILE',
+        payment_method: backendPaymentMethod as 'CASH' | 'CARD' | 'MOBILE',
         status: 'COMPLETED'
       })
-
-      // Update order status to COMPLETED after successful payment
-      await api.updateOrderStatus(selectedOrder.id!, 'COMPLETED')
 
       // Prepare and trigger receipt printing
       const receipt = prepareReceiptData()
@@ -193,7 +211,7 @@ export default function TransactionPage() {
       setShowPaymentSuccess(true)
 
       // Immediately refresh the order list to remove completed order
-      await fetchPendingOrders()
+      await fetchPendingOrders(false)
 
       // Reset form after a short delay
       setTimeout(() => {
@@ -242,13 +260,12 @@ export default function TransactionPage() {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">Kasir</h1>
             <Button
-              onClick={fetchPendingOrders}
+              onClick={() => fetchPendingOrders(true)}
               variant="outline"
               size="sm"
               className="rounded"
-              disabled={loading}
             >
-              {loading ? "Memuat..." : "Refresh"}
+              Refresh
             </Button>
           </div>
           {selectedOrder && (
@@ -580,7 +597,7 @@ export default function TransactionPage() {
                   if (!selectedOrder) return
                   try {
                     await api.updateOrderStatus(selectedOrder.id!, 'COMPLETED')
-                    await fetchPendingOrders()
+                    await fetchPendingOrders(true)
                     alert('Status: Pesanan sudah diantar ke pelanggan')
                   } catch (error) {
                     console.error('Error updating status:', error)
@@ -599,7 +616,7 @@ export default function TransactionPage() {
                   if (!selectedOrder) return
                   try {
                     await api.updateOrderStatus(selectedOrder.id!, 'READY')
-                    await fetchPendingOrders()
+                    await fetchPendingOrders(true)
                     alert('Status: Pesanan siap diantar')
                   } catch (error) {
                     console.error('Error updating status:', error)
@@ -618,7 +635,7 @@ export default function TransactionPage() {
                   if (!selectedOrder) return
                   try {
                     await api.updateOrderStatus(selectedOrder.id!, 'PREPARING')
-                    await fetchPendingOrders()
+                    await fetchPendingOrders(true)
                     alert('Status: Pesanan mulai dimasak')
                   } catch (error) {
                     console.error('Error updating status:', error)
