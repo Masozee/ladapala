@@ -85,10 +85,13 @@ export default function SchedulePage() {
         date_lte: endDate
       })
 
-      console.log(`Fetched ${schedulesResponse.results.length} schedules`)
+      console.log(`Fetched ${schedulesResponse.results.length} schedules`, schedulesResponse)
+      console.log('Sample schedule:', schedulesResponse.results[0])
       setSchedules(schedulesResponse.results)
     } catch (error) {
       console.error('Error fetching schedule data:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
+      alert('Failed to fetch schedules: ' + (error as any).message)
     } finally {
       setLoading(false)
     }
