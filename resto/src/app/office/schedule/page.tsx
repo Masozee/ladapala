@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -289,8 +289,8 @@ export default function SchedulePage() {
                 {staff.map(employee => {
                   const fullName = `${employee.user_first_name} ${employee.user_last_name}`
                   return (
-                    <>
-                      <div key={employee.id} className="font-medium text-sm py-4 flex items-center">
+                    <React.Fragment key={employee.id}>
+                      <div className="font-medium text-sm py-4 flex items-center">
                         <div>
                           <div>{fullName}</div>
                           <div className="text-xs">{getRoleBadge(employee.role)}</div>
@@ -311,7 +311,7 @@ export default function SchedulePage() {
                           </div>
                         )
                       })}
-                    </>
+                    </React.Fragment>
                   )
                 })}
               </div>
