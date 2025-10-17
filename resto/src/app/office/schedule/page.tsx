@@ -134,7 +134,14 @@ export default function SchedulePage() {
 
   const getShiftForEmployeeAndDate = (employeeId: number, date: Date) => {
     const dateStr = date.toISOString().split('T')[0]
-    return schedules.find(s => s.employee === employeeId && s.shift_date === dateStr)
+    const shift = schedules.find(s => s.employee === employeeId && s.shift_date === dateStr)
+    // Debug first call
+    if (employeeId === staff[0]?.id && dateStr === weekDates[0]?.toISOString().split('T')[0]) {
+      console.log(`Looking for employee ${employeeId} on ${dateStr}`)
+      console.log('Available schedule dates:', schedules.map(s => `${s.employee}:${s.shift_date}`).slice(0, 5))
+      console.log('Found shift:', shift)
+    }
+    return shift
   }
 
   const getTodaySchedules = () => {
@@ -157,6 +164,11 @@ export default function SchedulePage() {
 
   const weekStats = getWeekStats()
   const todaySchedules = getTodaySchedules()
+
+  // Debug logs
+  console.log('Staff count:', staff.length)
+  console.log('Schedules count:', schedules.length)
+  console.log('Week dates:', weekDates.map(d => d.toISOString().split('T')[0]))
 
   if (loading) {
     return (
