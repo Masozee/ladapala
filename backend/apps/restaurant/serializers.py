@@ -229,17 +229,52 @@ class PromotionSerializer(serializers.ModelSerializer):
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
-    staff_name = serializers.CharField(source='staff.user.get_full_name', read_only=True)
-    staff_role = serializers.CharField(source='staff.role', read_only=True)
-    
+    # Map Schedule model fields to match frontend Shift interface
+    employee = serializers.IntegerField(source='staff.id', read_only=True)
+    employee_name = serializers.CharField(source='staff.user.get_full_name', read_only=True)
+    employee_id_display = serializers.CharField(source='staff.employee_id', read_only=True)
+    shift_date = serializers.DateField(source='date', read_only=True)
+    shift_type_display = serializers.CharField(source='get_shift_type_display', read_only=True)
+    break_duration = serializers.IntegerField(default=0, read_only=True)  # Not stored in model, default to 0
+    hours_scheduled = serializers.SerializerMethodField()
+    has_attendance = serializers.BooleanField(source='is_confirmed', read_only=True)
+
+    # Keep original fields for write operations
+    staff = serializers.PrimaryKeyRelatedField(queryset=Staff.objects.all(), write_only=True)
+    date = serializers.DateField(write_only=True)
+
     class Meta:
         model = Schedule
-        fields = '__all__'
+        fields = [
+            'id', 'employee', 'employee_name', 'employee_id_display',
+            'shift_date', 'start_time', 'end_time', 'shift_type', 'shift_type_display',
+            'break_duration', 'hours_scheduled', 'has_attendance', 'notes',
+            'created_at', 'updated_at',
+            'staff', 'date', 'is_confirmed'  # Write-only fields
+        ]
         read_only_fields = ['created_at', 'updated_at']
-    
+
+    def get_hours_scheduled(self, obj):
+        """Calculate hours between start and end time"""
+        from datetime import datetime, timedelta
+        start = datetime.combine(obj.date, obj.start_time)
+        end = datetime.combine(obj.date, obj.end_time)
+        if obj.end_time < obj.start_time:  # Overnight shift
+            end += timedelta(days=1)
+        return round((end - start).total_seconds() / 3600, 1)
+
     def validate(self, data):
-        instance = Schedule(**data)
-        instance.clean()
+        # Convert write-only fields to model fields for validation
+        if 'staff' in data:
+            instance_data = {
+                'staff': data.get('staff'),
+                'date': data.get('date'),
+                'shift_type': data.get('shift_type'),
+                'start_time': data.get('start_time'),
+                'end_time': data.get('end_time'),
+            }
+            instance = Schedule(**instance_data)
+            instance.clean()
         return data
 
 
