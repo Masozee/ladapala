@@ -16,6 +16,21 @@ export interface Product {
   profit_margin: string;
 }
 
+export interface ProductAvailability {
+  id: number;
+  name: string;
+  price: number;
+  category: string | null;
+  image: string | null;
+  can_be_made: boolean;
+  insufficient_ingredients: Array<{
+    name: string;
+    needed: number;
+    available: number;
+    unit: string;
+  }>;
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -251,6 +266,7 @@ export interface Inventory {
   supplier: string;
   unit: string;
   category: string;
+  location: 'WAREHOUSE' | 'KITCHEN';
   needs_restock: boolean;
   total_value: string;
   created_at: string;
@@ -414,6 +430,10 @@ class ApiClient {
 
   async getAvailableProducts(): Promise<{ count: number; results: Product[] }> {
     return this.fetch('/products/available/');
+  }
+
+  async checkProductStockAvailability(): Promise<ProductAvailability[]> {
+    return this.fetch('/products/check_stock_availability/');
   }
 
   // Categories
@@ -675,6 +695,13 @@ class ApiClient {
 
   async getSchedule(id: number): Promise<Shift> {
     return this.fetch(`/schedules/${id}/`);
+  }
+
+  async createSchedule(data: { staff: number; date: string; start_time: string; end_time: string; shift_type: string; notes?: string; is_confirmed?: boolean }): Promise<Shift> {
+    return this.fetch(`/schedules/`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
   }
 
   // Inventory

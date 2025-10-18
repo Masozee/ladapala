@@ -32,6 +32,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { api, type Staff, type Shift } from "@/lib/api"
 
 const daysOfWeek = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"]
@@ -59,6 +70,21 @@ export default function SchedulePage() {
   const [staff, setStaff] = useState<Staff[]>([])
   const [schedules, setSchedules] = useState<Shift[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [formData, setFormData] = useState({
+    staff_id: '',
+    date: '',
+    shift_type: '',
+    notes: ''
+  })
+
+  const SHIFT_TIMES: Record<string, { start: string; end: string }> = {
+    'MORNING': { start: '06:00', end: '14:00' },
+    'AFTERNOON': { start: '14:00', end: '22:00' },
+    'EVENING': { start: '16:00', end: '00:00' },
+    'NIGHT': { start: '22:00', end: '06:00' }
+  }
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -72,12 +98,14 @@ export default function SchedulePage() {
       const staffResponse = await api.getStaff({ branch: 4, is_active: true })
       setStaff(staffResponse.results)
 
-      // Fetch schedules for the current week using date range filter
-      const weekDates = getWeekDates(selectedDate)
-      const startDate = weekDates[0].toISOString().split('T')[0]
-      const endDate = weekDates[6].toISOString().split('T')[0]
+      // Fetch schedules for the current month using date range filter
+      const year = selectedDate.getFullYear()
+      const month = selectedDate.getMonth()
 
-      console.log(`Fetching schedules from ${startDate} to ${endDate}`)
+      // Format dates properly to avoid timezone issues
+      const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
+      const daysInMonth = new Date(year, month + 1, 0).getDate()
+      const endDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`
 
       // Fetch schedules with date range filter (backend filtering)
       const schedulesResponse = await api.getSchedules({
@@ -85,39 +113,75 @@ export default function SchedulePage() {
         date_lte: endDate
       })
 
-      console.log(`Fetched ${schedulesResponse.results.length} schedules`, schedulesResponse)
-      console.log('Sample schedule:', schedulesResponse.results[0])
-      setSchedules(schedulesResponse.results)
+      // Handle both paginated and non-paginated responses
+      const schedulesList = Array.isArray(schedulesResponse) ? schedulesResponse : schedulesResponse.results
+
+      console.log(`Fetched schedules from ${startDate} to ${endDate}:`, schedulesList.length)
+      console.log('Unique dates in schedules:', [...new Set(schedulesList.map(s => s.shift_date))].sort())
+
+      setSchedules(schedulesList)
     } catch (error) {
       console.error('Error fetching schedule data:', error)
-      console.error('Error details:', JSON.stringify(error, null, 2))
       alert('Failed to fetch schedules: ' + (error as any).message)
     } finally {
       setLoading(false)
     }
   }
 
-  const getWeekDates = (date: Date) => {
-    const week = []
-    const startOfWeek = new Date(date)
-    const day = startOfWeek.getDay()
-    const diff = startOfWeek.getDate() - day
-    startOfWeek.setDate(diff)
+  const getMonthDates = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const dates = []
 
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startOfWeek)
-      day.setDate(startOfWeek.getDate() + i)
-      week.push(day)
+    for (let i = 1; i <= daysInMonth; i++) {
+      dates.push(new Date(year, month, i))
     }
-    return week
+    return dates
   }
 
-  const weekDates = getWeekDates(selectedDate)
+  const monthDates = getMonthDates(selectedDate)
 
-  const navigateWeek = (direction: "prev" | "next") => {
+  const navigateMonth = (direction: "prev" | "next") => {
     const newDate = new Date(selectedDate)
-    newDate.setDate(newDate.getDate() + (direction === "next" ? 7 : -7))
+    newDate.setMonth(newDate.getMonth() + (direction === "next" ? 1 : -1))
     setSelectedDate(newDate)
+  }
+
+  const handleAddShift = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+
+    try {
+      const shiftTimes = SHIFT_TIMES[formData.shift_type]
+
+      await api.createSchedule({
+        staff: parseInt(formData.staff_id),
+        date: formData.date,
+        start_time: shiftTimes.start,
+        end_time: shiftTimes.end,
+        shift_type: formData.shift_type,
+        notes: formData.notes,
+        is_confirmed: false
+      })
+
+      // Reset form
+      setFormData({
+        staff_id: '',
+        date: '',
+        shift_type: '',
+        notes: ''
+      })
+      setIsAddDialogOpen(false)
+
+      // Refresh data
+      fetchData()
+    } catch (error) {
+      console.error('Error creating schedule:', error)
+      alert('Gagal menambah shift: ' + (error as any).message)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const getStatusBadge = (isConfirmed: boolean) => {
@@ -134,14 +198,7 @@ export default function SchedulePage() {
 
   const getShiftForEmployeeAndDate = (employeeId: number, date: Date) => {
     const dateStr = date.toISOString().split('T')[0]
-    const shift = schedules.find(s => s.employee === employeeId && s.shift_date === dateStr)
-    // Debug first call
-    if (employeeId === staff[0]?.id && dateStr === weekDates[0]?.toISOString().split('T')[0]) {
-      console.log(`Looking for employee ${employeeId} on ${dateStr}`)
-      console.log('Available schedule dates:', schedules.map(s => `${s.employee}:${s.shift_date}`).slice(0, 5))
-      console.log('Found shift:', shift)
-    }
-    return shift
+    return schedules.find(s => s.employee === employeeId && s.shift_date === dateStr)
   }
 
   const getTodaySchedules = () => {
@@ -162,26 +219,18 @@ export default function SchedulePage() {
     }
   }
 
-  const weekStats = getWeekStats()
+  const monthStats = getWeekStats() // Reusing same function for month stats
   const todaySchedules = getTodaySchedules()
 
-  // Debug logs
-  console.log('Staff count:', staff.length)
-  console.log('Schedules count:', schedules.length)
-  console.log('Week dates:', weekDates.map(d => d.toISOString().split('T')[0]))
-
-  if (loading) {
-    return (
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg text-gray-500">Loading schedules...</div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative">
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="text-lg text-gray-500">Loading...</div>
+        </div>
+      )}
+
       {/* Header Section */}
       <div className="flex justify-between items-center">
         <div>
@@ -193,7 +242,7 @@ export default function SchedulePage() {
             <HugeiconsIcon icon={Calendar01Icon} size={16} strokeWidth={2} className="mr-2" />
             Refresh
           </Button>
-          <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black">
+          <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black" onClick={() => setIsAddDialogOpen(true)}>
             <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} className="mr-2" />
             Tambah Shift
           </Button>
@@ -224,11 +273,11 @@ export default function SchedulePage() {
         </Card>
         <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Jam Minggu Ini</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Jam</CardTitle>
             <HugeiconsIcon icon={Calendar01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{weekStats.totalHours}</div>
+            <div className="text-2xl font-bold">{monthStats.totalHours}</div>
             <p className="text-xs text-muted-foreground">Jam kerja terjadwal</p>
           </CardContent>
         </Card>
@@ -238,8 +287,8 @@ export default function SchedulePage() {
             <HugeiconsIcon icon={SingleUserIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{weekStats.confirmedCount}/{weekStats.totalCount}</div>
-            <p className="text-xs text-muted-foreground">{weekStats.totalCount > 0 ? `${Math.round((weekStats.confirmedCount/weekStats.totalCount)*100)}%` : '0%'} shift dikonfirmasi</p>
+            <div className="text-2xl font-bold">{monthStats.confirmedCount}/{monthStats.totalCount}</div>
+            <p className="text-xs text-muted-foreground">{monthStats.totalCount > 0 ? `${Math.round((monthStats.confirmedCount/monthStats.totalCount)*100)}%` : '0%'} shift dikonfirmasi</p>
           </CardContent>
         </Card>
       </div>
@@ -255,26 +304,33 @@ export default function SchedulePage() {
           {/* Schedule Header */}
           <div className="bg-white p-4 rounded-lg shadow-sm">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Jadwal Shift</h2>
+              <h2 className="text-lg font-semibold">Jadwal Shift ({monthDates.length} hari)</h2>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="icon"
                   className="rounded"
-                  onClick={() => navigateWeek("prev")}
+                  onClick={() => navigateMonth("prev")}
                 >
                   <HugeiconsIcon icon={ArrowLeft01Icon} size={16} strokeWidth={2} />
                 </Button>
                 <div className="px-4 py-2 text-sm font-medium">
-                  {weekDates[0].getDate()} - {weekDates[6].getDate()} {monthNames[weekDates[6].getMonth()]} {weekDates[6].getFullYear()}
+                  {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
                 </div>
                 <Button
                   variant="outline"
                   size="icon"
                   className="rounded"
-                  onClick={() => navigateWeek("next")}
+                  onClick={() => navigateMonth("next")}
                 >
                   <HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2} />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded text-[#58ff34] border-[#58ff34]"
+                  onClick={() => setSelectedDate(new Date())}
+                >
+                  Bulan Ini
                 </Button>
                 <Select value={selectedView} onValueChange={(value: "week" | "day") => setSelectedView(value)}>
                   <SelectTrigger className="w-[120px]">
@@ -320,19 +376,20 @@ export default function SchedulePage() {
                       })}
                     </div>
 
-                    {/* Scrollable Date Columns */}
+                    {/* Scrollable Date Columns - Total: {monthDates.length} days */}
                     <div className="flex">
-                      {weekDates.map((date, dateIndex) => {
+                      {monthDates.map((date, dateIndex) => {
                         const isToday = date.toDateString() === new Date().toDateString()
+                        const isWeekend = date.getDay() === 0 || date.getDay() === 6
                         return (
-                          <div key={dateIndex} className="border-r border-gray-200 last:border-r-0" style={{ minWidth: '180px' }}>
+                          <div key={dateIndex} className="border-r border-gray-200 last:border-r-0" style={{ minWidth: '140px' }}>
                             {/* Date Header */}
-                            <div className={`h-16 px-3 py-2 border-b border-gray-200 text-center ${isToday ? 'bg-[#58ff34]/10' : 'bg-gray-50'}`}>
-                              <div className={`font-semibold text-sm ${isToday ? 'text-[#58ff34]' : 'text-gray-900'}`}>
+                            <div className={`h-16 px-2 py-2 border-b border-gray-200 text-center ${isToday ? 'bg-[#58ff34]/10' : isWeekend ? 'bg-gray-100' : 'bg-gray-50'}`}>
+                              <div className={`font-semibold text-xs ${isToday ? 'text-[#58ff34]' : isWeekend ? 'text-red-600' : 'text-gray-900'}`}>
                                 {daysOfWeek[date.getDay()]}
                               </div>
-                              <div className={`text-xs mt-1 ${isToday ? 'text-[#58ff34]' : 'text-gray-500'}`}>
-                                {date.getDate()} {monthNames[date.getMonth()].slice(0, 3)}
+                              <div className={`text-xl font-bold mt-1 ${isToday ? 'text-[#58ff34]' : isWeekend ? 'text-red-600' : 'text-gray-900'}`}>
+                                {date.getDate()}
                               </div>
                             </div>
                             {/* Schedule Cells */}
@@ -341,20 +398,19 @@ export default function SchedulePage() {
                               return (
                                 <div
                                   key={`${employee.id}-${dateIndex}`}
-                                  className={`h-24 px-3 py-2 border-b border-gray-200 ${isToday ? 'bg-[#58ff34]/5' : ''}`}
+                                  className={`h-24 px-2 py-2 border-b border-gray-200 ${isToday ? 'bg-[#58ff34]/5' : isWeekend ? 'bg-gray-50' : ''}`}
                                 >
                                   {shift ? (
-                                    <div className="h-full flex flex-col justify-center space-y-1.5">
-                                      <div className="text-xs font-semibold text-gray-900">
-                                        {shift.start_time.slice(0,5)} - {shift.end_time.slice(0,5)}
+                                    <div className="h-full flex flex-col justify-center space-y-1">
+                                      <div className="text-[10px] font-semibold text-gray-900">
+                                        {shift.start_time.slice(0,5)}-{shift.end_time.slice(0,5)}
                                       </div>
-                                      <div className="text-[10px] text-gray-600 font-medium">
+                                      <div className="text-[9px] text-gray-600 font-medium">
                                         {shift.shift_type}
                                       </div>
-                                      {getStatusBadge(shift.has_attendance)}
-                                      <div className="text-[10px] text-gray-500">
-                                        {shift.hours_scheduled} jam
-                                      </div>
+                                      {shift.has_attendance && (
+                                        <div className="text-[8px] text-green-600">✓</div>
+                                      )}
                                     </div>
                                   ) : (
                                     <div className="h-full flex items-center justify-center">
@@ -452,6 +508,99 @@ export default function SchedulePage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Add Shift Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Tambah Shift Baru</DialogTitle>
+            <DialogDescription>
+              Isi form di bawah untuk menambahkan jadwal shift baru
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddShift}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="staff">Karyawan</Label>
+                <Select
+                  value={formData.staff_id}
+                  onValueChange={(value) => setFormData({...formData, staff_id: value})}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih karyawan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {staff.map(s => (
+                      <SelectItem key={s.id} value={s.id.toString()}>
+                        {s.user.first_name} {s.user.last_name} - {ROLE_LABELS[s.role]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="date">Tanggal</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="shift_type">Tipe Shift</Label>
+                <Select
+                  value={formData.shift_type}
+                  onValueChange={(value) => setFormData({...formData, shift_type: value})}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih tipe shift" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MORNING">Pagi (06:00-14:00)</SelectItem>
+                    <SelectItem value="AFTERNOON">Siang (14:00-22:00)</SelectItem>
+                    <SelectItem value="EVENING">Sore (16:00-00:00)</SelectItem>
+                    <SelectItem value="NIGHT">Malam (22:00-06:00)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="notes">Catatan (Opsional)</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  placeholder="Tambahkan catatan jika diperlukan"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddDialogOpen(false)}
+                disabled={submitting}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                className="bg-[#58ff34] hover:bg-[#4de82a] text-black"
+                disabled={submitting}
+              >
+                {submitting ? 'Menyimpan...' : 'Simpan Shift'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

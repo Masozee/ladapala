@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/auth-context"
 import { RoleGuard } from "@/components/role-guard"
 import { api, Inventory, InventoryTransaction } from "@/lib/api"
@@ -35,10 +36,12 @@ export default function StockDashboard() {
   const router = useRouter()
   const { staff } = useAuth()
 
-  const [inventory, setInventory] = useState<Inventory[]>([])
+  const [warehouseInventory, setWarehouseInventory] = useState<Inventory[]>([])
+  const [kitchenInventory, setKitchenInventory] = useState<Inventory[]>([])
   const [lowStock, setLowStock] = useState<Inventory[]>([])
   const [recentTransactions, setRecentTransactions] = useState<InventoryTransaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("warehouse")
 
   const canModify = staff && ['ADMIN', 'MANAGER', 'WAREHOUSE'].includes(staff.role)
 
@@ -56,9 +59,13 @@ export default function StockDashboard() {
         api.getInventoryTransactions({ branch: staff?.branch?.id })
       ])
 
-      setInventory(inventoryRes.results)
-      setLowStock(lowStockRes.results)
-      setRecentTransactions(transactionsRes.results.slice(0, 10))
+      // Separate warehouse and kitchen inventory
+      const allInventory = inventoryRes.results || []
+      setWarehouseInventory(allInventory.filter(item => item.location === 'WAREHOUSE'))
+      setKitchenInventory(allInventory.filter(item => item.location === 'KITCHEN'))
+
+      setLowStock(lowStockRes.results || [])
+      setRecentTransactions((transactionsRes.results || []).slice(0, 10))
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -66,7 +73,8 @@ export default function StockDashboard() {
     }
   }
 
-  const totalValue = inventory.reduce((acc, item) =>
+  const currentInventory = activeTab === "warehouse" ? warehouseInventory : kitchenInventory
+  const totalValue = currentInventory.reduce((acc, item) =>
     acc + (item.quantity * parseFloat(item.cost_per_unit)), 0
   )
 
@@ -104,22 +112,38 @@ export default function StockDashboard() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Dashboard Stok</h1>
-            <p className="text-muted-foreground">Kelola inventori dan pergerakan stok</p>
+            <p className="text-muted-foreground">Sistem manajemen stok gudang dan dapur</p>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Item</CardTitle>
-              <HugeiconsIcon icon={Package01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{inventory.length}</div>
-              <p className="text-xs text-muted-foreground">Jenis bahan baku</p>
-            </CardContent>
-          </Card>
+        {/* Location Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+            <TabsTrigger value="warehouse" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">
+              <HugeiconsIcon icon={Package01Icon} size={16} strokeWidth={2} className="mr-2" />
+              Gudang (Warehouse)
+            </TabsTrigger>
+            <TabsTrigger value="kitchen" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">
+              <HugeiconsIcon icon={PackageSentIcon} size={16} strokeWidth={2} className="mr-2" />
+              Dapur (Kitchen)
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Stats Cards */}
+          <TabsContent value={activeTab} className="mt-0 space-y-4">
+            <div className="grid gap-4 md:grid-cols-4">
+              <Card className="bg-white rounded-lg border-0 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Item</CardTitle>
+                  <HugeiconsIcon icon={Package01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{currentInventory.length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {activeTab === 'warehouse' ? 'Bahan baku mentah' : 'Siap pakai di dapur'}
+                  </p>
+                </CardContent>
+              </Card>
 
           <Card className="bg-white rounded-lg border-0 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -190,6 +214,23 @@ export default function StockDashboard() {
                 <div>
                   <CardTitle className="text-lg">Penerimaan</CardTitle>
                   <CardDescription>Terima barang masuk</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card
+            className="bg-gradient-to-br from-orange-50 to-orange-100 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => router.push('/office/stock/movements?tab=transfer')}
+          >
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500 rounded-lg">
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={24} strokeWidth={2} className="text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Transfer Stok</CardTitle>
+                  <CardDescription>Gudang ke Dapur</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -276,64 +317,64 @@ export default function StockDashboard() {
           </Card>
         )}
 
-        {/* Recent Transactions */}
+        {/* Stock Availability */}
         <Card className="bg-white rounded-lg border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Transaksi Terbaru</CardTitle>
-              <CardDescription>10 transaksi terakhir</CardDescription>
+              <CardTitle>Ketersediaan Stok {activeTab === 'warehouse' ? 'Gudang' : 'Dapur'}</CardTitle>
+              <CardDescription>Daftar item dan jumlah stok saat ini</CardDescription>
             </div>
             <Button
               variant="outline"
               className="rounded"
-              onClick={() => router.push('/office/stock/reports?tab=transactions')}
+              onClick={() => router.push('/office/stock/items')}
             >
-              Lihat Semua
+              Kelola Item
               <HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2} className="ml-2" />
             </Button>
           </CardHeader>
           <CardContent>
-            {recentTransactions.length === 0 ? (
+            {currentInventory.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">Belum ada transaksi</p>
+                <p className="text-muted-foreground">Belum ada item di {activeTab === 'warehouse' ? 'gudang' : 'dapur'}</p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Tanggal</TableHead>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Tipe</TableHead>
-                    <TableHead>Jumlah</TableHead>
-                    <TableHead>Petugas</TableHead>
-                    <TableHead>Catatan</TableHead>
+                    <TableHead>Nama Item</TableHead>
+                    <TableHead>Stok Tersedia</TableHead>
+                    <TableHead>Min. Stok</TableHead>
+                    <TableHead>Harga/Unit</TableHead>
+                    <TableHead>Nilai Total</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
+                  {currentInventory.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className={item.needs_restock ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
+                        {item.quantity} {item.unit}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.min_quantity} {item.unit}
+                      </TableCell>
                       <TableCell>
-                        {new Date(transaction.created_at).toLocaleString('id-ID', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        Rp {parseFloat(item.cost_per_unit).toLocaleString('id-ID')}
                       </TableCell>
-                      <TableCell className="font-medium">{transaction.inventory_name}</TableCell>
-                      <TableCell>{getTransactionTypeBadge(transaction.transaction_type)}</TableCell>
-                      <TableCell className={
-                        transaction.transaction_type === 'IN' ? 'text-green-600 font-semibold' :
-                        transaction.transaction_type === 'OUT' || transaction.transaction_type === 'WASTE' ? 'text-red-600 font-semibold' :
-                        'text-blue-600 font-semibold'
-                      }>
-                        {transaction.transaction_type === 'IN' ? '+' :
-                         transaction.transaction_type === 'OUT' || transaction.transaction_type === 'WASTE' ? '-' : ''}
-                        {transaction.quantity}
+                      <TableCell className="font-semibold">
+                        Rp {parseFloat(item.total_value).toLocaleString('id-ID')}
                       </TableCell>
-                      <TableCell>{transaction.performed_by_name}</TableCell>
-                      <TableCell className="max-w-xs truncate">{transaction.notes || '-'}</TableCell>
+                      <TableCell>
+                        {item.needs_restock ? (
+                          <Badge className="bg-red-500 text-white">Rendah</Badge>
+                        ) : item.quantity > item.min_quantity * 2 ? (
+                          <Badge className="bg-green-500 text-white">Aman</Badge>
+                        ) : (
+                          <Badge className="bg-yellow-500 text-white">Normal</Badge>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -341,6 +382,8 @@ export default function StockDashboard() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </RoleGuard>
   )

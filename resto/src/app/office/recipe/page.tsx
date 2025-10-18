@@ -1,453 +1,553 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  Search01Icon,
-  Add01Icon,
-  Edit01Icon,
-  Clock01Icon,
-  UserIcon,
-  ChefHatIcon,
-  Book01Icon,
-  Wallet01Icon,
-  InformationCircleIcon
-} from "@hugeicons/core-free-icons"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Add01Icon, Edit01Icon, Delete02Icon, PackageSentIcon } from "@hugeicons/core-free-icons"
+import { useAuth } from "@/contexts/auth-context"
+import { api } from "@/lib/api"
 
 interface Recipe {
-  id: string
-  name: string
-  category: string
-  prepTime: number
-  cookTime: number
-  servings: number
-  cost: number
-  price: number
-  margin: number
-  ingredients: Ingredient[]
-  instructions: string[]
-  popularity: "high" | "medium" | "low"
+  id: number
+  product: number
+  product_name: string
+  product_price: string
+  branch: number
+  branch_name: string
+  serving_size: string
+  preparation_time: number | null
+  cooking_time: number | null
+  instructions: string
+  notes: string
+  is_active: boolean
+  ingredients: RecipeIngredient[]
+  total_cost: string
+  cost_per_serving: string
+  profit_margin: number
+  created_at: string
+  updated_at: string
 }
 
-interface Ingredient {
-  name: string
-  quantity: number
+interface RecipeIngredient {
+  id: number
+  recipe: number
+  inventory_item: number
+  inventory_item_name: string
+  inventory_item_unit: string
+  inventory_item_location: string
+  quantity: string
   unit: string
-  cost: number
+  notes: string
+  total_cost: string
 }
 
-const mockRecipes: Recipe[] = [
-  {
-    id: "1",
-    name: "Nasi Goreng Spesial",
-    category: "Makanan Utama",
-    prepTime: 10,
-    cookTime: 15,
-    servings: 1,
-    cost: 12000,
-    price: 25000,
-    margin: 52,
-    popularity: "high",
-    ingredients: [
-      { name: "Beras", quantity: 200, unit: "gram", cost: 3000 },
-      { name: "Telur", quantity: 2, unit: "butir", cost: 4000 },
-      { name: "Ayam", quantity: 100, unit: "gram", cost: 3500 },
-      { name: "Bumbu", quantity: 50, unit: "gram", cost: 1500 }
-    ],
-    instructions: [
-      "Panaskan minyak dalam wajan",
-      "Tumis bumbu hingga harum",
-      "Masukkan ayam, masak hingga matang",
-      "Tambahkan nasi dan aduk rata",
-      "Buat telur mata sapi di wajan terpisah",
-      "Sajikan dengan telur di atas nasi goreng"
-    ]
-  },
-  {
-    id: "2",
-    name: "Ayam Bakar Madu",
-    category: "Makanan Utama",
-    prepTime: 30,
-    cookTime: 45,
-    servings: 1,
-    cost: 18000,
-    price: 35000,
-    margin: 49,
-    popularity: "high",
-    ingredients: [
-      { name: "Ayam", quantity: 250, unit: "gram", cost: 10000 },
-      { name: "Madu", quantity: 50, unit: "ml", cost: 3000 },
-      { name: "Kecap Manis", quantity: 30, unit: "ml", cost: 1500 },
-      { name: "Bumbu Marinasi", quantity: 40, unit: "gram", cost: 3500 }
-    ],
-    instructions: [
-      "Marinasi ayam dengan bumbu selama 30 menit",
-      "Campur madu dan kecap untuk glazing",
-      "Bakar ayam di atas api sedang",
-      "Olesi dengan campuran madu berkala",
-      "Bakar hingga matang dan berwarna kecoklatan"
-    ]
-  },
-  {
-    id: "3",
-    name: "Es Teh Manis",
-    category: "Minuman",
-    prepTime: 5,
-    cookTime: 0,
-    servings: 1,
-    cost: 2000,
-    price: 8000,
-    margin: 75,
-    popularity: "medium",
-    ingredients: [
-      { name: "Teh Celup", quantity: 1, unit: "kantong", cost: 500 },
-      { name: "Gula", quantity: 20, unit: "gram", cost: 500 },
-      { name: "Es Batu", quantity: 200, unit: "gram", cost: 500 },
-      { name: "Air", quantity: 250, unit: "ml", cost: 500 }
-    ],
-    instructions: [
-      "Seduh teh dengan air panas",
-      "Tambahkan gula dan aduk hingga larut",
-      "Dinginkan sebentar",
-      "Tambahkan es batu",
-      "Sajikan dingin"
-    ]
-  }
-]
+interface Product {
+  id: number
+  name: string
+  price: string
+  category: number
+  category_name: string
+}
 
-const categories = ["Semua", "Makanan Utama", "Makanan Pembuka", "Makanan Penutup", "Minuman", "Snack"]
+interface Inventory {
+  id: number
+  name: string
+  unit: string
+  location: string
+  cost_per_unit: string
+  quantity: number
+}
 
 export default function RecipePage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("Semua")
+  const { staff } = useAuth()
+  const [recipes, setRecipes] = useState<Recipe[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [kitchenInventory, setKitchenInventory] = useState<Inventory[]>([])
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const filteredRecipes = mockRecipes.filter(recipe => {
-    const matchesSearch = recipe.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "Semua" || recipe.category === selectedCategory
-    return matchesSearch && matchesCategory
+  const [recipeForm, setRecipeForm] = useState({
+    product: '',
+    serving_size: '1',
+    preparation_time: '',
+    cooking_time: '',
+    instructions: '',
+    notes: ''
   })
 
-  const getPopularityBadge = (popularity: Recipe["popularity"]) => {
-    switch (popularity) {
-      case "high":
-        return <Badge className="bg-green-500 text-white">Populer</Badge>
-      case "medium":
-        return <Badge className="bg-yellow-500 text-white">Sedang</Badge>
-      case "low":
-        return <Badge className="bg-gray-500 text-white">Rendah</Badge>
+  const [ingredients, setIngredients] = useState<Array<{
+    inventory_item: string
+    quantity: string
+    notes: string
+  }>>([{ inventory_item: '', quantity: '', notes: '' }])
+
+  useEffect(() => {
+    if (staff?.branch) {
+      fetchData()
+    }
+  }, [staff])
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true)
+      const [recipesRes, productsRes, inventoryRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipes/?branch=${staff?.branch}`, {
+          credentials: 'include'
+        }),
+        api.getProducts({ branch: staff?.branch }),
+        api.getInventory({ branch: staff?.branch, location: 'KITCHEN' })
+      ])
+
+      const recipesData = await recipesRes.json()
+      setRecipes(Array.isArray(recipesData) ? recipesData : recipesData.results || [])
+      setProducts(productsRes.results || [])
+      setKitchenInventory(inventoryRes.results || [])
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const getMarginColor = (margin: number) => {
-    if (margin >= 50) return "text-green-600"
-    if (margin >= 30) return "text-yellow-600"
-    return "text-red-600"
+  const addIngredientRow = () => {
+    setIngredients([...ingredients, { inventory_item: '', quantity: '', notes: '' }])
+  }
+
+  const removeIngredientRow = (index: number) => {
+    setIngredients(ingredients.filter((_, i) => i !== index))
+  }
+
+  const updateIngredient = (index: number, field: string, value: string) => {
+    const updated = [...ingredients]
+    updated[index] = { ...updated[index], [field]: value }
+    setIngredients(updated)
+  }
+
+  const getCsrfToken = () => {
+    const name = 'csrftoken'
+    const value = `; ${document.cookie}`
+    const parts = value.split(`; ${name}=`)
+    if (parts.length === 2) return parts.pop()?.split(';').shift()
+    return ''
+  }
+
+  const handleCreateRecipe = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const csrfToken = getCsrfToken()
+
+      // Create recipe
+      const recipeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipes/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken || ''
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          ...recipeForm,
+          branch: staff?.branch,
+          is_active: true
+        })
+      })
+
+      if (!recipeRes.ok) {
+        const error = await recipeRes.json()
+        console.error('Recipe creation failed:', error)
+        alert('Gagal membuat resep: ' + JSON.stringify(error))
+        return
+      }
+
+      const recipe = await recipeRes.json()
+
+      // Create ingredients
+      for (const ing of ingredients) {
+        if (ing.inventory_item && ing.quantity) {
+          const invItem = kitchenInventory.find(i => i.id === parseInt(ing.inventory_item))
+          const ingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipe-ingredients/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken || ''
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              recipe: recipe.id,
+              inventory_item: ing.inventory_item,
+              quantity: ing.quantity,
+              unit: invItem?.unit || 'g',
+              notes: ing.notes
+            })
+          })
+
+          if (!ingRes.ok) {
+            console.error('Failed to create ingredient:', await ingRes.json())
+          }
+        }
+      }
+
+      alert('Resep berhasil dibuat!')
+      setIsCreateOpen(false)
+      resetForm()
+      fetchData()
+    } catch (error) {
+      console.error('Error creating recipe:', error)
+      alert('Terjadi kesalahan: ' + error)
+    }
+  }
+
+  const resetForm = () => {
+    setRecipeForm({
+      product: '',
+      serving_size: '1',
+      preparation_time: '',
+      cooking_time: '',
+      instructions: '',
+      notes: ''
+    })
+    setIngredients([{ inventory_item: '', quantity: '', notes: '' }])
+  }
+
+  const viewRecipeDetail = async (recipe: Recipe) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipes/${recipe.id}/`, {
+        credentials: 'include'
+      })
+      const data = await res.json()
+      setSelectedRecipe(data)
+      setIsDetailOpen(true)
+    } catch (error) {
+      console.error('Error fetching recipe detail:', error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Memuat data...</p>
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header Section */}
+    <div className="container mx-auto max-w-7xl px-4 py-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Resep & Menu</h1>
-          <p className="text-muted-foreground">Kelola resep masakan dan kalkulasi biaya</p>
+          <h1 className="text-3xl font-bold">Manajemen Resep (BOM)</h1>
+          <p className="text-muted-foreground">Bill of Materials untuk setiap menu</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="rounded">
-            <HugeiconsIcon icon={Book01Icon} size={16} strokeWidth={2} className="mr-2" />
-            Import Resep
-          </Button>
-          <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black">
-            <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} className="mr-2" />
-            Tambah Resep
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Resep</CardTitle>
-            <HugeiconsIcon icon={Book01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockRecipes.length}</div>
-            <p className="text-xs text-muted-foreground">Resep aktif</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Margin Rata-rata</CardTitle>
-            <HugeiconsIcon icon={Wallet01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Math.round(mockRecipes.reduce((acc, r) => acc + r.margin, 0) / mockRecipes.length)}%
-            </div>
-            <p className="text-xs text-muted-foreground">Keuntungan</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Menu Populer</CardTitle>
-            <HugeiconsIcon icon={ChefHatIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {mockRecipes.filter(r => r.popularity === "high").length}
-            </div>
-            <p className="text-xs text-muted-foreground">Menu favorit</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Waktu Rata-rata</CardTitle>
-            <HugeiconsIcon icon={Clock01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Math.round(mockRecipes.reduce((acc, r) => acc + r.prepTime + r.cookTime, 0) / mockRecipes.length)} menit
-            </div>
-            <p className="text-xs text-muted-foreground">Persiapan + masak</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="recipes" className="space-y-6">
-        <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
-          <TabsTrigger value="recipes" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Daftar Resep</TabsTrigger>
-          <TabsTrigger value="categories" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Kategori</TabsTrigger>
-          <TabsTrigger value="costs" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium data-[state=active]:bg-[#58ff34] data-[state=active]:text-black data-[state=active]:shadow-sm">Analisis Biaya</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="recipes" className="space-y-4">
-          {/* Search and Filter Bar */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Resep Masakan</h2>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <HugeiconsIcon icon={Search01Icon} size={16} strokeWidth={2} className="absolute left-2 top-2.5 text-muted-foreground" />
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-[#58ff34] hover:bg-[#4de82a] text-black">
+              <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} className="mr-2" />
+              Buat Resep
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Buat Resep Baru</DialogTitle>
+              <DialogDescription>Definisikan bahan dan takaran untuk menu</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateRecipe} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Menu *</Label>
+                  <select
+                    required
+                    className="w-full border rounded px-3 py-2"
+                    value={recipeForm.product}
+                    onChange={(e) => setRecipeForm({ ...recipeForm, product: e.target.value })}
+                  >
+                    <option value="">Pilih Menu</option>
+                    {products.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label>Porsi per Resep *</Label>
                   <Input
-                    placeholder="Cari resep..."
-                    className="pl-8 w-[200px]"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    required
+                    value={recipeForm.serving_size}
+                    onChange={(e) => setRecipeForm({ ...recipeForm, serving_size: e.target.value })}
                   />
                 </div>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
-            </div>
-          </div>
 
-          {/* Recipe Grid */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredRecipes.map((recipe) => (
-                  <Card key={recipe.id} className="bg-white cursor-pointer hover:shadow-lg transition-shadow rounded-lg border-0 shadow-sm"
-                    onClick={() => setSelectedRecipe(recipe)}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{recipe.name}</CardTitle>
-                          <CardDescription>{recipe.category}</CardDescription>
-                        </div>
-                        {getPopularityBadge(recipe.popularity)}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Waktu Persiapan (menit)</Label>
+                  <Input
+                    type="number"
+                    value={recipeForm.preparation_time}
+                    onChange={(e) => setRecipeForm({ ...recipeForm, preparation_time: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Waktu Memasak (menit)</Label>
+                  <Input
+                    type="number"
+                    value={recipeForm.cooking_time}
+                    onChange={(e) => setRecipeForm({ ...recipeForm, cooking_time: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Instruksi Memasak</Label>
+                <Textarea
+                  value={recipeForm.instructions}
+                  onChange={(e) => setRecipeForm({ ...recipeForm, instructions: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Catatan</Label>
+                <Textarea
+                  value={recipeForm.notes}
+                  onChange={(e) => setRecipeForm({ ...recipeForm, notes: e.target.value })}
+                  rows={2}
+                />
+              </div>
+
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center mb-3">
+                  <Label className="text-lg font-semibold">Bahan-bahan *</Label>
+                  <Button type="button" size="sm" onClick={addIngredientRow} className="bg-[#58ff34] hover:bg-[#4de82a] text-black">
+                    <HugeiconsIcon icon={Add01Icon} size={14} strokeWidth={2} className="mr-1" />
+                    Tambah Bahan
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  {ingredients.map((ing, index) => (
+                    <div key={index} className="grid grid-cols-12 gap-2 items-end">
+                      <div className="col-span-5">
+                        <Label>Bahan dari Dapur</Label>
+                        <select
+                          required
+                          className="w-full border rounded px-2 py-2 text-sm"
+                          value={ing.inventory_item}
+                          onChange={(e) => updateIngredient(index, 'inventory_item', e.target.value)}
+                        >
+                          <option value="">Pilih Bahan</option>
+                          {kitchenInventory.map(inv => (
+                            <option key={inv.id} value={inv.id}>
+                              {inv.name} ({inv.unit})
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Waktu:</span>
-                          <span className="flex items-center gap-1">
-                            <HugeiconsIcon icon={Clock01Icon} size={12} strokeWidth={2} />
-                            {recipe.prepTime + recipe.cookTime} menit
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Porsi:</span>
-                          <span className="flex items-center gap-1">
-                            <HugeiconsIcon icon={UserIcon} size={12} strokeWidth={2} />
-                            {recipe.servings} porsi
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Biaya:</span>
-                          <span>Rp {recipe.cost.toLocaleString("id-ID")}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Harga Jual:</span>
-                          <span>Rp {recipe.price.toLocaleString("id-ID")}</span>
-                        </div>
-                        <div className="flex justify-between text-sm font-semibold">
-                          <span>Margin:</span>
-                          <span className={getMarginColor(recipe.margin)}>{recipe.margin}%</span>
-                        </div>
+                      <div className="col-span-2">
+                        <Label>Jumlah</Label>
+                        <Input
+                          type="number"
+                          step="0.001"
+                          required
+                          value={ing.quantity}
+                          onChange={(e) => updateIngredient(index, 'quantity', e.target.value)}
+                        />
                       </div>
-                      <div className="flex gap-2 mt-4">
-                        <Button size="sm" variant="outline" className="flex-1 rounded">
-                          <HugeiconsIcon icon={Edit01Icon} size={12} strokeWidth={2} className="mr-1" />
-                          Edit
+                      <div className="col-span-4">
+                        <Label>Catatan</Label>
+                        <Input
+                          value={ing.notes}
+                          onChange={(e) => updateIngredient(index, 'notes', e.target.value)}
+                          placeholder="Opsional"
+                        />
+                      </div>
+                      <div className="col-span-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removeIngredientRow(index)}
+                          disabled={ingredients.length === 1}
+                        >
+                          <HugeiconsIcon icon={Delete02Icon} size={14} strokeWidth={2} />
                         </Button>
-                        <Button size="sm" variant="outline" className="flex-1 rounded">
-                          <HugeiconsIcon icon={InformationCircleIcon} size={12} strokeWidth={2} className="mr-1" />
-                          Detail
-                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                  Batal
+                </Button>
+                <Button type="submit" className="bg-[#58ff34] hover:bg-[#4de82a] text-black">
+                  Simpan Resep
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Daftar Resep</CardTitle>
+          <CardDescription>Klik resep untuk melihat detail bahan dan biaya</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {recipes.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Belum ada resep. Klik "Buat Resep" untuk memulai.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Menu</TableHead>
+                  <TableHead>Porsi</TableHead>
+                  <TableHead>Harga Jual</TableHead>
+                  <TableHead>Biaya per Porsi</TableHead>
+                  <TableHead>Margin</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recipes.map((r) => (
+                  <TableRow key={r.id} className="cursor-pointer hover:bg-gray-50" onClick={() => viewRecipeDetail(r)}>
+                    <TableCell className="font-medium">{r.product_name}</TableCell>
+                    <TableCell>{r.serving_size} porsi</TableCell>
+                    <TableCell>Rp {parseFloat(r.product_price).toLocaleString('id-ID')}</TableCell>
+                    <TableCell>Rp {parseFloat(r.cost_per_serving).toLocaleString('id-ID')}</TableCell>
+                    <TableCell>
+                      <Badge className={r.profit_margin > 50 ? "bg-green-500" : r.profit_margin > 30 ? "bg-yellow-500" : "bg-red-500"}>
+                        {r.profit_margin}%
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={r.is_active ? "default" : "secondary"}>
+                        {r.is_active ? 'Aktif' : 'Nonaktif'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Button size="sm" variant="outline">
+                        <HugeiconsIcon icon={Edit01Icon} size={14} strokeWidth={2} />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
-          </div>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recipe Detail Dialog */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detail Resep: {selectedRecipe?.product_name}</DialogTitle>
+            <DialogDescription>
+              Porsi: {selectedRecipe?.serving_size} | Total Biaya: Rp {parseFloat(selectedRecipe?.total_cost || '0').toLocaleString('id-ID')}
+            </DialogDescription>
+          </DialogHeader>
 
           {selectedRecipe && (
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="mb-4">
-                <h2 className="text-xl font-semibold">{selectedRecipe.name} - Detail Resep</h2>
-                <p className="text-muted-foreground">Bahan dan cara pembuatan</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Harga Jual</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold">Rp {parseFloat(selectedRecipe.product_price).toLocaleString('id-ID')}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Biaya per Porsi</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold">Rp {parseFloat(selectedRecipe.cost_per_serving).toLocaleString('id-ID')}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Margin Profit</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold">{selectedRecipe.profit_margin}%</p>
+                  </CardContent>
+                </Card>
               </div>
-                <div className="grid gap-4 md:grid-cols-2">
+
+              {selectedRecipe.preparation_time && (
+                <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <h3 className="font-semibold mb-2">Bahan-bahan:</h3>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Bahan</TableHead>
-                          <TableHead>Jumlah</TableHead>
-                          <TableHead>Biaya</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {selectedRecipe.ingredients.map((ing, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>{ing.name}</TableCell>
-                            <TableCell>{ing.quantity} {ing.unit}</TableCell>
-                            <TableCell>Rp {ing.cost.toLocaleString("id-ID")}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    <span className="font-semibold">Waktu Persiapan:</span> {selectedRecipe.preparation_time} menit
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-2">Cara Pembuatan:</h3>
-                    <ol className="space-y-2">
-                      {selectedRecipe.instructions.map((instruction, idx) => (
-                        <li key={idx} className="flex gap-2">
-                          <span className="font-semibold text-muted-foreground">{idx + 1}.</span>
-                          <span className="text-sm">{instruction}</span>
-                        </li>
-                      ))}
-                    </ol>
+                    <span className="font-semibold">Waktu Memasak:</span> {selectedRecipe.cooking_time} menit
                   </div>
                 </div>
+              )}
+
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <HugeiconsIcon icon={PackageSentIcon} size={16} strokeWidth={2} />
+                  Bahan-bahan ({selectedRecipe.ingredients.length} item)
+                </h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Bahan</TableHead>
+                      <TableHead>Jumlah</TableHead>
+                      <TableHead>Lokasi</TableHead>
+                      <TableHead>Biaya</TableHead>
+                      <TableHead>Catatan</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedRecipe.ingredients.map((ing) => (
+                      <TableRow key={ing.id}>
+                        <TableCell className="font-medium">{ing.inventory_item_name}</TableCell>
+                        <TableCell>{parseFloat(ing.quantity).toLocaleString('id-ID')} {ing.unit}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{ing.inventory_item_location === 'KITCHEN' ? 'Dapur' : 'Gudang'}</Badge>
+                        </TableCell>
+                        <TableCell>Rp {parseFloat(ing.total_cost).toLocaleString('id-ID')}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{ing.notes || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {selectedRecipe.instructions && (
+                <div>
+                  <h3 className="font-semibold mb-2">Instruksi Memasak</h3>
+                  <p className="text-sm whitespace-pre-line bg-gray-50 p-3 rounded">{selectedRecipe.instructions}</p>
+                </div>
+              )}
+
+              {selectedRecipe.notes && (
+                <div>
+                  <h3 className="font-semibold mb-2">Catatan</h3>
+                  <p className="text-sm whitespace-pre-line bg-gray-50 p-3 rounded">{selectedRecipe.notes}</p>
+                </div>
+              )}
             </div>
           )}
-        </TabsContent>
-
-        <TabsContent value="categories" className="space-y-4">
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle>Kategori Menu</CardTitle>
-              <CardDescription>Distribusi resep berdasarkan kategori</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
-                {categories.slice(1).map(category => {
-                  const count = mockRecipes.filter(r => r.category === category).length
-                  return (
-                    <Card key={category} className="rounded-lg border-gray-200">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base">{category}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{count}</div>
-                        <p className="text-xs text-muted-foreground">resep</p>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="costs" className="space-y-4">
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle>Analisis Biaya & Keuntungan</CardTitle>
-              <CardDescription>Perbandingan biaya produksi dan harga jual</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Menu</TableHead>
-                    <TableHead>Kategori</TableHead>
-                    <TableHead className="text-right">Biaya</TableHead>
-                    <TableHead className="text-right">Harga Jual</TableHead>
-                    <TableHead className="text-right">Keuntungan</TableHead>
-                    <TableHead className="text-right">Margin</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockRecipes.map((recipe) => (
-                    <TableRow key={recipe.id}>
-                      <TableCell className="font-medium">{recipe.name}</TableCell>
-                      <TableCell>{recipe.category}</TableCell>
-                      <TableCell className="text-right">
-                        Rp {recipe.cost.toLocaleString("id-ID")}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        Rp {recipe.price.toLocaleString("id-ID")}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        Rp {(recipe.price - recipe.cost).toLocaleString("id-ID")}
-                      </TableCell>
-                      <TableCell className={`text-right font-semibold ${getMarginColor(recipe.margin)}`}>
-                        {recipe.margin}%
-                      </TableCell>
-                      <TableCell>{getPopularityBadge(recipe.popularity)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

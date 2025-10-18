@@ -125,6 +125,11 @@ class Product(models.Model):
         ordering = ['category', 'name']
 
 
+class InventoryLocation(models.TextChoices):
+    WAREHOUSE = 'WAREHOUSE', 'Gudang'
+    KITCHEN = 'KITCHEN', 'Dapur'
+
+
 class Inventory(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='inventory_items')
     name = models.CharField(max_length=200)
@@ -134,6 +139,12 @@ class Inventory(models.Model):
     min_quantity = models.DecimalField(max_digits=10, decimal_places=2)
     cost_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
     supplier = models.CharField(max_length=200, blank=True)
+    location = models.CharField(
+        max_length=20,
+        choices=InventoryLocation.choices,
+        default=InventoryLocation.WAREHOUSE,
+        help_text="Storage location: Warehouse for raw materials, Kitchen for ready-to-use items"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -150,18 +161,19 @@ class Inventory(models.Model):
 
     class Meta:
         verbose_name_plural = "Inventory"
-        ordering = ['branch', 'name']
-        unique_together = ['branch', 'name']
+        ordering = ['branch', 'location', 'name']
+        unique_together = ['branch', 'name', 'location']
 
 
 class InventoryTransaction(models.Model):
     TRANSACTION_TYPES = [
-        ('IN', 'Stock In'),
-        ('OUT', 'Stock Out'),
-        ('ADJUST', 'Adjustment'),
-        ('WASTE', 'Waste'),
+        ('IN', 'Stock In'),          # Purchase/receive to warehouse
+        ('OUT', 'Stock Out'),         # Direct usage/consumption
+        ('ADJUST', 'Adjustment'),     # Stock correction
+        ('WASTE', 'Waste'),           # Damaged/expired items
+        ('TRANSFER', 'Transfer'),     # Warehouse to kitchen transfer
     ]
-    
+
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='transactions')
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
@@ -180,6 +192,96 @@ class InventoryTransaction(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class StockTransfer(models.Model):
+    """Records transfers from warehouse to kitchen"""
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='stock_transfers')
+    item_name = models.CharField(max_length=200)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    unit = models.CharField(max_length=50)
+    from_warehouse = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        related_name='transfers_out',
+        limit_choices_to={'location': 'WAREHOUSE'}
+    )
+    to_kitchen = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        related_name='transfers_in',
+        limit_choices_to={'location': 'KITCHEN'}
+    )
+    transferred_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    transfer_date = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.item_name} - {self.quantity} {self.unit} (Warehouse → Kitchen)"
+
+    class Meta:
+        ordering = ['-transfer_date']
+        verbose_name = "Stock Transfer"
+        verbose_name_plural = "Stock Transfers"
+
+
+class Recipe(models.Model):
+    """Bill of Materials (BOM) for menu items - defines ingredients needed per serving"""
+    product = models.OneToOneField('Product', on_delete=models.CASCADE, related_name='recipe')
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='recipes')
+    serving_size = models.DecimalField(max_digits=10, decimal_places=2, default=1, help_text="Number of servings this recipe produces")
+    preparation_time = models.IntegerField(help_text="Preparation time in minutes", null=True, blank=True)
+    cooking_time = models.IntegerField(help_text="Cooking time in minutes", null=True, blank=True)
+    instructions = models.TextField(blank=True, help_text="Cooking instructions")
+    notes = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def total_cost(self):
+        """Calculate total ingredient cost for this recipe"""
+        return sum(ingredient.total_cost for ingredient in self.ingredients.all())
+
+    @property
+    def cost_per_serving(self):
+        """Calculate cost per serving"""
+        if self.serving_size > 0:
+            return self.total_cost / float(self.serving_size)
+        return 0
+
+    def __str__(self):
+        return f"Recipe: {self.product.name}"
+
+    class Meta:
+        ordering = ['product__name']
+        verbose_name = "Recipe (BOM)"
+        verbose_name_plural = "Recipes (BOM)"
+
+
+class RecipeIngredient(models.Model):
+    """Individual ingredients in a recipe with exact quantities"""
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='ingredients')
+    inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='used_in_recipes')
+    quantity = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        help_text="Quantity needed per serving in base units (g, ml, pcs)"
+    )
+    unit = models.CharField(max_length=50, help_text="Base unit: gram, ml, piece, etc")
+    notes = models.CharField(max_length=200, blank=True, help_text="e.g., 'finely chopped', 'room temperature'")
+
+    @property
+    def total_cost(self):
+        """Calculate cost for this ingredient based on quantity and unit cost"""
+        return float(self.quantity) * float(self.inventory_item.cost_per_unit)
+
+    def __str__(self):
+        return f"{self.recipe.product.name} - {self.inventory_item.name}: {self.quantity} {self.unit}"
+
+    class Meta:
+        ordering = ['recipe', 'inventory_item__name']
+        unique_together = ['recipe', 'inventory_item']
 
 
 class Table(models.Model):

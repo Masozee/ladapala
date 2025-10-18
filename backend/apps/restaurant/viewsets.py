@@ -11,7 +11,8 @@ from .models import (
     Category, Product, Inventory, InventoryTransaction,
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
-    Promotion, Schedule, Report, CashierSession
+    Promotion, Schedule, Report, CashierSession,
+    Recipe, RecipeIngredient
 )
 from .serializers import (
     RestaurantSerializer, BranchSerializer, StaffSerializer,
@@ -21,7 +22,7 @@ from .serializers import (
     KitchenOrderSerializer, KitchenOrderItemSerializer,
     PromotionSerializer, ScheduleSerializer, ReportSerializer,
     DashboardSerializer, CashierSessionSerializer, CashierSessionOpenSerializer,
-    CashierSessionCloseSerializer
+    CashierSessionCloseSerializer, RecipeSerializer, RecipeIngredientSerializer
 )
 from .permissions import IsManagerOrAdmin, IsKitchenStaff, IsWarehouseStaff
 
@@ -88,6 +89,50 @@ class ProductViewSet(viewsets.ModelViewSet):
         available_products = self.get_queryset().filter(is_available=True)
         serializer = self.get_serializer(available_products, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def check_stock_availability(self, request):
+        """Check which products can be made based on current kitchen stock"""
+        from .models import Recipe
+
+        products = self.get_queryset().filter(is_available=True)
+        product_availability = []
+
+        for product in products:
+            availability_info = {
+                'id': product.id,
+                'name': product.name,
+                'price': product.price,
+                'category': product.category.name if product.category else None,
+                'image': product.image.url if product.image else None,
+                'can_be_made': True,
+                'insufficient_ingredients': []
+            }
+
+            try:
+                recipe = product.recipe
+
+                # Check each ingredient availability for 1 serving
+                for recipe_ingredient in recipe.ingredients.all():
+                    inventory_item = recipe_ingredient.inventory_item
+                    quantity_needed = float(recipe_ingredient.quantity)
+
+                    if inventory_item.quantity < quantity_needed:
+                        availability_info['can_be_made'] = False
+                        availability_info['insufficient_ingredients'].append({
+                            'name': inventory_item.name,
+                            'needed': quantity_needed,
+                            'available': float(inventory_item.quantity),
+                            'unit': inventory_item.unit
+                        })
+
+            except Recipe.DoesNotExist:
+                # Product doesn't have a recipe - assume it can be made
+                availability_info['can_be_made'] = True
+
+            product_availability.append(availability_info)
+
+        return Response(product_availability)
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -282,11 +327,80 @@ class PaymentViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         payment = serializer.save(processed_by=self.request.user.staff)
-        
+
         if payment.status == 'COMPLETED':
             order = payment.order
+
+            # First, check if all ingredients are available in sufficient quantity
+            insufficient_items = []
+            for order_item in order.items.all():
+                try:
+                    recipe = order_item.product.recipe
+                    quantity_ordered = order_item.quantity
+
+                    # Check each ingredient availability
+                    for recipe_ingredient in recipe.ingredients.all():
+                        inventory_item = recipe_ingredient.inventory_item
+                        total_quantity_needed = float(recipe_ingredient.quantity) * quantity_ordered
+
+                        if inventory_item.quantity < total_quantity_needed:
+                            insufficient_items.append({
+                                'product': order_item.product.name,
+                                'ingredient': inventory_item.name,
+                                'needed': total_quantity_needed,
+                                'available': float(inventory_item.quantity),
+                                'unit': inventory_item.unit
+                            })
+                except Recipe.DoesNotExist:
+                    # Product doesn't have a recipe, skip validation
+                    pass
+
+            # If any ingredient is insufficient, reject the payment
+            if insufficient_items:
+                from rest_framework.exceptions import ValidationError
+                error_messages = []
+                for item in insufficient_items:
+                    error_messages.append(
+                        f"{item['product']}: Stok {item['ingredient']} tidak cukup. "
+                        f"Dibutuhkan {item['needed']}{item['unit']}, tersedia {item['available']}{item['unit']}"
+                    )
+                raise ValidationError({
+                    'error': 'Stok bahan tidak mencukupi',
+                    'details': error_messages
+                })
+
+            # All ingredients available, proceed with payment
             order.status = 'COMPLETED'
             order.save()
+
+            # Deduct ingredients from kitchen inventory based on recipes
+            for order_item in order.items.all():
+                try:
+                    recipe = order_item.product.recipe
+                    quantity_ordered = order_item.quantity
+
+                    # Deduct each ingredient from kitchen inventory
+                    for recipe_ingredient in recipe.ingredients.all():
+                        inventory_item = recipe_ingredient.inventory_item
+                        total_quantity_needed = float(recipe_ingredient.quantity) * quantity_ordered
+
+                        # Update inventory quantity
+                        inventory_item.quantity -= total_quantity_needed
+                        inventory_item.save()
+
+                        # Create inventory transaction record (OUT)
+                        InventoryTransaction.objects.create(
+                            inventory=inventory_item,
+                            transaction_type='OUT',
+                            quantity=total_quantity_needed,
+                            unit_cost=inventory_item.cost_per_unit,
+                            reference_number=f"ORDER-{order.id}",
+                            performed_by=self.request.user,
+                            notes=f"Auto-deduction for {quantity_ordered}x {order_item.product.name} (Order #{order.id})"
+                        )
+                except Recipe.DoesNotExist:
+                    # Product doesn't have a recipe, skip ingredient deduction
+                    pass
 
 
 class KitchenOrderViewSet(viewsets.ModelViewSet):
@@ -476,8 +590,14 @@ class ScheduleViewSet(viewsets.ModelViewSet):
     serializer_class = ScheduleSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['staff', 'date', 'shift_type', 'is_confirmed']
+    filterset_fields = {
+        'staff': ['exact'],
+        'date': ['exact', 'gte', 'lte'],
+        'shift_type': ['exact'],
+        'is_confirmed': ['exact']
+    }
     ordering = ['date', 'start_time']
+    pagination_class = None  # Disable pagination for schedules
     
     @action(detail=False, methods=['get'])
     def today(self, request):
@@ -1015,3 +1135,31 @@ class CashierSessionViewSet(viewsets.ModelViewSet):
             'transactions': transactions,
             'summary': session.settlement_data
         })
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ["branch", "product", "is_active"]
+    search_fields = ["product__name", "notes"]
+    ordering = ["product__name"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Prefetch related data for better performance
+        return queryset.select_related("product", "branch").prefetch_related("ingredients__inventory_item")
+
+
+class RecipeIngredientViewSet(viewsets.ModelViewSet):
+    queryset = RecipeIngredient.objects.all()
+    serializer_class = RecipeIngredientSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["recipe", "inventory_item"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.select_related("recipe__product", "inventory_item")
+

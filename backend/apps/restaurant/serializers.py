@@ -5,7 +5,8 @@ from .models import (
     Category, Product, Inventory, InventoryTransaction,
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
-    Promotion, Schedule, Report, CashierSession
+    Promotion, Schedule, Report, CashierSession,
+    Recipe, RecipeIngredient
 )
 
 User = get_user_model()
@@ -149,9 +150,49 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        from .models import KitchenOrder, KitchenOrderItem
+        from .models import KitchenOrder, KitchenOrderItem, Recipe
 
         items_data = validated_data.pop('items')
+
+        # VALIDATE STOCK AVAILABILITY BEFORE CREATING ORDER
+        insufficient_items = []
+        for item_data in items_data:
+            product = item_data.get('product')
+            quantity = item_data.get('quantity')
+
+            try:
+                recipe = product.recipe
+                # Check each ingredient availability
+                for recipe_ingredient in recipe.ingredients.all():
+                    inventory_item = recipe_ingredient.inventory_item
+                    total_quantity_needed = float(recipe_ingredient.quantity) * quantity
+
+                    if inventory_item.quantity < total_quantity_needed:
+                        insufficient_items.append({
+                            'product': product.name,
+                            'ingredient': inventory_item.name,
+                            'needed': total_quantity_needed,
+                            'available': float(inventory_item.quantity),
+                            'unit': inventory_item.unit
+                        })
+            except Recipe.DoesNotExist:
+                # Product doesn't have a recipe, skip validation
+                pass
+
+        # If any ingredient is insufficient, reject the order
+        if insufficient_items:
+            error_messages = []
+            for item in insufficient_items:
+                error_messages.append(
+                    f"{item['product']}: Stok {item['ingredient']} tidak cukup. "
+                    f"Dibutuhkan {item['needed']}{item['unit']}, tersedia {item['available']}{item['unit']}"
+                )
+            raise serializers.ValidationError({
+                'error': 'Stok bahan tidak mencukupi untuk membuat pesanan',
+                'details': error_messages
+            })
+
+        # All ingredients available, proceed with order creation
         order = Order.objects.create(**validated_data)
 
         # Create order items first
@@ -356,3 +397,47 @@ class CashierSessionCloseSerializer(serializers.Serializer):
     actual_cash = serializers.DecimalField(max_digits=10, decimal_places=2)
     notes = serializers.CharField(required=False, allow_blank=True)
     closed_by = serializers.IntegerField(required=False)
+
+
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+    inventory_item_name = serializers.CharField(source="inventory_item.name", read_only=True)
+    inventory_item_unit = serializers.CharField(source="inventory_item.unit", read_only=True)
+    inventory_item_location = serializers.CharField(source="inventory_item.location", read_only=True)
+    total_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = RecipeIngredient
+        fields = [
+            "id", "recipe", "inventory_item", "inventory_item_name", 
+            "inventory_item_unit", "inventory_item_location",
+            "quantity", "unit", "notes", "total_cost"
+        ]
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_price = serializers.DecimalField(source="product.price", max_digits=10, decimal_places=2, read_only=True)
+    branch_name = serializers.CharField(source="branch.name", read_only=True)
+    ingredients = RecipeIngredientSerializer(many=True, read_only=True)
+    total_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    cost_per_serving = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    profit_margin = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Recipe
+        fields = [
+            "id", "product", "product_name", "product_price", "branch", "branch_name",
+            "serving_size", "preparation_time", "cooking_time", "instructions", "notes",
+            "is_active", "ingredients", "total_cost", "cost_per_serving", "profit_margin",
+            "created_at", "updated_at"
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+    def get_profit_margin(self, obj):
+        """Calculate profit margin percentage"""
+        if obj.cost_per_serving > 0 and obj.product.price > 0:
+            profit = float(obj.product.price) - obj.cost_per_serving
+            margin = (profit / float(obj.product.price)) * 100
+            return round(margin, 2)
+        return 0
+
