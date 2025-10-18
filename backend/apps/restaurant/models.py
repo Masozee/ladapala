@@ -250,6 +250,15 @@ class Recipe(models.Model):
             return self.total_cost / float(self.serving_size)
         return 0
 
+    @property
+    def profit_margin(self):
+        """Calculate profit margin percentage"""
+        cost = self.cost_per_serving
+        price = float(self.product.price)
+        if cost > 0 and price > 0:
+            return ((price - cost) / price) * 100
+        return 0
+
     def __str__(self):
         return f"Recipe: {self.product.name}"
 

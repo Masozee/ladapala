@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db.models import Sum, Count, Q, F
 from datetime import datetime, timedelta
+from decimal import Decimal
 from .models import (
     Restaurant, Branch, Staff,
     Category, Product, Inventory, InventoryTransaction,
@@ -382,7 +383,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
                     # Deduct each ingredient from kitchen inventory
                     for recipe_ingredient in recipe.ingredients.all():
                         inventory_item = recipe_ingredient.inventory_item
-                        total_quantity_needed = float(recipe_ingredient.quantity) * quantity_ordered
+                        total_quantity_needed = Decimal(str(float(recipe_ingredient.quantity) * quantity_ordered))
 
                         # Update inventory quantity
                         inventory_item.quantity -= total_quantity_needed
