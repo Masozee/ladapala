@@ -783,6 +783,70 @@ class ApiClient {
       body: JSON.stringify(data),
     });
   }
+
+  // Recipes
+  async getRecipes(params?: { branch?: number; product?: number; is_active?: boolean }): Promise<{ count: number; results: any[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.branch) searchParams.set('branch', params.branch.toString());
+    if (params?.product) searchParams.set('product', params.product.toString());
+    if (params?.is_active !== undefined) searchParams.set('is_active', params.is_active.toString());
+
+    const query = searchParams.toString();
+    return this.fetch(`/recipes/${query ? `?${query}` : ''}`);
+  }
+
+  async getRecipe(id: number): Promise<any> {
+    return this.fetch(`/recipes/${id}/`);
+  }
+
+  async createRecipe(data: any): Promise<any> {
+    return this.fetch('/recipes/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateRecipe(id: number, data: any): Promise<any> {
+    return this.fetch(`/recipes/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteRecipe(id: number): Promise<void> {
+    return this.fetch(`/recipes/${id}/`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Recipe Ingredients
+  async getRecipeIngredients(params?: { recipe?: number }): Promise<{ count: number; results: any[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.recipe) searchParams.set('recipe', params.recipe.toString());
+
+    const query = searchParams.toString();
+    return this.fetch(`/recipe-ingredients/${query ? `?${query}` : ''}`);
+  }
+
+  async createRecipeIngredient(data: any): Promise<any> {
+    return this.fetch('/recipe-ingredients/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateRecipeIngredient(id: number, data: any): Promise<any> {
+    return this.fetch(`/recipe-ingredients/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteRecipeIngredient(id: number): Promise<void> {
+    return this.fetch(`/recipe-ingredients/${id}/`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Export singleton instance

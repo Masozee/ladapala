@@ -100,15 +100,12 @@ export default function RecipePage() {
     try {
       setIsLoading(true)
       const [recipesRes, productsRes, inventoryRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipes/?branch=${staff?.branch}`, {
-          credentials: 'include'
-        }),
+        api.getRecipes({ branch: staff?.branch }),
         api.getProducts({ branch: staff?.branch }),
         api.getInventory({ branch: staff?.branch, location: 'KITCHEN' })
       ])
 
-      const recipesData = await recipesRes.json()
-      setRecipes(Array.isArray(recipesData) ? recipesData : recipesData.results || [])
+      setRecipes(Array.isArray(recipesRes) ? recipesRes : recipesRes.results || [])
       setProducts(productsRes.results || [])
       setKitchenInventory(inventoryRes.results || [])
     } catch (error) {
