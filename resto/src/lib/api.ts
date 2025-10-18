@@ -414,11 +414,12 @@ class ApiClient {
   }
 
   // Products
-  async getProducts(params?: { category?: number; search?: string; is_available?: boolean }): Promise<{ count: number; results: Product[] }> {
+  async getProducts(params?: { category?: number; search?: string; is_available?: boolean; branch?: number }): Promise<{ count: number; results: Product[] }> {
     const searchParams = new URLSearchParams();
     if (params?.category) searchParams.set('category', params.category.toString());
     if (params?.search) searchParams.set('search', params.search);
     if (params?.is_available !== undefined) searchParams.set('is_available', params.is_available.toString());
+    if (params?.branch) searchParams.set('branch', params.branch.toString());
 
     const query = searchParams.toString();
     return this.fetch(`/products/${query ? `?${query}` : ''}`);
@@ -705,10 +706,11 @@ class ApiClient {
   }
 
   // Inventory
-  async getInventory(params?: { branch?: number; search?: string; status?: string }): Promise<{ count: number; results: Inventory[] }> {
+  async getInventory(params?: { branch?: number; search?: string; status?: string; location?: string }): Promise<{ count: number; results: Inventory[] }> {
     const searchParams = new URLSearchParams();
     if (params?.branch) searchParams.set('branch', params.branch.toString());
     if (params?.search) searchParams.set('search', params.search);
+    if (params?.location) searchParams.set('location', params.location);
     if (params?.status) {
       // status filter: 'low' (needs restock), 'out' (quantity = 0), 'normal'
       if (params.status === 'low') {
