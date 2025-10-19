@@ -77,6 +77,7 @@ export interface Order {
   total_amount?: string;
   created_at?: string;
   updated_at?: string;
+  payments?: Payment[];
 }
 
 export interface DashboardData {
@@ -1118,6 +1119,69 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  // Report APIs
+  async getSalesReport(params: {
+    period: 'today' | 'week' | 'month' | 'year' | 'custom'
+    branch?: number
+    start_date?: string
+    end_date?: string
+  }): Promise<any> {
+    const searchParams = new URLSearchParams();
+    searchParams.append('period', params.period);
+    if (params.branch) searchParams.append('branch', params.branch.toString());
+    if (params.start_date) searchParams.append('start_date', params.start_date);
+    if (params.end_date) searchParams.append('end_date', params.end_date);
+
+    return this.fetch(`/reports/sales/?${searchParams.toString()}`);
+  }
+
+  async getExpensesReport(params: {
+    period: 'today' | 'week' | 'month' | 'year' | 'custom'
+    branch?: number
+    start_date?: string
+    end_date?: string
+  }): Promise<any> {
+    const searchParams = new URLSearchParams();
+    searchParams.append('period', params.period);
+    if (params.branch) searchParams.append('branch', params.branch.toString());
+    if (params.start_date) searchParams.append('start_date', params.start_date);
+    if (params.end_date) searchParams.append('end_date', params.end_date);
+
+    return this.fetch(`/reports/expenses/?${searchParams.toString()}`);
+  }
+
+  async getProductsReport(params: {
+    period: 'today' | 'week' | 'month' | 'year' | 'custom'
+    branch?: number
+    start_date?: string
+    end_date?: string
+    limit?: number
+  }): Promise<any> {
+    const searchParams = new URLSearchParams();
+    searchParams.append('period', params.period);
+    if (params.branch) searchParams.append('branch', params.branch.toString());
+    if (params.start_date) searchParams.append('start_date', params.start_date);
+    if (params.end_date) searchParams.append('end_date', params.end_date);
+    if (params.limit) searchParams.append('limit', params.limit.toString());
+
+    return this.fetch(`/reports/products/?${searchParams.toString()}`);
+  }
+
+  async getTrendsReport(params: {
+    period: 'today' | 'week' | 'month' | 'year' | 'custom'
+    branch?: number
+    start_date?: string
+    end_date?: string
+  }): Promise<any> {
+    const searchParams = new URLSearchParams();
+    searchParams.append('period', params.period);
+    if (params.branch) searchParams.append('branch', params.branch.toString());
+    if (params.start_date) searchParams.append('start_date', params.start_date);
+    if (params.end_date) searchParams.append('end_date', params.end_date);
+
+    return this.fetch(`/reports/trends/?${searchParams.toString()}`);
   }
 }
 

@@ -77,6 +77,7 @@ export default function SchedulePage() {
     shift_type: '',
     notes: ''
   })
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null)
 
   const SHIFT_TIMES: Record<string, { start: string; end: string }> = {
     'MORNING': { start: '06:00', end: '14:00' },
@@ -89,6 +90,17 @@ export default function SchedulePage() {
   useEffect(() => {
     fetchData()
   }, [selectedDate])
+
+  // Scroll to today's date when component mounts or data changes
+  useEffect(() => {
+    if (scrollContainerRef.current && selectedView === 'week') {
+      const today = new Date()
+      const todayElement = scrollContainerRef.current.querySelector(`[data-date="${today.toISOString().split('T')[0]}"]`)
+      if (todayElement) {
+        todayElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+      }
+    }
+  }, [staff, selectedView])
 
   const fetchData = async () => {
     try {
@@ -349,14 +361,14 @@ export default function SchedulePage() {
           {/* Schedule Content */}
           <div className="bg-white rounded-lg">
             {selectedView === "week" ? (
-              <div className="relative">
+              <div className="relative border rounded-lg">
                 {/* Scrollable Container */}
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" ref={scrollContainerRef}>
                   <div className="inline-flex">
                     {/* Frozen Employee Column */}
-                    <div className="sticky left-0 z-20 bg-white border-r border-gray-200">
+                    <div className="sticky left-0 z-20 bg-white border-r-2 border-gray-300">
                       {/* Header */}
-                      <div className="h-16 px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center">
+                      <div className="h-16 px-4 py-3 bg-gray-50 border-b-2 border-gray-300 flex items-center">
                         <div className="font-semibold text-sm text-gray-700">Karyawan</div>
                       </div>
                       {/* Employee Rows */}
@@ -365,7 +377,7 @@ export default function SchedulePage() {
                         return (
                           <div
                             key={`name-${employee.id}`}
-                            className="h-24 px-4 py-3 border-b border-gray-200 flex items-center"
+                            className="h-24 px-4 py-3 border-b border-gray-300 flex items-center"
                             style={{ minWidth: '200px' }}
                           >
                             <div>
@@ -382,10 +394,16 @@ export default function SchedulePage() {
                       {monthDates.map((date, dateIndex) => {
                         const isToday = date.toDateString() === new Date().toDateString()
                         const isWeekend = date.getDay() === 0 || date.getDay() === 6
+                        const dateStr = date.toISOString().split('T')[0]
                         return (
-                          <div key={dateIndex} className={`border-r border-gray-200 last:border-r-0 ${isToday ? 'ring-2 ring-[#58ff34] ring-inset' : ''}`} style={{ minWidth: '140px' }}>
+                          <div
+                            key={dateIndex}
+                            data-date={dateStr}
+                            className={`border-r border-gray-300 last:border-r-0 ${isToday ? 'ring-2 ring-[#58ff34] ring-inset' : ''}`}
+                            style={{ minWidth: '140px' }}
+                          >
                             {/* Date Header */}
-                            <div className={`h-16 px-2 py-2 border-b border-gray-200 text-center ${isToday ? 'bg-[#58ff34] text-black' : isWeekend ? 'bg-gray-100' : 'bg-gray-50'}`}>
+                            <div className={`h-16 px-2 py-2 border-b-2 border-gray-300 text-center ${isToday ? 'bg-[#58ff34] text-black' : isWeekend ? 'bg-gray-100' : 'bg-gray-50'}`}>
                               <div className={`font-semibold text-xs ${isToday ? 'text-black' : isWeekend ? 'text-red-600' : 'text-gray-900'}`}>
                                 {daysOfWeek[date.getDay()]}
                               </div>
@@ -399,7 +417,7 @@ export default function SchedulePage() {
                               return (
                                 <div
                                   key={`${employee.id}-${dateIndex}`}
-                                  className={`h-24 px-2 py-2 border-b border-gray-200 ${isToday ? 'bg-[#58ff34]/20' : isWeekend ? 'bg-gray-50' : ''}`}
+                                  className={`h-24 px-2 py-2 border-b border-gray-300 ${isToday ? 'bg-[#58ff34]/20' : isWeekend ? 'bg-gray-50' : ''}`}
                                 >
                                   {shift ? (
                                     <div className="h-full flex flex-col justify-center space-y-1">

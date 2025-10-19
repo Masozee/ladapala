@@ -1,27 +1,33 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import datetime, timedelta, time
-from apps.restaurant.models import Staff, Schedule
+from apps.restaurant.models import Staff, Schedule, Branch
 import random
 
 
 class Command(BaseCommand):
-    help = 'Seed schedule data for 3 months (90 days) with realistic shift patterns'
+    help = 'Seed schedule data: 1 month back + current month + 2 months forward (120 days)'
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--days',
             type=int,
-            default=90,
-            help='Number of days to generate schedules for (default: 90)'
+            default=120,
+            help='Number of days to generate schedules for (default: 120)'
         )
 
     def handle(self, *args, **options):
         days = options['days']
         self.stdout.write(self.style.SUCCESS(f'Starting schedule seeding for {days} days...'))
 
+        # Get branch dynamically
+        branch = Branch.objects.first()
+        if not branch:
+            self.stdout.write(self.style.ERROR('No branch found in database'))
+            return
+
         # Get all staff members
-        staff_members = Staff.objects.filter(branch_id=4, is_active=True)
+        staff_members = Staff.objects.filter(branch=branch, is_active=True)
 
         if not staff_members.exists():
             self.stdout.write(self.style.ERROR('No active staff found. Run seed_auth_users first.'))
@@ -66,13 +72,14 @@ class Command(BaseCommand):
         warehouse_staff = list(staff_members.filter(role='WAREHOUSE'))
         admins = list(staff_members.filter(role='ADMIN'))
 
-        # Start from 30 days ago to include back dates for historical view
+        # Start from 30 days ago to include historical data
         today = timezone.now().date()
-        start_date = today - timedelta(days=30)
+        start_date = today - timedelta(days=30)  # 1 month back
         schedules_created = 0
 
         self.stdout.write(self.style.SUCCESS(f'\n📅 Generating schedules from {start_date} for {days} days...'))
-        self.stdout.write(self.style.SUCCESS(f'👥 Staff: {len(cashiers)} cashiers, {len(kitchen_staff)} kitchen, {len(managers)} managers\n'))
+        self.stdout.write(self.style.SUCCESS(f'   Branch: {branch.name} (ID: {branch.id})'))
+        self.stdout.write(self.style.SUCCESS(f'👥 Staff: {len(cashiers)} cashiers, {len(kitchen_staff)} kitchen, {len(managers)} managers, {len(warehouse_staff)} warehouse, {len(admins)} admins\n'))
 
         # Generate schedules for specified days
         for day_offset in range(days):

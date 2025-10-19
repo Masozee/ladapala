@@ -124,7 +124,13 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_payments(self, obj):
         from .models import Payment
         payments = Payment.objects.filter(order=obj)
-        return [{'id': p.id, 'status': p.status, 'amount': str(p.amount)} for p in payments]
+        return [{
+            'id': p.id,
+            'status': p.status,
+            'amount': str(p.amount),
+            'payment_method': p.payment_method,
+            'created_at': p.created_at.isoformat() if p.created_at else None
+        } for p in payments]
 
 
 class OrderItemCreateSerializer(serializers.ModelSerializer):

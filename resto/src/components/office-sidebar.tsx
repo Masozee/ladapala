@@ -48,7 +48,7 @@ const officeItems: SidebarItem[] = [
     icon: Calendar01Icon,
   },
   {
-    name: "Resep",
+    name: "Resep & Menu",
     href: "/office/recipe",
     icon: Book01Icon,
   },

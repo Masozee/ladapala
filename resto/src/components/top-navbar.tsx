@@ -27,7 +27,12 @@ const getPageTitle = (pathname: string): string => {
     '/office/stock': 'Manajemen Stok',
     '/office/schedule': 'Jadwal Karyawan',
     '/office/recipe': 'Resep & Menu',
-    '/office/report': 'Laporan'
+    '/office/report': 'Laporan',
+    '/office/sales-history': 'Riwayat Penjualan'
+  }
+  // Handle dynamic routes like /office/sales-history/[id]
+  if (pathname.startsWith('/office/sales-history/')) {
+    return 'Detail Penjualan'
   }
   return titles[pathname] || 'Dashboard Kasir'
 }

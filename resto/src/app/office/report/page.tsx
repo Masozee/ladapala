@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,7 +16,8 @@ import {
   Analytics01Icon,
   ArrowUp01Icon,
   ArrowDown01Icon,
-  ShoppingCart01Icon
+  ShoppingCart01Icon,
+  ViewIcon
 } from "@hugeicons/core-free-icons"
 import {
   Select,
@@ -32,68 +34,67 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
-interface SalesData {
-  date: string
-  revenue: number
-  orders: number
-  avgOrderValue: number
-  topProduct: string
-}
-
-interface ExpenseData {
-  category: string
-  amount: number
-  percentage: number
-  trend: "up" | "down" | "stable"
-}
-
-const mockSalesData: SalesData[] = [
-  { date: "2024-01-15", revenue: 4500000, orders: 87, avgOrderValue: 51724, topProduct: "Nasi Goreng Spesial" },
-  { date: "2024-01-14", revenue: 3800000, orders: 76, avgOrderValue: 50000, topProduct: "Ayam Bakar Madu" },
-  { date: "2024-01-13", revenue: 5200000, orders: 102, avgOrderValue: 50980, topProduct: "Nasi Goreng Spesial" },
-  { date: "2024-01-12", revenue: 4100000, orders: 82, avgOrderValue: 50000, topProduct: "Sate Ayam" },
-  { date: "2024-01-11", revenue: 3600000, orders: 71, avgOrderValue: 50704, topProduct: "Mie Ayam" },
-]
-
-const mockExpenses: ExpenseData[] = [
-  { category: "Bahan Baku", amount: 12500000, percentage: 45, trend: "up" },
-  { category: "Gaji Karyawan", amount: 8000000, percentage: 29, trend: "stable" },
-  { category: "Sewa Tempat", amount: 3500000, percentage: 13, trend: "stable" },
-  { category: "Utilitas", amount: 1800000, percentage: 7, trend: "down" },
-  { category: "Marketing", amount: 1000000, percentage: 4, trend: "up" },
-  { category: "Lainnya", amount: 700000, percentage: 2, trend: "down" },
-]
-
-const popularProducts = [
-  { name: "Nasi Goreng Spesial", sold: 342, revenue: 8550000 },
-  { name: "Ayam Bakar Madu", sold: 256, revenue: 8960000 },
-  { name: "Sate Ayam", sold: 198, revenue: 5940000 },
-  { name: "Mie Ayam", sold: 187, revenue: 4675000 },
-  { name: "Es Teh Manis", sold: 456, revenue: 3648000 },
-]
+import { api } from "@/lib/api"
 
 
 export default function ReportPage() {
-  const [selectedPeriod, setSelectedPeriod] = useState("week")
-  const [selectedBranch, setSelectedBranch] = useState("all")
+  const router = useRouter()
+  const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month' | 'year'>("week")
+  const [selectedBranch, setSelectedBranch] = useState("5")
+  const [loading, setLoading] = useState(true)
+  const [salesData, setSalesData] = useState<any>(null)
+  const [expensesData, setExpensesData] = useState<any>(null)
+  const [productsData, setProductsData] = useState<any>(null)
+  const [trendsData, setTrendsData] = useState<any>(null)
 
-  const totalRevenue = mockSalesData.reduce((acc, data) => acc + data.revenue, 0)
-  const totalOrders = mockSalesData.reduce((acc, data) => acc + data.orders, 0)
-  const avgRevenue = totalRevenue / mockSalesData.length
-  const totalExpenses = mockExpenses.reduce((acc, expense) => acc + expense.amount, 0)
-  const netProfit = totalRevenue - totalExpenses
+  useEffect(() => {
+    fetchReports()
+  }, [selectedPeriod, selectedBranch])
 
-  const getTrendIcon = (trend: "up" | "down" | "stable") => {
-    switch (trend) {
-      case "up":
-        return <HugeiconsIcon icon={ArrowUp01Icon} size={16} strokeWidth={2} className="h-4 w-4 text-green-500" />
-      case "down":
-        return <HugeiconsIcon icon={ArrowDown01Icon} size={16} strokeWidth={2} className="h-4 w-4 text-red-500" />
-      default:
-        return null
+  const fetchReports = async () => {
+    setLoading(true)
+    try {
+      const params = {
+        period: selectedPeriod,
+        branch: selectedBranch !== "all" ? parseInt(selectedBranch) : undefined
+      }
+
+      const [sales, expenses, products, trends] = await Promise.all([
+        api.getSalesReport(params),
+        api.getExpensesReport(params),
+        api.getProductsReport({ ...params, limit: 5 }),
+        api.getTrendsReport(params)
+      ])
+
+      setSalesData(sales)
+      setExpensesData(expenses)
+      setProductsData(products)
+      setTrendsData(trends)
+    } catch (error) {
+      console.error('Error fetching reports:', error)
+    } finally {
+      setLoading(false)
     }
   }
+
+  if (loading || !salesData || !expensesData || !productsData || !trendsData) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Memuat laporan...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const totalRevenue = parseFloat(salesData.summary.total_revenue || '0')
+  const totalOrders = salesData.summary.total_orders || 0
+  const avgOrderValue = parseFloat(salesData.summary.avg_order_value || '0')
+  const totalExpenses = parseFloat(expensesData.summary.total_expenses || '0')
+  const netProfit = totalRevenue - totalExpenses
+  const revenueGrowth = salesData.comparison?.revenue_growth || 0
+  const ordersGrowth = salesData.comparison?.orders_growth || 0
+  const expensesGrowth = expensesData.comparison?.growth_percentage || 0
 
 
   return (
@@ -147,8 +148,13 @@ export default function ReportPage() {
           <CardContent>
             <div className="text-2xl font-bold">Rp {(totalRevenue / 1000000).toFixed(1)}jt</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <HugeiconsIcon icon={AnalyticsUpIcon} size={16} strokeWidth={2} className="h-3 w-3 text-green-500" />
-              +12.5% dari minggu lalu
+              <HugeiconsIcon
+                icon={revenueGrowth >= 0 ? AnalyticsUpIcon : AnalyticsDownIcon}
+                size={16}
+                strokeWidth={2}
+                className={`h-3 w-3 ${revenueGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}
+              />
+              {revenueGrowth >= 0 ? '+' : ''}{revenueGrowth.toFixed(1)}% dari periode lalu
             </p>
           </CardContent>
         </Card>
@@ -160,8 +166,13 @@ export default function ReportPage() {
           <CardContent>
             <div className="text-2xl font-bold">{totalOrders}</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <HugeiconsIcon icon={AnalyticsUpIcon} size={16} strokeWidth={2} className="h-3 w-3 text-green-500" />
-              +8.2% dari minggu lalu
+              <HugeiconsIcon
+                icon={ordersGrowth >= 0 ? AnalyticsUpIcon : AnalyticsDownIcon}
+                size={16}
+                strokeWidth={2}
+                className={`h-3 w-3 ${ordersGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}
+              />
+              {ordersGrowth >= 0 ? '+' : ''}{ordersGrowth.toFixed(1)}% dari periode lalu
             </p>
           </CardContent>
         </Card>
@@ -171,10 +182,9 @@ export default function ReportPage() {
             <HugeiconsIcon icon={Analytics01Icon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Rp {Math.round(avgRevenue / totalOrders * mockSalesData.length).toLocaleString("id-ID")}</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <HugeiconsIcon icon={AnalyticsDownIcon} size={16} strokeWidth={2} className="h-3 w-3 text-red-500" />
-              -2.1% dari minggu lalu
+            <div className="text-2xl font-bold">Rp {Math.round(avgOrderValue).toLocaleString("id-ID")}</div>
+            <p className="text-xs text-muted-foreground">
+              Per transaksi
             </p>
           </CardContent>
         </Card>
@@ -186,8 +196,13 @@ export default function ReportPage() {
           <CardContent>
             <div className="text-2xl font-bold">Rp {(totalExpenses / 1000000).toFixed(1)}jt</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <HugeiconsIcon icon={AnalyticsUpIcon} size={16} strokeWidth={2} className="h-3 w-3 text-red-500" />
-              +5.3% dari minggu lalu
+              <HugeiconsIcon
+                icon={expensesGrowth >= 0 ? AnalyticsUpIcon : AnalyticsDownIcon}
+                size={16}
+                strokeWidth={2}
+                className={`h-3 w-3 ${expensesGrowth >= 0 ? 'text-red-500' : 'text-green-500'}`}
+              />
+              {expensesGrowth >= 0 ? '+' : ''}{expensesGrowth.toFixed(1)}% dari periode lalu
             </p>
           </CardContent>
         </Card>
@@ -201,7 +216,7 @@ export default function ReportPage() {
               Rp {(Math.abs(netProfit) / 1000000).toFixed(1)}jt
             </div>
             <p className="text-xs text-muted-foreground">
-              Margin: {((netProfit / totalRevenue) * 100).toFixed(1)}%
+              Margin: {totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : '0'}%
             </p>
           </CardContent>
         </Card>
@@ -222,36 +237,48 @@ export default function ReportPage() {
               <h2 className="text-lg font-semibold">Riwayat Penjualan</h2>
               <p className="text-muted-foreground">Detail penjualan harian</p>
             </div>
-              <Table>
+              <Table className="border">
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Tanggal</TableHead>
-                    <TableHead>Pendapatan</TableHead>
-                    <TableHead>Jumlah Pesanan</TableHead>
-                    <TableHead>Rata-rata Pesanan</TableHead>
-                    <TableHead>Produk Terlaris</TableHead>
+                  <TableRow className="border-b">
+                    <TableHead className="border-r">Tanggal</TableHead>
+                    <TableHead className="border-r">Pendapatan</TableHead>
+                    <TableHead className="border-r">Jumlah Pesanan</TableHead>
+                    <TableHead className="border-r">Rata-rata Pesanan</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockSalesData.map((data, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{data.date}</TableCell>
-                      <TableCell className="font-semibold">
-                        Rp {data.revenue.toLocaleString("id-ID")}
-                      </TableCell>
-                      <TableCell>{data.orders}</TableCell>
-                      <TableCell>Rp {data.avgOrderValue.toLocaleString("id-ID")}</TableCell>
-                      <TableCell>{data.topProduct}</TableCell>
-                      <TableCell>
-                        {data.revenue > 4000000 ? (
-                          <Badge className="bg-green-500 text-white">Bagus</Badge>
-                        ) : (
-                          <Badge className="bg-yellow-500 text-white">Normal</Badge>
-                        )}
+                  {salesData.daily_breakdown && salesData.daily_breakdown.length > 0 ? (
+                    salesData.daily_breakdown.map((data: any, index: number) => {
+                      const revenue = parseFloat(data.revenue || '0')
+                      const avgValue = parseFloat(data.avg_order_value || '0')
+                      return (
+                        <TableRow key={index} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => router.push('/office/sales-history')}>
+                          <TableCell className="border-r text-blue-600 hover:text-blue-800 font-medium">
+                            {new Date(data.date).toLocaleDateString('id-ID')}
+                          </TableCell>
+                          <TableCell className="border-r font-semibold">
+                            Rp {revenue.toLocaleString("id-ID")}
+                          </TableCell>
+                          <TableCell className="border-r">{data.orders}</TableCell>
+                          <TableCell className="border-r">Rp {Math.round(avgValue).toLocaleString("id-ID")}</TableCell>
+                          <TableCell>
+                            {revenue > avgOrderValue * data.orders ? (
+                              <Badge className="bg-green-500 text-white">Bagus</Badge>
+                            ) : (
+                              <Badge className="bg-yellow-500 text-white">Normal</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  ) : (
+                    <TableRow className="border-b">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                        Tidak ada data penjualan
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
             </Table>
           </div>
@@ -263,50 +290,44 @@ export default function ReportPage() {
               <h2 className="text-lg font-semibold">Breakdown Pengeluaran</h2>
               <p className="text-muted-foreground">Analisis pengeluaran per kategori</p>
             </div>
-              <Table>
+              <Table className="border">
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Kategori</TableHead>
-                    <TableHead>Jumlah</TableHead>
+                  <TableRow className="border-b">
+                    <TableHead className="border-r">Kategori</TableHead>
+                    <TableHead className="border-r">Jumlah</TableHead>
                     <TableHead>Persentase</TableHead>
-                    <TableHead>Tren</TableHead>
-                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockExpenses.map((expense, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{expense.category}</TableCell>
-                      <TableCell>Rp {expense.amount.toLocaleString("id-ID")}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-20 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-[#58ff34] h-2 rounded-full"
-                              style={{ width: `${expense.percentage}%` }}
-                            />
-                          </div>
-                          <span className="text-sm">{expense.percentage}%</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getTrendIcon(expense.trend)}</TableCell>
-                      <TableCell>
-                        {expense.trend === "up" && (
-                          <Badge variant="outline" className="border-yellow-500 text-yellow-600">
-                            Naik
-                          </Badge>
-                        )}
-                        {expense.trend === "down" && (
-                          <Badge variant="outline" className="border-green-500 text-green-600">
-                            Turun
-                          </Badge>
-                        )}
-                        {expense.trend === "stable" && (
-                          <Badge variant="outline">Stabil</Badge>
-                        )}
+                  {expensesData.by_category && expensesData.by_category.length > 0 ? (
+                    expensesData.by_category.map((expense: any, index: number) => {
+                      const amount = parseFloat(expense.amount || '0')
+                      const percentage = parseFloat(expense.percentage || '0')
+                      return (
+                        <TableRow key={index} className="border-b">
+                          <TableCell className="font-medium border-r">{expense.category}</TableCell>
+                          <TableCell className="border-r">Rp {amount.toLocaleString("id-ID")}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-[#58ff34] h-2 rounded-full"
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                              <span className="text-sm">{percentage.toFixed(1)}%</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  ) : (
+                    <TableRow className="border-b">
+                      <TableCell colSpan={3} className="text-center text-muted-foreground">
+                        Tidak ada data pengeluaran
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
             </Table>
           </div>
@@ -318,92 +339,144 @@ export default function ReportPage() {
               <h2 className="text-lg font-semibold">Produk Terlaris</h2>
               <p className="text-muted-foreground">Performa produk berdasarkan penjualan</p>
             </div>
-              <Table>
+              <Table className="border">
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Produk</TableHead>
-                    <TableHead>Terjual</TableHead>
-                    <TableHead>Pendapatan</TableHead>
-                    <TableHead>Kontribusi</TableHead>
+                  <TableRow className="border-b">
+                    <TableHead className="border-r">Produk</TableHead>
+                    <TableHead className="border-r">Terjual</TableHead>
+                    <TableHead className="border-r">Pendapatan</TableHead>
+                    <TableHead className="border-r">Kontribusi</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {popularProducts.map((product, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>{product.sold} porsi</TableCell>
-                      <TableCell>Rp {product.revenue.toLocaleString("id-ID")}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-20 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-green-500 h-2 rounded-full"
-                              style={{ width: `${(product.revenue / totalRevenue * 100)}%` }}
-                            />
-                          </div>
-                          <span className="text-sm">
-                            {((product.revenue / totalRevenue) * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {index < 3 ? (
-                          <Badge className="bg-green-500 text-white">Top {index + 1}</Badge>
-                        ) : (
-                          <Badge variant="outline">Normal</Badge>
-                        )}
+                  {productsData.top_products && productsData.top_products.length > 0 ? (
+                    productsData.top_products.map((product: any, index: number) => {
+                      const revenue = parseFloat(product.revenue || '0')
+                      const contribution = parseFloat(product.contribution_percentage || '0')
+                      return (
+                        <TableRow key={index} className="border-b">
+                          <TableCell className="font-medium border-r">{product.product_name}</TableCell>
+                          <TableCell className="border-r">{product.quantity_sold} porsi</TableCell>
+                          <TableCell className="border-r">Rp {revenue.toLocaleString("id-ID")}</TableCell>
+                          <TableCell className="border-r">
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-green-500 h-2 rounded-full"
+                                  style={{ width: `${contribution}%` }}
+                                />
+                              </div>
+                              <span className="text-sm">
+                                {contribution.toFixed(1)}%
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {index < 3 ? (
+                              <Badge className="bg-green-500 text-white">Top {index + 1}</Badge>
+                            ) : (
+                              <Badge variant="outline">Normal</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  ) : (
+                    <TableRow className="border-b">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                        Tidak ada data produk
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
             </Table>
           </div>
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-4">
+          {/* Daily Revenue Chart */}
+          <div className="bg-white p-6 rounded-lg">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold">Grafik Omzet Harian</h2>
+              <p className="text-muted-foreground">Visualisasi penjualan per hari</p>
+            </div>
+            {salesData.daily_breakdown && salesData.daily_breakdown.length > 0 ? (
+              <div className="space-y-2">
+                {salesData.daily_breakdown.slice(0, 10).map((day: any, index: number) => {
+                  const revenue = parseFloat(day.revenue || '0')
+                  const maxRevenue = Math.max(...salesData.daily_breakdown.map((d: any) => parseFloat(d.revenue || '0')))
+                  const percentage = maxRevenue > 0 ? (revenue / maxRevenue) * 100 : 0
+                  const orders = day.orders || 0
+
+                  return (
+                    <div key={index} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-gray-700 w-32">
+                          {new Date(day.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                        </span>
+                        <div className="flex-1 mx-4">
+                          <div className="relative w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                            <div
+                              className="absolute h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-end pr-2"
+                              style={{ width: `${percentage}%` }}
+                            >
+                              {percentage > 15 && (
+                                <span className="text-white text-xs font-semibold">
+                                  Rp {(revenue / 1000000).toFixed(1)}jt
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 w-40 justify-end">
+                          {percentage <= 15 && (
+                            <span className="text-sm font-semibold">
+                              Rp {(revenue / 1000000).toFixed(1)}jt
+                            </span>
+                          )}
+                          <Badge className="bg-blue-500 text-white text-xs">
+                            {orders} order
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">Tidak ada data penjualan</p>
+            )}
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             <div className="bg-white p-6 rounded-lg">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold">Tren Penjualan Mingguan</h2>
-                <p className="text-muted-foreground">Perbandingan minggu ini vs minggu lalu</p>
+                <h2 className="text-lg font-semibold">Tren Penjualan</h2>
+                <p className="text-muted-foreground">Penjualan per hari dalam periode</p>
               </div>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>Senin</span>
-                    <div className="flex items-center gap-2">
-                      <span>Rp 3.6jt</span>
-                      <Badge className="bg-green-500 text-white text-xs">+15%</Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Selasa</span>
-                    <div className="flex items-center gap-2">
-                      <span>Rp 4.1jt</span>
-                      <Badge className="bg-green-500 text-xs">+8%</Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Rabu</span>
-                    <div className="flex items-center gap-2">
-                      <span>Rp 5.2jt</span>
-                      <Badge className="bg-green-500 text-xs">+22%</Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Kamis</span>
-                    <div className="flex items-center gap-2">
-                      <span>Rp 3.8jt</span>
-                      <Badge className="bg-red-500 text-white text-xs">-5%</Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Jumat</span>
-                    <div className="flex items-center gap-2">
-                      <span>Rp 4.5jt</span>
-                      <Badge className="bg-green-500 text-xs">+10%</Badge>
-                    </div>
-                  </div>
+                  {trendsData.daily_trend && trendsData.daily_trend.length > 0 ? (
+                    trendsData.daily_trend.slice(0, 7).map((day: any, index: number) => {
+                      const revenue = parseFloat(day.revenue || '0')
+                      const growth = parseFloat(day.growth_rate || '0')
+                      return (
+                        <div key={index} className="flex items-center justify-between">
+                          <span>{new Date(day.date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
+                          <div className="flex items-center gap-2">
+                            <span>Rp {(revenue / 1000000).toFixed(1)}jt</span>
+                            {growth !== 0 && (
+                              <Badge className={`${growth >= 0 ? 'bg-green-500' : 'bg-red-500'} text-white text-xs`}>
+                                {growth >= 0 ? '+' : ''}{growth.toFixed(0)}%
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <p className="text-center text-muted-foreground">Tidak ada data tren</p>
+                  )}
                 </div>
             </div>
 
@@ -413,42 +486,24 @@ export default function ReportPage() {
                 <p className="text-muted-foreground">Distribusi pesanan per jam</p>
               </div>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>12:00 - 13:00</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-[#58ff34] h-2 rounded-full" style={{ width: '85%' }} />
-                      </div>
-                      <span className="text-sm">85%</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>19:00 - 20:00</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-[#58ff34] h-2 rounded-full" style={{ width: '75%' }} />
-                      </div>
-                      <span className="text-sm">75%</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>13:00 - 14:00</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-[#58ff34] h-2 rounded-full" style={{ width: '60%' }} />
-                      </div>
-                      <span className="text-sm">60%</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>18:00 - 19:00</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div className="bg-[#58ff34] h-2 rounded-full" style={{ width: '55%' }} />
-                      </div>
-                      <span className="text-sm">55%</span>
-                    </div>
-                  </div>
+                  {trendsData.peak_hours && trendsData.peak_hours.length > 0 ? (
+                    trendsData.peak_hours.slice(0, 5).map((hour: any, index: number) => {
+                      const percentage = parseFloat(hour.percentage || '0')
+                      return (
+                        <div key={index} className="flex items-center justify-between">
+                          <span>{hour.hour}:00 - {hour.hour + 1}:00</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-32 bg-gray-200 rounded-full h-2">
+                              <div className="bg-[#58ff34] h-2 rounded-full" style={{ width: `${percentage}%` }} />
+                            </div>
+                            <span className="text-sm">{percentage.toFixed(0)}%</span>
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <p className="text-center text-muted-foreground">Tidak ada data jam sibuk</p>
+                  )}
                 </div>
             </div>
           </div>

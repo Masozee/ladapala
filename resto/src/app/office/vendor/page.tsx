@@ -16,6 +16,8 @@ import { useAuth } from "@/contexts/auth-context"
 import { RoleGuard } from "@/components/role-guard"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Search01Icon } from "@hugeicons/core-free-icons"
 import {
   Dialog,
   DialogContent,
@@ -36,6 +38,8 @@ export default function VendorPage() {
   const [vendors, setVendors] = useState<Vendor[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
   const [formData, setFormData] = useState<VendorCreate>({
     name: '',
     contact_person: '',
@@ -48,6 +52,14 @@ export default function VendorPage() {
     branch: 0,
   })
   const [submitting, setSubmitting] = useState(false)
+
+  // Filter vendors
+  const filteredVendors = vendors.filter(vendor => {
+    const matchesSearch = vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         vendor.contact_person?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         vendor.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesSearch
+  })
 
   useEffect(() => {
     fetchVendors()
@@ -114,11 +126,8 @@ export default function VendorPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <HugeiconsIcon icon={UserGroupIcon} size={32} strokeWidth={2} className="text-blue-600" />
-              Daftar Vendor
-            </h1>
-            <p className="text-muted-foreground">Kelola informasi vendor dan supplier</p>
+            <h1 className="text-2xl font-bold">Daftar Vendor</h1>
+            <p className="text-sm text-muted-foreground">Kelola informasi vendor dan supplier</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -284,13 +293,24 @@ export default function VendorPage() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <HugeiconsIcon icon={DeliveryTruck01Icon} size={24} strokeWidth={2} className="text-green-600" />
-                  Daftar Vendor
-                </CardTitle>
+                <CardTitle>Daftar Vendor</CardTitle>
                 <CardDescription>
-                  {vendors.length} vendor terdaftar
+                  {filteredVendors.length} vendor terdaftar
                 </CardDescription>
+              </div>
+              <div className="relative w-64">
+                <HugeiconsIcon
+                  icon={Search01Icon}
+                  size={16}
+                  strokeWidth={2}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                />
+                <Input
+                  placeholder="Cari vendor..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9"
+                />
               </div>
             </div>
           </CardHeader>
@@ -299,11 +319,15 @@ export default function VendorPage() {
               <div className="text-center py-12 px-6">
                 <p className="text-muted-foreground">Memuat data vendor...</p>
               </div>
-            ) : vendors.length === 0 ? (
+            ) : filteredVendors.length === 0 ? (
               <div className="text-center py-12 px-6">
                 <HugeiconsIcon icon={UserGroupIcon} size={48} strokeWidth={1.5} className="mx-auto mb-2 opacity-30" />
-                <p className="text-muted-foreground">Belum ada vendor terdaftar</p>
-                <p className="text-sm text-muted-foreground mt-1">Vendor akan muncul setelah Anda membuat Purchase Order</p>
+                <p className="text-muted-foreground">
+                  {vendors.length === 0 ? 'Belum ada vendor terdaftar' : 'Tidak ada vendor yang cocok dengan pencarian'}
+                </p>
+                {vendors.length === 0 && (
+                  <p className="text-sm text-muted-foreground mt-1">Vendor akan muncul setelah Anda membuat Purchase Order</p>
+                )}
               </div>
             ) : (
               <div className="rounded-lg border overflow-x-auto">
@@ -319,7 +343,7 @@ export default function VendorPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {vendors.map((vendor, index) => (
+                    {filteredVendors.map((vendor, index) => (
                       <TableRow
                         key={index}
                         className="hover:bg-gray-50 border-b cursor-pointer"

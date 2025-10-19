@@ -174,8 +174,8 @@ class Inventory(models.Model):
 
     @property
     def total_value(self):
-        """Estimated value based on average cost"""
-        return self.quantity * self.average_cost
+        """Estimated value based on cost per unit"""
+        return self.quantity * self.cost_per_unit
 
     def update_cost_moving_average(self, new_quantity, new_unit_cost):
         """

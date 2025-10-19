@@ -1,411 +1,181 @@
-"""
-Seed recipes (Bill of Materials) for existing menu products
-Creates kitchen inventory and links recipes to products
-"""
-
 from django.core.management.base import BaseCommand
+from apps.restaurant.models import Product, Inventory, Recipe, RecipeIngredient, Branch
 from decimal import Decimal
-from apps.restaurant.models import (
-    Branch, Product, Inventory, Recipe, RecipeIngredient
-)
 
 
 class Command(BaseCommand):
-    help = 'Seed recipes for existing menu products with kitchen inventory'
+    help = 'Create realistic Indonesian recipe BOMs using actual inventory items'
 
     def handle(self, *args, **kwargs):
-        try:
-            # Get the main branch
-            branch = Branch.objects.get(id=4)
-        except Branch.DoesNotExist:
-            self.stdout.write(self.style.ERROR('Branch ID 4 not found. Please run seed_resto_data first.'))
+        self.stdout.write(self.style.WARNING('Starting recipe BOM seeding...'))
+
+        # Get branch
+        branch = Branch.objects.first()
+        if not branch:
+            self.stdout.write(self.style.ERROR('No branch found in database'))
             return
 
-        self.stdout.write(self.style.WARNING('Creating kitchen inventory items...'))
+        # Delete existing recipes
+        deleted_recipes = Recipe.objects.all().delete()[0]
+        self.stdout.write(self.style.WARNING(f'Deleted {deleted_recipes} existing recipes'))
 
-        # Kitchen inventory with precise BOM units
-        kitchen_inventory = [
-            # Proteins
-            {'name': 'Ayam Kampung', 'unit': 'gram', 'quantity': '20000.00', 'min_qty': '5000.00', 'cost': '37.50'},
-            {'name': 'Daging Sapi', 'unit': 'gram', 'quantity': '15000.00', 'min_qty': '3000.00', 'cost': '120.00'},
-            {'name': 'Telur Ayam', 'unit': 'pcs', 'quantity': '100.00', 'min_qty': '20.00', 'cost': '2500.00'},
-            {'name': 'Tahu Putih', 'unit': 'pcs', 'quantity': '50.00', 'min_qty': '10.00', 'cost': '1500.00'},
-            {'name': 'Tempe', 'unit': 'pcs', 'quantity': '50.00', 'min_qty': '10.00', 'cost': '1200.00'},
+        # Get kitchen inventory items (these are what recipes use)
+        try:
+            inv_beras = Inventory.objects.get(name='Beras Premium', location='KITCHEN')
+            inv_daging = Inventory.objects.get(name='Daging Sapi', location='KITCHEN')
+            inv_ayam = Inventory.objects.get(name='Ayam Kampung', location='KITCHEN')
+            inv_santan = Inventory.objects.get(name='Santan Kelapa', location='KITCHEN')
+            inv_bawang = Inventory.objects.get(name='Bawang Merah', location='KITCHEN')
+            inv_cabai = Inventory.objects.get(name='Cabai Merah', location='KITCHEN')
+            inv_minyak = Inventory.objects.get(name='Minyak Goreng', location='KITCHEN')
+            inv_gula = Inventory.objects.get(name='Gula Merah', location='KITCHEN')
+            inv_alpukat = Inventory.objects.get(name='Alpukat', location='KITCHEN')
+            inv_durian = Inventory.objects.get(name='Durian', location='KITCHEN')
+        except Inventory.DoesNotExist as e:
+            self.stdout.write(self.style.ERROR(f'Kitchen inventory not found: {e}'))
+            self.stdout.write(self.style.ERROR('Please run seed_kitchen_items first'))
+            return
 
-            # Carbs & Grains
-            {'name': 'Beras Premium', 'unit': 'gram', 'quantity': '50000.00', 'min_qty': '10000.00', 'cost': '12.00'},
-            {'name': 'Nasi Gurih', 'unit': 'gram', 'quantity': '30000.00', 'min_qty': '5000.00', 'cost': '15.00'},
-            {'name': 'Lontong', 'unit': 'pcs', 'quantity': '100.00', 'min_qty': '20.00', 'cost': '2000.00'},
-            {'name': 'Ketupat', 'unit': 'pcs', 'quantity': '50.00', 'min_qty': '10.00', 'cost': '2500.00'},
-
-            # Vegetables
-            {'name': 'Bawang Merah', 'unit': 'gram', 'quantity': '5000.00', 'min_qty': '1000.00', 'cost': '35.00'},
-            {'name': 'Bawang Putih', 'unit': 'gram', 'quantity': '3000.00', 'min_qty': '500.00', 'cost': '40.00'},
-            {'name': 'Cabai Merah', 'unit': 'gram', 'quantity': '2000.00', 'min_qty': '300.00', 'cost': '60.00'},
-            {'name': 'Sayur Nangka Muda', 'unit': 'gram', 'quantity': '10000.00', 'min_qty': '2000.00', 'cost': '8.00'},
-            {'name': 'Kol', 'unit': 'gram', 'quantity': '5000.00', 'min_qty': '1000.00', 'cost': '5.00'},
-            {'name': 'Tauge', 'unit': 'gram', 'quantity': '3000.00', 'min_qty': '500.00', 'cost': '7.00'},
-            {'name': 'Tomat', 'unit': 'gram', 'quantity': '3000.00', 'min_qty': '500.00', 'cost': '12.00'},
-
-            # Coconut products
-            {'name': 'Santan Kelapa', 'unit': 'ml', 'quantity': '10000.00', 'min_qty': '2000.00', 'cost': '18.00'},
-            {'name': 'Kelapa Parut', 'unit': 'gram', 'quantity': '3000.00', 'min_qty': '500.00', 'cost': '25.00'},
-
-            # Cooking essentials
-            {'name': 'Minyak Goreng', 'unit': 'ml', 'quantity': '15000.00', 'min_qty': '3000.00', 'cost': '14.00'},
-            {'name': 'Garam', 'unit': 'gram', 'quantity': '5000.00', 'min_qty': '1000.00', 'cost': '2.00'},
-            {'name': 'Gula Pasir', 'unit': 'gram', 'quantity': '10000.00', 'min_qty': '2000.00', 'cost': '15.00'},
-            {'name': 'Gula Merah', 'unit': 'gram', 'quantity': '5000.00', 'min_qty': '1000.00', 'cost': '20.00'},
-            {'name': 'Kecap Manis', 'unit': 'ml', 'quantity': '5000.00', 'min_qty': '1000.00', 'cost': '12.00'},
-            {'name': 'Kacang Tanah', 'unit': 'gram', 'quantity': '3000.00', 'min_qty': '500.00', 'cost': '30.00'},
-
-            # Spices
-            {'name': 'Kemiri', 'unit': 'gram', 'quantity': '1000.00', 'min_qty': '200.00', 'cost': '50.00'},
-            {'name': 'Kunyit', 'unit': 'gram', 'quantity': '1000.00', 'min_qty': '200.00', 'cost': '45.00'},
-            {'name': 'Lengkuas', 'unit': 'gram', 'quantity': '2000.00', 'min_qty': '300.00', 'cost': '20.00'},
-            {'name': 'Serai', 'unit': 'batang', 'quantity': '50.00', 'min_qty': '10.00', 'cost': '500.00'},
-            {'name': 'Daun Salam', 'unit': 'gram', 'quantity': '500.00', 'min_qty': '100.00', 'cost': '30.00'},
-            {'name': 'Daun Jeruk', 'unit': 'gram', 'quantity': '300.00', 'min_qty': '50.00', 'cost': '40.00'},
-
-            # Condiments & Extras
-            {'name': 'Emping', 'unit': 'gram', 'quantity': '2000.00', 'min_qty': '300.00', 'cost': '35.00'},
-            {'name': 'Krupuk', 'unit': 'pcs', 'quantity': '200.00', 'min_qty': '50.00', 'cost': '500.00'},
-            {'name': 'Bawang Goreng', 'unit': 'gram', 'quantity': '1000.00', 'min_qty': '200.00', 'cost': '80.00'},
-
-            # Dessert & Drinks
-            {'name': 'Tepung Ketan', 'unit': 'gram', 'quantity': '5000.00', 'min_qty': '1000.00', 'cost': '18.00'},
-            {'name': 'Durian', 'unit': 'gram', 'quantity': '3000.00', 'min_qty': '500.00', 'cost': '100.00'},
-            {'name': 'Cendol', 'unit': 'gram', 'quantity': '2000.00', 'min_qty': '300.00', 'cost': '25.00'},
-            {'name': 'Alpukat', 'unit': 'pcs', 'quantity': '20.00', 'min_qty': '5.00', 'cost': '15000.00'},
-            {'name': 'Jahe Merah', 'unit': 'gram', 'quantity': '2000.00', 'min_qty': '300.00', 'cost': '35.00'},
-            {'name': 'Jahe', 'unit': 'gram', 'quantity': '2000.00', 'min_qty': '300.00', 'cost': '30.00'},
-            {'name': 'Teh Celup', 'unit': 'pcs', 'quantity': '200.00', 'min_qty': '50.00', 'cost': '500.00'},
-            {'name': 'Es Batu', 'unit': 'gram', 'quantity': '20000.00', 'min_qty': '5000.00', 'cost': '1.00'},
-        ]
-
-        inventory_map = {}
-        for item in kitchen_inventory:
-            inv, created = Inventory.objects.get_or_create(
-                branch=branch,
-                name=item['name'],
-                location='KITCHEN',
-                defaults={
-                    'unit': item['unit'],
-                    'quantity': Decimal(item['quantity']),
-                    'min_quantity': Decimal(item['min_qty']),
-                    'cost_per_unit': Decimal(item['cost'])
-                }
-            )
-            inventory_map[item['name']] = inv
-            status = 'Created' if created else 'Exists'
-            self.stdout.write(f"  {status}: {item['name']} - {item['quantity']} {item['unit']}")
-
-        self.stdout.write(self.style.SUCCESS(f'\n✓ Kitchen inventory ready ({len(inventory_map)} items)'))
-
-        # Define recipes for each product
-        self.stdout.write(self.style.WARNING('\nCreating recipes for menu products...'))
-
+        # Recipe data structure
         recipes_data = {
             'Nasi Gudeg Jogja': {
-                'serving_size': 1,
-                'prep_time': 30,
-                'cook_time': 180,
-                'instructions': 'Masak nangka muda dengan santan dan rempah khas Jogja hingga empuk',
-                'ingredients': [
-                    ('Nasi Gurih', 300, 'gram'),
-                    ('Sayur Nangka Muda', 200, 'gram'),
-                    ('Ayam Kampung', 150, 'gram'),
-                    ('Telur Ayam', 1, 'pcs'),
-                    ('Santan Kelapa', 200, 'ml'),
-                    ('Gula Merah', 50, 'gram'),
-                    ('Bawang Merah', 30, 'gram'),
-                    ('Bawang Putih', 20, 'gram'),
-                    ('Kemiri', 10, 'gram'),
-                    ('Lengkuas', 15, 'gram'),
-                    ('Daun Salam', 5, 'gram'),
-                ]
+                'prep_time': 30, 'cook_time': 180,
+                'instructions': '1. Rebus nangka muda dengan santan dan bumbu halus\n2. Masak hingga bumbu meresap (3-4 jam)\n3. Sajikan dengan nasi putih, telur, dan krecek',
+                'ingredients': [(inv_beras, 200, 'gram', 'nasi putih'), (inv_santan, 150, 'ml', 'kental'), (inv_gula, 30, 'gram', 'untuk rasa manis'), (inv_bawang, 20, 'gram', 'bumbu halus'), (inv_cabai, 5, 'gram', 'optional')]
             },
             'Nasi Liwet Solo': {
-                'serving_size': 1,
-                'prep_time': 20,
-                'cook_time': 60,
-                'instructions': 'Masak beras dengan santan dan rempah khas Solo',
-                'ingredients': [
-                    ('Beras Premium', 300, 'gram'),
-                    ('Santan Kelapa', 300, 'ml'),
-                    ('Ayam Kampung', 100, 'gram'),
-                    ('Telur Ayam', 1, 'pcs'),
-                    ('Bawang Merah', 25, 'gram'),
-                    ('Bawang Putih', 15, 'gram'),
-                    ('Serai', 1, 'batang'),
-                    ('Daun Salam', 3, 'gram'),
-                    ('Garam', 5, 'gram'),
-                ]
+                'prep_time': 20, 'cook_time': 45,
+                'instructions': '1. Masak beras dengan santan dan bumbu\n2. Tambahkan ayam suwir dan sayuran\n3. Masak hingga nasi matang dan harum',
+                'ingredients': [(inv_beras, 250, 'gram', 'nasi liwet'), (inv_ayam, 100, 'gram', 'suwir'), (inv_santan, 200, 'ml', 'santan kental'), (inv_bawang, 15, 'gram', 'iris halus')]
             },
             'Nasi Padang Komplit': {
-                'serving_size': 1,
-                'prep_time': 40,
-                'cook_time': 90,
-                'instructions': 'Sajikan nasi putih dengan rendang, sambal, dan lauk khas Padang',
-                'ingredients': [
-                    ('Beras Premium', 350, 'gram'),
-                    ('Daging Sapi', 200, 'gram'),
-                    ('Santan Kelapa', 250, 'ml'),
-                    ('Telur Ayam', 1, 'pcs'),
-                    ('Bawang Merah', 40, 'gram'),
-                    ('Bawang Putih', 30, 'gram'),
-                    ('Cabai Merah', 30, 'gram'),
-                    ('Kemiri', 15, 'gram'),
-                    ('Kunyit', 10, 'gram'),
-                    ('Lengkuas', 20, 'gram'),
-                    ('Daun Jeruk', 5, 'gram'),
-                    ('Gula Merah', 30, 'gram'),
-                ]
+                'prep_time': 40, 'cook_time': 90,
+                'instructions': '1. Masak rendang daging sapi\n2. Buat sambal dan sayur\n3. Sajikan dengan nasi putih hangat',
+                'ingredients': [(inv_beras, 250, 'gram', 'nasi putih'), (inv_daging, 150, 'gram', 'rendang'), (inv_santan, 200, 'ml', 'untuk rendang'), (inv_cabai, 30, 'gram', 'sambal'), (inv_bawang, 25, 'gram', 'bumbu'), (inv_minyak, 20, 'ml', 'menumis')]
             },
             'Bubur Ayam': {
-                'serving_size': 1,
-                'prep_time': 15,
-                'cook_time': 45,
-                'instructions': 'Masak beras hingga lembut, sajikan dengan topping ayam dan bumbu',
-                'ingredients': [
-                    ('Beras Premium', 150, 'gram'),
-                    ('Ayam Kampung', 100, 'gram'),
-                    ('Bawang Merah', 20, 'gram'),
-                    ('Bawang Putih', 15, 'gram'),
-                    ('Bawang Goreng', 10, 'gram'),
-                    ('Kacang Tanah', 30, 'gram'),
-                    ('Kecap Manis', 15, 'ml'),
-                    ('Krupuk', 2, 'pcs'),
-                    ('Garam', 5, 'gram'),
-                ]
+                'prep_time': 15, 'cook_time': 60,
+                'instructions': '1. Rebus beras hingga menjadi bubur\n2. Tumis bumbu dan ayam suwir\n3. Sajikan bubur dengan topping ayam, bawang goreng, dan kacang',
+                'ingredients': [(inv_beras, 100, 'gram', 'untuk bubur'), (inv_ayam, 80, 'gram', 'suwir'), (inv_bawang, 15, 'gram', 'bumbu'), (inv_minyak, 15, 'ml', 'menumis')]
             },
             'Lontong Sayur': {
-                'serving_size': 1,
-                'prep_time': 20,
-                'cook_time': 60,
-                'instructions': 'Masak sayur dengan santan, sajikan dengan lontong',
-                'ingredients': [
-                    ('Lontong', 3, 'pcs'),
-                    ('Santan Kelapa', 200, 'ml'),
-                    ('Sayur Nangka Muda', 150, 'gram'),
-                    ('Tahu Putih', 2, 'pcs'),
-                    ('Tempe', 2, 'pcs'),
-                    ('Bawang Merah', 25, 'gram'),
-                    ('Bawang Putih', 20, 'gram'),
-                    ('Lengkuas', 10, 'gram'),
-                    ('Daun Salam', 3, 'gram'),
-                    ('Garam', 5, 'gram'),
-                ]
+                'prep_time': 25, 'cook_time': 45,
+                'instructions': '1. Buat lontong dari beras\n2. Masak sayur dengan santan\n3. Sajikan dengan sambal dan kerupuk',
+                'ingredients': [(inv_beras, 150, 'gram', 'lontong'), (inv_santan, 180, 'ml', 'sayur santan'), (inv_bawang, 10, 'gram', 'bumbu'), (inv_cabai, 8, 'gram', 'sambal')]
             },
             'Soto Betawi': {
-                'serving_size': 1,
-                'prep_time': 25,
-                'cook_time': 120,
-                'instructions': 'Rebus daging dengan santan dan rempah khas Betawi',
-                'ingredients': [
-                    ('Daging Sapi', 200, 'gram'),
-                    ('Santan Kelapa', 300, 'ml'),
-                    ('Tomat', 50, 'gram'),
-                    ('Bawang Merah', 30, 'gram'),
-                    ('Bawang Putih', 25, 'gram'),
-                    ('Jahe', 15, 'gram'),
-                    ('Serai', 1, 'batang'),
-                    ('Daun Jeruk', 5, 'gram'),
-                    ('Emping', 20, 'gram'),
-                    ('Bawang Goreng', 15, 'gram'),
-                ]
+                'prep_time': 30, 'cook_time': 120,
+                'instructions': '1. Rebus daging sapi hingga empuk\n2. Buat kuah dengan santan dan bumbu\n3. Sajikan dengan nasi dan emping',
+                'ingredients': [(inv_daging, 200, 'gram', 'daging sapi'), (inv_santan, 250, 'ml', 'kuah soto'), (inv_bawang, 20, 'gram', 'bumbu'), (inv_cabai, 10, 'gram', 'sambal'), (inv_minyak, 15, 'ml', 'menumis')]
             },
             'Rawon Surabaya': {
-                'serving_size': 1,
-                'prep_time': 30,
-                'cook_time': 150,
-                'instructions': 'Masak daging dengan kluwek hingga kuah hitam pekat',
-                'ingredients': [
-                    ('Daging Sapi', 250, 'gram'),
-                    ('Bawang Merah', 35, 'gram'),
-                    ('Bawang Putih', 30, 'gram'),
-                    ('Kemiri', 15, 'gram'),
-                    ('Kunyit', 10, 'gram'),
-                    ('Lengkuas', 20, 'gram'),
-                    ('Serai', 2, 'batang'),
-                    ('Daun Jeruk', 5, 'gram'),
-                    ('Tauge', 50, 'gram'),
-                    ('Bawang Goreng', 15, 'gram'),
-                ]
+                'prep_time': 35, 'cook_time': 150,
+                'instructions': '1. Rebus daging dengan bumbu kluwak\n2. Masak hingga daging empuk dan kuah hitam pekat\n3. Sajikan dengan nasi dan tauge',
+                'ingredients': [(inv_daging, 180, 'gram', 'daging sapi'), (inv_bawang, 25, 'gram', 'bumbu halus'), (inv_cabai, 15, 'gram', 'sambal'), (inv_minyak, 20, 'ml', 'menumis')]
             },
             'Sop Buntut Bakar': {
-                'serving_size': 1,
-                'prep_time': 35,
-                'cook_time': 240,
-                'instructions': 'Rebus buntut sapi hingga empuk, bakar sebelum disajikan',
-                'ingredients': [
-                    ('Daging Sapi', 400, 'gram'),
-                    ('Bawang Merah', 40, 'gram'),
-                    ('Bawang Putih', 35, 'gram'),
-                    ('Bawang Goreng', 20, 'gram'),
-                    ('Serai', 2, 'batang'),
-                    ('Daun Salam', 5, 'gram'),
-                    ('Garam', 8, 'gram'),
-                    ('Minyak Goreng', 30, 'ml'),
-                ]
+                'prep_time': 45, 'cook_time': 180,
+                'instructions': '1. Rebus buntut sapi hingga empuk\n2. Bakar buntut sebelum disajikan\n3. Buat kuah kaldu dengan sayuran',
+                'ingredients': [(inv_daging, 250, 'gram', 'buntut sapi'), (inv_bawang, 20, 'gram', 'bumbu'), (inv_minyak, 15, 'ml', 'untuk membakar')]
             },
             'Gado-gado': {
-                'serving_size': 1,
-                'prep_time': 20,
-                'cook_time': 30,
-                'instructions': 'Rebus sayuran, siram dengan bumbu kacang',
-                'ingredients': [
-                    ('Kol', 100, 'gram'),
-                    ('Tauge', 80, 'gram'),
-                    ('Tahu Putih', 2, 'pcs'),
-                    ('Tempe', 2, 'pcs'),
-                    ('Telur Ayam', 1, 'pcs'),
-                    ('Kacang Tanah', 80, 'gram'),
-                    ('Gula Merah', 30, 'gram'),
-                    ('Cabai Merah', 20, 'gram'),
-                    ('Bawang Putih', 15, 'gram'),
-                    ('Krupuk', 3, 'pcs'),
-                ]
+                'prep_time': 25, 'cook_time': 20,
+                'instructions': '1. Rebus sayuran\n2. Buat bumbu kacang dengan santan\n3. Siram sayuran dengan bumbu kacang',
+                'ingredients': [(inv_santan, 100, 'ml', 'bumbu kacang'), (inv_bawang, 10, 'gram', 'bumbu'), (inv_cabai, 8, 'gram', 'sambal'), (inv_gula, 15, 'gram', 'bumbu kacang')]
             },
             'Ketoprak': {
-                'serving_size': 1,
-                'prep_time': 15,
-                'cook_time': 25,
-                'instructions': 'Campur ketupat, tauge, tahu dengan bumbu kacang',
-                'ingredients': [
-                    ('Ketupat', 3, 'pcs'),
-                    ('Tauge', 100, 'gram'),
-                    ('Tahu Putih', 3, 'pcs'),
-                    ('Kacang Tanah', 70, 'gram'),
-                    ('Gula Merah', 25, 'gram'),
-                    ('Kecap Manis', 20, 'ml'),
-                    ('Bawang Putih', 15, 'gram'),
-                    ('Cabai Merah', 15, 'gram'),
-                    ('Krupuk', 2, 'pcs'),
-                ]
+                'prep_time': 20, 'cook_time': 15,
+                'instructions': '1. Rebus bihun dan tahu\n2. Buat bumbu kacang\n3. Campur semua bahan dan siram bumbu kacang',
+                'ingredients': [(inv_beras, 50, 'gram', 'lontong'), (inv_santan, 80, 'ml', 'bumbu kacang'), (inv_bawang, 8, 'gram', 'bumbu'), (inv_cabai, 5, 'gram', 'sambal')]
             },
             'Es Cendol Durian': {
-                'serving_size': 1,
-                'prep_time': 15,
-                'cook_time': 20,
-                'instructions': 'Campur cendol, santan, gula merah dengan durian',
-                'ingredients': [
-                    ('Cendol', 100, 'gram'),
-                    ('Santan Kelapa', 150, 'ml'),
-                    ('Gula Merah', 80, 'gram'),
-                    ('Durian', 100, 'gram'),
-                    ('Es Batu', 200, 'gram'),
-                ]
+                'prep_time': 15, 'cook_time': 10,
+                'instructions': '1. Buat cendol dari tepung beras\n2. Siapkan santan dan gula merah cair\n3. Tambahkan durian dan es batu',
+                'ingredients': [(inv_durian, 100, 'gram', 'daging buah'), (inv_santan, 150, 'ml', 'santan cendol'), (inv_gula, 50, 'gram', 'gula merah cair')]
             },
             'Klepon Pandan': {
-                'serving_size': 1,
-                'prep_time': 20,
-                'cook_time': 30,
-                'instructions': 'Bentuk adonan tepung ketan, isi gula merah, rebus dan gulingkan di kelapa parut',
-                'ingredients': [
-                    ('Tepung Ketan', 100, 'gram'),
-                    ('Gula Merah', 40, 'gram'),
-                    ('Kelapa Parut', 80, 'gram'),
-                    ('Garam', 2, 'gram'),
-                ]
+                'prep_time': 30, 'cook_time': 20,
+                'instructions': '1. Buat adonan dari tepung ketan\n2. Isi dengan gula merah\n3. Rebus dan gulingkan di kelapa parut',
+                'ingredients': [(inv_beras, 80, 'gram', 'tepung ketan'), (inv_gula, 40, 'gram', 'isian'), (inv_santan, 30, 'ml', 'kelapa parut')]
             },
             'Es Teh Manis': {
-                'serving_size': 1,
-                'prep_time': 5,
-                'cook_time': 10,
-                'instructions': 'Seduh teh, tambah gula, sajikan dengan es',
-                'ingredients': [
-                    ('Teh Celup', 2, 'pcs'),
-                    ('Gula Pasir', 30, 'gram'),
-                    ('Es Batu', 150, 'gram'),
-                ]
+                'prep_time': 5, 'cook_time': 5,
+                'instructions': '1. Seduh teh dengan air panas\n2. Tambahkan gula\n3. Dinginkan dengan es batu',
+                'ingredients': [(inv_gula, 20, 'gram', 'pemanis')]
             },
             'Jus Alpukat': {
-                'serving_size': 1,
-                'prep_time': 10,
-                'cook_time': 0,
-                'instructions': 'Blender alpukat dengan susu, gula, dan es',
-                'ingredients': [
-                    ('Alpukat', 1, 'pcs'),
-                    ('Gula Pasir', 40, 'gram'),
-                    ('Santan Kelapa', 100, 'ml'),
-                    ('Es Batu', 150, 'gram'),
-                ]
+                'prep_time': 10, 'cook_time': 0,
+                'instructions': '1. Keruk daging alpukat\n2. Blender dengan susu dan gula\n3. Tambahkan es batu',
+                'ingredients': [(inv_alpukat, 200, 'gram', 'alpukat matang'), (inv_gula, 30, 'gram', 'pemanis'), (inv_santan, 50, 'ml', 'susu/santan')]
             },
             'Wedang Jahe Merah': {
-                'serving_size': 1,
-                'prep_time': 10,
-                'cook_time': 20,
-                'instructions': 'Rebus jahe merah dengan gula merah hingga harum',
-                'ingredients': [
-                    ('Jahe Merah', 50, 'gram'),
-                    ('Gula Merah', 60, 'gram'),
-                    ('Serai', 1, 'batang'),
-                    ('Gula Pasir', 20, 'gram'),
-                ]
+                'prep_time': 10, 'cook_time': 15,
+                'instructions': '1. Rebus jahe merah dengan air\n2. Tambahkan gula merah\n3. Sajikan hangat',
+                'ingredients': [(inv_gula, 40, 'gram', 'gula merah')]
             },
         }
 
-        # Create recipes for products
         recipes_created = 0
-        recipes_skipped = 0
+        ingredients_created = 0
+
+        self.stdout.write(self.style.SUCCESS(f'\n📖 Creating recipes for {len(recipes_data)} menu items...\n'))
 
         for product_name, recipe_data in recipes_data.items():
             try:
                 product = Product.objects.get(name=product_name)
-
-                # Check if recipe already exists
-                if hasattr(product, 'recipe'):
-                    self.stdout.write(f"  Skipped: {product_name} (recipe already exists)")
-                    recipes_skipped += 1
-                    continue
-
-                # Create recipe
                 recipe = Recipe.objects.create(
-                    product=product,
-                    branch=branch,
-                    serving_size=Decimal(str(recipe_data['serving_size'])),
+                    product=product, branch=branch, serving_size=1,
                     preparation_time=recipe_data['prep_time'],
                     cooking_time=recipe_data['cook_time'],
                     instructions=recipe_data['instructions'],
                     is_active=True
                 )
-
-                # Add ingredients
-                for ingredient_name, quantity, unit in recipe_data['ingredients']:
-                    if ingredient_name in inventory_map:
-                        RecipeIngredient.objects.create(
-                            recipe=recipe,
-                            inventory_item=inventory_map[ingredient_name],
-                            quantity=Decimal(str(quantity)),
-                            unit=unit
-                        )
-                    else:
-                        self.stdout.write(self.style.WARNING(f"    Missing inventory: {ingredient_name}"))
-
-                # Calculate cost
-                total_cost = recipe.total_cost
-                cost_per_serving = recipe.cost_per_serving
-                profit_margin = recipe.profit_margin
-
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f"  ✓ {product_name}: {recipe.ingredients.count()} ingredients, "
-                        f"Cost: Rp {cost_per_serving:,.0f}, "
-                        f"Margin: {profit_margin:.1f}%"
-                    )
-                )
                 recipes_created += 1
+                recipe_cost = Decimal('0')
+                ingredient_list = []
+
+                for inv_item, qty, unit, notes in recipe_data['ingredients']:
+                    ingredient = RecipeIngredient.objects.create(
+                        recipe=recipe, inventory_item=inv_item,
+                        quantity=Decimal(str(qty)), unit=unit, notes=notes
+                    )
+                    ingredients_created += 1
+                    ing_cost = ingredient.total_cost
+                    recipe_cost += Decimal(str(ing_cost))
+                    ingredient_list.append(f'      • {inv_item.name}: {qty} {unit} = Rp {ing_cost:,.0f}')
+
+                product_price = Decimal(str(product.price))
+                profit = product_price - recipe_cost
+                margin_pct = (profit / product_price * 100) if product_price > 0 else 0
+
+                self.stdout.write(self.style.SUCCESS(f'✓ {product_name}'))
+                self.stdout.write(f'   Harga Jual: Rp {product_price:,.0f}')
+                self.stdout.write(f'   Biaya Bahan: Rp {recipe_cost:,.0f}')
+                self.stdout.write(f'   Profit: Rp {profit:,.0f} ({margin_pct:.1f}%)')
+                self.stdout.write(f'   Waktu: {recipe_data["prep_time"]}min prep + {recipe_data["cook_time"]}min masak')
+                self.stdout.write(f'   Bahan ({len(recipe_data["ingredients"])} items):')
+                for ing in ingredient_list:
+                    self.stdout.write(ing)
+                self.stdout.write('')
 
             except Product.DoesNotExist:
-                self.stdout.write(self.style.ERROR(f"  Product not found: {product_name}"))
+                self.stdout.write(self.style.WARNING(f'   ⚠ Product not found: {product_name}'))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f'   ✗ Error: {product_name}: {str(e)}'))
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f'\n✓ Recipe creation complete!\n'
-                f'  Created: {recipes_created} recipes\n'
-                f'  Skipped: {recipes_skipped} recipes\n'
-                f'  Total products: {Product.objects.count()}\n'
-                f'  Products with recipes: {Recipe.objects.count()}'
-            )
-        )
+        self.stdout.write(self.style.SUCCESS(f'\n✅ Created: {recipes_created} recipes, {ingredients_created} ingredients'))
+
+        recipes = Recipe.objects.all()
+        total_margin = Decimal('0')
+        self.stdout.write(self.style.SUCCESS(f'\n💰 Profit Margin Summary:'))
+
+        for recipe in recipes:
+            cost = Decimal(str(recipe.cost_per_serving))
+            price = Decimal(str(recipe.product.price))
+            profit = price - cost
+            margin = (profit / price * 100) if price > 0 else 0
+            total_margin += margin
+            self.stdout.write(f'   {recipe.product.name:<30} Cost: Rp {cost:>8,.0f}  Price: Rp {price:>8,.0f}  Margin: {margin:>5.1f}%')
+
+        avg_margin = total_margin / len(recipes) if recipes else 0
+        self.stdout.write(self.style.SUCCESS(f'\n   Average Profit Margin: {avg_margin:.1f}%'))
