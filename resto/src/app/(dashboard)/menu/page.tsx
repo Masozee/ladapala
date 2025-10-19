@@ -150,7 +150,7 @@ export default function MenuPage() {
 
     try {
       // Create order via API
-      const branchId = process.env.NEXT_PUBLIC_API_BRANCH_ID || '4'
+      const branchId = process.env.NEXT_PUBLIC_API_BRANCH_ID || '5'
       const orderData = {
         branch: parseInt(branchId),
         table: selectedTableId,

@@ -94,8 +94,9 @@ export default function SchedulePage() {
     try {
       setLoading(true)
 
-      // Fetch all active staff for branch 4
-      const staffResponse = await api.getStaff({ branch: 4, is_active: true })
+      // Fetch all active staff for current branch
+      const branchId = parseInt(process.env.NEXT_PUBLIC_API_BRANCH_ID || '5')
+      const staffResponse = await api.getStaff({ branch: branchId, is_active: true })
       setStaff(staffResponse.results)
 
       // Fetch schedules for the current month using date range filter
