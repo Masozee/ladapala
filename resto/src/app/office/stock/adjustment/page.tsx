@@ -160,7 +160,7 @@ export default function AdjustmentPage() {
 
         {/* Adjustment Form */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <HugeiconsIcon icon={Edit01Icon} size={24} strokeWidth={2} className="text-purple-600" />

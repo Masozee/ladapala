@@ -247,7 +247,7 @@ export default function StockMovementsPage() {
 
           {/* Transfer Tab */}
           <TabsContent value="transfer" className="space-y-4">
-            <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <Card className="bg-white rounded-lg border">
               <CardHeader>
                 <CardTitle>Transfer Stok dari Gudang ke Dapur</CardTitle>
                 <CardDescription>
@@ -268,7 +268,7 @@ export default function StockMovementsPage() {
 
           {/* Receipt Tab */}
           <TabsContent value="receipt" className="space-y-4">
-            <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <Card className="bg-white rounded-lg border">
               <CardHeader>
                 <CardTitle>Penerimaan Barang</CardTitle>
                 <CardDescription>
@@ -289,7 +289,7 @@ export default function StockMovementsPage() {
 
           {/* Adjustment Tab */}
           <TabsContent value="adjustment" className="space-y-4">
-            <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <Card className="bg-white rounded-lg border">
               <CardHeader>
                 <CardTitle>Koreksi Stok</CardTitle>
                 <CardDescription>

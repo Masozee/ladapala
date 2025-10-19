@@ -142,7 +142,7 @@ export default function StockDashboard() {
           {/* Warehouse Tab */}
           <TabsContent value="warehouse" className="mt-0 space-y-4">
             <div className="grid gap-4 md:grid-cols-4">
-              <Card className="bg-white rounded-lg border-0 shadow-sm">
+              <Card className="bg-white rounded-lg border">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Item</CardTitle>
                   <HugeiconsIcon icon={Package01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -153,7 +153,7 @@ export default function StockDashboard() {
                 </CardContent>
               </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Nilai Total</CardTitle>
               <HugeiconsIcon icon={AnalyticsDownIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -166,7 +166,7 @@ export default function StockDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/office/stock/reports')}>
+          <Card className="bg-white rounded-lg border cursor-pointer" onClick={() => router.push('/office/stock/reports')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
               <HugeiconsIcon icon={Alert01Icon} size={16} strokeWidth={2} className="text-yellow-500" />
@@ -179,7 +179,7 @@ export default function StockDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Transaksi Hari Ini</CardTitle>
               <HugeiconsIcon icon={FileEditIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -209,7 +209,7 @@ export default function StockDashboard() {
           </div>
 
           {warehouseInventory.length === 0 ? (
-            <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <Card className="bg-white rounded-lg border">
               <CardContent className="py-12">
                 <div className="text-center">
                   <p className="text-muted-foreground">Belum ada item di gudang</p>
@@ -217,7 +217,7 @@ export default function StockDashboard() {
               </CardContent>
             </Card>
           ) : (
-            <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+            <div className="rounded-lg border bg-white overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">
@@ -268,7 +268,7 @@ export default function StockDashboard() {
           {/* Kitchen Tab */}
           <TabsContent value="kitchen" className="mt-0 space-y-4">
             <div className="grid gap-4 md:grid-cols-4">
-              <Card className="bg-white rounded-lg border-0 shadow-sm">
+              <Card className="bg-white rounded-lg border">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Item</CardTitle>
                   <HugeiconsIcon icon={Package01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -279,7 +279,7 @@ export default function StockDashboard() {
                 </CardContent>
               </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Nilai Total</CardTitle>
               <HugeiconsIcon icon={AnalyticsDownIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -292,7 +292,7 @@ export default function StockDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/office/stock/reports')}>
+          <Card className="bg-white rounded-lg border cursor-pointer" onClick={() => router.push('/office/stock/reports')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
               <HugeiconsIcon icon={Alert01Icon} size={16} strokeWidth={2} className="text-yellow-500" />
@@ -305,7 +305,7 @@ export default function StockDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Transaksi Hari Ini</CardTitle>
               <HugeiconsIcon icon={FileEditIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -336,7 +336,7 @@ export default function StockDashboard() {
           </div>
 
           {kitchenInventory.length === 0 ? (
-            <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <Card className="bg-white rounded-lg border">
               <CardContent className="py-12">
                 <div className="text-center">
                   <p className="text-muted-foreground">Belum ada item di dapur</p>
@@ -344,7 +344,7 @@ export default function StockDashboard() {
               </CardContent>
             </Card>
           ) : (
-            <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+            <div className="rounded-lg border bg-white overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">

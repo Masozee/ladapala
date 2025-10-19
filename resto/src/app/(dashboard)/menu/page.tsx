@@ -324,7 +324,7 @@ export default function MenuPage() {
           </div>
 
           {/* POS Order Sidebar - Right Side */}
-          <div className="w-96 bg-white rounded-lg shadow-sm flex flex-col sticky top-8 h-[calc(100vh-8rem)]">
+          <div className="w-96 bg-white rounded-lg flex flex-col sticky top-8 h-[calc(100vh-8rem)]">
             {/* Header */}
             <div className="px-4 py-3 border-b bg-gray-50 flex-shrink-0 rounded-t-lg">
               <h2 className="text-lg font-bold text-gray-900">Pesanan Baru</h2>

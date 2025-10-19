@@ -320,7 +320,7 @@ export default function PurchaseOrderDetailPage() {
 
         {/* PO Information */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader>
               <CardTitle>Informasi Supplier</CardTitle>
             </CardHeader>
@@ -350,7 +350,7 @@ export default function PurchaseOrderDetailPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader>
               <CardTitle>Informasi Order</CardTitle>
             </CardHeader>
@@ -378,7 +378,7 @@ export default function PurchaseOrderDetailPage() {
         </div>
 
         {/* Staff Information */}
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader>
             <CardTitle>Informasi Staff</CardTitle>
           </CardHeader>
@@ -399,7 +399,7 @@ export default function PurchaseOrderDetailPage() {
         </Card>
 
         {/* Items Table */}
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle>Daftar Item ({purchaseOrder.total_items} item)</CardTitle>
@@ -410,7 +410,7 @@ export default function PurchaseOrderDetailPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+            <div className="rounded-lg border bg-white overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">
@@ -451,7 +451,7 @@ export default function PurchaseOrderDetailPage() {
         {(purchaseOrder.notes || purchaseOrder.terms_and_conditions) && (
           <div className="grid gap-6 md:grid-cols-2">
             {purchaseOrder.notes && (
-              <Card className="bg-white rounded-lg border-0 shadow-sm">
+              <Card className="bg-white rounded-lg border">
                 <CardHeader>
                   <CardTitle>Catatan</CardTitle>
                 </CardHeader>
@@ -462,7 +462,7 @@ export default function PurchaseOrderDetailPage() {
             )}
 
             {purchaseOrder.terms_and_conditions && (
-              <Card className="bg-white rounded-lg border-0 shadow-sm">
+              <Card className="bg-white rounded-lg border">
                 <CardHeader>
                   <CardTitle>Syarat & Ketentuan</CardTitle>
                 </CardHeader>

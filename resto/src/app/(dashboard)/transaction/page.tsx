@@ -335,7 +335,7 @@ export default function TransactionPage() {
         </div>
 
         {/* Order Items */}
-        <Card className="flex-1 rounded-lg overflow-hidden border-0">
+        <Card className="flex-1 rounded-lg overflow-hidden border">
           <CardHeader className="pb-3 bg-gray-50">
             <CardTitle className="text-lg">Daftar Pesanan</CardTitle>
           </CardHeader>
@@ -378,7 +378,7 @@ export default function TransactionPage() {
         </Card>
 
         {/* Totals */}
-        <Card className="mt-4 rounded-lg border-0">
+        <Card className="mt-4 rounded-lg border">
           <CardContent className="p-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -401,7 +401,7 @@ export default function TransactionPage() {
           </div>
 
         {/* Right Side - Payment Module */}
-        <div className="w-[450px] bg-white rounded-lg shadow-sm p-6 flex flex-col">
+        <div className="w-[450px] bg-white rounded-lg p-6 flex flex-col">
         {/* Payment Methods */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold mb-3">Metode Pembayaran</h3>
@@ -436,7 +436,7 @@ export default function TransactionPage() {
         {paymentMethod === "cash" && (
           <>
             {/* Cash Amount Display */}
-            <Card className="mb-4 rounded-lg border-0">
+            <Card className="mb-4 rounded-lg border">
               <CardContent className="p-4">
                 <div className="mb-2">
                   <label className="text-sm text-gray-600">Uang Diterima:</label>
@@ -547,7 +547,7 @@ export default function TransactionPage() {
         )}
 
         {paymentMethod === "card" && (
-          <Card className="mb-4 rounded-lg border-0 flex-1">
+          <Card className="mb-4 rounded-lg border flex-1">
             <CardContent className="p-4">
               <div className="h-full flex flex-col items-center justify-center text-center">
                 <HugeiconsIcon icon={CreditCardIcon} size={32} strokeWidth={2} className="text-[#58ff34] mb-4" />
@@ -564,7 +564,7 @@ export default function TransactionPage() {
         )}
 
         {paymentMethod === "qris" && (
-          <Card className="mb-4 rounded-lg border-0 flex-1">
+          <Card className="mb-4 rounded-lg border flex-1">
             <CardContent className="p-4">
               <div className="h-full flex flex-col items-center justify-center text-center">
                 <div className="w-40 h-40 bg-white border-2 border-dashed border-purple-300 mb-4 flex items-center justify-center">

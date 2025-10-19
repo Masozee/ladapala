@@ -247,7 +247,7 @@ export default function ReceiptPage() {
         <StockActionTabs />
 
         {/* Approved POs List */}
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
@@ -269,7 +269,7 @@ export default function ReceiptPage() {
                 <p className="text-sm text-muted-foreground mt-1">Buat Purchase Order baru di menu Purchase Orders</p>
               </div>
             ) : (
-              <div className="rounded-lg border-0 overflow-hidden">
+              <div className="rounded-lg border overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50 hover:bg-gray-50">
@@ -480,7 +480,7 @@ export default function ReceiptPage() {
         </Card>
 
         {/* Receipt History Table */}
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
@@ -496,7 +496,7 @@ export default function ReceiptPage() {
                 <p className="text-muted-foreground">Belum ada riwayat penerimaan</p>
               </div>
             ) : (
-              <div className="rounded-lg border-0 overflow-hidden">
+              <div className="rounded-lg border overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50 hover:bg-gray-50">

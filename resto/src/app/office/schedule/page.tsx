@@ -252,7 +252,7 @@ export default function SchedulePage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Karyawan</CardTitle>
             <HugeiconsIcon icon={UserIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -262,7 +262,7 @@ export default function SchedulePage() {
             <p className="text-xs text-muted-foreground">Karyawan aktif</p>
           </CardContent>
         </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Shift Hari Ini</CardTitle>
             <HugeiconsIcon icon={Clock01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -272,7 +272,7 @@ export default function SchedulePage() {
             <p className="text-xs text-muted-foreground">Karyawan terjadwal</p>
           </CardContent>
         </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Jam</CardTitle>
             <HugeiconsIcon icon={Calendar01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -282,7 +282,7 @@ export default function SchedulePage() {
             <p className="text-xs text-muted-foreground">Jam kerja terjadwal</p>
           </CardContent>
         </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Shift Dikonfirmasi</CardTitle>
             <HugeiconsIcon icon={SingleUserIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -303,7 +303,7 @@ export default function SchedulePage() {
 
         <TabsContent value="schedule" className="space-y-4">
           {/* Schedule Header */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="bg-white p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Jadwal Shift ({monthDates.length} hari)</h2>
               <div className="flex items-center gap-2">
@@ -347,7 +347,7 @@ export default function SchedulePage() {
           </div>
 
           {/* Schedule Content */}
-          <div className="bg-white rounded-lg shadow-sm">
+          <div className="bg-white rounded-lg">
             {selectedView === "week" ? (
               <div className="relative">
                 {/* Scrollable Container */}
@@ -383,13 +383,13 @@ export default function SchedulePage() {
                         const isToday = date.toDateString() === new Date().toDateString()
                         const isWeekend = date.getDay() === 0 || date.getDay() === 6
                         return (
-                          <div key={dateIndex} className="border-r border-gray-200 last:border-r-0" style={{ minWidth: '140px' }}>
+                          <div key={dateIndex} className={`border-r border-gray-200 last:border-r-0 ${isToday ? 'ring-2 ring-[#58ff34] ring-inset' : ''}`} style={{ minWidth: '140px' }}>
                             {/* Date Header */}
-                            <div className={`h-16 px-2 py-2 border-b border-gray-200 text-center ${isToday ? 'bg-[#58ff34]/10' : isWeekend ? 'bg-gray-100' : 'bg-gray-50'}`}>
-                              <div className={`font-semibold text-xs ${isToday ? 'text-[#58ff34]' : isWeekend ? 'text-red-600' : 'text-gray-900'}`}>
+                            <div className={`h-16 px-2 py-2 border-b border-gray-200 text-center ${isToday ? 'bg-[#58ff34] text-black' : isWeekend ? 'bg-gray-100' : 'bg-gray-50'}`}>
+                              <div className={`font-semibold text-xs ${isToday ? 'text-black' : isWeekend ? 'text-red-600' : 'text-gray-900'}`}>
                                 {daysOfWeek[date.getDay()]}
                               </div>
-                              <div className={`text-xl font-bold mt-1 ${isToday ? 'text-[#58ff34]' : isWeekend ? 'text-red-600' : 'text-gray-900'}`}>
+                              <div className={`text-xl font-bold mt-1 ${isToday ? 'text-black' : isWeekend ? 'text-red-600' : 'text-gray-900'}`}>
                                 {date.getDate()}
                               </div>
                             </div>
@@ -399,7 +399,7 @@ export default function SchedulePage() {
                               return (
                                 <div
                                   key={`${employee.id}-${dateIndex}`}
-                                  className={`h-24 px-2 py-2 border-b border-gray-200 ${isToday ? 'bg-[#58ff34]/5' : isWeekend ? 'bg-gray-50' : ''}`}
+                                  className={`h-24 px-2 py-2 border-b border-gray-200 ${isToday ? 'bg-[#58ff34]/20' : isWeekend ? 'bg-gray-50' : ''}`}
                                 >
                                   {shift ? (
                                     <div className="h-full flex flex-col justify-center space-y-1">
@@ -470,7 +470,7 @@ export default function SchedulePage() {
         </TabsContent>
 
         <TabsContent value="employees" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">Daftar Karyawan</h2>
               <p className="text-muted-foreground">Kelola informasi dan jadwal karyawan</p>

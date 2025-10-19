@@ -171,7 +171,7 @@ export default function PurchaseOrdersPage() {
 
         {/* Purchase Orders Table */}
         {purchaseOrders.length === 0 ? (
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardContent className="py-12">
               <div className="text-center">
                 <HugeiconsIcon icon={DeliveryTruck01Icon} size={48} strokeWidth={2} className="mx-auto text-muted-foreground mb-4" />
@@ -180,7 +180,7 @@ export default function PurchaseOrdersPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+          <div className="rounded-lg border bg-white overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50 hover:bg-gray-50">
@@ -242,7 +242,7 @@ export default function PurchaseOrdersPage() {
 
         {/* Summary */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total PO</CardTitle>
             </CardHeader>
@@ -250,7 +250,7 @@ export default function PurchaseOrdersPage() {
               <div className="text-2xl font-bold">{purchaseOrders.length}</div>
             </CardContent>
           </Card>
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Nilai</CardTitle>
             </CardHeader>
@@ -262,7 +262,7 @@ export default function PurchaseOrdersPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Menunggu Persetujuan</CardTitle>
             </CardHeader>
@@ -272,7 +272,7 @@ export default function PurchaseOrdersPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Siap Diterima</CardTitle>
             </CardHeader>

@@ -332,7 +332,7 @@ export default function CreatePurchaseOrderPage() {
             {/* Left Column - Form (1/4) */}
             <div className="col-span-3 space-y-4">
               {/* Vendor Selection */}
-              <Card className="bg-white rounded-lg border-0 shadow-sm">
+              <Card className="bg-white rounded-lg border">
                 <CardContent className="pt-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -395,7 +395,7 @@ export default function CreatePurchaseOrderPage() {
 
               {/* Item Selection */}
               {selectedVendorId && (
-                <Card className="bg-white rounded-lg border-0 shadow-sm">
+                <Card className="bg-white rounded-lg border">
                   <CardContent className="pt-6">
                     <div className="space-y-4">
                       <h3 className="font-semibold">Tambah Item</h3>
@@ -429,7 +429,7 @@ export default function CreatePurchaseOrderPage() {
 
             {/* Right Column - PO Preview (3/4) */}
             <div className="col-span-9">
-              <Card className="bg-white rounded-lg border-0 shadow-sm">
+              <Card className="bg-white rounded-lg border">
                 <CardContent className="pt-8 px-12 pb-12">
                   {!selectedVendorId ? (
                     <div className="text-center py-24 text-muted-foreground">

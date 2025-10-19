@@ -142,7 +142,7 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="restaurant" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg">
             <div className="mb-6">
               <h2 className="text-lg font-semibold">Informasi Restoran</h2>
               <p className="text-muted-foreground">Kelola informasi dasar restoran</p>
@@ -255,7 +255,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg">
             <div className="mb-6">
               <h2 className="text-lg font-semibold">Pengaturan Notifikasi</h2>
               <p className="text-muted-foreground">Atur notifikasi dan peringatan sistem</p>
@@ -365,7 +365,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="system" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg">
             <div className="mb-6">
               <h2 className="text-lg font-semibold">Pengaturan Sistem</h2>
               <p className="text-muted-foreground">Konfigurasi backup, penyimpanan, dan performa</p>
@@ -461,7 +461,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="printer" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg">
             <div className="mb-6">
               <h2 className="text-lg font-semibold">Pengaturan Printer</h2>
               <p className="text-muted-foreground">Konfigurasi printer untuk kitchen dan kasir</p>
@@ -550,7 +550,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="security" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg">
             <div className="mb-6">
               <h2 className="text-lg font-semibold">Keamanan</h2>
               <p className="text-muted-foreground">Pengaturan keamanan dan akses pengguna</p>

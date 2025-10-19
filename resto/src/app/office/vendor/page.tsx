@@ -280,7 +280,7 @@ export default function VendorPage() {
         </div>
 
         {/* Vendor List */}
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
@@ -306,7 +306,7 @@ export default function VendorPage() {
                 <p className="text-sm text-muted-foreground mt-1">Vendor akan muncul setelah Anda membuat Purchase Order</p>
               </div>
             ) : (
-              <div className="rounded-lg border-0 overflow-x-auto">
+              <div className="rounded-lg border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50 hover:bg-gray-50">

@@ -146,7 +146,7 @@ export default function VendorDetailPage() {
         </div>
 
         {/* Vendor Details */}
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader>
             <CardTitle>Informasi Vendor</CardTitle>
           </CardHeader>
@@ -194,7 +194,7 @@ export default function VendorDetailPage() {
         </Card>
 
         {/* Purchase Order History */}
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
@@ -211,7 +211,7 @@ export default function VendorDetailPage() {
                 <p className="text-muted-foreground">Belum ada riwayat purchase order</p>
               </div>
             ) : (
-              <div className="rounded-lg border-0 overflow-hidden">
+              <div className="rounded-lg border overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50 hover:bg-gray-50">

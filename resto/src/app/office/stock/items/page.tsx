@@ -357,7 +357,7 @@ export default function ItemMasterPage() {
 
         {/* Items Table */}
         {isLoading ? (
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardContent className="py-12">
               <div className="text-center">
                 <p className="text-muted-foreground">Memuat data...</p>
@@ -365,7 +365,7 @@ export default function ItemMasterPage() {
             </CardContent>
           </Card>
         ) : filteredItems.length === 0 ? (
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardContent className="py-12">
               <div className="text-center">
                 <p className="text-muted-foreground">Belum ada item</p>
@@ -373,7 +373,7 @@ export default function ItemMasterPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+          <div className="rounded-lg border bg-white overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50 hover:bg-gray-50">

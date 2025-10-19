@@ -316,7 +316,7 @@ export default function HomePage() {
                     </div>
                     <div className="space-y-2">
                       {order.items?.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border">
                           <div>
                             <div className="font-medium text-sm">{item.product_name}</div>
                             <div className="text-xs text-gray-500">Qty: {item.quantity}</div>
@@ -431,7 +431,7 @@ export default function HomePage() {
                         </div>
                         <div className="space-y-2">
                           {order.items?.map((item, index) => (
-                            <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                            <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border">
                               <div>
                                 <div className="font-medium text-sm">{item.product_name}</div>
                                 <div className="text-xs text-gray-500">Qty: {item.quantity}</div>

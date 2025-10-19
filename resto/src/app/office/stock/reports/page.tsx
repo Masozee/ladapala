@@ -91,7 +91,7 @@ export default function StockReportsPage() {
 
         {/* Summary Stats */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Item</CardTitle>
               <HugeiconsIcon icon={Package01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -102,7 +102,7 @@ export default function StockReportsPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Nilai Total</CardTitle>
               <HugeiconsIcon icon={AnalyticsDownIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -115,7 +115,7 @@ export default function StockReportsPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
               <HugeiconsIcon icon={Alert01Icon} size={16} strokeWidth={2} className="text-yellow-500" />
@@ -128,7 +128,7 @@ export default function StockReportsPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Transaksi Hari Ini</CardTitle>
               <HugeiconsIcon icon={Calendar01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
@@ -153,7 +153,7 @@ export default function StockReportsPage() {
               </div>
               <Badge className="bg-yellow-500">{lowStockItems.length} Item</Badge>
             </div>
-            <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+            <div className="rounded-lg border bg-white overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">
@@ -192,7 +192,7 @@ export default function StockReportsPage() {
 
         {/* Location Breakdown */}
         <div className="grid gap-4 md:grid-cols-2">
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader>
               <CardTitle>Stok Gudang</CardTitle>
               <CardDescription>{warehouseInventory.length} item</CardDescription>
@@ -219,7 +219,7 @@ export default function StockReportsPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
+          <Card className="bg-white rounded-lg border">
             <CardHeader>
               <CardTitle>Stok Dapur</CardTitle>
               <CardDescription>{kitchenInventory.length} item</CardDescription>
@@ -256,7 +256,7 @@ export default function StockReportsPage() {
             </div>
           </div>
           {transactions.length === 0 ? (
-            <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <Card className="bg-white rounded-lg border">
               <CardContent className="py-12">
                 <div className="text-center text-muted-foreground">
                   Belum ada transaksi
@@ -264,7 +264,7 @@ export default function StockReportsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+            <div className="rounded-lg border bg-white overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">

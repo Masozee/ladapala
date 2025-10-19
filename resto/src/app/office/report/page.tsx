@@ -139,7 +139,7 @@ export default function ReportPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
             <HugeiconsIcon icon={DollarCircleIcon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
@@ -152,7 +152,7 @@ export default function ReportPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pesanan</CardTitle>
             <HugeiconsIcon icon={ShoppingCart01Icon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
@@ -165,7 +165,7 @@ export default function ReportPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Rata-rata Pesanan</CardTitle>
             <HugeiconsIcon icon={Analytics01Icon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
@@ -178,7 +178,7 @@ export default function ReportPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pengeluaran</CardTitle>
             <HugeiconsIcon icon={AnalyticsDownIcon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
@@ -191,7 +191,7 @@ export default function ReportPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Laba Bersih</CardTitle>
             <HugeiconsIcon icon={AnalyticsUpIcon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
@@ -217,7 +217,7 @@ export default function ReportPage() {
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">Riwayat Penjualan</h2>
               <p className="text-muted-foreground">Detail penjualan harian</p>
@@ -258,7 +258,7 @@ export default function ReportPage() {
         </TabsContent>
 
         <TabsContent value="expenses" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">Breakdown Pengeluaran</h2>
               <p className="text-muted-foreground">Analisis pengeluaran per kategori</p>
@@ -313,7 +313,7 @@ export default function ReportPage() {
         </TabsContent>
 
         <TabsContent value="products" className="space-y-4">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">Produk Terlaris</h2>
               <p className="text-muted-foreground">Performa produk berdasarkan penjualan</p>
@@ -363,7 +363,7 @@ export default function ReportPage() {
 
         <TabsContent value="trends" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="bg-white p-6 rounded-lg">
               <div className="mb-4">
                 <h2 className="text-lg font-semibold">Tren Penjualan Mingguan</h2>
                 <p className="text-muted-foreground">Perbandingan minggu ini vs minggu lalu</p>
@@ -407,7 +407,7 @@ export default function ReportPage() {
                 </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="bg-white p-6 rounded-lg">
               <div className="mb-4">
                 <h2 className="text-lg font-semibold">Jam Sibuk</h2>
                 <p className="text-muted-foreground">Distribusi pesanan per jam</p>

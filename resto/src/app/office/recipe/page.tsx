@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -9,8 +10,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon, Edit01Icon, Delete02Icon, PackageSentIcon } from "@hugeicons/core-free-icons"
+import {
+  Add01Icon, Edit01Icon, Delete02Icon, PackageSentIcon,
+  Search01Icon, FilterIcon, ChefHatIcon, MoneyBag02Icon,
+  Time01Icon, AnalyticsDownIcon
+} from "@hugeicons/core-free-icons"
 import { useAuth } from "@/contexts/auth-context"
 import { api } from "@/lib/api"
 
@@ -70,10 +76,14 @@ export default function RecipePage() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [kitchenInventory, setKitchenInventory] = useState<Inventory[]>([])
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterMargin, setFilterMargin] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<string>('name')
 
   const [recipeForm, setRecipeForm] = useState({
     product: '',
@@ -214,18 +224,65 @@ export default function RecipePage() {
     setIngredients([{ inventory_item: '', quantity: '', notes: '' }])
   }
 
-  const viewRecipeDetail = async (recipe: Recipe) => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipes/${recipe.id}/`, {
-        credentials: 'include'
-      })
-      const data = await res.json()
-      setSelectedRecipe(data)
-      setIsDetailOpen(true)
-    } catch (error) {
-      console.error('Error fetching recipe detail:', error)
-    }
+  const viewRecipeDetail = (recipe: Recipe) => {
+    // Navigate to detail page instead of opening popup
+    window.location.href = `/office/recipe/${recipe.id}`
   }
+
+  // Filtered and sorted recipes
+  const filteredRecipes = useMemo(() => {
+    let filtered = recipes.filter(recipe => {
+      // Search filter
+      const matchesSearch = recipe.product_name.toLowerCase().includes(searchQuery.toLowerCase())
+
+      // Margin filter
+      let matchesMargin = true
+      if (filterMargin === 'high') matchesMargin = recipe.profit_margin >= 70
+      else if (filterMargin === 'medium') matchesMargin = recipe.profit_margin >= 40 && recipe.profit_margin < 70
+      else if (filterMargin === 'low') matchesMargin = recipe.profit_margin < 40
+
+      // Status filter
+      const matchesStatus = filterStatus === 'all' ||
+        (filterStatus === 'active' && recipe.is_active) ||
+        (filterStatus === 'inactive' && !recipe.is_active)
+
+      return matchesSearch && matchesMargin && matchesStatus
+    })
+
+    // Sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.product_name.localeCompare(b.product_name)
+        case 'margin-high':
+          return b.profit_margin - a.profit_margin
+        case 'margin-low':
+          return a.profit_margin - b.profit_margin
+        case 'cost-high':
+          return parseFloat(b.cost_per_serving) - parseFloat(a.cost_per_serving)
+        case 'cost-low':
+          return parseFloat(a.cost_per_serving) - parseFloat(b.cost_per_serving)
+        case 'price-high':
+          return parseFloat(b.product_price) - parseFloat(a.product_price)
+        case 'price-low':
+          return parseFloat(a.product_price) - parseFloat(b.product_price)
+        default:
+          return 0
+      }
+    })
+
+    return filtered
+  }, [recipes, searchQuery, filterMargin, filterStatus, sortBy])
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const totalRecipes = filteredRecipes.length
+    const avgMargin = filteredRecipes.reduce((sum, r) => sum + r.profit_margin, 0) / (totalRecipes || 1)
+    const avgCost = filteredRecipes.reduce((sum, r) => sum + parseFloat(r.cost_per_serving), 0) / (totalRecipes || 1)
+    const highMarginCount = filteredRecipes.filter(r => r.profit_margin >= 70).length
+
+    return { totalRecipes, avgMargin, avgCost, highMarginCount }
+  }, [filteredRecipes])
 
   if (isLoading) {
     return (
@@ -237,6 +294,7 @@ export default function RecipePage() {
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Manajemen Resep (BOM)</h1>
@@ -394,157 +452,201 @@ export default function RecipePage() {
         </Dialog>
       </div>
 
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="bg-white rounded-lg border">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Resep</CardTitle>
+            <HugeiconsIcon icon={ChefHatIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalRecipes}</div>
+            <p className="text-xs text-muted-foreground">{stats.highMarginCount} margin tinggi (≥70%)</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white rounded-lg border">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rata² Margin</CardTitle>
+            <HugeiconsIcon icon={AnalyticsDownIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.avgMargin.toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground">Profit margin</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white rounded-lg border">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rata² Biaya</CardTitle>
+            <HugeiconsIcon icon={MoneyBag02Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Rp {stats.avgCost.toLocaleString('id-ID', {maximumFractionDigits: 0})}</div>
+            <p className="text-xs text-muted-foreground">Cost per serving</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white rounded-lg border">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Bahan Dapur</CardTitle>
+            <HugeiconsIcon icon={PackageSentIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{kitchenInventory.length}</div>
+            <p className="text-xs text-muted-foreground">Item tersedia</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="flex justify-end items-center gap-3">
+        <div className="relative w-64">
+          <HugeiconsIcon
+            icon={Search01Icon}
+            size={16}
+            strokeWidth={2}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          />
+          <Input
+            placeholder="Cari nama menu..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
+
+        <Select value={filterMargin} onValueChange={setFilterMargin}>
+          <SelectTrigger className="w-40 h-9">
+            <SelectValue placeholder="Margin" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Margin</SelectItem>
+            <SelectItem value="high">Tinggi (≥70%)</SelectItem>
+            <SelectItem value="medium">Sedang (40-70%)</SelectItem>
+            <SelectItem value="low">Rendah (&lt;40%)</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-32 h-9">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua</SelectItem>
+            <SelectItem value="active">Aktif</SelectItem>
+            <SelectItem value="inactive">Nonaktif</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-44 h-9">
+            <SelectValue placeholder="Urutkan" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">Nama A-Z</SelectItem>
+            <SelectItem value="margin-high">Margin Tertinggi</SelectItem>
+            <SelectItem value="margin-low">Margin Terendah</SelectItem>
+            <SelectItem value="cost-high">Biaya Tertinggi</SelectItem>
+            <SelectItem value="cost-low">Biaya Terendah</SelectItem>
+            <SelectItem value="price-high">Harga Tertinggi</SelectItem>
+            <SelectItem value="price-low">Harga Terendah</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Recipe Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Resep</CardTitle>
+          <CardTitle>Daftar Resep ({filteredRecipes.length})</CardTitle>
           <CardDescription>Klik resep untuk melihat detail bahan dan biaya</CardDescription>
         </CardHeader>
         <CardContent>
-          {recipes.length === 0 ? (
+          {filteredRecipes.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Belum ada resep. Klik "Buat Resep" untuk memulai.</p>
+              <p className="text-muted-foreground">
+                {recipes.length === 0
+                  ? 'Belum ada resep. Klik "Buat Resep" untuk memulai.'
+                  : 'Tidak ada resep yang cocok dengan filter.'}
+              </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Menu</TableHead>
-                  <TableHead>Porsi</TableHead>
-                  <TableHead>Harga Jual</TableHead>
-                  <TableHead>Biaya per Porsi</TableHead>
-                  <TableHead>Margin</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recipes.map((r) => (
-                  <TableRow key={r.id} className="cursor-pointer hover:bg-gray-50" onClick={() => viewRecipeDetail(r)}>
-                    <TableCell className="font-medium">{r.product_name}</TableCell>
-                    <TableCell>{r.serving_size} porsi</TableCell>
-                    <TableCell>Rp {parseFloat(r.product_price).toLocaleString('id-ID')}</TableCell>
-                    <TableCell>Rp {parseFloat(r.cost_per_serving).toLocaleString('id-ID')}</TableCell>
-                    <TableCell>
-                      <Badge className={r.profit_margin > 50 ? "bg-green-500" : r.profit_margin > 30 ? "bg-yellow-500" : "bg-red-500"}>
-                        {r.profit_margin}%
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={r.is_active ? "default" : "secondary"}>
-                        {r.is_active ? 'Aktif' : 'Nonaktif'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Button size="sm" variant="outline">
-                        <HugeiconsIcon icon={Edit01Icon} size={14} strokeWidth={2} />
-                      </Button>
-                    </TableCell>
+            <div className="rounded-lg border bg-white overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 hover:bg-gray-50">
+                    <TableHead className="font-semibold text-gray-900 py-4 px-6">Menu</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-center py-4 px-6">Porsi</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-center py-4 px-6">Bahan</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Harga Jual</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Biaya Bahan</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Profit</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-center py-4 px-6">Margin</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-center py-4 px-6">Waktu</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-center py-4 px-6">Status</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-center py-4 px-6">Aksi</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredRecipes.map((r) => {
+                    const profit = parseFloat(r.product_price) - parseFloat(r.cost_per_serving)
+                    const totalTime = (r.preparation_time || 0) + (r.cooking_time || 0)
+
+                    return (
+                      <TableRow
+                        key={r.id}
+                        className="cursor-pointer hover:bg-gray-50 border-b"
+                        onClick={() => viewRecipeDetail(r)}
+                      >
+                        <TableCell className="font-medium py-4 px-6">{r.product_name}</TableCell>
+                        <TableCell className="text-center py-4 px-6">{r.serving_size}</TableCell>
+                        <TableCell className="text-center py-4 px-6">
+                          <Badge variant="outline">{r.ingredients?.length || 0} item</Badge>
+                        </TableCell>
+                        <TableCell className="text-right py-4 px-6 font-semibold">
+                          Rp {parseFloat(r.product_price).toLocaleString('id-ID')}
+                        </TableCell>
+                        <TableCell className="text-right py-4 px-6">
+                          Rp {parseFloat(r.cost_per_serving).toLocaleString('id-ID')}
+                        </TableCell>
+                        <TableCell className="text-right py-4 px-6 text-green-600 font-semibold">
+                          Rp {profit.toLocaleString('id-ID')}
+                        </TableCell>
+                        <TableCell className="text-center py-4 px-6">
+                          <Badge
+                            className={
+                              r.profit_margin >= 70
+                                ? "bg-green-500 text-white"
+                                : r.profit_margin >= 40
+                                ? "bg-yellow-500 text-white"
+                                : "bg-red-500 text-white"
+                            }
+                          >
+                            {r.profit_margin.toFixed(1)}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center py-4 px-6 text-sm text-muted-foreground">
+                          {totalTime > 0 ? `${totalTime} menit` : '-'}
+                        </TableCell>
+                        <TableCell className="text-center py-4 px-6">
+                          <Badge variant={r.is_active ? "default" : "secondary"}>
+                            {r.is_active ? 'Aktif' : 'Nonaktif'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center py-4 px-6" onClick={(e) => e.stopPropagation()}>
+                          <Button size="sm" variant="outline">
+                            <HugeiconsIcon icon={Edit01Icon} size={14} strokeWidth={2} />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
-
-      {/* Recipe Detail Dialog */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Detail Resep: {selectedRecipe?.product_name}</DialogTitle>
-            <DialogDescription>
-              Porsi: {selectedRecipe?.serving_size} | Total Biaya: Rp {parseFloat(selectedRecipe?.total_cost || '0').toLocaleString('id-ID')}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedRecipe && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Harga Jual</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl font-bold">Rp {parseFloat(selectedRecipe.product_price).toLocaleString('id-ID')}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Biaya per Porsi</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl font-bold">Rp {parseFloat(selectedRecipe.cost_per_serving).toLocaleString('id-ID')}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Margin Profit</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl font-bold">{selectedRecipe.profit_margin}%</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {selectedRecipe.preparation_time && (
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-semibold">Waktu Persiapan:</span> {selectedRecipe.preparation_time} menit
-                  </div>
-                  <div>
-                    <span className="font-semibold">Waktu Memasak:</span> {selectedRecipe.cooking_time} menit
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <HugeiconsIcon icon={PackageSentIcon} size={16} strokeWidth={2} />
-                  Bahan-bahan ({selectedRecipe.ingredients.length} item)
-                </h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Bahan</TableHead>
-                      <TableHead>Jumlah</TableHead>
-                      <TableHead>Lokasi</TableHead>
-                      <TableHead>Biaya</TableHead>
-                      <TableHead>Catatan</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedRecipe.ingredients.map((ing) => (
-                      <TableRow key={ing.id}>
-                        <TableCell className="font-medium">{ing.inventory_item_name}</TableCell>
-                        <TableCell>{parseFloat(ing.quantity).toLocaleString('id-ID')} {ing.unit}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{ing.inventory_item_location === 'KITCHEN' ? 'Dapur' : 'Gudang'}</Badge>
-                        </TableCell>
-                        <TableCell>Rp {parseFloat(ing.total_cost).toLocaleString('id-ID')}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{ing.notes || '-'}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {selectedRecipe.instructions && (
-                <div>
-                  <h3 className="font-semibold mb-2">Instruksi Memasak</h3>
-                  <p className="text-sm whitespace-pre-line bg-gray-50 p-3 rounded">{selectedRecipe.instructions}</p>
-                </div>
-              )}
-
-              {selectedRecipe.notes && (
-                <div>
-                  <h3 className="font-semibold mb-2">Catatan</h3>
-                  <p className="text-sm whitespace-pre-line bg-gray-50 p-3 rounded">{selectedRecipe.notes}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

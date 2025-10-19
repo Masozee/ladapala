@@ -167,7 +167,7 @@ export default function StockUpdatePage() {
         <StockActionTabs />
 
         {/* Search */}
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
+        <Card className="bg-white rounded-lg border">
           <CardContent className="pt-6">
             <div className="relative">
               <HugeiconsIcon
@@ -201,7 +201,7 @@ export default function StockUpdatePage() {
 
           {/* Warehouse Tab */}
           <TabsContent value="warehouse" className="mt-0 space-y-4">
-            <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <Card className="bg-white rounded-lg border">
               <CardHeader>
                 <CardTitle>Stok Gudang</CardTitle>
               </CardHeader>
@@ -215,7 +215,7 @@ export default function StockUpdatePage() {
                     <p className="text-muted-foreground">Tidak ada item ditemukan</p>
                   </div>
                 ) : (
-                  <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+                  <div className="rounded-lg border bg-white overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-gray-50 hover:bg-gray-50">
@@ -305,7 +305,7 @@ export default function StockUpdatePage() {
 
           {/* Kitchen Tab */}
           <TabsContent value="kitchen" className="mt-0 space-y-4">
-            <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <Card className="bg-white rounded-lg border">
               <CardHeader>
                 <CardTitle>Stok Dapur</CardTitle>
               </CardHeader>
@@ -319,7 +319,7 @@ export default function StockUpdatePage() {
                     <p className="text-muted-foreground">Tidak ada item ditemukan</p>
                   </div>
                 ) : (
-                  <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+                  <div className="rounded-lg border bg-white overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-gray-50 hover:bg-gray-50">
