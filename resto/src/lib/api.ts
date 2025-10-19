@@ -122,8 +122,10 @@ export interface Staff {
   id: number;
   employee_id: string;
   role: 'ADMIN' | 'MANAGER' | 'CASHIER' | 'KITCHEN' | 'WAREHOUSE';
-  branch: number;
-  branch_name?: string;
+  branch: {
+    id: number;
+    name: string;
+  };
   phone: string;
   is_active: boolean;
   user: {
@@ -258,17 +260,16 @@ export interface ScheduleCheck {
 export interface Inventory {
   id: number;
   branch: number;
-  branch_name: string;
   name: string;
+  description?: string;
+  unit: string;
   quantity: number;
   min_quantity: number;
   cost_per_unit: string;
-  supplier: string;
-  unit: string;
-  category: string;
   location: 'WAREHOUSE' | 'KITCHEN';
-  needs_restock: boolean;
+  average_cost: string;
   total_value: string;
+  needs_restock: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -276,21 +277,18 @@ export interface Inventory {
 export interface InventoryCreate {
   branch: number;
   name: string;
-  quantity: number;
+  description?: string;
+  unit: string;
   min_quantity: number;
-  cost_per_unit: string;
-  supplier?: string;
-  unit?: string;
-  category?: string;
+  location: 'WAREHOUSE' | 'KITCHEN';
 }
 
 export interface InventoryUpdate {
   name?: string;
-  min_quantity?: number;
-  cost_per_unit?: string;
-  supplier?: string;
+  description?: string;
   unit?: string;
-  category?: string;
+  min_quantity?: number;
+  location?: 'WAREHOUSE' | 'KITCHEN';
 }
 
 export interface InventoryTransaction {
@@ -311,12 +309,99 @@ export interface InventoryTransaction {
   created_at: string;
 }
 
+export interface PurchaseOrderItem {
+  id: number;
+  purchase_order?: number;
+  inventory_item: number;
+  inventory_item_name?: string;
+  inventory_item_unit?: string;
+  quantity: string;
+  unit_price: string;
+  total_price?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PurchaseOrder {
+  id: number;
+  po_number: string;
+  branch: number;
+  branch_name?: string;
+  supplier_name: string;
+  supplier_contact?: string;
+  supplier_email?: string;
+  supplier_phone?: string;
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'RECEIVED' | 'CANCELLED';
+  order_date: string;
+  expected_delivery_date?: string;
+  actual_delivery_date?: string;
+  created_by: number;
+  created_by_name?: string;
+  approved_by?: number;
+  approved_by_name?: string;
+  received_by?: number;
+  received_by_name?: string;
+  notes?: string;
+  terms_and_conditions?: string;
+  items: PurchaseOrderItem[];
+  total_amount: string;
+  total_items: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PurchaseOrderCreate {
+  branch: number;
+  supplier_name: string;
+  supplier_contact?: string;
+  supplier_email?: string;
+  supplier_phone?: string;
+  supplier_address?: string;
+  payment_terms_days?: number;
+  tax_id?: string;
+  order_date?: string;
+  expected_delivery_date?: string;
+  created_by: number;
+  notes?: string;
+  terms_and_conditions?: string;
+  items: {
+    inventory_item: number;
+    quantity: string;
+    unit_price: string;
+    notes?: string;
+  }[];
+}
+
 export interface InventoryTransactionCreate {
   inventory: number;
   transaction_type: 'IN' | 'OUT' | 'ADJUST' | 'WASTE';
   quantity: number;
   unit_cost: string;
   reference_number?: string;
+  notes?: string;
+}
+
+export interface StockTransfer {
+  id: number;
+  branch: number;
+  item_name: string;
+  quantity: string;
+  unit: string;
+  from_warehouse: number;
+  from_warehouse_name: string;
+  to_kitchen: number;
+  to_kitchen_name: string;
+  transferred_by: number;
+  transferred_by_name: string;
+  transfer_date: string;
+  notes: string;
+}
+
+export interface StockTransferCreate {
+  warehouse_item_id: number;
+  kitchen_item_id: number;
+  quantity: number;
   notes?: string;
 }
 
@@ -357,6 +442,49 @@ export interface SessionReport {
     }>;
   }>;
   summary: CashierSession['settlement_data'];
+}
+
+export interface Vendor {
+  id: string;
+  name: string;
+  contact: string;
+  email: string;
+  phone: string;
+  address: string;
+  payment_terms_days: number;
+  tax_id: string;
+  total_purchase_orders: number;
+  total_amount: string;
+  last_order_date: string;
+  branch_id: number;
+}
+
+export interface VendorDetail {
+  id: string;
+  name: string;
+  contact: string;
+  email: string;
+  phone: string;
+  address: string;
+  payment_terms_days: number;
+  tax_id: string;
+  total_purchase_orders: number;
+  total_amount: string;
+  last_order_date: string;
+  branch_id: number;
+  purchase_orders: PurchaseOrder[];
+}
+
+export interface VendorCreate {
+  name: string;
+  contact_person: string;
+  email: string;
+  phone: string;
+  address: string;
+  payment_terms_days: number;
+  tax_id: string;
+  notes?: string;
+  branch: number;
 }
 
 class ApiClient {
@@ -706,11 +834,12 @@ class ApiClient {
   }
 
   // Inventory
-  async getInventory(params?: { branch?: number; search?: string; status?: string; location?: string }): Promise<{ count: number; results: Inventory[] }> {
+  async getInventory(params?: { branch?: number; search?: string; status?: string; location?: string; page_size?: number }): Promise<{ count: number; results: Inventory[] }> {
     const searchParams = new URLSearchParams();
     if (params?.branch) searchParams.set('branch', params.branch.toString());
     if (params?.search) searchParams.set('search', params.search);
     if (params?.location) searchParams.set('location', params.location);
+    if (params?.page_size) searchParams.set('page_size', params.page_size.toString());
     if (params?.status) {
       // status filter: 'low' (needs restock), 'out' (quantity = 0), 'normal'
       if (params.status === 'low') {
@@ -722,6 +851,37 @@ class ApiClient {
 
     const query = searchParams.toString();
     return this.fetch(`/inventory/${query ? `?${query}` : ''}`);
+  }
+
+  async getAllInventory(params?: { branch?: number; search?: string; status?: string; location?: string }): Promise<Inventory[]> {
+    let allResults: Inventory[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const searchParams = new URLSearchParams();
+      if (params?.branch) searchParams.set('branch', params.branch.toString());
+      if (params?.search) searchParams.set('search', params.search);
+      if (params?.location) searchParams.set('location', params.location);
+      if (params?.status) {
+        if (params.status === 'low') {
+          searchParams.set('needs_restock', 'true');
+        } else if (params.status === 'out') {
+          searchParams.set('quantity', '0');
+        }
+      }
+      searchParams.set('page', page.toString());
+      searchParams.set('page_size', '100');
+
+      const query = searchParams.toString();
+      const response: { count: number; results: Inventory[]; next: string | null } = await this.fetch(`/inventory/${query ? `?${query}` : ''}`);
+
+      allResults = [...allResults, ...response.results];
+      hasMore = !!response.next;
+      page++;
+    }
+
+    return allResults;
   }
 
   async getInventoryItem(id: number): Promise<Inventory> {
@@ -781,6 +941,77 @@ class ApiClient {
     return this.fetch('/inventory-transactions/', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  // Purchase Orders
+  async getPurchaseOrders(params?: {
+    branch?: number;
+    status?: string;
+    created_by?: number;
+    search?: string;
+    ordering?: string;
+  }): Promise<{ count: number; results: PurchaseOrder[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.branch) searchParams.set('branch', params.branch.toString());
+    if (params?.status) searchParams.set('status', params.status);
+    if (params?.created_by) searchParams.set('created_by', params.created_by.toString());
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.ordering) searchParams.set('ordering', params.ordering);
+
+    const query = searchParams.toString();
+    return this.fetch(`/purchase-orders/${query ? `?${query}` : ''}`);
+  }
+
+  async getPurchaseOrder(id: number): Promise<PurchaseOrder> {
+    return this.fetch(`/purchase-orders/${id}/`);
+  }
+
+  async createPurchaseOrder(data: PurchaseOrderCreate): Promise<PurchaseOrder> {
+    return this.fetch('/purchase-orders/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updatePurchaseOrder(id: number, data: Partial<PurchaseOrder>): Promise<PurchaseOrder> {
+    return this.fetch(`/purchase-orders/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deletePurchaseOrder(id: number): Promise<void> {
+    return this.fetch(`/purchase-orders/${id}/`, {
+      method: 'DELETE',
+    });
+  }
+
+  async submitPurchaseOrder(id: number): Promise<PurchaseOrder> {
+    return this.fetch(`/purchase-orders/${id}/submit/`, {
+      method: 'POST',
+    });
+  }
+
+  async approvePurchaseOrder(id: number): Promise<PurchaseOrder> {
+    return this.fetch(`/purchase-orders/${id}/approve/`, {
+      method: 'POST',
+    });
+  }
+
+  async receivePurchaseOrder(id: number, data?: {
+    actual_delivery_date?: string;
+    received_items?: { item_id: number; quantity_received: number }[];
+  }): Promise<PurchaseOrder> {
+    return this.fetch(`/purchase-orders/${id}/receive/`, {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  }
+
+  async cancelPurchaseOrder(id: number): Promise<PurchaseOrder> {
+    return this.fetch(`/purchase-orders/${id}/cancel/`, {
+      method: 'POST',
     });
   }
 
@@ -845,6 +1076,47 @@ class ApiClient {
   async deleteRecipeIngredient(id: number): Promise<void> {
     return this.fetch(`/recipe-ingredients/${id}/`, {
       method: 'DELETE',
+    });
+  }
+
+  // Stock Transfer endpoints
+  async createStockTransfer(data: StockTransferCreate): Promise<StockTransfer> {
+    return this.fetch('/stock-transfers/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getStockTransfers(params?: { branch?: number; from_warehouse?: number; to_kitchen?: number }): Promise<StockTransfer[]> {
+    const query = params ? `?${new URLSearchParams(params as any).toString()}` : '';
+    return this.fetch(`/stock-transfers/${query}`);
+  }
+
+  async getStockTransfer(id: number): Promise<StockTransfer> {
+    return this.fetch(`/stock-transfers/${id}/`);
+  }
+
+  async getRecentStockTransfers(): Promise<StockTransfer[]> {
+    return this.fetch('/stock-transfers/recent/');
+  }
+
+  async getStockTransfersByItem(itemName: string): Promise<StockTransfer[]> {
+    return this.fetch(`/stock-transfers/by_item/?name=${encodeURIComponent(itemName)}`);
+  }
+
+  // Vendor APIs
+  async getVendors(branch: number): Promise<Vendor[]> {
+    return this.fetch(`/vendors/?branch=${branch}`);
+  }
+
+  async getVendorDetail(vendorId: string, branch: number): Promise<VendorDetail> {
+    return this.fetch(`/vendors/${vendorId}/?branch=${branch}`);
+  }
+
+  async createVendor(data: VendorCreate): Promise<Vendor> {
+    return this.fetch('/vendors/', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 }

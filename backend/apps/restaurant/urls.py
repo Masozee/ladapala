@@ -6,7 +6,8 @@ from .viewsets import (
     InventoryTransactionViewSet, OrderViewSet, PaymentViewSet,
     TableViewSet, KitchenOrderViewSet, PromotionViewSet,
     ScheduleViewSet, ReportViewSet, DashboardViewSet, CashierSessionViewSet,
-    RecipeViewSet, RecipeIngredientViewSet
+    RecipeViewSet, RecipeIngredientViewSet, PurchaseOrderViewSet, PurchaseOrderItemViewSet,
+    StockTransferViewSet, VendorViewSet
 )
 
 router = DefaultRouter()
@@ -28,6 +29,10 @@ router.register(r'dashboard', DashboardViewSet, basename='dashboard')
 router.register(r'cashier-sessions', CashierSessionViewSet)
 router.register(r'recipes', RecipeViewSet)
 router.register(r'recipe-ingredients', RecipeIngredientViewSet)
+router.register(r'purchase-orders', PurchaseOrderViewSet)
+router.register(r'purchase-order-items', PurchaseOrderItemViewSet)
+router.register(r'stock-transfers', StockTransferViewSet)
+router.register(r'vendors', VendorViewSet, basename='vendor')
 
 app_name = 'restaurant'
 

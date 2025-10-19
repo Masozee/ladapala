@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/auth-context"
 import { RoleGuard } from "@/components/role-guard"
+import { StockActionTabs } from "@/components/stock-action-tabs"
 import { api, Inventory, InventoryTransaction } from "@/lib/api"
 
 export default function StockDashboard() {
@@ -53,16 +54,22 @@ export default function StockDashboard() {
     try {
       setIsLoading(true)
 
-      const [inventoryRes, lowStockRes, transactionsRes] = await Promise.all([
-        api.getInventory({ branch: staff?.branch?.id }),
+      // Fetch warehouse and kitchen inventory separately to avoid pagination issues
+      const [warehouse, kitchen, lowStockRes, transactionsRes] = await Promise.all([
+        api.getAllInventory({ branch: staff?.branch?.id, location: 'WAREHOUSE' }),
+        api.getAllInventory({ branch: staff?.branch?.id, location: 'KITCHEN' }),
         api.getLowStockInventory(staff?.branch?.id),
         api.getInventoryTransactions({ branch: staff?.branch?.id })
       ])
 
-      // Separate warehouse and kitchen inventory
-      const allInventory = inventoryRes.results || []
-      setWarehouseInventory(allInventory.filter(item => item.location === 'WAREHOUSE'))
-      setKitchenInventory(allInventory.filter(item => item.location === 'KITCHEN'))
+      console.log('📦 Inventory fetched:', {
+        total: warehouse.length + kitchen.length,
+        warehouse: warehouse.length,
+        kitchen: kitchen.length
+      })
+
+      setWarehouseInventory(warehouse)
+      setKitchenInventory(kitchen)
 
       setLowStock(lowStockRes.results || [])
       setRecentTransactions((transactionsRes.results || []).slice(0, 10))
@@ -75,7 +82,7 @@ export default function StockDashboard() {
 
   const currentInventory = activeTab === "warehouse" ? warehouseInventory : kitchenInventory
   const totalValue = currentInventory.reduce((acc, item) =>
-    acc + (item.quantity * parseFloat(item.cost_per_unit)), 0
+    acc + (item.quantity * parseFloat(item.cost_per_unit || '0')), 0
   )
 
   const todayTransactions = recentTransactions.filter(t => {
@@ -116,6 +123,9 @@ export default function StockDashboard() {
           </div>
         </div>
 
+        {/* Quick Action Tabs */}
+        <StockActionTabs />
+
         {/* Location Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
@@ -129,8 +139,8 @@ export default function StockDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Stats Cards */}
-          <TabsContent value={activeTab} className="mt-0 space-y-4">
+          {/* Warehouse Tab */}
+          <TabsContent value="warehouse" className="mt-0 space-y-4">
             <div className="grid gap-4 md:grid-cols-4">
               <Card className="bg-white rounded-lg border-0 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -138,10 +148,8 @@ export default function StockDashboard() {
                   <HugeiconsIcon icon={Package01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{currentInventory.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {activeTab === 'warehouse' ? 'Bahan baku mentah' : 'Siap pakai di dapur'}
-                  </p>
+                  <div className="text-2xl font-bold">{warehouseInventory.length}</div>
+                  <p className="text-xs text-muted-foreground">Bahan baku mentah</p>
                 </CardContent>
               </Card>
 
@@ -152,7 +160,7 @@ export default function StockDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                Rp {totalValue.toLocaleString("id-ID")}
+                Rp {warehouseInventory.reduce((acc, item) => acc + (item.quantity * parseFloat(item.cost_per_unit || '0')), 0).toLocaleString("id-ID")}
               </div>
               <p className="text-xs text-muted-foreground">Nilai inventori</p>
             </CardContent>
@@ -183,146 +191,12 @@ export default function StockDashboard() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card
-            className="bg-gradient-to-br from-blue-50 to-blue-100 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push('/office/stock/items')}
-          >
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500 rounded-lg">
-                  <HugeiconsIcon icon={Package01Icon} size={24} strokeWidth={2} className="text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Master Item</CardTitle>
-                  <CardDescription>Kelola data item</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card
-            className="bg-gradient-to-br from-green-50 to-green-100 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push('/office/stock/movements?tab=receipt')}
-          >
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500 rounded-lg">
-                  <HugeiconsIcon icon={PackageReceiveIcon} size={24} strokeWidth={2} className="text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Penerimaan</CardTitle>
-                  <CardDescription>Terima barang masuk</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card
-            className="bg-gradient-to-br from-orange-50 to-orange-100 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push('/office/stock/movements?tab=transfer')}
-          >
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-500 rounded-lg">
-                  <HugeiconsIcon icon={ArrowRight01Icon} size={24} strokeWidth={2} className="text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Transfer Stok</CardTitle>
-                  <CardDescription>Gudang ke Dapur</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card
-            className="bg-gradient-to-br from-purple-50 to-purple-100 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push('/office/stock/movements?tab=adjustment')}
-          >
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-500 rounded-lg">
-                  <HugeiconsIcon icon={Edit01Icon} size={24} strokeWidth={2} className="text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Koreksi Stok</CardTitle>
-                  <CardDescription>Penyesuaian stok</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card
-            className="bg-gradient-to-br from-gray-50 to-gray-100 border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push('/office/stock/reports')}
-          >
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gray-500 rounded-lg">
-                  <HugeiconsIcon icon={AnalyticsDownIcon} size={24} strokeWidth={2} className="text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Laporan</CardTitle>
-                  <CardDescription>Lihat laporan stok</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-        </div>
-
-        {/* Low Stock Alerts */}
-        {(lowStock || []).length > 0 && (
-          <Card className="bg-white rounded-lg border-0 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Peringatan Stok Rendah</CardTitle>
-                <CardDescription>Item yang perlu segera direstock</CardDescription>
-              </div>
-              <Button
-                variant="outline"
-                className="rounded"
-                onClick={() => router.push('/office/stock/reports')}
-              >
-                Lihat Semua
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2} className="ml-2" />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {(lowStock || []).slice(0, 5).map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <HugeiconsIcon icon={Alert01Icon} size={20} strokeWidth={2} className="text-yellow-600" />
-                      <div>
-                        <h4 className="font-semibold">{item.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Stok: {item.quantity} {item.unit} | Min: {item.min_quantity} {item.unit}
-                        </p>
-                      </div>
-                    </div>
-                    {canModify && (
-                      <Button
-                        size="sm"
-                        className="bg-[#58ff34] hover:bg-[#4de82a]"
-                        onClick={() => router.push('/office/stock/movements?tab=receipt&item=' + item.id)}
-                      >
-                        Restock
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Stock Availability */}
-        <Card className="bg-white rounded-lg border-0 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
+        {/* Stock Availability - Warehouse */}
+        <div className="space-y-4">
+          <div className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Ketersediaan Stok {activeTab === 'warehouse' ? 'Gudang' : 'Dapur'}</CardTitle>
-              <CardDescription>Daftar item dan jumlah stok saat ini</CardDescription>
+              <h2 className="text-2xl font-bold">Ketersediaan Stok Gudang</h2>
+              <p className="text-muted-foreground">Daftar item dan jumlah stok saat ini</p>
             </div>
             <Button
               variant="outline"
@@ -332,41 +206,48 @@ export default function StockDashboard() {
               Kelola Item
               <HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2} className="ml-2" />
             </Button>
-          </CardHeader>
-          <CardContent>
-            {currentInventory.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Belum ada item di {activeTab === 'warehouse' ? 'gudang' : 'dapur'}</p>
-              </div>
-            ) : (
+          </div>
+
+          {warehouseInventory.length === 0 ? (
+            <Card className="bg-white rounded-lg border-0 shadow-sm">
+              <CardContent className="py-12">
+                <div className="text-center">
+                  <p className="text-muted-foreground">Belum ada item di gudang</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Nama Item</TableHead>
-                    <TableHead>Stok Tersedia</TableHead>
-                    <TableHead>Min. Stok</TableHead>
-                    <TableHead>Harga/Unit</TableHead>
-                    <TableHead>Nilai Total</TableHead>
-                    <TableHead>Status</TableHead>
+                  <TableRow className="bg-gray-50 hover:bg-gray-50">
+                    <TableHead className="font-semibold text-gray-900 py-4 px-6">Nama Item</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-4 px-6">Supplier</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Stok Tersedia</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Min. Stok</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Rata² Harga</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Nilai Estimasi</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-center py-4 px-6">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentInventory.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell className={item.needs_restock ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
-                        {item.quantity} {item.unit}
+                  {warehouseInventory.map((item, index) => (
+                    <TableRow key={item.id} className="hover:bg-gray-50 border-b">
+                      <TableCell className="font-medium py-4 px-6">{item.name}</TableCell>
+                      <TableCell className="text-muted-foreground py-4 px-6">{item.supplier || '-'}</TableCell>
+                      <TableCell className={`text-right font-semibold py-4 px-6 ${item.needs_restock ? 'text-red-600' : 'text-green-600'}`}>
+                        {parseFloat(item.quantity).toLocaleString('id-ID')} {item.unit}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.min_quantity} {item.unit}
+                      <TableCell className="text-right text-muted-foreground py-4 px-6">
+                        {parseFloat(item.min_quantity).toLocaleString('id-ID')} {item.unit}
                       </TableCell>
-                      <TableCell>
-                        Rp {parseFloat(item.cost_per_unit).toLocaleString('id-ID')}
+                      <TableCell className="text-right py-4 px-6">
+                        Rp {parseFloat(item.cost_per_unit || '0').toLocaleString('id-ID')}
                       </TableCell>
-                      <TableCell className="font-semibold">
+                      <TableCell className="text-right font-semibold py-4 px-6">
                         Rp {parseFloat(item.total_value).toLocaleString('id-ID')}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-center py-4 px-6">
                         {item.needs_restock ? (
                           <Badge className="bg-red-500 text-white">Rendah</Badge>
                         ) : item.quantity > item.min_quantity * 2 ? (
@@ -379,9 +260,136 @@ export default function StockDashboard() {
                   ))}
                 </TableBody>
               </Table>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          )}
+        </div>
+          </TabsContent>
+
+          {/* Kitchen Tab */}
+          <TabsContent value="kitchen" className="mt-0 space-y-4">
+            <div className="grid gap-4 md:grid-cols-4">
+              <Card className="bg-white rounded-lg border-0 shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Item</CardTitle>
+                  <HugeiconsIcon icon={Package01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{kitchenInventory.length}</div>
+                  <p className="text-xs text-muted-foreground">Siap pakai di dapur</p>
+                </CardContent>
+              </Card>
+
+          <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Nilai Total</CardTitle>
+              <HugeiconsIcon icon={AnalyticsDownIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                Rp {kitchenInventory.reduce((acc, item) => acc + (item.quantity * parseFloat(item.cost_per_unit || '0')), 0).toLocaleString("id-ID")}
+              </div>
+              <p className="text-xs text-muted-foreground">Nilai inventori</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white rounded-lg border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/office/stock/reports')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
+              <HugeiconsIcon icon={Alert01Icon} size={16} strokeWidth={2} className="text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">
+                {(lowStock || []).length}
+              </div>
+              <p className="text-xs text-muted-foreground">Perlu direstock</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white rounded-lg border-0 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Transaksi Hari Ini</CardTitle>
+              <HugeiconsIcon icon={FileEditIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{todayTransactions}</div>
+              <p className="text-xs text-muted-foreground">Pergerakan stok</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Stock Availability - Kitchen */}
+        <div className="space-y-4">
+
+          <div className="flex flex-row items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Ketersediaan Stok Dapur</h2>
+              <p className="text-muted-foreground">Daftar item dan jumlah stok saat ini</p>
+            </div>
+            <Button
+              variant="outline"
+              className="rounded"
+              onClick={() => router.push('/office/stock/items')}
+            >
+              Kelola Item
+              <HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2} className="ml-2" />
+            </Button>
+          </div>
+
+          {kitchenInventory.length === 0 ? (
+            <Card className="bg-white rounded-lg border-0 shadow-sm">
+              <CardContent className="py-12">
+                <div className="text-center">
+                  <p className="text-muted-foreground">Belum ada item di dapur</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="rounded-lg border bg-white shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 hover:bg-gray-50">
+                    <TableHead className="font-semibold text-gray-900 py-4 px-6">Nama Item</TableHead>
+                    <TableHead className="font-semibold text-gray-900 py-4 px-6">Supplier</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Stok Tersedia</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Min. Stok</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Rata² Harga</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Nilai Estimasi</TableHead>
+                    <TableHead className="font-semibold text-gray-900 text-center py-4 px-6">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {kitchenInventory.map((item, index) => (
+                    <TableRow key={item.id} className="hover:bg-gray-50 border-b">
+                      <TableCell className="font-medium py-4 px-6">{item.name}</TableCell>
+                      <TableCell className="text-muted-foreground py-4 px-6">{item.supplier || '-'}</TableCell>
+                      <TableCell className={`text-right font-semibold py-4 px-6 ${item.needs_restock ? 'text-red-600' : 'text-green-600'}`}>
+                        {parseFloat(item.quantity).toLocaleString('id-ID')} {item.unit}
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground py-4 px-6">
+                        {parseFloat(item.min_quantity).toLocaleString('id-ID')} {item.unit}
+                      </TableCell>
+                      <TableCell className="text-right py-4 px-6">
+                        Rp {parseFloat(item.cost_per_unit || '0').toLocaleString('id-ID')}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold py-4 px-6">
+                        Rp {parseFloat(item.total_value).toLocaleString('id-ID')}
+                      </TableCell>
+                      <TableCell className="text-center py-4 px-6">
+                        {item.needs_restock ? (
+                          <Badge className="bg-red-500 text-white">Rendah</Badge>
+                        ) : item.quantity > item.min_quantity * 2 ? (
+                          <Badge className="bg-green-500 text-white">Aman</Badge>
+                        ) : (
+                          <Badge className="bg-yellow-500 text-white">Normal</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
           </TabsContent>
         </Tabs>
       </div>

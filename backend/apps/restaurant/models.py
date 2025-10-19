@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from decimal import Decimal
 import uuid
+from datetime import date
 
 
 class Restaurant(models.Model):
@@ -135,10 +136,14 @@ class Inventory(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     unit = models.CharField(max_length=50, help_text="e.g., kg, liter, piece")
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    min_quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    cost_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
-    supplier = models.CharField(max_length=200, blank=True)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    min_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cost_per_unit = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text="Moving average cost per unit, updated when PO items are received"
+    )
     location = models.CharField(
         max_length=20,
         choices=InventoryLocation.choices,
@@ -153,14 +158,53 @@ class Inventory(models.Model):
         return self.quantity <= self.min_quantity
 
     @property
+    def average_cost(self):
+        """Calculate weighted average cost from recent transactions"""
+        recent_receipts = self.transactions.filter(
+            transaction_type='IN'
+        ).order_by('-created_at')[:10]
+
+        if not recent_receipts.exists():
+            return 0
+
+        total_cost = sum(t.unit_cost * t.quantity for t in recent_receipts)
+        total_qty = sum(t.quantity for t in recent_receipts)
+
+        return total_cost / total_qty if total_qty > 0 else 0
+
+    @property
     def total_value(self):
-        return self.quantity * self.cost_per_unit
+        """Estimated value based on average cost"""
+        return self.quantity * self.average_cost
+
+    def update_cost_moving_average(self, new_quantity, new_unit_cost):
+        """
+        Update cost_per_unit using moving average formula.
+        Formula: (Old Qty × Old Cost + New Qty × New Cost) / (Old Qty + New Qty)
+
+        Args:
+            new_quantity: Decimal - Quantity being added
+            new_unit_cost: Decimal - Unit cost of new quantity
+        """
+        old_qty = self.quantity
+        old_cost = self.cost_per_unit
+
+        # If current stock is zero or cost is zero, use new cost directly
+        if old_qty == 0 or old_cost == 0:
+            self.cost_per_unit = new_unit_cost
+        else:
+            # Moving average calculation
+            total_cost = (old_qty * old_cost) + (new_quantity * new_unit_cost)
+            total_qty = old_qty + new_quantity
+            self.cost_per_unit = total_cost / total_qty if total_qty > 0 else new_unit_cost
+
+        self.save()
 
     def __str__(self):
         return f"{self.branch.name} - {self.name} ({self.quantity} {self.unit})"
 
     class Meta:
-        verbose_name_plural = "Inventory"
+        verbose_name_plural = "Inventory (Legacy)"
         ordering = ['branch', 'location', 'name']
         unique_together = ['branch', 'name', 'location']
 
@@ -702,3 +746,136 @@ class Report(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class PurchaseOrderStatus(models.TextChoices):
+    DRAFT = 'DRAFT', 'Draft'
+    SUBMITTED = 'SUBMITTED', 'Submitted'
+    APPROVED = 'APPROVED', 'Approved'
+    RECEIVED = 'RECEIVED', 'Received'
+    CANCELLED = 'CANCELLED', 'Cancelled'
+
+
+class PurchaseOrder(models.Model):
+    """Purchase Order for ordering inventory items from suppliers"""
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='purchase_orders')
+    po_number = models.CharField(max_length=50, unique=True, db_index=True)
+    supplier_name = models.CharField(max_length=200)
+    supplier_contact = models.CharField(max_length=100, blank=True)
+    supplier_email = models.EmailField(blank=True)
+    supplier_phone = models.CharField(max_length=20, blank=True)
+    supplier_address = models.TextField(blank=True)
+    payment_terms_days = models.IntegerField(default=30, help_text='Number of days for payment (e.g., 30 for Net 30)')
+    tax_id = models.CharField(max_length=50, blank=True, help_text='NPWP or Tax ID')
+
+    status = models.CharField(
+        max_length=20,
+        choices=PurchaseOrderStatus.choices,
+        default=PurchaseOrderStatus.DRAFT
+    )
+
+    order_date = models.DateField(default=date.today)
+    expected_delivery_date = models.DateField(null=True, blank=True)
+    actual_delivery_date = models.DateField(null=True, blank=True)
+
+    created_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, related_name='created_purchase_orders')
+    approved_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_purchase_orders')
+    received_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_purchase_orders')
+
+    notes = models.TextField(blank=True)
+    terms_and_conditions = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def total_amount(self):
+        """Calculate total amount from all items"""
+        return sum(item.total_price for item in self.items.all())
+
+    @property
+    def total_items(self):
+        """Count total number of items"""
+        return self.items.count()
+
+    def generate_po_number(self):
+        """Generate unique PO number: PO-YYYYMMDD-XXXX"""
+        from datetime import datetime
+        date_str = datetime.now().strftime('%Y%m%d')
+        last_po = PurchaseOrder.objects.filter(
+            po_number__startswith=f'PO-{date_str}'
+        ).order_by('-po_number').first()
+
+        if last_po:
+            last_sequence = int(last_po.po_number.split('-')[-1])
+            new_sequence = last_sequence + 1
+        else:
+            new_sequence = 1
+
+        return f'PO-{date_str}-{new_sequence:04d}'
+
+    def save(self, *args, **kwargs):
+        if not self.po_number:
+            self.po_number = self.generate_po_number()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.po_number} - {self.supplier_name} ({self.status})"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Purchase Order"
+        verbose_name_plural = "Purchase Orders"
+
+
+class PurchaseOrderItem(models.Model):
+    """Individual items in a purchase order"""
+    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='items')
+    inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='purchase_order_items')
+
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    notes = models.CharField(max_length=200, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def total_price(self):
+        """Calculate total price for this item"""
+        return float(self.quantity) * float(self.unit_price)
+
+    def __str__(self):
+        return f"{self.purchase_order.po_number} - {self.inventory_item.name}: {self.quantity}"
+
+    class Meta:
+        ordering = ['purchase_order', 'inventory_item__name']
+        unique_together = ['purchase_order', 'inventory_item']
+
+
+class Vendor(models.Model):
+    """Vendor/Supplier master data"""
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='vendors')
+    name = models.CharField(max_length=200, db_index=True)
+    contact_person = models.CharField(max_length=100, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+    payment_terms_days = models.IntegerField(default=30, help_text='Number of days for payment')
+    tax_id = models.CharField(max_length=50, blank=True, help_text='NPWP or Tax ID')
+
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.branch.name}"
+
+    class Meta:
+        ordering = ['name']
+        unique_together = ['branch', 'name']
+        verbose_name = "Vendor"
+        verbose_name_plural = "Vendors"

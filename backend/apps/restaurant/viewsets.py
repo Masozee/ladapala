@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db.models import Sum, Count, Q, F
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from decimal import Decimal
 from .models import (
     Restaurant, Branch, Staff,
@@ -13,7 +13,8 @@ from .models import (
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
     Promotion, Schedule, Report, CashierSession,
-    Recipe, RecipeIngredient
+    Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
+    StockTransfer
 )
 from .serializers import (
     RestaurantSerializer, BranchSerializer, StaffSerializer,
@@ -23,7 +24,9 @@ from .serializers import (
     KitchenOrderSerializer, KitchenOrderItemSerializer,
     PromotionSerializer, ScheduleSerializer, ReportSerializer,
     DashboardSerializer, CashierSessionSerializer, CashierSessionOpenSerializer,
-    CashierSessionCloseSerializer, RecipeSerializer, RecipeIngredientSerializer
+    CashierSessionCloseSerializer, RecipeSerializer, RecipeIngredientSerializer,
+    PurchaseOrderSerializer, PurchaseOrderCreateSerializer, PurchaseOrderItemSerializer,
+    StockTransferSerializer, StockTransferCreateSerializer
 )
 from .permissions import IsManagerOrAdmin, IsKitchenStaff, IsWarehouseStaff
 
@@ -146,8 +149,8 @@ class InventoryViewSet(viewsets.ModelViewSet):
     serializer_class = InventorySerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name', 'supplier']
-    filterset_fields = ['branch']
+    search_fields = ['name', 'description']
+    filterset_fields = ['branch', 'location']
     ordering_fields = ['name', 'quantity']
     
     @action(detail=False, methods=['get'])
@@ -1163,4 +1166,457 @@ class RecipeIngredientViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.select_related("recipe__product", "inventory_item")
+
+
+class PurchaseOrderViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing Purchase Orders
+
+    List: GET /api/purchase-orders/
+    Create: POST /api/purchase-orders/
+    Retrieve: GET /api/purchase-orders/{id}/
+    Update: PUT/PATCH /api/purchase-orders/{id}/
+    Delete: DELETE /api/purchase-orders/{id}/
+
+    Custom actions:
+    - submit: POST /api/purchase-orders/{id}/submit/ - Submit draft PO
+    - approve: POST /api/purchase-orders/{id}/approve/ - Approve submitted PO
+    - receive: POST /api/purchase-orders/{id}/receive/ - Mark PO as received (creates inventory transactions)
+    - cancel: POST /api/purchase-orders/{id}/cancel/ - Cancel PO
+    """
+    queryset = PurchaseOrder.objects.all()
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['po_number', 'supplier_name', 'supplier_contact']
+    filterset_fields = ['branch', 'status', 'created_by']
+    ordering_fields = ['created_at', 'order_date', 'po_number']
+    ordering = ['-created_at']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return PurchaseOrderCreateSerializer
+        return PurchaseOrderSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.select_related(
+            'branch', 'created_by__user', 'approved_by__user', 'received_by__user'
+        ).prefetch_related('items__inventory_item')
+
+    @action(detail=True, methods=['post'])
+    def submit(self, request, pk=None):
+        """Submit a draft purchase order"""
+        purchase_order = self.get_object()
+
+        if purchase_order.status != 'DRAFT':
+            return Response(
+                {'error': 'Only draft purchase orders can be submitted'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not purchase_order.items.exists():
+            return Response(
+                {'error': 'Purchase order must have at least one item'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        purchase_order.status = 'SUBMITTED'
+        purchase_order.save()
+
+        serializer = self.get_serializer(purchase_order)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        """Approve a submitted purchase order (Manager/Admin only)"""
+        purchase_order = self.get_object()
+
+        if purchase_order.status != 'SUBMITTED':
+            return Response(
+                {'error': 'Only submitted purchase orders can be approved'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Get staff from request user
+        try:
+            staff = request.user.staff
+        except:
+            return Response(
+                {'error': 'User is not a staff member'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        purchase_order.status = 'APPROVED'
+        purchase_order.approved_by = staff
+        purchase_order.save()
+
+        serializer = self.get_serializer(purchase_order)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def receive(self, request, pk=None):
+        """
+        Mark purchase order as received and create inventory transactions
+
+        Request body (optional):
+        {
+            "actual_delivery_date": "2024-01-15",
+            "received_items": [
+                {"item_id": 1, "quantity_received": 50}
+            ]
+        }
+        """
+        purchase_order = self.get_object()
+
+        if purchase_order.status != 'APPROVED':
+            return Response(
+                {'error': 'Only approved purchase orders can be received'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Get staff from request user
+        try:
+            staff = request.user.staff
+        except:
+            return Response(
+                {'error': 'User is not a staff member'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        actual_delivery_date = request.data.get('actual_delivery_date', timezone.now().date())
+        received_items = request.data.get('received_items', [])
+
+        # Create inventory transactions for each item
+        for po_item in purchase_order.items.all():
+            # Check if specific quantity was provided
+            quantity_received = po_item.quantity
+            if received_items and isinstance(received_items, list):
+                for received in received_items:
+                    if isinstance(received, dict) and received.get('item_id') == po_item.id:
+                        quantity_received = Decimal(str(received.get('quantity_received', po_item.quantity)))
+                        break
+
+            # Create inventory transaction
+            InventoryTransaction.objects.create(
+                inventory=po_item.inventory_item,
+                transaction_type='IN',
+                quantity=quantity_received,
+                unit_cost=po_item.unit_price,
+                reference_number=purchase_order.po_number,
+                notes=f'Received from PO {purchase_order.po_number} - Supplier: {purchase_order.supplier_name}'
+            )
+
+            # Update inventory quantity
+            po_item.inventory_item.quantity += quantity_received
+            po_item.inventory_item.save()
+
+        purchase_order.status = 'RECEIVED'
+        purchase_order.received_by = staff
+        purchase_order.actual_delivery_date = actual_delivery_date
+        purchase_order.save()
+
+        serializer = self.get_serializer(purchase_order)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        """Cancel a purchase order"""
+        purchase_order = self.get_object()
+
+        if purchase_order.status == 'RECEIVED':
+            return Response(
+                {'error': 'Cannot cancel a received purchase order'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        purchase_order.status = 'CANCELLED'
+        purchase_order.save()
+
+        serializer = self.get_serializer(purchase_order)
+        return Response(serializer.data)
+
+
+class PurchaseOrderItemViewSet(viewsets.ModelViewSet):
+    queryset = PurchaseOrderItem.objects.all()
+    serializer_class = PurchaseOrderItemSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['purchase_order', 'inventory_item']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.select_related('purchase_order', 'inventory_item')
+
+
+class StockTransferViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing warehouse to kitchen stock transfers.
+    Automatically handles unit conversion (kg→gram, liter→ml) and price conversion.
+    """
+    queryset = StockTransfer.objects.all()
+    serializer_class = StockTransferSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['branch', 'from_warehouse', 'to_kitchen', 'transferred_by']
+    ordering_fields = ['transfer_date', 'quantity']
+    ordering = ['-transfer_date']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.select_related(
+            'branch', 'from_warehouse', 'to_kitchen', 'transferred_by'
+        )
+
+    def get_serializer_class(self):
+        """Use create serializer for POST, standard serializer for GET/LIST"""
+        if self.action == 'create':
+            return StockTransferCreateSerializer
+        return StockTransferSerializer
+
+    @action(detail=False, methods=['get'])
+    def by_item(self, request):
+        """Get all transfers for a specific item (by name)"""
+        item_name = request.query_params.get('name')
+        if not item_name:
+            return Response(
+                {'error': 'Item name is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        transfers = self.get_queryset().filter(item_name__icontains=item_name)
+        serializer = self.get_serializer(transfers, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def recent(self, request):
+        """Get recent transfers (last 7 days)"""
+        from datetime import timedelta
+        from django.utils import timezone
+
+        seven_days_ago = timezone.now() - timedelta(days=7)
+        transfers = self.get_queryset().filter(transfer_date__gte=seven_days_ago)
+        serializer = self.get_serializer(transfers, many=True)
+        return Response(serializer.data)
+
+
+class VendorViewSet(viewsets.ViewSet):
+    """
+    ViewSet for vendor management.
+    Aggregates supplier data from Purchase Orders and Vendor model.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request):
+        """Create a new vendor"""
+        from .serializers import VendorCreateSerializer
+        from .models import Vendor
+
+        serializer = VendorCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            branch_id = request.data.get('branch')
+            if not branch_id:
+                return Response(
+                    {'error': 'branch is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if vendor already exists
+            if Vendor.objects.filter(
+                branch_id=branch_id,
+                name=serializer.validated_data['name']
+            ).exists():
+                return Response(
+                    {'error': 'Vendor dengan nama ini sudah ada'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            vendor = serializer.save(branch_id=branch_id)
+
+            # Generate ID for response
+            import re
+            vendor_id = re.sub(r'[^a-z0-9]+', '-', vendor.name.lower()).strip('-')
+
+            return Response({
+                'id': vendor_id,
+                'name': vendor.name,
+                'contact': vendor.contact_person,
+                'email': vendor.email,
+                'phone': vendor.phone,
+                'address': vendor.address,
+                'payment_terms_days': vendor.payment_terms_days,
+                'tax_id': vendor.tax_id,
+                'total_purchase_orders': 0,
+                'total_amount': '0',
+                'last_order_date': None,
+                'branch_id': vendor.branch_id
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request):
+        """
+        Get list of all vendors with their purchase statistics
+        """
+        from django.db.models import Max
+
+        branch_id = request.query_params.get('branch')
+        if not branch_id:
+            return Response(
+                {'error': 'branch parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        from .models import Vendor
+        import re
+
+        # Get vendors from Vendor model
+        vendor_objects = Vendor.objects.filter(branch_id=branch_id, is_active=True)
+
+        # Get unique vendor names from purchase orders
+        vendors_data = PurchaseOrder.objects.filter(
+            branch_id=branch_id
+        ).values(
+            'supplier_name', 'supplier_contact', 'supplier_email', 'supplier_phone',
+            'supplier_address', 'payment_terms_days', 'tax_id'
+        ).annotate(
+            total_purchase_orders=Count('id'),
+            last_order_date=Max('order_date')
+        ).order_by('-last_order_date')
+
+        # Merge vendors from both sources
+        vendors = []
+        vendor_names_seen = set()
+
+        # First, add vendors from Vendor model
+        for vendor_obj in vendor_objects:
+            # Calculate PO statistics for this vendor
+            pos = PurchaseOrder.objects.filter(
+                branch_id=branch_id,
+                supplier_name=vendor_obj.name
+            ).prefetch_related('items')
+
+            total_amount = sum(po.total_amount for po in pos)
+            total_pos = pos.count()
+            last_po = pos.order_by('-order_date').first()
+
+            vendor_id = re.sub(r'[^a-z0-9]+', '-', vendor_obj.name.lower()).strip('-')
+            vendor_names_seen.add(vendor_obj.name)
+
+            vendors.append({
+                'id': vendor_id,
+                'name': vendor_obj.name,
+                'contact': vendor_obj.contact_person or '',
+                'email': vendor_obj.email or '',
+                'phone': vendor_obj.phone or '',
+                'address': vendor_obj.address or '',
+                'payment_terms_days': vendor_obj.payment_terms_days,
+                'tax_id': vendor_obj.tax_id or '',
+                'total_purchase_orders': total_pos,
+                'total_amount': total_amount,
+                'last_order_date': last_po.order_date if last_po else None,
+                'branch_id': int(branch_id)
+            })
+
+        # Then add vendors from POs that aren't in the Vendor model
+        for vendor_data in vendors_data:
+            if vendor_data['supplier_name'] not in vendor_names_seen:
+                # Calculate actual total amount from all POs for this vendor
+                pos = PurchaseOrder.objects.filter(
+                    branch_id=branch_id,
+                    supplier_name=vendor_data['supplier_name']
+                ).prefetch_related('items')
+
+                total_amount = sum(po.total_amount for po in pos)
+
+                vendor_id = re.sub(r'[^a-z0-9]+', '-', vendor_data['supplier_name'].lower()).strip('-')
+                vendor_names_seen.add(vendor_data['supplier_name'])
+
+                vendors.append({
+                    'id': vendor_id,
+                    'name': vendor_data['supplier_name'],
+                    'contact': vendor_data['supplier_contact'] or '',
+                    'email': vendor_data['supplier_email'] or '',
+                    'phone': vendor_data['supplier_phone'] or '',
+                    'address': vendor_data['supplier_address'] or '',
+                    'payment_terms_days': vendor_data['payment_terms_days'] or 30,
+                    'tax_id': vendor_data['tax_id'] or '',
+                    'total_purchase_orders': vendor_data['total_purchase_orders'],
+                    'total_amount': total_amount,
+                    'last_order_date': vendor_data['last_order_date'],
+                    'branch_id': int(branch_id)
+                })
+
+        # Sort by last_order_date (None values at end)
+        vendors.sort(key=lambda x: x['last_order_date'] or date(1900, 1, 1), reverse=True)
+
+        from .serializers import VendorSerializer
+        serializer = VendorSerializer(vendors, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        """
+        Get detailed vendor information including purchase order history
+        pk = vendor ID (URL-safe slug)
+        """
+        import re
+        from django.db.models import Count, Sum, Max
+
+        vendor_id = pk
+        branch_id = request.query_params.get('branch')
+
+        if not branch_id:
+            return Response(
+                {'error': 'branch parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Find vendor by matching ID generated from supplier name
+        all_vendors = PurchaseOrder.objects.filter(
+            branch_id=branch_id
+        ).values_list('supplier_name', flat=True).distinct()
+
+        vendor_name = None
+        for name in all_vendors:
+            generated_id = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+            if generated_id == vendor_id:
+                vendor_name = name
+                break
+
+        if not vendor_name:
+            return Response(
+                {'error': 'Vendor not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Get vendor's purchase orders
+        purchase_orders = PurchaseOrder.objects.filter(
+            branch_id=branch_id,
+            supplier_name=vendor_name
+        ).order_by('-order_date')
+
+        # Get vendor info from first PO
+        first_po = purchase_orders.first()
+
+        # Calculate statistics
+        total_amount = sum(po.total_amount for po in purchase_orders)
+
+        vendor_detail = {
+            'id': vendor_id,
+            'name': vendor_name,
+            'contact': first_po.supplier_contact or '',
+            'email': first_po.supplier_email or '',
+            'phone': first_po.supplier_phone or '',
+            'address': first_po.supplier_address or '',
+            'payment_terms_days': first_po.payment_terms_days or 30,
+            'tax_id': first_po.tax_id or '',
+            'total_purchase_orders': purchase_orders.count(),
+            'total_amount': total_amount,
+            'last_order_date': purchase_orders.first().order_date,
+            'branch_id': int(branch_id),
+            'purchase_orders': purchase_orders
+        }
+
+        from .serializers import VendorDetailSerializer
+        serializer = VendorDetailSerializer(vendor_detail)
+        return Response(serializer.data)
 

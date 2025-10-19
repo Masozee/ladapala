@@ -14,7 +14,8 @@ import {
   Logout01Icon,
   UserIcon,
   ArrowLeft01Icon,
-  Menu02Icon
+  Menu02Icon,
+  UserGroupIcon
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import {
@@ -35,6 +36,11 @@ const officeItems: SidebarItem[] = [
     name: "Stok",
     href: "/office/stock",
     icon: Package01Icon,
+  },
+  {
+    name: "Vendor",
+    href: "/office/vendor",
+    icon: UserGroupIcon,
   },
   {
     name: "Jadwal",
@@ -95,7 +101,8 @@ export function OfficeSidebar() {
         <nav className="flex-1 flex items-center justify-center p-4">
           <div className="space-y-2">
             {officeItems.map((item) => {
-              const isActive = pathname === item.href
+              // Check if current path starts with the item href (for sub-pages like /office/stock/*)
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
 
               return (
                 <Tooltip key={item.name}>

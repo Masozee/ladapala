@@ -32,6 +32,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { useAuth } from "@/contexts/auth-context"
 import { RoleGuard } from "@/components/role-guard"
+import { StockActionTabs } from "@/components/stock-action-tabs"
 import { api, type Inventory } from "@/lib/api"
 
 export default function StockMovementsPage() {
@@ -218,21 +219,14 @@ export default function StockMovementsPage() {
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="icon"
-              className="rounded"
-              onClick={() => router.push('/office/stock')}
-            >
-              <HugeiconsIcon icon={ArrowLeft01Icon} size={20} strokeWidth={2} />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Pergerakan Stok</h1>
-              <p className="text-muted-foreground">Kelola penerimaan, transfer, dan koreksi stok</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold">Pergerakan Stok</h1>
+            <p className="text-muted-foreground">Kelola penerimaan, transfer, dan koreksi stok</p>
           </div>
         </div>
+
+        {/* Quick Action Tabs */}
+        <StockActionTabs />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

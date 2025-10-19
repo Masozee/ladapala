@@ -6,7 +6,8 @@ from .models import (
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
     Promotion, Schedule, Report, CashierSession,
-    Recipe, RecipeIngredient
+    Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
+    StockTransfer, Vendor
 )
 
 User = get_user_model()
@@ -69,12 +70,13 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class InventorySerializer(serializers.ModelSerializer):
     needs_restock = serializers.BooleanField(read_only=True)
+    average_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     total_value = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    
+
     class Meta:
         model = Inventory
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at', 'needs_restock', 'total_value']
+        read_only_fields = ['created_at', 'updated_at', 'needs_restock', 'average_cost', 'total_value']
 
 
 class InventoryTransactionSerializer(serializers.ModelSerializer):
@@ -441,3 +443,278 @@ class RecipeSerializer(serializers.ModelSerializer):
             return round(margin, 2)
         return 0
 
+
+class PurchaseOrderItemSerializer(serializers.ModelSerializer):
+    inventory_item_name = serializers.CharField(source='inventory_item.name', read_only=True)
+    inventory_item_unit = serializers.CharField(source='inventory_item.unit', read_only=True)
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = PurchaseOrderItem
+        fields = [
+            'id', 'purchase_order', 'inventory_item', 'inventory_item_name',
+            'inventory_item_unit', 'quantity', 'unit_price', 'total_price',
+            'notes', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class PurchaseOrderSerializer(serializers.ModelSerializer):
+    items = PurchaseOrderItemSerializer(many=True, read_only=True)
+    created_by_name = serializers.CharField(source='created_by.user.full_name', read_only=True)
+    approved_by_name = serializers.CharField(source='approved_by.user.full_name', read_only=True)
+    received_by_name = serializers.CharField(source='received_by.user.full_name', read_only=True)
+    branch_name = serializers.CharField(source='branch.name', read_only=True)
+    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    total_items = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+            'id', 'branch', 'branch_name', 'po_number', 'supplier_name',
+            'supplier_contact', 'supplier_email', 'supplier_phone',
+            'status', 'order_date', 'expected_delivery_date', 'actual_delivery_date',
+            'created_by', 'created_by_name', 'approved_by', 'approved_by_name',
+            'received_by', 'received_by_name', 'notes', 'terms_and_conditions',
+            'items', 'total_amount', 'total_items', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['po_number', 'created_at', 'updated_at']
+
+
+class PurchaseOrderItemCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating PO items (without purchase_order field)"""
+    class Meta:
+        model = PurchaseOrderItem
+        fields = ['inventory_item', 'quantity', 'unit_price', 'notes']
+
+
+class PurchaseOrderCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating purchase orders with items"""
+    items = PurchaseOrderItemCreateSerializer(many=True)
+
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+            'branch', 'supplier_name', 'supplier_contact', 'supplier_email',
+            'supplier_phone', 'order_date', 'expected_delivery_date',
+            'created_by', 'notes', 'terms_and_conditions', 'items'
+        ]
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        purchase_order = PurchaseOrder.objects.create(**validated_data)
+
+        for item_data in items_data:
+            PurchaseOrderItem.objects.create(
+                purchase_order=purchase_order,
+                **item_data
+            )
+
+        return purchase_order
+
+    def to_representation(self, instance):
+        """Use PurchaseOrderSerializer for output"""
+        return PurchaseOrderSerializer(instance, context=self.context).data
+
+
+class StockTransferSerializer(serializers.ModelSerializer):
+    """Serializer for viewing stock transfer records"""
+    from_warehouse_name = serializers.CharField(source='from_warehouse.name', read_only=True)
+    to_kitchen_name = serializers.CharField(source='to_kitchen.name', read_only=True)
+    transferred_by_name = serializers.CharField(source='transferred_by.full_name', read_only=True)
+
+    class Meta:
+        model = StockTransfer
+        fields = [
+            'id', 'branch', 'item_name', 'quantity', 'unit',
+            'from_warehouse', 'from_warehouse_name',
+            'to_kitchen', 'to_kitchen_name',
+            'transferred_by', 'transferred_by_name',
+            'transfer_date', 'notes'
+        ]
+        read_only_fields = ['id', 'transfer_date']
+
+
+class StockTransferCreateSerializer(serializers.Serializer):
+    """Serializer for creating stock transfers with automatic unit/price conversion"""
+    warehouse_item_id = serializers.IntegerField(required=True)
+    kitchen_item_id = serializers.IntegerField(required=True)
+    quantity = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
+    notes = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Quantity must be greater than 0")
+        return value
+
+    def validate(self, data):
+        """Validate warehouse and kitchen items exist and have sufficient stock"""
+        from decimal import Decimal
+
+        try:
+            warehouse_item = Inventory.objects.get(
+                id=data['warehouse_item_id'],
+                location='WAREHOUSE'
+            )
+        except Inventory.DoesNotExist:
+            raise serializers.ValidationError({
+                'warehouse_item_id': 'Warehouse item not found'
+            })
+
+        try:
+            kitchen_item = Inventory.objects.get(
+                id=data['kitchen_item_id'],
+                location='KITCHEN'
+            )
+        except Inventory.DoesNotExist:
+            raise serializers.ValidationError({
+                'kitchen_item_id': 'Kitchen item not found'
+            })
+
+        # Verify same item (same name)
+        if warehouse_item.name != kitchen_item.name:
+            raise serializers.ValidationError({
+                'kitchen_item_id': f'Kitchen item must be "{warehouse_item.name}", not "{kitchen_item.name}"'
+            })
+
+        # Verify sufficient warehouse stock
+        if warehouse_item.quantity < data['quantity']:
+            raise serializers.ValidationError({
+                'quantity': f'Insufficient warehouse stock. Available: {warehouse_item.quantity} {warehouse_item.unit}'
+            })
+
+        # Store items for create method
+        data['warehouse_item'] = warehouse_item
+        data['kitchen_item'] = kitchen_item
+
+        return data
+
+    def create(self, validated_data):
+        """Create transfer with automatic unit and price conversion"""
+        from decimal import Decimal
+
+        warehouse_item = validated_data['warehouse_item']
+        kitchen_item = validated_data['kitchen_item']
+        transfer_quantity = validated_data['quantity']
+        notes = validated_data.get('notes', '')
+        user = self.context['request'].user
+
+        # Calculate unit conversion factor (if needed)
+        warehouse_unit = warehouse_item.unit.lower()
+        kitchen_unit = kitchen_item.unit.lower()
+
+        # Conversion logic for kg→gram and liter→ml
+        conversion_factor = Decimal('1')
+        if warehouse_unit in ['kg', 'kilogram'] and kitchen_unit in ['gram', 'g']:
+            conversion_factor = Decimal('1000')
+        elif warehouse_unit in ['liter', 'l', 'litre'] and kitchen_unit in ['ml', 'milliliter']:
+            conversion_factor = Decimal('1000')
+        elif warehouse_unit != kitchen_unit:
+            raise serializers.ValidationError({
+                'unit': f'Cannot convert {warehouse_unit} to {kitchen_unit}'
+            })
+
+        # Calculate kitchen quantity (with conversion)
+        kitchen_quantity = transfer_quantity * conversion_factor
+
+        # Calculate kitchen cost per unit (with conversion)
+        # If warehouse is Rp 45,000/kg and kitchen is gram, cost = 45,000 / 1000 = Rp 45/gram
+        kitchen_cost_per_unit = warehouse_item.cost_per_unit / conversion_factor
+
+        # Update kitchen inventory with moving average
+        kitchen_item.update_cost_moving_average(
+            new_quantity=kitchen_quantity,
+            new_unit_cost=kitchen_cost_per_unit
+        )
+        kitchen_item.quantity += kitchen_quantity
+        kitchen_item.save()
+
+        # Deduct from warehouse
+        warehouse_item.quantity -= transfer_quantity
+        warehouse_item.save()
+
+        # Create transfer record
+        transfer = StockTransfer.objects.create(
+            branch=warehouse_item.branch,
+            item_name=warehouse_item.name,
+            quantity=transfer_quantity,
+            unit=warehouse_item.unit,
+            from_warehouse=warehouse_item,
+            to_kitchen=kitchen_item,
+            transferred_by=user,
+            notes=notes or f'Transferred {transfer_quantity} {warehouse_unit} = {kitchen_quantity} {kitchen_unit}'
+        )
+
+        # Create inventory transactions for audit trail
+        InventoryTransaction.objects.create(
+            inventory=warehouse_item,
+            transaction_type='TRANSFER',
+            quantity=transfer_quantity,
+            unit_cost=warehouse_item.cost_per_unit,
+            reference_number=f'TRF-{transfer.id}',
+            performed_by=user,
+            notes=f'Transfer ke dapur: {transfer.notes}'
+        )
+
+        InventoryTransaction.objects.create(
+            inventory=kitchen_item,
+            transaction_type='TRANSFER',
+            quantity=kitchen_quantity,
+            unit_cost=kitchen_cost_per_unit,
+            reference_number=f'TRF-{transfer.id}',
+            performed_by=user,
+            notes=f'Transfer dari gudang: {transfer.notes}'
+        )
+
+        return transfer
+
+    def to_representation(self, instance):
+        """Use StockTransferSerializer for output"""
+        return StockTransferSerializer(instance, context=self.context).data
+
+
+class VendorSerializer(serializers.Serializer):
+    """Serializer for vendor data aggregated from Purchase Orders"""
+    id = serializers.CharField()
+    name = serializers.CharField()
+    contact = serializers.CharField()
+    email = serializers.EmailField()
+    phone = serializers.CharField()
+    address = serializers.CharField()
+    payment_terms_days = serializers.IntegerField()
+    tax_id = serializers.CharField()
+    total_purchase_orders = serializers.IntegerField()
+    total_amount = serializers.DecimalField(max_digits=15, decimal_places=2)
+    last_order_date = serializers.DateField()
+    branch_id = serializers.IntegerField()
+
+
+class VendorDetailSerializer(serializers.Serializer):
+    """Detailed vendor information with purchase order history"""
+    id = serializers.CharField()
+    name = serializers.CharField()
+    contact = serializers.CharField()
+    email = serializers.EmailField()
+    phone = serializers.CharField()
+    address = serializers.CharField()
+    payment_terms_days = serializers.IntegerField()
+    tax_id = serializers.CharField()
+    total_purchase_orders = serializers.IntegerField()
+    total_amount = serializers.DecimalField(max_digits=15, decimal_places=2)
+    last_order_date = serializers.DateField()
+    branch_id = serializers.IntegerField()
+    purchase_orders = PurchaseOrderSerializer(many=True)
+
+
+class VendorCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating new vendors"""
+    class Meta:
+        model = Vendor
+        fields = [
+            'name', 'contact_person', 'email', 'phone',
+            'address', 'payment_terms_days', 'tax_id', 'notes'
+        ]
+
+    def create(self, validated_data):
+        # Branch will be set in the viewset
+        return super().create(validated_data)

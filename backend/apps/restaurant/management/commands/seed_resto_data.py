@@ -413,23 +413,23 @@ class Command(BaseCommand):
 
         self.stdout.write('Created recent orders')
 
-        # Create inventory items
+        # Create inventory items (WAREHOUSE location for PO system)
         inventory_items = [
-            {'name': 'Beras Premium', 'unit': 'kg', 'quantity': 150, 'min_quantity': 30, 'cost_per_unit': 12000, 'supplier': 'CV Beras Nusantara'},
-            {'name': 'Daging Sapi', 'unit': 'kg', 'quantity': 50, 'min_quantity': 10, 'cost_per_unit': 120000, 'supplier': 'PT Meat Supplier'},
-            {'name': 'Ayam Kampung', 'unit': 'ekor', 'quantity': 40, 'min_quantity': 10, 'cost_per_unit': 45000, 'supplier': 'Peternakan Jaya'},
-            {'name': 'Minyak Goreng', 'unit': 'liter', 'quantity': 60, 'min_quantity': 15, 'cost_per_unit': 14000, 'supplier': 'PT Sinar Mas'},
-            {'name': 'Cabai Merah', 'unit': 'kg', 'quantity': 25, 'min_quantity': 5, 'cost_per_unit': 40000, 'supplier': 'Pasar Induk'},
-            {'name': 'Bawang Merah', 'unit': 'kg', 'quantity': 30, 'min_quantity': 8, 'cost_per_unit': 35000, 'supplier': 'Pasar Induk'},
-            {'name': 'Santan Kelapa', 'unit': 'liter', 'quantity': 40, 'min_quantity': 10, 'cost_per_unit': 8000, 'supplier': 'CV Kelapa Mas'},
-            {'name': 'Gula Merah', 'unit': 'kg', 'quantity': 20, 'min_quantity': 5, 'cost_per_unit': 18000, 'supplier': 'CV Gula Aren'},
-            {'name': 'Durian', 'unit': 'kg', 'quantity': 15, 'min_quantity': 5, 'cost_per_unit': 50000, 'supplier': 'Kebun Durian'},
-            {'name': 'Alpukat', 'unit': 'kg', 'quantity': 20, 'min_quantity': 5, 'cost_per_unit': 25000, 'supplier': 'Pasar Buah'},
+            {'name': 'Beras Premium', 'unit': 'kg', 'quantity': 0, 'min_quantity': 30, 'cost_per_unit': 0, 'location': 'WAREHOUSE'},
+            {'name': 'Daging Sapi', 'unit': 'kg', 'quantity': 0, 'min_quantity': 10, 'cost_per_unit': 0, 'location': 'WAREHOUSE'},
+            {'name': 'Ayam Kampung', 'unit': 'ekor', 'quantity': 0, 'min_quantity': 10, 'cost_per_unit': 0, 'location': 'WAREHOUSE'},
+            {'name': 'Minyak Goreng', 'unit': 'liter', 'quantity': 0, 'min_quantity': 15, 'cost_per_unit': 0, 'location': 'WAREHOUSE'},
+            {'name': 'Cabai Merah', 'unit': 'kg', 'quantity': 0, 'min_quantity': 5, 'cost_per_unit': 0, 'location': 'WAREHOUSE'},
+            {'name': 'Bawang Merah', 'unit': 'kg', 'quantity': 0, 'min_quantity': 8, 'cost_per_unit': 0, 'location': 'WAREHOUSE'},
+            {'name': 'Santan Kelapa', 'unit': 'liter', 'quantity': 0, 'min_quantity': 10, 'cost_per_unit': 0, 'location': 'WAREHOUSE'},
+            {'name': 'Gula Merah', 'unit': 'kg', 'quantity': 0, 'min_quantity': 5, 'cost_per_unit': 0, 'location': 'WAREHOUSE'},
+            {'name': 'Durian', 'unit': 'kg', 'quantity': 0, 'min_quantity': 5, 'cost_per_unit': 0, 'location': 'WAREHOUSE'},
+            {'name': 'Alpukat', 'unit': 'kg', 'quantity': 0, 'min_quantity': 5, 'cost_per_unit': 0, 'location': 'WAREHOUSE'},
         ]
 
         for data in inventory_items:
             Inventory.objects.create(branch=branch, **data)
-        self.stdout.write('Created inventory items')
+        self.stdout.write('Created inventory items (quantities and costs will be set by PO receipts)')
 
         # Create promotion
         Promotion.objects.create(

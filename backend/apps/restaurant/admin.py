@@ -4,7 +4,8 @@ from .models import (
     Category, Product, Inventory, InventoryTransaction,
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
-    Promotion, Schedule, Report, CashierSession, SessionAuditLog
+    Promotion, Schedule, Report, CashierSession, SessionAuditLog,
+    PurchaseOrder, PurchaseOrderItem
 )
 
 
@@ -132,3 +133,49 @@ class SessionAuditLogAdmin(admin.ModelAdmin):
 class ReportAdmin(admin.ModelAdmin):
     list_display = ['report_type', 'branch', 'start_date', 'end_date', 'generated_by', 'created_at']
     list_filter = ['report_type', 'branch', 'created_at']
+
+
+class PurchaseOrderItemInline(admin.TabularInline):
+    model = PurchaseOrderItem
+    extra = 1
+    fields = ['inventory_item', 'quantity', 'unit_price', 'total_price', 'notes']
+    readonly_fields = ['total_price']
+
+
+@admin.register(PurchaseOrder)
+class PurchaseOrderAdmin(admin.ModelAdmin):
+    list_display = ['po_number', 'supplier_name', 'status', 'order_date', 'total_items', 'total_amount', 'created_by']
+    list_filter = ['status', 'branch', 'order_date', 'created_at']
+    search_fields = ['po_number', 'supplier_name', 'supplier_contact']
+    readonly_fields = ['po_number', 'total_amount', 'total_items', 'created_at', 'updated_at']
+    inlines = [PurchaseOrderItemInline]
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('po_number', 'branch', 'status')
+        }),
+        ('Supplier Details', {
+            'fields': ('supplier_name', 'supplier_contact', 'supplier_email', 'supplier_phone')
+        }),
+        ('Dates', {
+            'fields': ('order_date', 'expected_delivery_date', 'actual_delivery_date')
+        }),
+        ('Staff & Approval', {
+            'fields': ('created_by', 'approved_by', 'received_by')
+        }),
+        ('Additional Information', {
+            'fields': ('notes', 'terms_and_conditions', 'total_items', 'total_amount')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(PurchaseOrderItem)
+class PurchaseOrderItemAdmin(admin.ModelAdmin):
+    list_display = ['purchase_order', 'inventory_item', 'quantity', 'unit_price', 'total_price']
+    list_filter = ['purchase_order__status', 'purchase_order__branch']
+    search_fields = ['purchase_order__po_number', 'inventory_item__name']
+    readonly_fields = ['total_price']

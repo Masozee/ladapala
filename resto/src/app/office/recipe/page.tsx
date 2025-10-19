@@ -100,9 +100,9 @@ export default function RecipePage() {
     try {
       setIsLoading(true)
       const [recipesRes, productsRes, inventoryRes] = await Promise.all([
-        api.getRecipes({ branch: staff?.branch }),
-        api.getProducts({ branch: staff?.branch }),
-        api.getInventory({ branch: staff?.branch, location: 'KITCHEN' })
+        api.getRecipes({ branch: staff?.branch?.id }),
+        api.getProducts({ branch: staff?.branch?.id }),
+        api.getInventory({ branch: staff?.branch?.id, location: 'KITCHEN' })
       ])
 
       setRecipes(Array.isArray(recipesRes) ? recipesRes : recipesRes.results || [])
@@ -152,7 +152,7 @@ export default function RecipePage() {
         credentials: 'include',
         body: JSON.stringify({
           ...recipeForm,
-          branch: staff?.branch,
+          branch: staff?.branch?.id,
           is_active: true
         })
       })
