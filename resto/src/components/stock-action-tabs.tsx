@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Package01Icon, DeliveryTruck01Icon, DeliveryReturn01Icon, FileEditIcon, Analytics01Icon, Edit01Icon, ShoppingBasket01Icon } from '@hugeicons/core-free-icons'
+import { Package01Icon, DeliveryTruck01Icon, DeliveryReturn01Icon, FileEditIcon, Analytics01Icon, Edit01Icon, ShoppingBasket01Icon, AlertCircleIcon } from '@hugeicons/core-free-icons'
 
 export function StockActionTabs() {
   const router = useRouter()
@@ -40,6 +40,11 @@ export function StockActionTabs() {
       path: '/office/stock/adjustment',
     },
     {
+      label: 'Kadaluarsa',
+      icon: AlertCircleIcon,
+      path: '/office/stock/expiry',
+    },
+    {
       label: 'Laporan',
       icon: Analytics01Icon,
       path: '/office/stock/reports',
@@ -52,6 +57,11 @@ export function StockActionTabs() {
 
     // For purchase-orders, also match detail pages
     if (tab.path === '/office/stock/purchase-orders' && pathname.startsWith('/office/stock/purchase-orders')) {
+      return true
+    }
+
+    // For expiry page
+    if (tab.path === '/office/stock/expiry' && pathname.startsWith('/office/stock/expiry')) {
       return true
     }
 
