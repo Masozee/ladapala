@@ -137,8 +137,20 @@ export default function HomePage() {
   const fetchTransactions = async () => {
     try {
       setLoadingTransactions(true)
-      // Fetch recent payments with order details
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/?ordering=-created_at&limit=50`, {
+
+      // Fetch payments for current session only
+      let url = `${process.env.NEXT_PUBLIC_API_URL}/payments/?ordering=-created_at`
+
+      // If there's an active session, filter by session
+      if (activeSession) {
+        url += `&cashier_session=${activeSession.id}`
+      } else {
+        // If no active session, show today's transactions
+        const today = new Date().toISOString().split('T')[0]
+        url += `&created_at__gte=${today}`
+      }
+
+      const response = await fetch(url, {
         credentials: 'include'
       })
       if (response.ok) {
@@ -702,7 +714,15 @@ export default function HomePage() {
         <TabsContent value="transactions" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Daftar Transaksi</CardTitle>
+              <CardTitle>
+                Daftar Transaksi {activeSession && `- Sesi ${activeSession.shift_type}`}
+              </CardTitle>
+              <p className="text-sm text-gray-500 mt-1">
+                {activeSession
+                  ? `Menampilkan transaksi untuk sesi kasir aktif`
+                  : `Menampilkan transaksi hari ini`
+                }
+              </p>
             </CardHeader>
             <CardContent>
               {loadingTransactions ? (
@@ -710,6 +730,7 @@ export default function HomePage() {
                   <p className="text-gray-500">Memuat transaksi...</p>
                 </div>
               ) : (
+                <div className="rounded-lg border overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -790,6 +811,7 @@ export default function HomePage() {
                     )}
                   </TableBody>
                 </Table>
+                </div>
               )}
             </CardContent>
           </Card>
