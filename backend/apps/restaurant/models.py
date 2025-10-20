@@ -373,7 +373,7 @@ class Order(models.Model):
     order_number = models.CharField(max_length=50, unique=True, blank=True)
     table = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     order_type = models.CharField(max_length=20, choices=ORDER_TYPES)
-    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='PENDING')
+    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='CONFIRMED')
     customer_name = models.CharField(max_length=100, blank=True)
     customer_phone = models.CharField(max_length=20, blank=True)
     delivery_address = models.TextField(blank=True)

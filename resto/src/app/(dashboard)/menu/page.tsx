@@ -150,9 +150,9 @@ export default function MenuPage() {
 
     try {
       // Create order via API
-      const branchId = process.env.NEXT_PUBLIC_API_BRANCH_ID || '5'
+      const branchId = parseInt(process.env.NEXT_PUBLIC_API_BRANCH_ID || '5')
       const orderData = {
-        branch: parseInt(branchId),
+        branch: branchId,
         table: selectedTableId,
         order_type: (selectedTableId ? 'DINE_IN' : 'TAKEAWAY') as 'DINE_IN' | 'TAKEAWAY' | 'DELIVERY',
         customer_name: customerName,
@@ -166,6 +166,7 @@ export default function MenuPage() {
       }
 
       console.log('Creating order with data:', orderData)
+      console.log('Branch ID from env:', process.env.NEXT_PUBLIC_API_BRANCH_ID)
       await api.createOrder(orderData)
 
       // Reset everything
@@ -179,9 +180,10 @@ export default function MenuPage() {
       setAvailableTables(tablesResponse.results)
 
       alert("Pesanan berhasil dibuat!")
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating order:', error)
-      alert("Gagal membuat pesanan. Silakan coba lagi.")
+      const errorMessage = error?.message || "Gagal membuat pesanan. Silakan coba lagi."
+      alert(errorMessage)
     }
   }
 

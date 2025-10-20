@@ -286,8 +286,9 @@ export default function ItemMasterPage() {
                         <Input
                           type="number"
                           min="0"
+                          step="0.01"
                           value={formData.min_quantity}
-                          onChange={(e) => setFormData({ ...formData, min_quantity: parseFloat(e.target.value) || 0 })}
+                          onChange={(e) => setFormData({ ...formData, min_quantity: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
                         />
                       </div>
 
@@ -495,8 +496,9 @@ export default function ItemMasterPage() {
                 <Input
                   type="number"
                   min="0"
+                  step="0.01"
                   value={formData.min_quantity}
-                  onChange={(e) => setFormData({ ...formData, min_quantity: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData({ ...formData, min_quantity: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
                 />
               </div>
 

@@ -535,6 +535,12 @@ class ApiClient {
         throw new Error(errorData.error || `API Error: ${response.status} ${response.statusText}`);
       }
 
+      // Handle empty responses (like DELETE requests)
+      const contentType = response.headers.get('content-type');
+      if (response.status === 204 || !contentType?.includes('application/json')) {
+        return {} as T;
+      }
+
       return await response.json();
     } catch (error) {
       console.error('API Fetch Error:', error);

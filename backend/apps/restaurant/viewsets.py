@@ -235,12 +235,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         order = serializer.save()
-        
+
         if order.order_type == 'DINE_IN' and order.table:
             order.table.is_available = False
             order.table.save()
-        
-        KitchenOrder.objects.create(order=order)
     
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):

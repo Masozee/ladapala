@@ -74,11 +74,11 @@ export default function HomePage() {
       // Exclude orders that already have COMPLETED payments
       // Only show TODAY's orders (filter out old orders from previous days)
       const unpaidResponse = await api.getOrders({ status: 'COMPLETED' })
-      const today = new Date().toDateString()
+      const todayDate = new Date().toDateString()
       const filteredUnpaid = unpaidResponse.results.filter(order => {
         const hasCompletedPayment = order.payments && order.payments.some((p: any) => p.status === 'COMPLETED')
         const orderDate = new Date(order.created_at!).toDateString()
-        const isToday = orderDate === today
+        const isToday = orderDate === todayDate
         return !hasCompletedPayment && isToday
       })
       const sortedUnpaid = filteredUnpaid.sort((a, b) => {
@@ -96,7 +96,7 @@ export default function HomePage() {
         .filter(order => {
           const isActiveStatus = ['CONFIRMED', 'PREPARING', 'READY'].includes(order.status || '')
           const orderDate = new Date(order.created_at!).toDateString()
-          const isToday = orderDate === today
+          const isToday = orderDate === todayDate
           return isActiveStatus && isToday
         })
         .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
