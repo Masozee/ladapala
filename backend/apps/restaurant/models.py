@@ -150,6 +150,16 @@ class Inventory(models.Model):
         default=InventoryLocation.WAREHOUSE,
         help_text="Storage location: Warehouse for raw materials, Kitchen for ready-to-use items"
     )
+    # Expiry tracking fields
+    earliest_expiry_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Earliest expiry date among all active batches for this item"
+    )
+    has_expiring_items = models.BooleanField(
+        default=False,
+        help_text="Flag indicating if any batches are expiring within 30 days"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -225,6 +235,12 @@ class InventoryTransaction(models.Model):
     reference_number = models.CharField(max_length=100, blank=True)
     performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     notes = models.TextField(blank=True)
+
+    # Batch tracking fields
+    batch_number = models.CharField(max_length=100, blank=True, db_index=True)
+    expiry_date = models.DateField(null=True, blank=True)
+    manufacturing_date = models.DateField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
@@ -236,6 +252,127 @@ class InventoryTransaction(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class BatchStatus(models.TextChoices):
+    ACTIVE = 'ACTIVE', 'Active'
+    EXPIRING = 'EXPIRING', 'Expiring Soon'
+    EXPIRED = 'EXPIRED', 'Expired'
+    DISPOSED = 'DISPOSED', 'Disposed'
+
+
+class InventoryBatch(models.Model):
+    """
+    Tracks individual batches of inventory items with expiry dates.
+    Each batch represents a specific quantity received from a purchase order.
+    Supports FIFO (First In First Out) inventory management.
+    """
+    inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='batches')
+    batch_number = models.CharField(max_length=100, unique=True, db_index=True)
+
+    # Quantity tracking
+    quantity_remaining = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Current quantity available in this batch"
+    )
+    original_quantity = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Original quantity when batch was received"
+    )
+
+    # Expiry information
+    expiry_date = models.DateField(db_index=True, help_text="Date when this batch expires")
+    manufacturing_date = models.DateField(null=True, blank=True)
+
+    # Purchase information
+    purchase_order = models.ForeignKey(
+        'PurchaseOrder',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='batches'
+    )
+    received_date = models.DateField(auto_now_add=True)
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Status tracking
+    status = models.CharField(
+        max_length=20,
+        choices=BatchStatus.choices,
+        default=BatchStatus.ACTIVE,
+        db_index=True
+    )
+    disposed_at = models.DateTimeField(null=True, blank=True)
+    disposed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='disposed_batches'
+    )
+    disposal_method = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Method of disposal: WASTE, DONATED, RETURNED"
+    )
+    disposal_notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def is_active(self):
+        """Check if batch is still active (not expired or disposed)"""
+        return self.status == BatchStatus.ACTIVE and self.quantity_remaining > 0
+
+    @property
+    def days_until_expiry(self):
+        """Calculate days until expiry"""
+        if not self.expiry_date:
+            return None
+        delta = self.expiry_date - date.today()
+        return delta.days
+
+    @property
+    def is_expiring_soon(self):
+        """Check if batch is expiring within 30 days"""
+        days = self.days_until_expiry
+        return days is not None and 0 < days <= 30
+
+    @property
+    def is_expired(self):
+        """Check if batch has expired"""
+        days = self.days_until_expiry
+        return days is not None and days < 0
+
+    @property
+    def usage_percentage(self):
+        """Calculate how much of the batch has been used"""
+        if self.original_quantity == 0:
+            return 0
+        return float((self.original_quantity - self.quantity_remaining) / self.original_quantity * 100)
+
+    def update_status(self):
+        """Auto-update status based on expiry date and quantity"""
+        if self.quantity_remaining <= 0:
+            self.status = BatchStatus.DISPOSED
+        elif self.is_expired:
+            self.status = BatchStatus.EXPIRED
+        elif self.is_expiring_soon:
+            self.status = BatchStatus.EXPIRING
+        else:
+            self.status = BatchStatus.ACTIVE
+        self.save()
+
+    def __str__(self):
+        return f"{self.batch_number} - {self.inventory.name} (Exp: {self.expiry_date})"
+
+    class Meta:
+        ordering = ['expiry_date', 'created_at']  # FIFO ordering
+        verbose_name = "Inventory Batch"
+        verbose_name_plural = "Inventory Batches"
 
 
 class StockTransfer(models.Model):

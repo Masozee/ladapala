@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import (
     Restaurant, Branch, Staff, StaffRole,
-    Category, Product, Inventory, InventoryTransaction,
+    Category, Product, Inventory, InventoryTransaction, InventoryBatch,
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
     Promotion, Schedule, Report, CashierSession,
@@ -84,11 +84,42 @@ class InventoryTransactionSerializer(serializers.ModelSerializer):
     inventory_name = serializers.CharField(source='inventory.name', read_only=True)
     performed_by_username = serializers.CharField(source='performed_by.username', read_only=True)
     total_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    
+
     class Meta:
         model = InventoryTransaction
         fields = '__all__'
         read_only_fields = ['created_at', 'total_cost']
+
+
+class InventoryBatchSerializer(serializers.ModelSerializer):
+    inventory_name = serializers.CharField(source='inventory.name', read_only=True)
+    inventory_unit = serializers.CharField(source='inventory.unit', read_only=True)
+    po_number = serializers.CharField(source='purchase_order.po_number', read_only=True, allow_null=True)
+    disposed_by_name = serializers.SerializerMethodField()
+
+    # Computed fields
+    days_until_expiry = serializers.IntegerField(read_only=True)
+    is_expiring_soon = serializers.BooleanField(read_only=True)
+    is_expired = serializers.BooleanField(read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
+    usage_percentage = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = InventoryBatch
+        fields = '__all__'
+        read_only_fields = [
+            'batch_number', 'created_at', 'updated_at',
+            'days_until_expiry', 'is_expiring_soon', 'is_expired',
+            'is_active', 'usage_percentage'
+        ]
+
+    def get_disposed_by_name(self, obj):
+        if obj.disposed_by:
+            user = obj.disposed_by
+            if user.first_name and user.last_name:
+                return f"{user.first_name} {user.last_name}"
+            return user.email
+        return None
 
 
 class TableSerializer(serializers.ModelSerializer):

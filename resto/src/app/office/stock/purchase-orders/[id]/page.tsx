@@ -54,7 +54,11 @@ export default function PurchaseOrderDetailPage() {
     new Date().toISOString().split('T')[0]
   )
   const [receivedItems, setReceivedItems] = useState<{
-    [key: number]: number
+    [key: number]: {
+      quantity_received: number
+      expiry_date: string
+      manufacturing_date: string
+    }
   }>({})
 
   useEffect(() => {
@@ -67,10 +71,17 @@ export default function PurchaseOrderDetailPage() {
       const data = await api.getPurchaseOrder(Number(params.id))
       setPurchaseOrder(data)
 
-      // Initialize received items with ordered quantities
-      const initialReceived: { [key: number]: number } = {}
+      // Initialize received items with ordered quantities and default dates
+      const initialReceived: { [key: number]: { quantity_received: number; expiry_date: string; manufacturing_date: string } } = {}
+      const defaultExpiryDate = new Date()
+      defaultExpiryDate.setMonth(defaultExpiryDate.getMonth() + 6) // Default 6 months from now
+
       data.items.forEach(item => {
-        initialReceived[item.id] = parseFloat(item.quantity)
+        initialReceived[item.id] = {
+          quantity_received: parseFloat(item.quantity),
+          expiry_date: defaultExpiryDate.toISOString().split('T')[0],
+          manufacturing_date: new Date().toISOString().split('T')[0]
+        }
       })
       setReceivedItems(initialReceived)
     } catch (error) {
@@ -135,10 +146,12 @@ export default function PurchaseOrderDetailPage() {
     try {
       setIsActionLoading(true)
 
-      // Build received items array
-      const receivedItemsArray = Object.entries(receivedItems).map(([itemId, qty]) => ({
+      // Build received items array with expiry dates
+      const receivedItemsArray = Object.entries(receivedItems).map(([itemId, data]) => ({
         item_id: parseInt(itemId),
-        quantity_received: qty
+        quantity_received: data.quantity_received,
+        expiry_date: data.expiry_date,
+        manufacturing_date: data.manufacturing_date || undefined
       }))
 
       await api.receivePurchaseOrder(purchaseOrder.id, {
@@ -499,13 +512,15 @@ export default function PurchaseOrderDetailPage() {
 
             <div>
               <Label>Item yang Diterima</Label>
-              <div className="mt-2 rounded-lg border">
+              <div className="mt-2 rounded-lg border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50 hover:bg-gray-50">
                       <TableHead className="font-semibold">Item</TableHead>
                       <TableHead className="font-semibold text-right">Dipesan</TableHead>
                       <TableHead className="font-semibold text-right">Diterima</TableHead>
+                      <TableHead className="font-semibold">Tgl. Kadaluarsa</TableHead>
+                      <TableHead className="font-semibold">Tgl. Produksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -521,12 +536,44 @@ export default function PurchaseOrderDetailPage() {
                           <Input
                             type="number"
                             step="0.01"
-                            value={receivedItems[item.id] || 0}
+                            value={receivedItems[item.id]?.quantity_received || 0}
                             onChange={(e) => setReceivedItems({
                               ...receivedItems,
-                              [item.id]: parseFloat(e.target.value) || 0
+                              [item.id]: {
+                                ...receivedItems[item.id],
+                                quantity_received: parseFloat(e.target.value) || 0
+                              }
                             })}
                             className="w-32 ml-auto"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="date"
+                            value={receivedItems[item.id]?.expiry_date || ''}
+                            onChange={(e) => setReceivedItems({
+                              ...receivedItems,
+                              [item.id]: {
+                                ...receivedItems[item.id],
+                                expiry_date: e.target.value
+                              }
+                            })}
+                            className="w-40"
+                            required
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="date"
+                            value={receivedItems[item.id]?.manufacturing_date || ''}
+                            onChange={(e) => setReceivedItems({
+                              ...receivedItems,
+                              [item.id]: {
+                                ...receivedItems[item.id],
+                                manufacturing_date: e.target.value
+                              }
+                            })}
+                            className="w-40"
                           />
                         </TableCell>
                       </TableRow>
@@ -534,6 +581,9 @@ export default function PurchaseOrderDetailPage() {
                   </TableBody>
                 </Table>
               </div>
+              <p className="text-sm text-gray-500 mt-2">
+                * Tanggal kadaluarsa wajib diisi untuk setiap item
+              </p>
             </div>
           </div>
 

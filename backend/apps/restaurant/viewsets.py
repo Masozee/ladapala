@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, date
 from decimal import Decimal
 from .models import (
     Restaurant, Branch, Staff,
-    Category, Product, Inventory, InventoryTransaction,
+    Category, Product, Inventory, InventoryTransaction, InventoryBatch,
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
     Promotion, Schedule, Report, CashierSession,
@@ -19,7 +19,7 @@ from .models import (
 from .serializers import (
     RestaurantSerializer, BranchSerializer, StaffSerializer,
     CategorySerializer, ProductSerializer, InventorySerializer,
-    InventoryTransactionSerializer, OrderSerializer, OrderCreateSerializer,
+    InventoryTransactionSerializer, InventoryBatchSerializer, OrderSerializer, OrderCreateSerializer,
     OrderItemSerializer, PaymentSerializer, TableSerializer,
     KitchenOrderSerializer, KitchenOrderItemSerializer,
     PromotionSerializer, ScheduleSerializer, ReportSerializer,
@@ -172,12 +172,12 @@ class InventoryTransactionViewSet(viewsets.ModelViewSet):
     serializer_class = InventoryTransactionSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['inventory', 'transaction_type']
+    filterset_fields = ['inventory', 'transaction_type', 'batch_number']
     ordering = ['-created_at']
-    
+
     def perform_create(self, serializer):
         transaction = serializer.save(performed_by=self.request.user)
-        
+
         inventory = transaction.inventory
         if transaction.transaction_type == 'IN':
             inventory.quantity += transaction.quantity
@@ -185,8 +185,113 @@ class InventoryTransactionViewSet(viewsets.ModelViewSet):
             inventory.quantity -= transaction.quantity
         elif transaction.transaction_type == 'ADJUST':
             inventory.quantity = transaction.quantity
-        
+
         inventory.save()
+
+
+class InventoryBatchViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing inventory batches with expiry tracking.
+
+    Endpoints:
+    - list: GET /api/inventory-batches/ - List all batches
+    - expiring: GET /api/inventory-batches/expiring/ - Get batches expiring soon (within 30 days)
+    - expired: GET /api/inventory-batches/expired/ - Get expired batches
+    - dispose: POST /api/inventory-batches/{id}/dispose/ - Mark batch as disposed
+    """
+    queryset = InventoryBatch.objects.all()
+    serializer_class = InventoryBatchSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['batch_number', 'inventory__name']
+    filterset_fields = ['inventory', 'status', 'purchase_order']
+    ordering_fields = ['expiry_date', 'created_at', 'quantity_remaining']
+    ordering = ['expiry_date']  # FIFO ordering by default
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.select_related('inventory', 'purchase_order', 'disposed_by')
+
+    @action(detail=False, methods=['get'])
+    def expiring(self, request):
+        """Get batches expiring within 30 days"""
+        from datetime import date, timedelta
+        threshold_date = date.today() + timedelta(days=30)
+
+        expiring_batches = self.get_queryset().filter(
+            status='ACTIVE',
+            quantity_remaining__gt=0,
+            expiry_date__lte=threshold_date,
+            expiry_date__gte=date.today()
+        ).order_by('expiry_date')
+
+        serializer = self.get_serializer(expiring_batches, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def expired(self, request):
+        """Get expired batches"""
+        from datetime import date
+
+        expired_batches = self.get_queryset().filter(
+            expiry_date__lt=date.today()
+        ).exclude(status='DISPOSED').order_by('expiry_date')
+
+        serializer = self.get_serializer(expired_batches, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def dispose(self, request, pk=None):
+        """
+        Mark a batch as disposed
+
+        Request body:
+        {
+            "disposal_method": "WASTE",  // WASTE, DONATED, RETURNED
+            "disposal_notes": "Expired items"
+        }
+        """
+        batch = self.get_object()
+
+        if batch.status == 'DISPOSED':
+            return Response(
+                {'error': 'Batch is already disposed'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        disposal_method = request.data.get('disposal_method', 'WASTE')
+        disposal_notes = request.data.get('disposal_notes', '')
+
+        # Create waste transaction if not already empty
+        if batch.quantity_remaining > 0:
+            InventoryTransaction.objects.create(
+                inventory=batch.inventory,
+                transaction_type='WASTE',
+                quantity=batch.quantity_remaining,
+                unit_cost=batch.unit_cost,
+                reference_number=batch.batch_number,
+                batch_number=batch.batch_number,
+                performed_by=request.user,
+                notes=f'Disposal: {disposal_method} - {disposal_notes}'
+            )
+
+            # Update inventory quantity
+            batch.inventory.quantity -= batch.quantity_remaining
+
+        # Mark batch as disposed
+        batch.status = 'DISPOSED'
+        batch.quantity_remaining = 0
+        batch.disposed_at = timezone.now()
+        batch.disposed_by = request.user
+        batch.disposal_method = disposal_method
+        batch.disposal_notes = disposal_notes
+        batch.save()
+
+        # Update inventory earliest_expiry_date
+        batch.inventory.save()
+
+        serializer = self.get_serializer(batch)
+        return Response(serializer.data)
 
 
 class TableViewSet(viewsets.ModelViewSet):
@@ -1349,13 +1454,18 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def receive(self, request, pk=None):
         """
-        Mark purchase order as received and create inventory transactions
+        Mark purchase order as received and create inventory transactions with batch tracking
 
-        Request body (optional):
+        Request body:
         {
             "actual_delivery_date": "2024-01-15",
             "received_items": [
-                {"item_id": 1, "quantity_received": 50}
+                {
+                    "item_id": 1,
+                    "quantity_received": 50,
+                    "expiry_date": "2024-12-31",
+                    "manufacturing_date": "2024-01-01"  // optional
+                }
             ]
         }
         """
@@ -1379,28 +1489,118 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         actual_delivery_date = request.data.get('actual_delivery_date', timezone.now().date())
         received_items = request.data.get('received_items', [])
 
-        # Create inventory transactions for each item
-        for po_item in purchase_order.items.all():
-            # Check if specific quantity was provided
-            quantity_received = po_item.quantity
-            if received_items and isinstance(received_items, list):
-                for received in received_items:
-                    if isinstance(received, dict) and received.get('item_id') == po_item.id:
-                        quantity_received = Decimal(str(received.get('quantity_received', po_item.quantity)))
-                        break
+        if not received_items:
+            return Response(
+                {'error': 'received_items is required with expiry dates for each item'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-            # Create inventory transaction
+        from .models import InventoryBatch
+        from datetime import datetime
+
+        # Create inventory transactions and batches for each item
+        for po_item in purchase_order.items.all():
+            # Find received item data
+            received_data = None
+            for received in received_items:
+                if isinstance(received, dict) and received.get('item_id') == po_item.id:
+                    received_data = received
+                    break
+
+            if not received_data:
+                return Response(
+                    {'error': f'Missing received data for item {po_item.inventory_item.name}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            quantity_received = Decimal(str(received_data.get('quantity_received', po_item.quantity)))
+            expiry_date_str = received_data.get('expiry_date')
+            manufacturing_date_str = received_data.get('manufacturing_date')
+
+            if not expiry_date_str:
+                return Response(
+                    {'error': f'expiry_date is required for {po_item.inventory_item.name}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Parse dates
+            try:
+                expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': f'Invalid expiry_date format for {po_item.inventory_item.name}. Use YYYY-MM-DD'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            manufacturing_date = None
+            if manufacturing_date_str:
+                try:
+                    manufacturing_date = datetime.strptime(manufacturing_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    return Response(
+                        {'error': f'Invalid manufacturing_date format for {po_item.inventory_item.name}. Use YYYY-MM-DD'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # Generate batch number: INV-{inventory_id}-{date}-{seq}
+            date_str = timezone.now().strftime('%Y%m%d')
+            last_batch = InventoryBatch.objects.filter(
+                batch_number__startswith=f'BATCH-{po_item.inventory_item.id}-{date_str}'
+            ).order_by('-batch_number').first()
+
+            if last_batch:
+                last_seq = int(last_batch.batch_number.split('-')[-1])
+                new_seq = last_seq + 1
+            else:
+                new_seq = 1
+
+            batch_number = f'BATCH-{po_item.inventory_item.id}-{date_str}-{new_seq:03d}'
+
+            # Create inventory batch
+            batch = InventoryBatch.objects.create(
+                inventory=po_item.inventory_item,
+                batch_number=batch_number,
+                quantity_remaining=quantity_received,
+                original_quantity=quantity_received,
+                expiry_date=expiry_date,
+                manufacturing_date=manufacturing_date,
+                purchase_order=purchase_order,
+                unit_cost=po_item.unit_price,
+                status='ACTIVE'
+            )
+
+            # Create inventory transaction with batch info
             InventoryTransaction.objects.create(
                 inventory=po_item.inventory_item,
                 transaction_type='IN',
                 quantity=quantity_received,
                 unit_cost=po_item.unit_price,
                 reference_number=purchase_order.po_number,
+                batch_number=batch_number,
+                expiry_date=expiry_date,
+                manufacturing_date=manufacturing_date,
                 notes=f'Received from PO {purchase_order.po_number} - Supplier: {purchase_order.supplier_name}'
             )
 
             # Update inventory quantity
             po_item.inventory_item.quantity += quantity_received
+
+            # Update earliest expiry date for this inventory item
+            earliest_batch = InventoryBatch.objects.filter(
+                inventory=po_item.inventory_item,
+                status='ACTIVE',
+                quantity_remaining__gt=0
+            ).order_by('expiry_date').first()
+
+            if earliest_batch:
+                po_item.inventory_item.earliest_expiry_date = earliest_batch.expiry_date
+                # Check if any batch is expiring within 30 days
+                days_until_expiry = (earliest_batch.expiry_date - date.today()).days
+                po_item.inventory_item.has_expiring_items = days_until_expiry <= 30
+            else:
+                po_item.inventory_item.earliest_expiry_date = None
+                po_item.inventory_item.has_expiring_items = False
+
             po_item.inventory_item.save()
 
         purchase_order.status = 'RECEIVED'
