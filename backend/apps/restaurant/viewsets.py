@@ -328,7 +328,19 @@ class PaymentViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     
     def perform_create(self, serializer):
-        payment = serializer.save(processed_by=self.request.user.staff)
+        # Get active cashier session for the current user
+        from .models import CashierSession
+        staff = self.request.user.staff
+        active_session = CashierSession.objects.filter(
+            cashier=staff,
+            status='OPEN'
+        ).first()
+
+        # Save payment with processed_by and cashier_session
+        payment = serializer.save(
+            processed_by=staff,
+            cashier_session=active_session
+        )
 
         if payment.status == 'COMPLETED':
             order = payment.order
