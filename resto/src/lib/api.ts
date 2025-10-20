@@ -703,6 +703,13 @@ class ApiClient {
     });
   }
 
+  async voidPayment(paymentId: number, reason: string): Promise<{ message: string; payment_id: number; transaction_id: string; order_status: string }> {
+    return this.fetch(`/payments/${paymentId}/void/`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
   // Authentication
   async getCsrfCookie(): Promise<void> {
     // Request CSRF cookie from backend

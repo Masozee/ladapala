@@ -404,6 +404,78 @@ class PaymentViewSet(viewsets.ModelViewSet):
                     # Product doesn't have a recipe, skip ingredient deduction
                     pass
 
+    @action(detail=True, methods=['post'])
+    def void(self, request, pk=None):
+        """
+        Void a payment transaction
+        - Only MANAGER or ADMIN can void
+        - Only COMPLETED payments can be voided
+        - Updates payment status to REFUNDED
+        - Reverts order status back to COMPLETED
+        - Creates audit log entry
+        """
+        payment = self.get_object()
+        staff = request.user.staff
+
+        # Authorization check - only MANAGER or ADMIN
+        if staff.role not in ['MANAGER', 'ADMIN']:
+            return Response(
+                {'error': 'Only managers and admins can void payments'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Only COMPLETED payments can be voided
+        if payment.status != 'COMPLETED':
+            return Response(
+                {'error': f'Only COMPLETED payments can be voided. Current status: {payment.status}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Void reason is required
+        void_reason = request.data.get('reason', '').strip()
+        if not void_reason:
+            return Response(
+                {'error': 'Void reason is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update payment status to REFUNDED
+        payment.status = 'REFUNDED'
+        payment.void_reason = void_reason
+        payment.voided_by = staff
+        payment.voided_at = timezone.now()
+        payment.save()
+
+        # Revert order status back to COMPLETED (ready for new payment)
+        order = payment.order
+        order.status = 'COMPLETED'
+        order.save()
+
+        # Create audit log if payment had cashier session
+        if payment.cashier_session:
+            from .models import SessionAuditLog
+            SessionAuditLog.objects.create(
+                cashier_session=payment.cashier_session,
+                event_type='PAYMENT_VOIDED',
+                event_data={
+                    'payment_id': payment.id,
+                    'transaction_id': payment.transaction_id,
+                    'amount': str(payment.amount),
+                    'payment_method': payment.payment_method,
+                    'order_number': order.order_number,
+                    'voided_by': staff.user.get_full_name() or staff.user.email,
+                    'void_reason': void_reason,
+                },
+                performed_by=staff
+            )
+
+        return Response({
+            'message': 'Payment voided successfully',
+            'payment_id': payment.id,
+            'transaction_id': payment.transaction_id,
+            'order_status': order.status
+        })
+
 
 class KitchenOrderViewSet(viewsets.ModelViewSet):
     queryset = KitchenOrder.objects.all()

@@ -6,10 +6,15 @@ import { CreditCardIcon, SmartPhone01Icon, DollarCircleIcon, Invoice01Icon, Add0
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { api, type Order } from "@/lib/api"
 import { Receipt, type ReceiptData } from "@/components/receipt"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function TransactionPage() {
+  const { staff } = useAuth()
   const [pendingOrders, setPendingOrders] = useState<Order[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "qris">("cash")
@@ -19,6 +24,11 @@ export default function TransactionPage() {
   const [loading, setLoading] = useState(true)
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
   const [shouldPrint, setShouldPrint] = useState(false)
+
+  // Void transaction state
+  const [showVoidDialog, setShowVoidDialog] = useState(false)
+  const [voidReason, setVoidReason] = useState("")
+  const [isVoiding, setIsVoiding] = useState(false)
 
   useEffect(() => {
     // Initial fetch with loading state
@@ -226,6 +236,46 @@ export default function TransactionPage() {
       alert("Gagal memproses pembayaran. Silakan coba lagi.")
     }
   }
+
+  // Handle void payment
+  const handleVoidPayment = async () => {
+    if (!selectedOrder || !selectedOrder.payments || selectedOrder.payments.length === 0) {
+      alert("Tidak ada pembayaran yang dapat di-void")
+      return
+    }
+
+    if (!voidReason.trim()) {
+      alert("Alasan void harus diisi!")
+      return
+    }
+
+    const completedPayment = selectedOrder.payments.find((p: any) => p.status === 'COMPLETED')
+    if (!completedPayment) {
+      alert("Tidak ada pembayaran yang completed untuk di-void")
+      return
+    }
+
+    try {
+      setIsVoiding(true)
+      await api.voidPayment(completedPayment.id, voidReason)
+
+      alert("Pembayaran berhasil di-void!")
+      setShowVoidDialog(false)
+      setVoidReason("")
+
+      // Refresh order list
+      await fetchPendingOrders(false)
+    } catch (error: any) {
+      console.error('Void error:', error)
+      alert("Gagal void pembayaran: " + (error?.message || "Unknown error"))
+    } finally {
+      setIsVoiding(false)
+    }
+  }
+
+  // Check if order has completed payment (can be voided)
+  const hasCompletedPayment = selectedOrder?.payments?.some((p: any) => p.status === 'COMPLETED')
+  const canVoid = hasCompletedPayment && staff?.role && ['MANAGER', 'ADMIN'].includes(staff.role)
 
   if (loading) {
     return (
@@ -652,20 +702,34 @@ export default function TransactionPage() {
         )}
 
         {/* Process Payment Button */}
-        <Button
-          onClick={handlePayment}
-          disabled={
-            !selectedOrder ||
-            selectedOrder.items.length === 0 ||
-            !customerName.trim() ||
-            (paymentMethod === "cash" && cashReceived < total) ||
-            selectedOrder.status !== 'COMPLETED'
-          }
-          className="w-full h-14 rounded bg-green-600 hover:bg-green-700 text-white text-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          <HugeiconsIcon icon={Invoice01Icon} size={32} strokeWidth={2} className="mr-2" />
-          {selectedOrder && selectedOrder.status === 'COMPLETED' ? 'BAYAR' : 'BELUM DIANTAR'}
-        </Button>
+        <div className="space-y-2">
+          <Button
+            onClick={handlePayment}
+            disabled={
+              !selectedOrder ||
+              selectedOrder.items.length === 0 ||
+              !customerName.trim() ||
+              (paymentMethod === "cash" && cashReceived < total) ||
+              selectedOrder.status !== 'COMPLETED'
+            }
+            className="w-full h-14 rounded bg-green-600 hover:bg-green-700 text-white text-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            <HugeiconsIcon icon={Invoice01Icon} size={32} strokeWidth={2} className="mr-2" />
+            {selectedOrder && selectedOrder.status === 'COMPLETED' ? 'BAYAR' : 'BELUM DIANTAR'}
+          </Button>
+
+          {/* Void Payment Button - Only for MANAGER/ADMIN */}
+          {canVoid && (
+            <Button
+              onClick={() => setShowVoidDialog(true)}
+              variant="outline"
+              className="w-full border-red-600 text-red-600 hover:bg-red-50"
+            >
+              <HugeiconsIcon icon={Delete01Icon} size={20} strokeWidth={2} className="mr-2" />
+              Void Pembayaran
+            </Button>
+          )}
+        </div>
           </div>
 
       {/* Success Modal */}
@@ -696,6 +760,83 @@ export default function TransactionPage() {
           }}
         />
       )}
+
+      {/* Void Payment Dialog */}
+      <Dialog open={showVoidDialog} onOpenChange={setShowVoidDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">⚠️ Void Pembayaran</DialogTitle>
+            <DialogDescription>
+              Tindakan ini akan membatalkan pembayaran yang sudah dilakukan. Pesanan akan kembali ke status menunggu pembayaran.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {selectedOrder && (
+              <div className="bg-gray-50 p-4 rounded space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">No. Pesanan:</span>
+                  <span className="font-semibold">{selectedOrder.order_number}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Total:</span>
+                  <span className="font-semibold">Rp {total.toLocaleString('id-ID')}</span>
+                </div>
+                {selectedOrder.payments && selectedOrder.payments.length > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Metode:</span>
+                    <span className="font-semibold">
+                      {selectedOrder.payments.find((p: any) => p.status === 'COMPLETED')?.payment_method}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="void-reason" className="text-red-600 font-semibold">
+                Alasan Void (Wajib) *
+              </Label>
+              <Textarea
+                id="void-reason"
+                value={voidReason}
+                onChange={(e) => setVoidReason(e.target.value)}
+                placeholder="Contoh: Kesalahan input pembayaran, customer request refund, dll"
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+
+            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3">
+              <p className="text-xs text-yellow-800">
+                <strong>Perhatian:</strong> Tindakan void akan tercatat dalam audit log dan tidak dapat dibatalkan.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowVoidDialog(false)
+                setVoidReason("")
+              }}
+              disabled={isVoiding}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              onClick={handleVoidPayment}
+              disabled={!voidReason.trim() || isVoiding}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isVoiding ? "Memproses..." : "Ya, Void Pembayaran"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   )

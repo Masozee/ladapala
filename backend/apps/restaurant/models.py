@@ -441,6 +441,12 @@ class Payment(models.Model):
     processed_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True)
     cashier_session = models.ForeignKey('CashierSession', on_delete=models.SET_NULL, null=True, blank=True,
                                        related_name='payments')
+
+    # Void transaction fields
+    void_reason = models.TextField(blank=True)
+    voided_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, related_name='voided_payments')
+    voided_at = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
