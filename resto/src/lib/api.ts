@@ -533,6 +533,31 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+
+        // Handle Django validation errors
+        if (errorData.detail) {
+          throw new Error(errorData.detail);
+        }
+
+        // Handle field-specific errors
+        if (errorData.non_field_errors) {
+          throw new Error(errorData.non_field_errors.join(', '));
+        }
+
+        // Handle multiple field errors
+        const fieldErrors = Object.entries(errorData)
+          .filter(([key]) => key !== 'error')
+          .map(([field, errors]) => {
+            if (Array.isArray(errors)) {
+              return `${field}: ${errors.join(', ')}`;
+            }
+            return `${field}: ${errors}`;
+          });
+
+        if (fieldErrors.length > 0) {
+          throw new Error(fieldErrors.join('; '));
+        }
+
         throw new Error(errorData.error || `API Error: ${response.status} ${response.statusText}`);
       }
 
