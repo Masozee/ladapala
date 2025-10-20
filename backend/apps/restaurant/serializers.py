@@ -42,7 +42,8 @@ class StaffSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     user_id = serializers.IntegerField(write_only=True)
     branch_name = serializers.CharField(source='branch.name', read_only=True)
-    
+    restaurant_id = serializers.IntegerField(source='branch.restaurant.id', read_only=True)
+
     class Meta:
         model = Staff
         fields = '__all__'

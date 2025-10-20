@@ -90,9 +90,12 @@ export default function RecipePage() {
     name: '',
     category: '',
     price: '',
+    cost: '',
     description: '',
+    preparation_time: '15',
     is_available: true
   })
+  const [menuImage, setMenuImage] = useState<File | null>(null)
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('')
@@ -253,27 +256,42 @@ export default function RecipePage() {
       name: '',
       category: '',
       price: '',
+      cost: '',
       description: '',
+      preparation_time: '15',
       is_available: true
     })
+    setMenuImage(null)
   }
 
   const handleCreateMenu = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       const csrfToken = getCsrfToken()
+      const formData = new FormData()
+
+      // Add all form fields
+      formData.append('name', menuForm.name)
+      formData.append('category', menuForm.category)
+      formData.append('price', menuForm.price)
+      formData.append('cost', menuForm.cost)
+      formData.append('description', menuForm.description)
+      formData.append('preparation_time', menuForm.preparation_time)
+      formData.append('is_available', menuForm.is_available.toString())
+      formData.append('restaurant', staff?.restaurant_id?.toString() || '')
+
+      // Add image if selected
+      if (menuImage) {
+        formData.append('image', menuImage)
+      }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'X-CSRFToken': csrfToken || ''
         },
         credentials: 'include',
-        body: JSON.stringify({
-          ...menuForm,
-          branch: staff?.branch?.id
-        })
+        body: formData
       })
 
       if (!res.ok) {
@@ -813,15 +831,49 @@ export default function RecipePage() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Harga Jual *</Label>
+                      <Input
+                        type="number"
+                        required
+                        value={menuForm.price}
+                        onChange={(e) => setMenuForm({ ...menuForm, price: e.target.value })}
+                        placeholder="25000"
+                      />
+                    </div>
+                    <div>
+                      <Label>Harga Modal *</Label>
+                      <Input
+                        type="number"
+                        required
+                        value={menuForm.cost}
+                        onChange={(e) => setMenuForm({ ...menuForm, cost: e.target.value })}
+                        placeholder="15000"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <Label>Harga *</Label>
+                    <Label>Waktu Persiapan (menit) *</Label>
                     <Input
                       type="number"
                       required
-                      value={menuForm.price}
-                      onChange={(e) => setMenuForm({ ...menuForm, price: e.target.value })}
-                      placeholder="25000"
+                      value={menuForm.preparation_time}
+                      onChange={(e) => setMenuForm({ ...menuForm, preparation_time: e.target.value })}
+                      placeholder="15"
                     />
+                  </div>
+
+                  <div>
+                    <Label>Gambar Menu</Label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setMenuImage(e.target.files?.[0] || null)}
+                      className="cursor-pointer"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG (Max 5MB)</p>
                   </div>
 
                   <div>

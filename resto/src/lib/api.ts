@@ -127,6 +127,7 @@ export interface Staff {
     id: number;
     name: string;
   };
+  restaurant_id: number;
   phone: string;
   is_active: boolean;
   user: {
