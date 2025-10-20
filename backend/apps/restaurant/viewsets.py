@@ -1618,3 +1618,27 @@ class VendorViewSet(viewsets.ViewSet):
         serializer = VendorDetailSerializer(vendor_detail)
         return Response(serializer.data)
 
+
+class OrderItemViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet for order items - read only for analytics"""
+    queryset = OrderItem.objects.all()
+    serializer_class = OrderItemSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['product', 'order__status']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        """Filter by product if provided"""
+        queryset = super().get_queryset()
+        product_id = self.request.query_params.get('product')
+
+        if product_id:
+            queryset = queryset.filter(product_id=product_id)
+
+        # Join with order to get order details
+        queryset = queryset.select_related('order', 'product')
+
+        return queryset
+

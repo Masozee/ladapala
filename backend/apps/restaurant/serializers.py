@@ -103,7 +103,20 @@ class TableSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
     subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    
+    order_number = serializers.CharField(source='order.order_number', read_only=True)
+    order_status = serializers.CharField(source='order.status', read_only=True)
+    payment_status = serializers.SerializerMethodField()
+    total = serializers.DecimalField(source='subtotal', max_digits=10, decimal_places=2, read_only=True)
+    price = serializers.DecimalField(source='unit_price', max_digits=10, decimal_places=2, read_only=True)
+
+    def get_payment_status(self, obj):
+        """Get payment status from order's payments"""
+        if hasattr(obj, 'order') and obj.order:
+            payments = obj.order.payments.filter(status='COMPLETED')
+            if payments.exists():
+                return 'PAID'
+        return 'UNPAID'
+
     class Meta:
         model = OrderItem
         fields = '__all__'
