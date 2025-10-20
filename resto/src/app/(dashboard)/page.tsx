@@ -60,16 +60,35 @@ export default function HomePage() {
   const [managerPassword, setManagerPassword] = useState("")
   const [isVoiding, setIsVoiding] = useState(false)
 
+  // Expiry tracking state
+  const [expiringCount, setExpiringCount] = useState(0)
+  const [expiredCount, setExpiredCount] = useState(0)
+
   useEffect(() => {
     fetchData()
+    fetchExpiryData()
 
     // Auto-refresh every 30 seconds to show latest data
     const interval = setInterval(() => {
       fetchData()
+      fetchExpiryData()
     }, 30000)
 
     return () => clearInterval(interval)
   }, [])
+
+  const fetchExpiryData = async () => {
+    try {
+      const [expiring, expired] = await Promise.all([
+        api.getExpiringBatches(),
+        api.getExpiredBatches()
+      ])
+      setExpiringCount(expiring.length)
+      setExpiredCount(expired.length)
+    } catch (error) {
+      console.error('Error fetching expiry data:', error)
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -702,6 +721,57 @@ export default function HomePage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Expiry Alert Card */}
+        {(expiringCount > 0 || expiredCount > 0) && (
+          <Card className="rounded-lg border-orange-200 bg-orange-50 shadow-none">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-700">
+                <HugeiconsIcon icon={AlertCircleIcon} size={20} strokeWidth={2} />
+                Peringatan Kadaluarsa
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {expiredCount > 0 && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium text-red-700">Sudah Kadaluarsa</div>
+                      <div className="text-sm text-red-600">Perlu segera dibuang</div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-2xl font-bold text-red-700">
+                        {expiredCount}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {expiringCount > 0 && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium text-orange-700">Segera Kadaluarsa</div>
+                      <div className="text-sm text-orange-600">Dalam 30 hari</div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-2xl font-bold text-orange-700">
+                        {expiringCount}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                <div className="pt-2 border-t border-orange-200">
+                  <a
+                    href="/office/stock/expiry"
+                    className="text-sm font-medium text-orange-700 hover:text-orange-800 flex items-center gap-1"
+                  >
+                    Lihat Detail
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2} />
+                  </a>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
         </TabsContent>
 

@@ -384,6 +384,7 @@ export default function ItemMasterPage() {
                   <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Stok</TableHead>
                   <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Min. Stok</TableHead>
                   <TableHead className="font-semibold text-gray-900 py-4 px-6">Lokasi</TableHead>
+                  <TableHead className="font-semibold text-gray-900 text-center py-4 px-6">Kadaluarsa</TableHead>
                   <TableHead className="font-semibold text-gray-900 text-center py-4 px-6">Status</TableHead>
                   {canModify && <TableHead className="font-semibold text-gray-900 text-center py-4 px-6 w-20">Aksi</TableHead>}
                 </TableRow>
@@ -406,6 +407,28 @@ export default function ItemMasterPage() {
                       <Badge variant={item.location === 'WAREHOUSE' ? 'default' : 'secondary'}>
                         {item.location === 'WAREHOUSE' ? 'Gudang' : 'Dapur'}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-center py-4 px-6">
+                      {item.earliest_expiry_date ? (
+                        (() => {
+                          const expiryDate = new Date(item.earliest_expiry_date)
+                          const today = new Date()
+                          const diffTime = expiryDate.getTime() - today.getTime()
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+                          if (diffDays < 0) {
+                            return <Badge variant="destructive">Kadaluarsa</Badge>
+                          } else if (diffDays <= 7) {
+                            return <Badge className="bg-orange-500 hover:bg-orange-600">{diffDays} hari</Badge>
+                          } else if (diffDays <= 14) {
+                            return <Badge className="bg-yellow-500 hover:bg-yellow-600">{diffDays} hari</Badge>
+                          } else {
+                            return <Badge className="bg-green-500 hover:bg-green-600">{expiryDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</Badge>
+                          }
+                        })()
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-center py-4 px-6">
                       {item.needs_restock ? (

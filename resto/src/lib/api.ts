@@ -272,6 +272,8 @@ export interface Inventory {
   average_cost: string;
   total_value: string;
   needs_restock: boolean;
+  earliest_expiry_date?: string;
+  has_expiring_items: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -382,6 +384,35 @@ export interface InventoryTransactionCreate {
   unit_cost: string;
   reference_number?: string;
   notes?: string;
+}
+
+export interface InventoryBatch {
+  id: number;
+  inventory: number;
+  inventory_name: string;
+  inventory_unit: string;
+  batch_number: string;
+  quantity_remaining: string;
+  original_quantity: string;
+  expiry_date: string;
+  manufacturing_date?: string;
+  purchase_order?: number;
+  po_number?: string;
+  received_date: string;
+  unit_cost: string;
+  status: 'ACTIVE' | 'EXPIRING' | 'EXPIRED' | 'DISPOSED';
+  disposed_at?: string;
+  disposed_by?: number;
+  disposed_by_name?: string;
+  disposal_method?: string;
+  disposal_notes?: string;
+  days_until_expiry: number;
+  is_expiring_soon: boolean;
+  is_expired: boolean;
+  is_active: boolean;
+  usage_percentage: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface StockTransfer {
@@ -979,6 +1010,38 @@ class ApiClient {
 
   async createInventoryTransaction(data: InventoryTransactionCreate): Promise<InventoryTransaction> {
     return this.fetch('/inventory-transactions/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Inventory Batches
+  async getInventoryBatches(params?: {
+    inventory?: number;
+    status?: string;
+    purchase_order?: number;
+    ordering?: string;
+  }): Promise<{ count: number; results: InventoryBatch[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.inventory) searchParams.set('inventory', params.inventory.toString());
+    if (params?.status) searchParams.set('status', params.status);
+    if (params?.purchase_order) searchParams.set('purchase_order', params.purchase_order.toString());
+    if (params?.ordering) searchParams.set('ordering', params.ordering);
+
+    const query = searchParams.toString();
+    return this.fetch(`/inventory-batches/${query ? `?${query}` : ''}`);
+  }
+
+  async getExpiringBatches(): Promise<InventoryBatch[]> {
+    return this.fetch('/inventory-batches/expiring/');
+  }
+
+  async getExpiredBatches(): Promise<InventoryBatch[]> {
+    return this.fetch('/inventory-batches/expired/');
+  }
+
+  async disposeBatch(id: number, data: { disposal_method: string; disposal_notes?: string }): Promise<InventoryBatch> {
+    return this.fetch(`/inventory-batches/${id}/dispose/`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
