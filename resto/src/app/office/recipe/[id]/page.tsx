@@ -78,6 +78,52 @@ export default function RecipeDetailPage() {
     }
   }
 
+  const handleEdit = () => {
+    // Navigate to edit page (you can create this later)
+    router.push(`/office/recipe/${params.id}/edit`)
+  }
+
+  const handleDelete = async () => {
+    if (!confirm('Yakin ingin menghapus resep ini? Data tidak dapat dikembalikan.')) {
+      return
+    }
+
+    try {
+      const csrfToken = getCsrfToken()
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipes/${params.id}/`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'X-CSRFToken': csrfToken || ''
+        }
+      })
+
+      if (res.ok || res.status === 204) {
+        alert('Resep berhasil dihapus')
+        router.push('/office/recipe')
+      } else {
+        const error = await res.json().catch(() => ({}))
+        alert('Gagal menghapus resep: ' + (error.detail || error.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Error deleting recipe:', error)
+      alert('Terjadi kesalahan saat menghapus resep')
+    }
+  }
+
+  const getCsrfToken = (): string | null => {
+    if (typeof document === 'undefined') return null
+    const name = 'csrftoken'
+    const cookies = document.cookie.split(';')
+    for (let cookie of cookies) {
+      cookie = cookie.trim()
+      if (cookie.startsWith(name + '=')) {
+        return decodeURIComponent(cookie.substring(name.length + 1))
+      }
+    }
+    return null
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -112,11 +158,15 @@ export default function RecipeDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="rounded">
+          <Button variant="outline" className="rounded" onClick={handleEdit}>
             <HugeiconsIcon icon={Edit01Icon} size={16} strokeWidth={2} className="mr-2" />
             Edit Resep
           </Button>
-          <Button variant="outline" className="rounded text-red-600 border-red-600 hover:bg-red-50">
+          <Button
+            variant="outline"
+            className="rounded text-red-600 border-red-600 hover:bg-red-50"
+            onClick={handleDelete}
+          >
             <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} className="mr-2" />
             Hapus
           </Button>
