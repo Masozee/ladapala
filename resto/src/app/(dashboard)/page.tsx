@@ -144,17 +144,22 @@ export default function HomePage() {
       // If there's an active session, filter by session
       if (activeSession) {
         url += `&cashier_session=${activeSession.id}`
+        console.log('Fetching transactions for session:', activeSession.id)
       } else {
         // If no active session, show today's transactions
         const today = new Date().toISOString().split('T')[0]
         url += `&created_at__gte=${today}`
+        console.log('Fetching transactions for today:', today)
       }
+
+      console.log('Transaction API URL:', url)
 
       const response = await fetch(url, {
         credentials: 'include'
       })
       if (response.ok) {
         const data = await response.json()
+        console.log('Transactions received:', data.count || data.results?.length || 0)
         setTransactions(data.results || [])
       }
     } catch (error) {

@@ -324,7 +324,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['order', 'payment_method', 'status']
+    filterset_fields = ['order', 'payment_method', 'status', 'cashier_session']
     ordering = ['-created_at']
     
     def perform_create(self, serializer):
