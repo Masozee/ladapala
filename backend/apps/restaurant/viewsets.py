@@ -416,6 +416,17 @@ class PaymentViewSet(viewsets.ModelViewSet):
                     # Product doesn't have a recipe, skip ingredient deduction
                     pass
 
+    @action(detail=False, methods=['get'])
+    def today(self, request):
+        """
+        Get today's payments
+        """
+        today = timezone.now().date()
+        payments = self.queryset.filter(created_at__date=today).order_by('-created_at')
+
+        serializer = self.get_serializer(payments, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['post'])
     def void(self, request, pk=None):
         """

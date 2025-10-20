@@ -250,12 +250,38 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
 class PaymentSerializer(serializers.ModelSerializer):
     order_number = serializers.CharField(source='order.order_number', read_only=True)
-    processed_by_name = serializers.CharField(source='processed_by.user.username', read_only=True)
-    
+    processed_by_name = serializers.SerializerMethodField()
+    cashier_session = serializers.SerializerMethodField()
+
     class Meta:
         model = Payment
         fields = '__all__'
         read_only_fields = ['transaction_id', 'created_at']
+
+    def get_processed_by_name(self, obj):
+        if obj.processed_by and obj.processed_by.user:
+            user = obj.processed_by.user
+            if user.first_name and user.last_name:
+                return f"{user.first_name} {user.last_name}"
+            return user.email
+        return None
+
+    def get_cashier_session(self, obj):
+        if obj.cashier_session:
+            cashier_name = None
+            if obj.cashier_session.cashier and obj.cashier_session.cashier.user:
+                user = obj.cashier_session.cashier.user
+                if user.first_name and user.last_name:
+                    cashier_name = f"{user.first_name} {user.last_name}"
+                else:
+                    cashier_name = user.email
+
+            return {
+                'id': obj.cashier_session.id,
+                'shift_type': obj.cashier_session.shift_type,
+                'cashier_name': cashier_name
+            }
+        return None
 
 
 class KitchenOrderItemSerializer(serializers.ModelSerializer):

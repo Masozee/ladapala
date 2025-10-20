@@ -138,20 +138,10 @@ export default function HomePage() {
     try {
       setLoadingTransactions(true)
 
-      // Fetch payments for current session only
-      let url = `${process.env.NEXT_PUBLIC_API_URL}/payments/?ordering=-created_at`
+      // Use backend today endpoint for better filtering
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/payments/today/`
 
-      // If there's an active session, filter by session
-      if (activeSession) {
-        url += `&cashier_session=${activeSession.id}`
-        console.log('Fetching transactions for session:', activeSession.id)
-      } else {
-        // If no active session, show today's transactions
-        const today = new Date().toISOString().split('T')[0]
-        url += `&created_at__gte=${today}`
-        console.log('Fetching transactions for today:', today)
-      }
-
+      console.log('Fetching today\'s transactions from backend')
       console.log('Transaction API URL:', url)
 
       const response = await fetch(url, {
@@ -159,8 +149,8 @@ export default function HomePage() {
       })
       if (response.ok) {
         const data = await response.json()
-        console.log('Transactions received:', data.count || data.results?.length || 0)
-        setTransactions(data.results || [])
+        console.log('Transactions received:', data.length || 0)
+        setTransactions(data || [])
       }
     } catch (error) {
       console.error('Error fetching transactions:', error)
@@ -720,13 +710,10 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                Daftar Transaksi {activeSession && `- Sesi ${activeSession.shift_type}`}
+                Daftar Transaksi Hari Ini
               </CardTitle>
               <p className="text-sm text-gray-500 mt-1">
-                {activeSession
-                  ? `Menampilkan transaksi untuk sesi kasir aktif`
-                  : `Menampilkan transaksi hari ini`
-                }
+                Menampilkan semua transaksi hari ini dari semua sesi
               </p>
             </CardHeader>
             <CardContent>
@@ -746,13 +733,14 @@ export default function HomePage() {
                       <TableHead>Metode</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Kasir</TableHead>
+                      <TableHead>Sesi</TableHead>
                       <TableHead className="text-right">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {transactions.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                        <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                           Belum ada transaksi
                         </TableCell>
                       </TableRow>
@@ -790,6 +778,15 @@ export default function HomePage() {
                           </TableCell>
                           <TableCell className="text-sm">
                             {payment.processed_by_name || '-'}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {payment.cashier_session ? (
+                              <Badge variant="secondary" className="font-normal">
+                                {payment.cashier_session.shift_type}
+                              </Badge>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
                             {payment.status === 'COMPLETED' && (
