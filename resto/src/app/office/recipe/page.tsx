@@ -278,7 +278,11 @@ export default function RecipePage() {
       formData.append('description', menuForm.description)
       formData.append('preparation_time', menuForm.preparation_time)
       formData.append('is_available', menuForm.is_available.toString())
-      formData.append('restaurant', staff?.restaurant_id?.toString() || '')
+
+      // Restaurant has default value (5) in backend, only add if available from staff
+      if (staff?.restaurant_id) {
+        formData.append('restaurant', staff.restaurant_id.toString())
+      }
 
       // Add image if selected
       if (menuImage) {
