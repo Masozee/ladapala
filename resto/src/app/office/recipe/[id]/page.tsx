@@ -6,6 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PackageSentIcon, ChefHatIcon, Time01Icon,
@@ -51,6 +55,15 @@ export default function RecipeDetailPage() {
   const router = useRouter()
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editForm, setEditForm] = useState({
+    serving_size: '',
+    preparation_time: '',
+    cooking_time: '',
+    instructions: '',
+    notes: '',
+    is_active: true
+  })
 
   useEffect(() => {
     if (params.id) {
@@ -79,8 +92,51 @@ export default function RecipeDetailPage() {
   }
 
   const handleEdit = () => {
-    // Navigate to edit page (you can create this later)
-    router.push(`/office/recipe/${params.id}/edit`)
+    if (recipe) {
+      setEditForm({
+        serving_size: recipe.serving_size,
+        preparation_time: recipe.preparation_time?.toString() || '',
+        cooking_time: recipe.cooking_time?.toString() || '',
+        instructions: recipe.instructions,
+        notes: recipe.notes,
+        is_active: recipe.is_active
+      })
+      setIsEditDialogOpen(true)
+    }
+  }
+
+  const handleSaveEdit = async () => {
+    try {
+      const csrfToken = getCsrfToken()
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipes/${params.id}/`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken || ''
+        },
+        body: JSON.stringify({
+          serving_size: editForm.serving_size,
+          preparation_time: editForm.preparation_time ? parseInt(editForm.preparation_time) : null,
+          cooking_time: editForm.cooking_time ? parseInt(editForm.cooking_time) : null,
+          instructions: editForm.instructions,
+          notes: editForm.notes,
+          is_active: editForm.is_active
+        })
+      })
+
+      if (res.ok) {
+        alert('Resep berhasil diupdate')
+        setIsEditDialogOpen(false)
+        fetchRecipe() // Reload recipe data
+      } else {
+        const error = await res.json().catch(() => ({}))
+        alert('Gagal update resep: ' + (error.detail || error.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Error updating recipe:', error)
+      alert('Terjadi kesalahan saat update resep')
+    }
   }
 
   const handleDelete = async () => {
@@ -367,6 +423,92 @@ export default function RecipeDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Resep</DialogTitle>
+            <DialogDescription>
+              Ubah detail resep untuk {recipe?.product_name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Ukuran Porsi</Label>
+                <Input
+                  value={editForm.serving_size}
+                  onChange={(e) => setEditForm({ ...editForm, serving_size: e.target.value })}
+                  placeholder="1"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  value={editForm.is_active.toString()}
+                  onChange={(e) => setEditForm({ ...editForm, is_active: e.target.value === 'true' })}
+                >
+                  <option value="true">Aktif</option>
+                  <option value="false">Nonaktif</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Waktu Persiapan (menit)</Label>
+                <Input
+                  type="number"
+                  value={editForm.preparation_time}
+                  onChange={(e) => setEditForm({ ...editForm, preparation_time: e.target.value })}
+                  placeholder="15"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Waktu Memasak (menit)</Label>
+                <Input
+                  type="number"
+                  value={editForm.cooking_time}
+                  onChange={(e) => setEditForm({ ...editForm, cooking_time: e.target.value })}
+                  placeholder="30"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Instruksi Memasak</Label>
+              <Textarea
+                value={editForm.instructions}
+                onChange={(e) => setEditForm({ ...editForm, instructions: e.target.value })}
+                rows={5}
+                placeholder="Masukkan langkah-langkah memasak..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Catatan</Label>
+              <Textarea
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                rows={3}
+                placeholder="Catatan tambahan (opsional)"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Batal
+            </Button>
+            <Button onClick={handleSaveEdit} className="bg-[#58ff34] hover:bg-[#4de82a] text-black">
+              Simpan Perubahan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
