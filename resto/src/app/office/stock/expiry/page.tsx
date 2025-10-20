@@ -222,11 +222,11 @@ export default function ExpiryManagementPage() {
 
   return (
     <RoleGuard allowedRoles={['ADMIN', 'MANAGER', 'WAREHOUSE']}>
-      <div className="space-y-6 p-6">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Manajemen Kadaluarsa</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-3xl font-bold">Manajemen Kadaluarsa</h1>
+            <p className="text-muted-foreground">
               Pantau dan kelola stok yang segera atau sudah kadaluarsa
             </p>
           </div>
