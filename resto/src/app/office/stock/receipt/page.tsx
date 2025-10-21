@@ -26,6 +26,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import { api, type PurchaseOrder, type InventoryTransaction } from "@/lib/api"
 
 export default function ReceiptPage() {
@@ -36,9 +44,13 @@ export default function ReceiptPage() {
   const [approvedPOs, setApprovedPOs] = useState<PurchaseOrder[]>([])
   const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null)
   const [receiptHistory, setReceiptHistory] = useState<InventoryTransaction[]>([])
-  const [receivedQuantities, setReceivedQuantities] = useState<Record<number, string>>({})
+  const [receivedQuantities, setReceivedQuantities] = useState<Record<number, {
+    quantity_received: string
+    expiry_date: string
+    manufacturing_date: string
+  }>>({})
   const [submitting, setSubmitting] = useState(false)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [infoDialogOpen, setInfoDialogOpen] = useState(false)
 
   useEffect(() => {
@@ -78,9 +90,25 @@ export default function ReceiptPage() {
   }
 
   const initializeReceivedQuantities = (po: PurchaseOrder) => {
-    const quantities: Record<number, string> = {}
+    const quantities: Record<number, {
+      quantity_received: string
+      expiry_date: string
+      manufacturing_date: string
+    }> = {}
+
+    // Default expiry: 6 months from today
+    const defaultExpiryDate = new Date()
+    defaultExpiryDate.setMonth(defaultExpiryDate.getMonth() + 6)
+
+    // Manufacturing date: today
+    const today = new Date()
+
     po.items?.forEach(item => {
-      quantities[item.id] = item.quantity // Default to full quantity
+      quantities[item.id] = {
+        quantity_received: item.quantity, // Default to full quantity
+        expiry_date: defaultExpiryDate.toISOString().split('T')[0],
+        manufacturing_date: today.toISOString().split('T')[0]
+      }
     })
     setReceivedQuantities(quantities)
   }
@@ -93,14 +121,37 @@ export default function ReceiptPage() {
   const handleQuantityChange = (itemId: number, value: string) => {
     setReceivedQuantities(prev => ({
       ...prev,
-      [itemId]: value
+      [itemId]: {
+        ...prev[itemId],
+        quantity_received: value
+      }
+    }))
+  }
+
+  const handleExpiryDateChange = (itemId: number, value: string) => {
+    setReceivedQuantities(prev => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        expiry_date: value
+      }
+    }))
+  }
+
+  const handleManufacturingDateChange = (itemId: number, value: string) => {
+    setReceivedQuantities(prev => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        manufacturing_date: value
+      }
     }))
   }
 
   const getTotalReceivedValue = () => {
     if (!selectedPO) return 0
     return selectedPO.items?.reduce((total, item) => {
-      const receivedQty = parseFloat(receivedQuantities[item.id] || '0')
+      const receivedQty = parseFloat(receivedQuantities[item.id]?.quantity_received || '0')
       const unitPrice = parseFloat(item.unit_price)
       return total + (receivedQty * unitPrice)
     }, 0) || 0
@@ -109,7 +160,7 @@ export default function ReceiptPage() {
   const getReceivedItemsCount = () => {
     if (!selectedPO) return 0
     return selectedPO.items?.filter(item => {
-      const receivedQty = parseFloat(receivedQuantities[item.id] || '0')
+      const receivedQty = parseFloat(receivedQuantities[item.id]?.quantity_received || '0')
       return receivedQty > 0
     }).length || 0
   }
@@ -119,7 +170,7 @@ export default function ReceiptPage() {
 
     // Validate at least one item has quantity > 0
     const hasItems = selectedPO.items?.some(item => {
-      const receivedQty = parseFloat(receivedQuantities[item.id] || '0')
+      const receivedQty = parseFloat(receivedQuantities[item.id]?.quantity_received || '0')
       return receivedQty > 0
     })
 
@@ -134,7 +185,7 @@ export default function ReceiptPage() {
 
     // Validate quantities don't exceed ordered
     const invalidItems = selectedPO.items?.filter(item => {
-      const receivedQty = parseFloat(receivedQuantities[item.id] || '0')
+      const receivedQty = parseFloat(receivedQuantities[item.id]?.quantity_received || '0')
       const orderedQty = parseFloat(item.quantity)
       return receivedQty > orderedQty
     })
@@ -154,12 +205,14 @@ export default function ReceiptPage() {
       // Build received_items array (only items with qty > 0)
       const received_items = selectedPO.items
         ?.filter(item => {
-          const receivedQty = parseFloat(receivedQuantities[item.id] || '0')
+          const receivedQty = parseFloat(receivedQuantities[item.id]?.quantity_received || '0')
           return receivedQty > 0
         })
         .map(item => ({
-          item_id: item.inventory_item,
-          quantity_received: parseFloat(receivedQuantities[item.id])
+          item_id: item.id, // PO item ID, not inventory item ID
+          quantity_received: parseFloat(receivedQuantities[item.id].quantity_received),
+          expiry_date: receivedQuantities[item.id].expiry_date,
+          manufacturing_date: receivedQuantities[item.id].manufacturing_date
         })) || []
 
       await api.receivePurchaseOrder(selectedPO.id, {
@@ -175,7 +228,7 @@ export default function ReceiptPage() {
         description: `${receivedCount} dari ${totalItems} item berhasil diterima. Harga otomatis diupdate dengan moving average.`
       })
 
-      setDialogOpen(false)
+      setSheetOpen(false)
       setSelectedPO(null)
       setReceivedQuantities({})
       fetchApprovedPOs()
@@ -234,6 +287,17 @@ export default function ReceiptPage() {
                       <p className="text-sm">
                         <strong className="text-blue-900">Contoh:</strong> Stok 100 kg @ Rp 10,000 + Terima 50 kg @ Rp 12,000 = 150 kg @ Rp 10,667/kg
                       </p>
+                    </div>
+                    <div className="border-t border-blue-200 my-4 pt-4">
+                      <p className="text-sm text-blue-900 font-semibold mb-2">
+                        Yang Terjadi Saat Menerima PO:
+                      </p>
+                      <ul className="text-sm text-blue-800 space-y-1 ml-4 list-disc">
+                        <li>Menambah stok gudang sesuai qty yang diterima</li>
+                        <li>Update harga rata-rata (cost_per_unit) dengan formula moving average</li>
+                        <li>Mencatat transaksi penerimaan untuk audit trail</li>
+                        <li>Membuat batch baru dengan tanggal kadaluarsa untuk tracking</li>
+                      </ul>
                     </div>
                   </div>
                 </DialogContent>
@@ -312,11 +376,11 @@ export default function ReceiptPage() {
                           <Badge className="bg-green-500 text-white">APPROVED</Badge>
                         </TableCell>
                         <TableCell className="text-center py-4 px-6">
-                          <Dialog open={dialogOpen && selectedPO?.id === po.id} onOpenChange={(open) => {
-                            setDialogOpen(open)
+                          <Sheet open={sheetOpen && selectedPO?.id === po.id} onOpenChange={(open) => {
+                            setSheetOpen(open)
                             if (!open) setSelectedPO(null)
                           }}>
-                            <DialogTrigger asChild>
+                            <SheetTrigger asChild>
                               <Button
                                 size="sm"
                                 className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black"
@@ -325,19 +389,21 @@ export default function ReceiptPage() {
                                 <HugeiconsIcon icon={PackageReceiveIcon} size={16} strokeWidth={2} className="mr-1" />
                                 Terima
                               </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2">
-                                  <HugeiconsIcon icon={PackageReceiveIcon} size={24} strokeWidth={2} className="text-green-600" />
-                                  Terima Purchase Order
-                                </DialogTitle>
-                                <DialogDescription>
-                                  Konfirmasi penerimaan barang dari PO {po.po_number}
-                                </DialogDescription>
-                              </DialogHeader>
+                            </SheetTrigger>
+                            <SheetContent side="right" className="w-7/12 overflow-y-auto p-0">
+                              <div className="sticky top-0 bg-white border-b p-6 z-10">
+                                <SheetHeader>
+                                  <SheetTitle className="flex items-center gap-2">
+                                    <HugeiconsIcon icon={PackageReceiveIcon} size={24} strokeWidth={2} className="text-green-600" />
+                                    Terima Purchase Order
+                                  </SheetTitle>
+                                  <SheetDescription>
+                                    Konfirmasi penerimaan barang dari PO {po.po_number}
+                                  </SheetDescription>
+                                </SheetHeader>
+                              </div>
 
-                              <div className="space-y-4 mt-4">
+                              <div className="space-y-4 p-6">
                                 {/* PO Details */}
                                 <div className="rounded-lg bg-gray-50 p-4 space-y-2 text-sm">
                                   <div className="flex justify-between">
@@ -360,9 +426,9 @@ export default function ReceiptPage() {
 
                                 {/* Items Preview */}
                                 <div>
-                                  <h4 className="font-semibold mb-2">Detail Item - Edit Jumlah Terima</h4>
+                                  <h4 className="font-semibold mb-2">Detail Item - Edit Jumlah Terima & Tanggal Kadaluarsa</h4>
                                   <p className="text-sm text-muted-foreground mb-2">
-                                    Ubah jumlah terima jika ada item yang tidak tersedia atau diterima sebagian
+                                    Ubah jumlah terima, tanggal produksi, dan tanggal kadaluarsa untuk setiap item
                                   </p>
                                   <div className="border rounded-lg overflow-hidden">
                                     <Table>
@@ -371,13 +437,15 @@ export default function ReceiptPage() {
                                           <TableHead className="font-semibold">Item</TableHead>
                                           <TableHead className="font-semibold text-right">Qty Order</TableHead>
                                           <TableHead className="font-semibold text-right">Qty Terima</TableHead>
+                                          <TableHead className="font-semibold">Tgl. Produksi</TableHead>
+                                          <TableHead className="font-semibold">Tgl. Kadaluarsa</TableHead>
                                           <TableHead className="font-semibold text-right">Harga/Unit</TableHead>
                                           <TableHead className="font-semibold text-right">Total</TableHead>
                                         </TableRow>
                                       </TableHeader>
                                       <TableBody>
                                         {po.items?.map((item) => {
-                                          const receivedQty = parseFloat(receivedQuantities[item.id] || '0')
+                                          const receivedQty = parseFloat(receivedQuantities[item.id]?.quantity_received || '0')
                                           const orderedQty = parseFloat(item.quantity)
                                           const unitPrice = parseFloat(item.unit_price)
                                           const isPartial = receivedQty < orderedQty && receivedQty > 0
@@ -395,9 +463,25 @@ export default function ReceiptPage() {
                                                   step="0.01"
                                                   min="0"
                                                   max={item.quantity}
-                                                  value={receivedQuantities[item.id] || ''}
+                                                  value={receivedQuantities[item.id]?.quantity_received || ''}
                                                   onChange={(e) => handleQuantityChange(item.id, e.target.value)}
                                                   className="w-24 text-right"
+                                                />
+                                              </TableCell>
+                                              <TableCell>
+                                                <Input
+                                                  type="date"
+                                                  value={receivedQuantities[item.id]?.manufacturing_date || ''}
+                                                  onChange={(e) => handleManufacturingDateChange(item.id, e.target.value)}
+                                                  className="w-36"
+                                                />
+                                              </TableCell>
+                                              <TableCell>
+                                                <Input
+                                                  type="date"
+                                                  value={receivedQuantities[item.id]?.expiry_date || ''}
+                                                  onChange={(e) => handleExpiryDateChange(item.id, e.target.value)}
+                                                  className="w-36"
                                                 />
                                               </TableCell>
                                               <TableCell className="text-right">
@@ -430,18 +514,6 @@ export default function ReceiptPage() {
                                   </div>
                                 </div>
 
-                                {/* Warning about Moving Average */}
-                                <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-                                  <p className="text-sm text-blue-900">
-                                    <strong>ℹ️ Perhatian:</strong> Menerima PO ini akan:
-                                  </p>
-                                  <ul className="text-sm text-blue-800 mt-2 space-y-1 ml-4 list-disc">
-                                    <li>Menambah stok gudang sesuai qty PO</li>
-                                    <li>Update harga rata-rata (cost_per_unit) dengan formula moving average</li>
-                                    <li>Mencatat transaksi penerimaan untuk audit trail</li>
-                                  </ul>
-                                </div>
-
                                 {/* Action Buttons */}
                                 <div className="flex gap-2 pt-4">
                                   <Button
@@ -449,7 +521,7 @@ export default function ReceiptPage() {
                                     variant="outline"
                                     className="flex-1 rounded"
                                     onClick={() => {
-                                      setDialogOpen(false)
+                                      setSheetOpen(false)
                                       setSelectedPO(null)
                                     }}
                                     disabled={submitting}
@@ -467,8 +539,8 @@ export default function ReceiptPage() {
                                   </Button>
                                 </div>
                               </div>
-                            </DialogContent>
-                          </Dialog>
+                            </SheetContent>
+                          </Sheet>
                         </TableCell>
                       </TableRow>
                     ))}
