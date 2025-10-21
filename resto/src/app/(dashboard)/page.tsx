@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -45,20 +44,6 @@ export default function HomePage() {
   const [recentOrders, setRecentOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSession, setActiveSession] = useState<any>(null)
-  const [activeTab, setActiveTab] = useState("dashboard")
-
-  // Transaction list state
-  const [transactions, setTransactions] = useState<any[]>([])
-  const [loadingTransactions, setLoadingTransactions] = useState(false)
-
-  // Void dialog state
-  const [showVoidDialog, setShowVoidDialog] = useState(false)
-  const [showManagerAuth, setShowManagerAuth] = useState(false)
-  const [selectedPayment, setSelectedPayment] = useState<any>(null)
-  const [voidReason, setVoidReason] = useState("")
-  const [managerEmail, setManagerEmail] = useState("")
-  const [managerPassword, setManagerPassword] = useState("")
-  const [isVoiding, setIsVoiding] = useState(false)
 
   // Expiry tracking state
   const [expiringCount, setExpiringCount] = useState(0)
@@ -153,88 +138,6 @@ export default function HomePage() {
     }
   }
 
-  const fetchTransactions = async () => {
-    try {
-      setLoadingTransactions(true)
-
-      // Use backend today endpoint for better filtering
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/payments/today/`
-
-      console.log('Fetching today\'s transactions from backend')
-      console.log('Transaction API URL:', url)
-
-      const response = await fetch(url, {
-        credentials: 'include'
-      })
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Transactions received:', data.length || 0)
-        setTransactions(data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching transactions:', error)
-    } finally {
-      setLoadingTransactions(false)
-    }
-  }
-
-  // Fetch transactions when switching to transactions tab
-  useEffect(() => {
-    if (activeTab === 'transactions') {
-      fetchTransactions()
-    }
-  }, [activeTab])
-
-  const handleVoidClick = (payment: any) => {
-    setSelectedPayment(payment)
-    setShowManagerAuth(true)
-  }
-
-  const handleManagerAuthSubmit = async () => {
-    try {
-      // Validate manager credentials
-      const response = await api.login(managerEmail, managerPassword)
-
-      if (response.staff?.role && ['MANAGER', 'ADMIN'].includes(response.staff.role)) {
-        // Manager authenticated, show void reason dialog
-        setShowManagerAuth(false)
-        setShowVoidDialog(true)
-        setManagerEmail("")
-        setManagerPassword("")
-      } else {
-        alert("Hanya Manager atau Admin yang dapat melakukan void transaksi")
-      }
-    } catch (error) {
-      console.error('Manager auth error:', error)
-      alert("Email atau password salah")
-    }
-  }
-
-  const handleVoidPayment = async () => {
-    if (!selectedPayment || !voidReason.trim()) {
-      alert("Alasan void harus diisi!")
-      return
-    }
-
-    try {
-      setIsVoiding(true)
-      await api.voidPayment(selectedPayment.id, voidReason)
-
-      alert("Pembayaran berhasil di-void!")
-      setShowVoidDialog(false)
-      setVoidReason("")
-      setSelectedPayment(null)
-
-      // Refresh transactions
-      fetchTransactions()
-      fetchData()
-    } catch (error: any) {
-      console.error('Void error:', error)
-      alert("Gagal void pembayaran: " + (error?.message || "Unknown error"))
-    } finally {
-      setIsVoiding(false)
-    }
-  }
 
   const today = new Date().toLocaleDateString("id-ID", {
     weekday: 'long',
@@ -336,23 +239,17 @@ export default function HomePage() {
           )}
         </div>
         <Button
-          onClick={activeTab === 'dashboard' ? fetchData : fetchTransactions}
+          onClick={fetchData}
           variant="outline"
-          disabled={loading || loadingTransactions}
+          disabled={loading}
           className="flex items-center gap-2"
         >
-          <HugeiconsIcon icon={ArrowRight01Icon} size={20} strokeWidth={2} className={(loading || loadingTransactions) ? "animate-spin" : ""} />
-          {(loading || loadingTransactions) ? "Memuat..." : "Refresh"}
+          <HugeiconsIcon icon={ArrowRight01Icon} size={20} strokeWidth={2} className={loading ? "animate-spin" : ""} />
+          {loading ? "Memuat..." : "Refresh"}
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="transactions">Transaksi</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="dashboard" className="space-y-6">
+      <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat) => (
@@ -773,254 +670,7 @@ export default function HomePage() {
           </Card>
         )}
       </div>
-        </TabsContent>
-
-        {/* Transactions Tab */}
-        <TabsContent value="transactions" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Daftar Transaksi Hari Ini
-              </CardTitle>
-              <p className="text-sm text-gray-500 mt-1">
-                Menampilkan semua transaksi hari ini dari semua sesi
-              </p>
-            </CardHeader>
-            <CardContent>
-              {loadingTransactions ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Memuat transaksi...</p>
-                </div>
-              ) : (
-                <div className="rounded-lg border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Waktu</TableHead>
-                      <TableHead>ID Transaksi</TableHead>
-                      <TableHead>No. Pesanan</TableHead>
-                      <TableHead className="text-right">Jumlah</TableHead>
-                      <TableHead>Metode</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Kasir</TableHead>
-                      <TableHead>Sesi</TableHead>
-                      <TableHead className="text-right">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactions.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-gray-500">
-                          Belum ada transaksi
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      transactions.map((payment) => (
-                        <TableRow key={payment.id}>
-                          <TableCell className="text-sm">
-                            {new Date(payment.created_at).toLocaleString('id-ID', {
-                              day: '2-digit',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs">
-                            {payment.transaction_id}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {payment.order_number || '-'}
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            Rp {parseFloat(payment.amount).toLocaleString('id-ID')}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{payment.payment_method}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={
-                              payment.status === 'COMPLETED' ? 'default' :
-                              payment.status === 'REFUNDED' ? 'destructive' :
-                              'secondary'
-                            }>
-                              {payment.status === 'REFUNDED' ? 'VOID' : payment.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {payment.processed_by_name || '-'}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {payment.cashier_session ? (
-                              <Badge variant="secondary" className="font-normal">
-                                {payment.cashier_session.shift_type}
-                              </Badge>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {payment.status === 'COMPLETED' && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <HugeiconsIcon icon={MoreVerticalIcon} size={16} strokeWidth={2} />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => handleVoidClick(payment)}
-                                    className="text-red-600"
-                                  >
-                                    <HugeiconsIcon icon={Delete01Icon} size={16} strokeWidth={2} className="mr-2" />
-                                    Void Pembayaran
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Manager Authentication Dialog */}
-      <Dialog open={showManagerAuth} onOpenChange={setShowManagerAuth}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>🔐 Autentikasi Manager</DialogTitle>
-            <DialogDescription>
-              Masukkan kredensial Manager atau Admin untuk melanjutkan void transaksi
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="manager-email">Email</Label>
-              <Input
-                id="manager-email"
-                type="email"
-                value={managerEmail}
-                onChange={(e) => setManagerEmail(e.target.value)}
-                placeholder="manager@example.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="manager-password">Password</Label>
-              <Input
-                id="manager-password"
-                type="password"
-                value={managerPassword}
-                onChange={(e) => setManagerPassword(e.target.value)}
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowManagerAuth(false)
-                setManagerEmail("")
-                setManagerPassword("")
-                setSelectedPayment(null)
-              }}
-            >
-              Batal
-            </Button>
-            <Button
-              type="button"
-              onClick={handleManagerAuthSubmit}
-              disabled={!managerEmail || !managerPassword}
-            >
-              Verifikasi
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Void Reason Dialog */}
-      <Dialog open={showVoidDialog} onOpenChange={setShowVoidDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-red-600">⚠️ Void Pembayaran</DialogTitle>
-            <DialogDescription>
-              Tindakan ini akan membatalkan pembayaran. Pesanan akan kembali ke status menunggu pembayaran.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {selectedPayment && (
-              <div className="bg-gray-50 p-4 rounded space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">ID Transaksi:</span>
-                  <span className="font-mono text-xs">{selectedPayment.transaction_id}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Jumlah:</span>
-                  <span className="font-semibold">Rp {parseFloat(selectedPayment.amount).toLocaleString('id-ID')}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Metode:</span>
-                  <span className="font-semibold">{selectedPayment.payment_method}</span>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="void-reason" className="text-red-600 font-semibold">
-                Alasan Void (Wajib) *
-              </Label>
-              <Textarea
-                id="void-reason"
-                value={voidReason}
-                onChange={(e) => setVoidReason(e.target.value)}
-                placeholder="Contoh: Kesalahan input pembayaran, customer request refund, dll"
-                rows={4}
-                className="resize-none"
-              />
-            </div>
-
-            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3">
-              <p className="text-xs text-yellow-800">
-                <strong>Perhatian:</strong> Tindakan void akan tercatat dalam audit log dan tidak dapat dibatalkan.
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowVoidDialog(false)
-                setVoidReason("")
-                setSelectedPayment(null)
-              }}
-              disabled={isVoiding}
-            >
-              Batal
-            </Button>
-            <Button
-              type="button"
-              onClick={handleVoidPayment}
-              disabled={!voidReason.trim() || isVoiding}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isVoiding ? "Memproses..." : "Ya, Void Pembayaran"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </div>
     </div>
   )
 }

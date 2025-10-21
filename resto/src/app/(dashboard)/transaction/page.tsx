@@ -2,19 +2,24 @@
 
 import { useState, useEffect } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { CreditCardIcon, SmartPhone01Icon, DollarCircleIcon, Invoice01Icon, Add01Icon, Remove01Icon, Delete01Icon } from "@hugeicons/core-free-icons"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CreditCardIcon, SmartPhone01Icon, DollarCircleIcon, Invoice01Icon, Add01Icon, Remove01Icon, Delete01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { api, type Order } from "@/lib/api"
 import { Receipt, type ReceiptData } from "@/components/receipt"
 import { useAuth } from "@/contexts/auth-context"
 
 export default function TransactionPage() {
   const { staff } = useAuth()
+  const [activeTab, setActiveTab] = useState("payment")
   const [pendingOrders, setPendingOrders] = useState<Order[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "qris">("cash")
@@ -25,9 +30,17 @@ export default function TransactionPage() {
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
   const [shouldPrint, setShouldPrint] = useState(false)
 
+  // Transaction list state
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [loadingTransactions, setLoadingTransactions] = useState(false)
+
   // Void transaction state
   const [showVoidDialog, setShowVoidDialog] = useState(false)
+  const [showManagerAuth, setShowManagerAuth] = useState(false)
+  const [selectedPayment, setSelectedPayment] = useState<any>(null)
   const [voidReason, setVoidReason] = useState("")
+  const [managerEmail, setManagerEmail] = useState("")
+  const [managerPassword, setManagerPassword] = useState("")
   const [isVoiding, setIsVoiding] = useState(false)
 
   useEffect(() => {
@@ -104,6 +117,76 @@ export default function TransactionPage() {
       if (!keepSelection) {
         setLoading(false)
       }
+    }
+  }
+
+  // Fetch transactions when switching to transactions tab
+  useEffect(() => {
+    if (activeTab === 'history') {
+      fetchTransactions()
+    }
+  }, [activeTab])
+
+  const fetchTransactions = async () => {
+    try {
+      setLoadingTransactions(true)
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/payments/today/`
+      const response = await fetch(url, {
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setTransactions(data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching transactions:', error)
+    } finally {
+      setLoadingTransactions(false)
+    }
+  }
+
+  const handleVoidClick = (payment: any) => {
+    setSelectedPayment(payment)
+    setShowManagerAuth(true)
+  }
+
+  const handleManagerAuthSubmit = async () => {
+    try {
+      const response = await api.login(managerEmail, managerPassword)
+      if (response.staff?.role && ['MANAGER', 'ADMIN'].includes(response.staff.role)) {
+        setShowManagerAuth(false)
+        setShowVoidDialog(true)
+        setManagerEmail("")
+        setManagerPassword("")
+      } else {
+        alert("Hanya Manager atau Admin yang dapat melakukan void transaksi")
+      }
+    } catch (error) {
+      console.error('Manager auth error:', error)
+      alert("Email atau password salah")
+    }
+  }
+
+  const handleVoidPayment = async () => {
+    if (!selectedPayment || !voidReason.trim()) {
+      alert("Alasan void harus diisi!")
+      return
+    }
+
+    try {
+      setIsVoiding(true)
+      await api.voidPayment(selectedPayment.id, voidReason)
+      alert("Pembayaran berhasil di-void!")
+      setShowVoidDialog(false)
+      setVoidReason("")
+      setSelectedPayment(null)
+      fetchTransactions()
+      fetchPendingOrders()
+    } catch (error: any) {
+      console.error('Void error:', error)
+      alert("Gagal void pembayaran: " + (error?.message || "Unknown error"))
+    } finally {
+      setIsVoiding(false)
     }
   }
 
@@ -237,42 +320,6 @@ export default function TransactionPage() {
     }
   }
 
-  // Handle void payment
-  const handleVoidPayment = async () => {
-    if (!selectedOrder || !selectedOrder.payments || selectedOrder.payments.length === 0) {
-      alert("Tidak ada pembayaran yang dapat di-void")
-      return
-    }
-
-    if (!voidReason.trim()) {
-      alert("Alasan void harus diisi!")
-      return
-    }
-
-    const completedPayment = selectedOrder.payments.find((p: any) => p.status === 'COMPLETED')
-    if (!completedPayment) {
-      alert("Tidak ada pembayaran yang completed untuk di-void")
-      return
-    }
-
-    try {
-      setIsVoiding(true)
-      await api.voidPayment(completedPayment.id, voidReason)
-
-      alert("Pembayaran berhasil di-void!")
-      setShowVoidDialog(false)
-      setVoidReason("")
-
-      // Refresh order list
-      await fetchPendingOrders(false)
-    } catch (error: any) {
-      console.error('Void error:', error)
-      alert("Gagal void pembayaran: " + (error?.message || "Unknown error"))
-    } finally {
-      setIsVoiding(false)
-    }
-  }
-
   // Check if order has completed payment (can be voided)
   const hasCompletedPayment = selectedOrder?.payments?.some((p: any) => p.status === 'COMPLETED')
   const canVoid = hasCompletedPayment && staff?.role && ['MANAGER', 'ADMIN'].includes(staff.role)
@@ -303,21 +350,31 @@ export default function TransactionPage() {
 
   return (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex gap-6">
-        {/* Left Side - Order List */}
-        <div className="flex-1 flex flex-col">
-        <div className="mb-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Kasir</h1>
-            <Button
-              onClick={() => fetchPendingOrders(true)}
-              variant="outline"
-              size="sm"
-              className="rounded"
-            >
-              Refresh
-            </Button>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Transaksi</h1>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="payment">Pembayaran</TabsTrigger>
+            <TabsTrigger value="history">Riwayat Transaksi</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="payment" className="mt-6">
+            <div className="flex gap-6">
+              {/* Left Side - Order List */}
+              <div className="flex-1 flex flex-col">
+                <div className="mb-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900">Daftar Pesanan</h2>
+                    <Button
+                      onClick={() => fetchPendingOrders(true)}
+                      variant="outline"
+                      size="sm"
+                      className="rounded"
+                    >
+                      Refresh
+                    </Button>
+                  </div>
           {selectedOrder && (
             <div className="flex items-center gap-2 mt-1">
               <p className="text-sm text-gray-600">
@@ -760,6 +817,174 @@ export default function TransactionPage() {
           }}
         />
       )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Daftar Transaksi Hari Ini</CardTitle>
+                <CardDescription>Menampilkan semua transaksi hari ini dari semua sesi</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingTransactions ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">Memuat transaksi...</p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Waktu</TableHead>
+                          <TableHead>ID Transaksi</TableHead>
+                          <TableHead>No. Pesanan</TableHead>
+                          <TableHead className="text-right">Jumlah</TableHead>
+                          <TableHead>Metode</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Kasir</TableHead>
+                          <TableHead>Sesi</TableHead>
+                          <TableHead className="text-right">Aksi</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {transactions.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                              Belum ada transaksi
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          transactions.map((payment) => (
+                            <TableRow key={payment.id}>
+                              <TableCell className="text-sm">
+                                {new Date(payment.created_at).toLocaleString('id-ID', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">
+                                {payment.transaction_id}
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {payment.order_number || '-'}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">
+                                Rp {parseFloat(payment.amount).toLocaleString('id-ID')}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{payment.payment_method}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={
+                                  payment.status === 'COMPLETED' ? 'default' :
+                                  payment.status === 'REFUNDED' ? 'destructive' :
+                                  'secondary'
+                                }>
+                                  {payment.status === 'REFUNDED' ? 'VOID' : payment.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                {payment.processed_by_name || '-'}
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                {payment.cashier_session ? (
+                                  <Badge variant="secondary" className="font-normal">
+                                    {payment.cashier_session.shift_type}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {payment.status === 'COMPLETED' && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm">
+                                        <HugeiconsIcon icon={MoreVerticalIcon} size={16} strokeWidth={2} />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={() => handleVoidClick(payment)}
+                                        className="text-red-600"
+                                      >
+                                        <HugeiconsIcon icon={Delete01Icon} size={16} strokeWidth={2} className="mr-2" />
+                                        Void Pembayaran
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Manager Authentication Dialog */}
+      <Dialog open={showManagerAuth} onOpenChange={setShowManagerAuth}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>🔐 Autentikasi Manager</DialogTitle>
+            <DialogDescription>
+              Masukkan kredensial Manager atau Admin untuk melanjutkan void transaksi
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="manager-email">Email</Label>
+              <Input
+                id="manager-email"
+                type="email"
+                value={managerEmail}
+                onChange={(e) => setManagerEmail(e.target.value)}
+                placeholder="manager@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="manager-password">Password</Label>
+              <Input
+                id="manager-password"
+                type="password"
+                value={managerPassword}
+                onChange={(e) => setManagerPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowManagerAuth(false)
+                setManagerEmail("")
+                setManagerPassword("")
+                setSelectedPayment(null)
+              }}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              onClick={handleManagerAuthSubmit}
+              disabled={!managerEmail || !managerPassword}
+            >
+              Verifikasi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Void Payment Dialog */}
       <Dialog open={showVoidDialog} onOpenChange={setShowVoidDialog}>
@@ -837,7 +1062,6 @@ export default function TransactionPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </div>
     </div>
   )
 }
