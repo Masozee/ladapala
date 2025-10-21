@@ -7,7 +7,8 @@ from .models import (
     KitchenOrder, KitchenOrderItem,
     Promotion, Schedule, Report, CashierSession,
     Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
-    StockTransfer, Vendor
+    StockTransfer, Vendor,
+    Customer, LoyaltyTransaction, Reward, CustomerFeedback, MembershipTierBenefit
 )
 
 User = get_user_model()
@@ -795,3 +796,118 @@ class VendorCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Branch will be set in the viewset
         return super().create(validated_data)
+
+
+# ===========================
+# Customer Relationship Management Serializers
+# ===========================
+
+class CustomerSerializer(serializers.ModelSerializer):
+    """Serializer for Customer model"""
+    favorite_products_details = ProductSerializer(source='favorite_products', many=True, read_only=True)
+
+    class Meta:
+        model = Customer
+        fields = [
+            'id', 'phone_number', 'name', 'email', 'date_of_birth', 'gender',
+            'membership_tier', 'membership_number', 'join_date',
+            'points_balance', 'lifetime_points',
+            'total_visits', 'total_spent', 'last_visit',
+            'favorite_products', 'favorite_products_details', 'notes',
+            'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['membership_number', 'join_date', 'points_balance', 'lifetime_points',
+                           'total_visits', 'total_spent', 'last_visit', 'created_at', 'updated_at']
+
+
+class CustomerCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating new customers"""
+    class Meta:
+        model = Customer
+        fields = ['phone_number', 'name', 'email', 'date_of_birth', 'gender', 'notes']
+
+
+class LoyaltyTransactionSerializer(serializers.ModelSerializer):
+    """Serializer for Loyalty Transaction model"""
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
+    customer_phone = serializers.CharField(source='customer.phone_number', read_only=True)
+    order_number = serializers.CharField(source='order.order_number', read_only=True)
+    reward_name = serializers.CharField(source='reward.name', read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+
+    def get_created_by_name(self, obj):
+        if obj.created_by and hasattr(obj.created_by, 'user'):
+            return obj.created_by.user.get_full_name() or obj.created_by.user.username
+        return None
+
+    class Meta:
+        model = LoyaltyTransaction
+        fields = [
+            'id', 'customer', 'customer_name', 'customer_phone',
+            'transaction_type', 'points', 'balance_after',
+            'order', 'order_number', 'reward', 'reward_name',
+            'description', 'expiry_date',
+            'created_by', 'created_by_name', 'created_at'
+        ]
+        read_only_fields = ['balance_after', 'created_at']
+
+
+class RewardSerializer(serializers.ModelSerializer):
+    """Serializer for Reward model"""
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    redemptions_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Reward
+        fields = [
+            'id', 'name', 'description', 'points_required',
+            'reward_type', 'discount_type', 'discount_value',
+            'product', 'product_name', 'voucher_code', 'voucher_value',
+            'is_active', 'stock_quantity', 'valid_from', 'valid_until',
+            'min_purchase', 'max_redemptions_per_customer',
+            'image', 'sort_order', 'redemptions_count',
+            'created_at', 'updated_at'
+        ]
+
+
+class CustomerFeedbackSerializer(serializers.ModelSerializer):
+    """Serializer for Customer Feedback model"""
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
+    customer_phone = serializers.CharField(source='customer.phone_number', read_only=True)
+    order_number = serializers.CharField(source='order.order_number', read_only=True)
+    responded_by_name = serializers.SerializerMethodField()
+
+    def get_responded_by_name(self, obj):
+        if obj.responded_by and hasattr(obj.responded_by, 'user'):
+            return obj.responded_by.user.get_full_name() or obj.responded_by.user.username
+        return None
+
+    class Meta:
+        model = CustomerFeedback
+        fields = [
+            'id', 'customer', 'customer_name', 'customer_phone',
+            'order', 'order_number',
+            'food_rating', 'service_rating', 'ambiance_rating', 'value_rating', 'overall_rating',
+            'comment', 'liked', 'disliked', 'suggestions',
+            'would_recommend',
+            'contact_name', 'contact_phone', 'contact_email',
+            'staff_response', 'responded_by', 'responded_by_name', 'responded_at',
+            'status', 'is_public', 'created_at'
+        ]
+        read_only_fields = ['overall_rating', 'created_at']
+
+
+class MembershipTierBenefitSerializer(serializers.ModelSerializer):
+    """Serializer for Membership Tier Benefit model"""
+    complimentary_items_details = ProductSerializer(source='complimentary_items', many=True, read_only=True)
+
+    class Meta:
+        model = MembershipTierBenefit
+        fields = [
+            'id', 'tier',
+            'min_total_spent', 'min_visits',
+            'points_multiplier', 'birthday_bonus_points', 'discount_percentage',
+            'priority_reservation', 'complimentary_items', 'complimentary_items_details',
+            'description', 'color_code',
+            'created_at', 'updated_at'
+        ]

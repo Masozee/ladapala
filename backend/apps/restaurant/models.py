@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from decimal import Decimal
 import uuid
@@ -1022,3 +1023,282 @@ class Vendor(models.Model):
         unique_together = ['branch', 'name']
         verbose_name = "Vendor"
         verbose_name_plural = "Vendors"
+
+
+# ===========================
+# Customer Relationship Management Models
+# ===========================
+
+class Customer(models.Model):
+    """
+    Customer master data for membership and loyalty program
+    """
+    GENDER_CHOICES = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('OTHER', 'Other'),
+    ]
+
+    TIER_CHOICES = [
+        ('BRONZE', 'Bronze'),
+        ('SILVER', 'Silver'),
+        ('GOLD', 'Gold'),
+        ('PLATINUM', 'Platinum'),
+    ]
+
+    # Basic Info
+    phone_number = models.CharField(max_length=15, unique=True, db_index=True, help_text='Primary identifier')
+    name = models.CharField(max_length=100)
+    email = models.EmailField(null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
+
+    # Membership
+    membership_tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='BRONZE', db_index=True)
+    membership_number = models.CharField(max_length=50, unique=True, db_index=True)  # Auto-generated: MBR-{year}{month}-{seq}
+    join_date = models.DateTimeField(auto_now_add=True)
+
+    # Loyalty Points
+    points_balance = models.IntegerField(default=0, help_text='Current available points')
+    lifetime_points = models.IntegerField(default=0, help_text='Total points earned ever')
+
+    # Stats
+    total_visits = models.IntegerField(default=0)
+    total_spent = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    last_visit = models.DateTimeField(null=True, blank=True)
+
+    # Preferences
+    favorite_products = models.ManyToManyField('Product', blank=True, related_name='favorited_by')
+    notes = models.TextField(blank=True, help_text='Staff notes about customer')
+
+    # Status
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.membership_number})"
+
+    def save(self, *args, **kwargs):
+        # Auto-generate membership number if not set
+        if not self.membership_number:
+            from datetime import datetime
+            now = datetime.now()
+            # Find latest member number for this month
+            prefix = f"MBR-{now.year}{now.month:02d}"
+            latest = Customer.objects.filter(membership_number__startswith=prefix).order_by('-membership_number').first()
+            if latest:
+                # Extract sequence number and increment
+                try:
+                    seq = int(latest.membership_number.split('-')[-1]) + 1
+                except:
+                    seq = 1
+            else:
+                seq = 1
+            self.membership_number = f"{prefix}-{seq:04d}"
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Customer"
+        verbose_name_plural = "Customers"
+
+
+class LoyaltyTransaction(models.Model):
+    """
+    Track all loyalty points transactions (earn, redeem, expire, adjust)
+    """
+    TRANSACTION_TYPES = [
+        ('EARN', 'Earn Points'),
+        ('REDEEM', 'Redeem Points'),
+        ('EXPIRE', 'Expire Points'),
+        ('ADJUST', 'Manual Adjustment'),
+    ]
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='loyalty_transactions')
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES, db_index=True)
+    points = models.IntegerField(help_text='Positive for earn, negative for redeem')
+    balance_after = models.IntegerField(help_text='Points balance after this transaction')
+
+    # Related entities
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True, related_name='loyalty_transactions')
+    reward = models.ForeignKey('Reward', on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Details
+    description = models.CharField(max_length=255)
+    expiry_date = models.DateField(null=True, blank=True, help_text='For earned points')
+
+    # Audit
+    created_by = models.ForeignKey('Staff', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.customer.name} - {self.transaction_type} - {self.points} points"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Loyalty Transaction"
+        verbose_name_plural = "Loyalty Transactions"
+
+
+class Reward(models.Model):
+    """
+    Loyalty rewards catalog - items customers can redeem with points
+    """
+    REWARD_TYPES = [
+        ('DISCOUNT', 'Discount'),
+        ('FREE_ITEM', 'Free Item'),
+        ('VOUCHER', 'Voucher'),
+    ]
+
+    DISCOUNT_TYPES = [
+        ('PERCENTAGE', 'Percentage'),
+        ('FIXED', 'Fixed Amount'),
+    ]
+
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    points_required = models.IntegerField(help_text='Points needed to redeem this reward')
+
+    # Reward Type
+    reward_type = models.CharField(max_length=20, choices=REWARD_TYPES)
+
+    # For DISCOUNT type
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPES, null=True, blank=True)
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    # For FREE_ITEM type
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # For VOUCHER type
+    voucher_code = models.CharField(max_length=20, null=True, blank=True)
+    voucher_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    # Availability
+    is_active = models.BooleanField(default=True, db_index=True)
+    stock_quantity = models.IntegerField(null=True, blank=True, help_text='null = unlimited')
+    valid_from = models.DateField(null=True, blank=True)
+    valid_until = models.DateField(null=True, blank=True)
+
+    # Restrictions
+    min_purchase = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Minimum purchase amount to use reward')
+    max_redemptions_per_customer = models.IntegerField(null=True, blank=True)
+
+    # Display
+    image = models.ImageField(upload_to='rewards/', null=True, blank=True)
+    sort_order = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.points_required} points)"
+
+    class Meta:
+        ordering = ['sort_order', 'points_required']
+        verbose_name = "Reward"
+        verbose_name_plural = "Rewards"
+
+
+class CustomerFeedback(models.Model):
+    """
+    Customer feedback and ratings for orders
+    """
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending Review'),
+        ('REVIEWED', 'Reviewed'),
+        ('RESOLVED', 'Resolved'),
+    ]
+
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name='feedbacks')
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True, related_name='feedbacks')
+
+    # Ratings (1-5 stars)
+    food_rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    service_rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    ambiance_rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    value_rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    overall_rating = models.FloatField(help_text='Calculated average of all ratings')
+
+    # Feedback
+    comment = models.TextField(blank=True)
+    liked = models.TextField(blank=True, help_text='What they liked')
+    disliked = models.TextField(blank=True, help_text="What they didn't like")
+    suggestions = models.TextField(blank=True)
+
+    # Would recommend?
+    would_recommend = models.BooleanField(null=True, blank=True)
+
+    # Contact for follow-up (optional for anonymous feedback)
+    contact_name = models.CharField(max_length=100, blank=True)
+    contact_phone = models.CharField(max_length=15, blank=True)
+    contact_email = models.EmailField(blank=True)
+
+    # Response
+    staff_response = models.TextField(blank=True)
+    responded_by = models.ForeignKey('Staff', on_delete=models.SET_NULL, null=True, blank=True, related_name='feedback_responses')
+    responded_at = models.DateTimeField(null=True, blank=True)
+
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', db_index=True)
+    is_public = models.BooleanField(default=False, help_text='Display on website/app')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Calculate overall rating as average
+        self.overall_rating = (
+            self.food_rating + self.service_rating +
+            self.ambiance_rating + self.value_rating
+        ) / 4.0
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Feedback from {self.customer.name if self.customer else 'Anonymous'} - {self.overall_rating}★"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Customer Feedback"
+        verbose_name_plural = "Customer Feedbacks"
+
+
+class MembershipTierBenefit(models.Model):
+    """
+    Configuration for membership tier requirements and benefits
+    """
+    TIER_CHOICES = [
+        ('BRONZE', 'Bronze'),
+        ('SILVER', 'Silver'),
+        ('GOLD', 'Gold'),
+        ('PLATINUM', 'Platinum'),
+    ]
+
+    tier = models.CharField(max_length=20, choices=TIER_CHOICES, unique=True)
+
+    # Requirements
+    min_total_spent = models.DecimalField(max_digits=12, decimal_places=2, help_text='Minimum lifetime spending to reach this tier')
+    min_visits = models.IntegerField(default=0, help_text='Minimum number of visits')
+
+    # Benefits
+    points_multiplier = models.FloatField(default=1.0, help_text='Points earning multiplier (e.g., 1.5 = 50% bonus)')
+    birthday_bonus_points = models.IntegerField(default=0)
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text='Auto discount on all purchases')
+
+    # Perks
+    priority_reservation = models.BooleanField(default=False)
+    complimentary_items = models.ManyToManyField(Product, blank=True, related_name='complimentary_for_tiers')
+
+    # Display
+    description = models.TextField()
+    color_code = models.CharField(max_length=7, default='#CD7F32', help_text='Hex color code for tier')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.tier} Tier"
+
+    class Meta:
+        ordering = ['min_total_spent']
+        verbose_name = "Membership Tier Benefit"
+        verbose_name_plural = "Membership Tier Benefits"

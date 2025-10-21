@@ -14,7 +14,8 @@ from .models import (
     KitchenOrder, KitchenOrderItem,
     Promotion, Schedule, Report, CashierSession,
     Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
-    StockTransfer
+    StockTransfer,
+    Customer, LoyaltyTransaction, Reward, CustomerFeedback, MembershipTierBenefit
 )
 from .serializers import (
     RestaurantSerializer, BranchSerializer, StaffSerializer,
@@ -26,7 +27,9 @@ from .serializers import (
     DashboardSerializer, CashierSessionSerializer, CashierSessionOpenSerializer,
     CashierSessionCloseSerializer, RecipeSerializer, RecipeIngredientSerializer,
     PurchaseOrderSerializer, PurchaseOrderCreateSerializer, PurchaseOrderItemSerializer,
-    StockTransferSerializer, StockTransferCreateSerializer
+    StockTransferSerializer, StockTransferCreateSerializer,
+    CustomerSerializer, CustomerCreateSerializer, LoyaltyTransactionSerializer,
+    RewardSerializer, CustomerFeedbackSerializer, MembershipTierBenefitSerializer
 )
 from .permissions import IsManagerOrAdmin, IsKitchenStaff, IsWarehouseStaff
 
@@ -1936,4 +1939,303 @@ class OrderItemViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = queryset.select_related('order', 'product')
 
         return queryset
+
+
+# ===========================
+# Customer Relationship Management ViewSets
+# ===========================
+
+class CustomerViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Customer management
+
+    Endpoints:
+    - list: GET /api/customers/
+    - create: POST /api/customers/
+    - retrieve: GET /api/customers/{id}/
+    - update: PUT/PATCH /api/customers/{id}/
+    - delete: DELETE /api/customers/{id}/
+    - lookup: GET /api/customers/lookup/?phone={phone}
+    - stats: GET /api/customers/{id}/stats/
+    """
+    queryset = Customer.objects.all()
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'phone_number', 'membership_number', 'email']
+    filterset_fields = ['membership_tier', 'is_active']
+    ordering_fields = ['created_at', 'total_spent', 'total_visits', 'points_balance']
+    ordering = ['-created_at']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CustomerCreateSerializer
+        return CustomerSerializer
+
+    @action(detail=False, methods=['get'])
+    def lookup(self, request):
+        """Quick customer lookup by phone number"""
+        phone = request.query_params.get('phone')
+        if not phone:
+            return Response({'error': 'Phone number required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            customer = Customer.objects.get(phone_number=phone)
+            serializer = self.get_serializer(customer)
+            return Response(serializer.data)
+        except Customer.DoesNotExist:
+            return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['get'])
+    def stats(self, request, pk=None):
+        """Get customer statistics and transaction history"""
+        customer = self.get_object()
+
+        # Recent loyalty transactions
+        loyalty_txns = customer.loyalty_transactions.all()[:10]
+        loyalty_serializer = LoyaltyTransactionSerializer(loyalty_txns, many=True)
+
+        # Recent feedbacks
+        feedbacks = customer.feedbacks.all()[:5]
+        feedback_serializer = CustomerFeedbackSerializer(feedbacks, many=True)
+
+        return Response({
+            'customer': self.get_serializer(customer).data,
+            'recent_loyalty_transactions': loyalty_serializer.data,
+            'recent_feedbacks': feedback_serializer.data,
+        })
+
+
+class LoyaltyTransactionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Loyalty Transactions
+
+    Endpoints:
+    - list: GET /api/loyalty-transactions/
+    - create: POST /api/loyalty-transactions/ (earn or adjust points)
+    - retrieve: GET /api/loyalty-transactions/{id}/
+    - redeem: POST /api/loyalty-transactions/redeem/
+    """
+    queryset = LoyaltyTransaction.objects.all()
+    serializer_class = LoyaltyTransactionSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['customer', 'transaction_type']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.select_related('customer', 'order', 'reward', 'created_by')
+
+    def perform_create(self, serializer):
+        """Create loyalty transaction and update customer balance"""
+        from django.utils import timezone
+
+        customer = serializer.validated_data['customer']
+        points = serializer.validated_data['points']
+
+        # Calculate new balance
+        new_balance = customer.points_balance + points
+        if new_balance < 0:
+            raise serializers.ValidationError('Insufficient points balance')
+
+        # Update customer
+        customer.points_balance = new_balance
+        if points > 0:  # Earning points
+            customer.lifetime_points += points
+        customer.save()
+
+        # Save transaction with balance_after
+        serializer.save(
+            balance_after=new_balance,
+            created_by=self.request.user.staff if hasattr(self.request.user, 'staff') else None
+        )
+
+    @action(detail=False, methods=['post'])
+    def redeem(self, request):
+        """Redeem a reward using points"""
+        customer_id = request.data.get('customer_id')
+        reward_id = request.data.get('reward_id')
+
+        if not customer_id or not reward_id:
+            return Response({'error': 'customer_id and reward_id required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            customer = Customer.objects.get(id=customer_id)
+            reward = Reward.objects.get(id=reward_id, is_active=True)
+        except (Customer.DoesNotExist, Reward.DoesNotExist):
+            return Response({'error': 'Customer or Reward not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if customer has enough points
+        if customer.points_balance < reward.points_required:
+            return Response({'error': 'Insufficient points'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check stock
+        if reward.stock_quantity is not None and reward.stock_quantity <= 0:
+            return Response({'error': 'Reward out of stock'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create redemption transaction
+        new_balance = customer.points_balance - reward.points_required
+
+        transaction = LoyaltyTransaction.objects.create(
+            customer=customer,
+            transaction_type='REDEEM',
+            points=-reward.points_required,
+            balance_after=new_balance,
+            reward=reward,
+            description=f'Redeemed: {reward.name}',
+            created_by=request.user.staff if hasattr(request.user, 'staff') else None
+        )
+
+        # Update customer
+        customer.points_balance = new_balance
+        customer.save()
+
+        # Update reward stock
+        if reward.stock_quantity is not None:
+            reward.stock_quantity -= 1
+            reward.save()
+
+        serializer = self.get_serializer(transaction)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class RewardViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Rewards catalog
+
+    Endpoints:
+    - list: GET /api/rewards/
+    - create: POST /api/rewards/
+    - retrieve: GET /api/rewards/{id}/
+    - update: PUT/PATCH /api/rewards/{id}/
+    - delete: DELETE /api/rewards/{id}/
+    - catalog: GET /api/rewards/catalog/ (public-facing, active rewards only)
+    """
+    queryset = Reward.objects.all()
+    serializer_class = RewardSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['reward_type', 'is_active']
+    ordering_fields = ['sort_order', 'points_required', 'created_at']
+    ordering = ['sort_order', 'points_required']
+
+    @action(detail=False, methods=['get'])
+    def catalog(self, request):
+        """Get active rewards catalog for customer-facing display"""
+        from django.utils import timezone
+        from django.db.models import Count
+
+        queryset = Reward.objects.filter(is_active=True)
+
+        # Filter by date validity
+        today = timezone.now().date()
+        queryset = queryset.filter(
+            models.Q(valid_from__isnull=True) | models.Q(valid_from__lte=today)
+        ).filter(
+            models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=today)
+        )
+
+        # Filter by stock availability
+        queryset = queryset.filter(
+            models.Q(stock_quantity__isnull=True) | models.Q(stock_quantity__gt=0)
+        )
+
+        # Annotate with redemptions count
+        queryset = queryset.annotate(
+            redemptions_count=Count('loyaltytransaction')
+        )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class CustomerFeedbackViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Customer Feedback
+
+    Endpoints:
+    - list: GET /api/feedback/
+    - create: POST /api/feedback/
+    - retrieve: GET /api/feedback/{id}/
+    - update: PATCH /api/feedback/{id}/
+    - respond: POST /api/feedback/{id}/respond/
+    - stats: GET /api/feedback/stats/
+    """
+    queryset = CustomerFeedback.objects.all()
+    serializer_class = CustomerFeedbackSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['status', 'customer', 'order']
+    ordering_fields = ['created_at', 'overall_rating']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.select_related('customer', 'order', 'responded_by')
+
+    @action(detail=True, methods=['post'])
+    def respond(self, request, pk=None):
+        """Staff response to feedback"""
+        feedback = self.get_object()
+        response_text = request.data.get('response')
+
+        if not response_text:
+            return Response({'error': 'Response text required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from django.utils import timezone
+
+        feedback.staff_response = response_text
+        feedback.responded_by = request.user.staff if hasattr(request.user, 'staff') else None
+        feedback.responded_at = timezone.now()
+        feedback.status = 'REVIEWED'
+        feedback.save()
+
+        serializer = self.get_serializer(feedback)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Get feedback statistics"""
+        from django.db.models import Avg, Count
+
+        total_count = CustomerFeedback.objects.count()
+        avg_ratings = CustomerFeedback.objects.aggregate(
+            avg_overall=Avg('overall_rating'),
+            avg_food=Avg('food_rating'),
+            avg_service=Avg('service_rating'),
+            avg_ambiance=Avg('ambiance_rating'),
+            avg_value=Avg('value_rating'),
+        )
+
+        status_counts = CustomerFeedback.objects.values('status').annotate(count=Count('id'))
+        response_rate = CustomerFeedback.objects.filter(staff_response__isnull=False).count() / max(total_count, 1) * 100
+
+        # Rating distribution
+        rating_dist = CustomerFeedback.objects.values('overall_rating').annotate(count=Count('id'))
+
+        return Response({
+            'total_count': total_count,
+            'average_ratings': avg_ratings,
+            'status_counts': list(status_counts),
+            'response_rate': round(response_rate, 2),
+            'rating_distribution': list(rating_dist),
+        })
+
+
+class MembershipTierBenefitViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Membership Tier Benefits configuration
+
+    Endpoints:
+    - list: GET /api/tier-benefits/
+    - create: POST /api/tier-benefits/
+    - retrieve: GET /api/tier-benefits/{id}/
+    - update: PUT/PATCH /api/tier-benefits/{id}/
+    - delete: DELETE /api/tier-benefits/{id}/
+    """
+    queryset = MembershipTierBenefit.objects.all()
+    serializer_class = MembershipTierBenefitSerializer
+    permission_classes = [IsAuthenticated]
+    ordering = ['min_total_spent']
 
