@@ -520,6 +520,123 @@ export interface VendorCreate {
   branch: number;
 }
 
+// ===========================
+// Customer Relationship Management Interfaces
+// ===========================
+
+export interface Customer {
+  id: number;
+  phone_number: string;
+  name: string;
+  email?: string;
+  date_of_birth?: string;
+  gender?: 'M' | 'F' | 'OTHER';
+  membership_tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
+  membership_number: string;
+  join_date: string;
+  points_balance: number;
+  lifetime_points: number;
+  total_visits: number;
+  total_spent: string;
+  last_visit?: string;
+  favorite_products: number[];
+  favorite_products_details?: Product[];
+  notes?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LoyaltyTransaction {
+  id: number;
+  customer: number;
+  customer_name: string;
+  customer_phone: string;
+  transaction_type: 'EARN' | 'REDEEM' | 'EXPIRE' | 'ADJUST';
+  points: number;
+  balance_after: number;
+  order?: number;
+  order_number?: string;
+  reward?: number;
+  reward_name?: string;
+  description: string;
+  expiry_date?: string;
+  created_by?: number;
+  created_by_name?: string;
+  created_at: string;
+}
+
+export interface Reward {
+  id: number;
+  name: string;
+  description: string;
+  points_required: number;
+  reward_type: 'DISCOUNT' | 'FREE_ITEM' | 'VOUCHER';
+  discount_type?: 'PERCENTAGE' | 'FIXED';
+  discount_value?: string;
+  product?: number;
+  product_name?: string;
+  voucher_code?: string;
+  voucher_value?: string;
+  is_active: boolean;
+  stock_quantity?: number;
+  valid_from?: string;
+  valid_until?: string;
+  min_purchase?: string;
+  max_redemptions_per_customer?: number;
+  image?: string;
+  sort_order: number;
+  redemptions_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomerFeedback {
+  id: number;
+  customer?: number;
+  customer_name?: string;
+  customer_phone?: string;
+  order?: number;
+  order_number?: string;
+  food_rating: number;
+  service_rating: number;
+  ambiance_rating: number;
+  value_rating: number;
+  overall_rating: number;
+  comment?: string;
+  liked?: string;
+  disliked?: string;
+  suggestions?: string;
+  would_recommend?: boolean;
+  contact_name?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  staff_response?: string;
+  responded_by?: number;
+  responded_by_name?: string;
+  responded_at?: string;
+  status: 'PENDING' | 'REVIEWED' | 'RESOLVED';
+  is_public: boolean;
+  created_at: string;
+}
+
+export interface MembershipTierBenefit {
+  id: number;
+  tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
+  min_total_spent: string;
+  min_visits: number;
+  points_multiplier: number;
+  birthday_bonus_points: number;
+  discount_percentage: string;
+  priority_reservation: boolean;
+  complimentary_items: number[];
+  complimentary_items_details?: Product[];
+  description: string;
+  color_code: string;
+  created_at: string;
+  updated_at: string;
+}
+
 class ApiClient {
   private baseUrl: string;
   private branchId: string;
@@ -1284,6 +1401,212 @@ class ApiClient {
     if (params.end_date) searchParams.append('end_date', params.end_date);
 
     return this.fetch(`/reports/trends/?${searchParams.toString()}`);
+  }
+
+  // ===========================
+  // Customer Relationship Management APIs
+  // ===========================
+
+  // Customer APIs
+  async getCustomers(params?: { membership_tier?: string; is_active?: boolean; search?: string }): Promise<{ count: number; results: Customer[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.membership_tier) searchParams.append('membership_tier', params.membership_tier);
+    if (params?.is_active !== undefined) searchParams.append('is_active', params.is_active.toString());
+    if (params?.search) searchParams.append('search', params.search);
+
+    return this.fetch(`/customers/?${searchParams.toString()}`);
+  }
+
+  async getCustomer(id: number): Promise<Customer> {
+    return this.fetch(`/customers/${id}/`);
+  }
+
+  async createCustomer(data: {
+    phone_number: string;
+    name: string;
+    email?: string;
+    date_of_birth?: string;
+    gender?: string;
+    notes?: string;
+  }): Promise<Customer> {
+    return this.fetch('/customers/', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateCustomer(id: number, data: Partial<Customer>): Promise<Customer> {
+    return this.fetch(`/customers/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async lookupCustomer(phone: string): Promise<Customer> {
+    return this.fetch(`/customers/lookup/?phone=${phone}`);
+  }
+
+  async getCustomerStats(id: number): Promise<{
+    customer: Customer;
+    recent_loyalty_transactions: LoyaltyTransaction[];
+    recent_feedbacks: CustomerFeedback[];
+  }> {
+    return this.fetch(`/customers/${id}/stats/`);
+  }
+
+  // Loyalty Transaction APIs
+  async getLoyaltyTransactions(params?: { customer?: number; transaction_type?: string }): Promise<{ count: number; results: LoyaltyTransaction[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.customer) searchParams.append('customer', params.customer.toString());
+    if (params?.transaction_type) searchParams.append('transaction_type', params.transaction_type);
+
+    return this.fetch(`/loyalty-transactions/?${searchParams.toString()}`);
+  }
+
+  async createLoyaltyTransaction(data: {
+    customer: number;
+    transaction_type: string;
+    points: number;
+    description: string;
+    order?: number;
+    expiry_date?: string;
+  }): Promise<LoyaltyTransaction> {
+    return this.fetch('/loyalty-transactions/', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async redeemReward(customer_id: number, reward_id: number): Promise<LoyaltyTransaction> {
+    return this.fetch('/loyalty-transactions/redeem/', {
+      method: 'POST',
+      body: JSON.stringify({ customer_id, reward_id })
+    });
+  }
+
+  // Reward APIs
+  async getRewards(params?: { reward_type?: string; is_active?: boolean }): Promise<{ count: number; results: Reward[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.reward_type) searchParams.append('reward_type', params.reward_type);
+    if (params?.is_active !== undefined) searchParams.append('is_active', params.is_active.toString());
+
+    return this.fetch(`/rewards/?${searchParams.toString()}`);
+  }
+
+  async getReward(id: number): Promise<Reward> {
+    return this.fetch(`/rewards/${id}/`);
+  }
+
+  async createReward(data: Partial<Reward>): Promise<Reward> {
+    return this.fetch('/rewards/', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateReward(id: number, data: Partial<Reward>): Promise<Reward> {
+    return this.fetch(`/rewards/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteReward(id: number): Promise<void> {
+    return this.fetch(`/rewards/${id}/`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getRewardsCatalog(): Promise<Reward[]> {
+    return this.fetch('/rewards/catalog/');
+  }
+
+  // Feedback APIs
+  async getFeedbacks(params?: { status?: string; customer?: number }): Promise<{ count: number; results: CustomerFeedback[] }> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append('status', params.status);
+    if (params?.customer) searchParams.append('customer', params.customer.toString());
+
+    return this.fetch(`/feedback/?${searchParams.toString()}`);
+  }
+
+  async getFeedback(id: number): Promise<CustomerFeedback> {
+    return this.fetch(`/feedback/${id}/`);
+  }
+
+  async createFeedback(data: {
+    customer?: number;
+    order?: number;
+    food_rating: number;
+    service_rating: number;
+    ambiance_rating: number;
+    value_rating: number;
+    comment?: string;
+    liked?: string;
+    disliked?: string;
+    suggestions?: string;
+    would_recommend?: boolean;
+    contact_name?: string;
+    contact_phone?: string;
+    contact_email?: string;
+  }): Promise<CustomerFeedback> {
+    return this.fetch('/feedback/', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async respondToFeedback(id: number, response: string): Promise<CustomerFeedback> {
+    return this.fetch(`/feedback/${id}/respond/`, {
+      method: 'POST',
+      body: JSON.stringify({ response })
+    });
+  }
+
+  async updateFeedback(id: number, data: Partial<CustomerFeedback>): Promise<CustomerFeedback> {
+    return this.fetch(`/feedback/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async getFeedbackStats(): Promise<{
+    total_count: number;
+    average_ratings: {
+      avg_overall: number;
+      avg_food: number;
+      avg_service: number;
+      avg_ambiance: number;
+      avg_value: number;
+    };
+    status_counts: Array<{ status: string; count: number }>;
+    response_rate: number;
+    rating_distribution: Array<{ overall_rating: number; count: number }>;
+  }> {
+    return this.fetch('/feedback/stats/');
+  }
+
+  // Tier Benefits APIs
+  async getTierBenefits(): Promise<MembershipTierBenefit[]> {
+    return this.fetch('/tier-benefits/');
+  }
+
+  async getTierBenefit(id: number): Promise<MembershipTierBenefit> {
+    return this.fetch(`/tier-benefits/${id}/`);
+  }
+
+  async createTierBenefit(data: Partial<MembershipTierBenefit>): Promise<MembershipTierBenefit> {
+    return this.fetch('/tier-benefits/', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateTierBenefit(id: number, data: Partial<MembershipTierBenefit>): Promise<MembershipTierBenefit> {
+    return this.fetch(`/tier-benefits/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
   }
 }
 
