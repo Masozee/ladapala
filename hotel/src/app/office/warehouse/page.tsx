@@ -2,7 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
-import { Package, AlertTriangle, TrendingDown, TrendingUp, Search, Plus, Edit, Trash2, Eye, MoreHorizontal, BarChart3, PieChart } from 'lucide-react';
+import {
+  PackageIcon,
+  AlertCircleIcon,
+  ArrowUp01Icon,
+  Search02Icon,
+  Add01Icon,
+  PencilEdit02Icon,
+  CancelCircleIcon,
+  EyeIcon,
+  MoreHorizontalIcon,
+  PieChartIcon
+} from '@/lib/icons';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 
 export default function WarehousePage() {
@@ -140,7 +151,7 @@ export default function WarehousePage() {
                   <p className="text-sm text-gray-100 mt-1">Total jenis barang</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Package className="h-4 w-4 text-[#005357]" />
+                  <PackageIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -160,7 +171,7 @@ export default function WarehousePage() {
                   <p className="text-sm text-gray-100 mt-1">Butuh segera diisi</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                  <Alert01Icon className="h-4 w-4 text-red-500" />
                 </div>
               </div>
             </div>
@@ -182,7 +193,7 @@ export default function WarehousePage() {
                   <p className="text-sm text-gray-100 mt-1">Perlu diperhatikan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <TrendingDown className="h-4 w-4 text-yellow-500" />
+                  <ArrowUp01Icon className="h-4 w-4 text-yellow-500" />
                 </div>
               </div>
             </div>
@@ -204,7 +215,7 @@ export default function WarehousePage() {
                   <p className="text-sm text-gray-100 mt-1">Kondisi normal</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <ArrowUp01Icon className="h-4 w-4 text-green-500" />
                 </div>
               </div>
             </div>
@@ -230,14 +241,14 @@ export default function WarehousePage() {
                   <p className="text-sm text-gray-100 mt-1">Distribusi status stok berdasarkan kategori</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <BarChart3 className="h-4 w-4 text-[#005357]" />
+                  <PieChartIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50">
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stockLevelData} barCategoryGap="20%">
+                  <PieChartIcon data={stockLevelData} barCategoryGap="20%">
                     <XAxis 
                       dataKey="category" 
                       axisLine={false} 
@@ -298,7 +309,7 @@ export default function WarehousePage() {
                   <p className="text-sm text-gray-100 mt-1">Pembagian item berdasarkan kategori</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <PieChart className="h-4 w-4 text-[#005357]" />
+                  <PieChartIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -346,14 +357,14 @@ export default function WarehousePage() {
                 <p className="text-sm text-gray-100 mt-1">Monitoring stok barang amenitas hotel</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <Package className="h-4 w-4 text-[#005357]" />
+                <PackageIcon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
           </div>
           <div className="p-6 bg-gray-50">
             <div className="flex items-center justify-between mb-6">
               <button className="bg-[#005357] text-white px-4 py-2 flex items-center space-x-2 hover:bg-[#004147] transition-colors">
-                <Plus className="h-4 w-4" />
+                <Add01Icon className="h-4 w-4" />
                 <span className="text-sm">Tambah Item</span>
               </button>
             </div>
@@ -381,7 +392,7 @@ export default function WarehousePage() {
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-gray-400" />
+                  <Search02Icon className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type="text"
@@ -494,7 +505,7 @@ export default function WarehousePage() {
                             className="flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors rounded"
                             title="More actions"
                           >
-                            <MoreHorizontal className="h-4 w-4" />
+                            <MoreHorizontalIcon className="h-4 w-4" />
                           </button>
                           
                           {openMenuId === item.id && (
@@ -515,7 +526,7 @@ export default function WarehousePage() {
                                     }}
                                     className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
                                   >
-                                    <Eye className="h-4 w-4" />
+                                    <EyeIcon className="h-4 w-4" />
                                     <span>Lihat Detail</span>
                                   </button>
                                   <button
@@ -525,7 +536,7 @@ export default function WarehousePage() {
                                     }}
                                     className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
                                   >
-                                    <Edit className="h-4 w-4" />
+                                    <PencilEdit02Icon className="h-4 w-4" />
                                     <span>Edit Item</span>
                                   </button>
                                   
@@ -539,7 +550,7 @@ export default function WarehousePage() {
                                     }}
                                     className="flex items-center space-x-2 px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors w-full text-left"
                                   >
-                                    <Plus className="h-4 w-4" />
+                                    <Add01Icon className="h-4 w-4" />
                                     <span>Tambah Stok</span>
                                   </button>
                                   
@@ -551,7 +562,7 @@ export default function WarehousePage() {
                                       }}
                                       className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
                                     >
-                                      <AlertTriangle className="h-4 w-4" />
+                                      <Alert01Icon className="h-4 w-4" />
                                       <span>Restok Mendesak</span>
                                     </button>
                                   )}

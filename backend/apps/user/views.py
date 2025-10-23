@@ -191,7 +191,7 @@ def check_session(request):
     else:
         return Response({
             'authenticated': False
-        }, status=status.HTTP_401_UNAUTHORIZED)
+        })
 
 
 @api_view(['GET', 'PUT', 'PATCH'])

@@ -38,7 +38,7 @@ interface StatCard {
 }
 
 export default function HomePage() {
-  const { staff } = useAuth()
+  const { staff, isAuthenticated, isLoading: authLoading } = useAuth()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [unpaidOrders, setUnpaidOrders] = useState<Order[]>([])
   const [recentOrders, setRecentOrders] = useState<Order[]>([])
@@ -50,17 +50,20 @@ export default function HomePage() {
   const [expiredCount, setExpiredCount] = useState(0)
 
   useEffect(() => {
-    fetchData()
-    fetchExpiryData()
-
-    // Auto-refresh every 30 seconds to show latest data
-    const interval = setInterval(() => {
+    // Only fetch data if authenticated
+    if (!authLoading && isAuthenticated) {
       fetchData()
       fetchExpiryData()
-    }, 30000)
 
-    return () => clearInterval(interval)
-  }, [])
+      // Auto-refresh every 30 seconds to show latest data
+      const interval = setInterval(() => {
+        fetchData()
+        fetchExpiryData()
+      }, 30000)
+
+      return () => clearInterval(interval)
+    }
+  }, [authLoading, isAuthenticated])
 
   const fetchExpiryData = async () => {
     try {

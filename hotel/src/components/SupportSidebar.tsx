@@ -7,24 +7,24 @@ import { usePathname } from 'next/navigation';
 import * as Separator from '@radix-ui/react-separator';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {
-  Wrench,
-  Bed,
-  Package,
-  MessageSquare,
-  ClipboardCheck,
-  AlertTriangle,
-  Clock,
-  Settings,
-  User,
-  ArrowLeft,
-  Headphones,
+  Wrench01Icon,
+  BedIcon,
+  PackageIcon,
+  Mail01Icon,
+  UserCheckIcon,
+  AlertCircleIcon,
+  Clock01Icon,
+  Settings02Icon,
+  UserIcon,
+  ChevronLeftIcon,
+  HeadphonesIcon,
   CheckSquare,
   ShoppingCart,
   Home,
-  Bell,
-  FileText,
-  Calendar
-} from 'lucide-react';
+  Notification02Icon,
+  File01Icon,
+  Calendar01Icon
+} from '@/lib/icons';
 
 interface MenuItem {
   name: string;
@@ -37,23 +37,23 @@ const SupportSidebar = () => {
   const pathname = usePathname();
 
   const mainNavItems: MenuItem[] = [
-    { name: 'Support Dashboard', icon: Headphones, href: '/support' },
-    { name: 'Back to Main', icon: ArrowLeft, href: '/' },
+    { name: 'Support Dashboard', icon: HeadphonesIcon, href: '/support' },
+    { name: 'Back to Main', icon: ChevronLeftIcon, href: '/' },
   ];
 
   const supportActions: MenuItem[] = [
-    { name: 'Maintenance', icon: Wrench, href: '/support/maintenance', badge: '3' },
-    { name: 'Housekeeping', icon: Bed, href: '/support/housekeeping', badge: '7' },
-    { name: 'Amenities Request', icon: Package, href: '/support/amenities', badge: '2' },
-    { name: 'Work Orders', icon: ClipboardCheck, href: '/support/workorders' },
-    { name: 'Emergency', icon: AlertTriangle, href: '/support/emergency' },
-    { name: 'Reports', icon: FileText, href: '/support/reports' },
+    { name: 'Maintenance', icon: Wrench01Icon, href: '/support/maintenance', badge: '3' },
+    { name: 'Housekeeping', icon: BedIcon, href: '/support/housekeeping', badge: '7' },
+    { name: 'Amenities Request', icon: PackageIcon, href: '/support/amenities', badge: '2' },
+    { name: 'Work Orders', icon: UserCheckIcon, href: '/support/workorders' },
+    { name: 'Emergency', icon: AlertCircleIcon, href: '/support/emergency' },
+    { name: 'Reports', icon: File01Icon, href: '/support/reports' },
   ];
 
   const bottomActions: MenuItem[] = [
-    { name: 'Calendar', icon: Calendar, href: '/calendar' },
-    { name: 'Support Settings', icon: Settings, href: '/support/settings' },
-    { name: 'Profile', icon: User, href: '/profile' },
+    { name: 'Calendar', icon: Calendar01Icon, href: '/calendar' },
+    { name: 'Support Settings', icon: Settings02Icon, href: '/support/settings' },
+    { name: 'Profile', icon: UserIcon, href: '/profile' },
   ];
 
   const isActive = (href: string) => {
@@ -69,7 +69,7 @@ const SupportSidebar = () => {
         <div className="p-4">
           <div className="flex items-center justify-center">
             <div className="w-10 h-10 bg-[#005357] flex items-center justify-center p-1">
-              <Image
+              <ViewIcon
                 src="/logo.png"
                 alt="Kapulaga Hotel Logo"
                 width={32}

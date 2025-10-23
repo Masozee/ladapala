@@ -7,23 +7,22 @@ import { usePathname } from 'next/navigation';
 import * as Separator from '@radix-ui/react-separator';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {
-  Building2,
-  Users,
-  CreditCard,
-  FileText,
-  Settings,
-  UserCog,
-  Clock,
-  TrendingUp,
+  Building03Icon,
+  UserMultipleIcon,
+  CreditCardIcon,
+  File01Icon,
+  Settings02Icon,
+  UserSettings01Icon,
+  Clock01Icon,
+  ArrowUp01Icon,
   Home,
-  User,
-  BarChart3,
-  Calendar,
-  DollarSign,
-  Shield,
-  ArrowLeft,
-  Package
-} from 'lucide-react';
+  UserIcon,
+  PieChartIcon,
+  Calendar01Icon,
+  Shield01Icon,
+  ChevronLeftIcon,
+  PackageIcon
+} from '@/lib/icons';
 
 interface MenuItem {
   name: string;
@@ -36,25 +35,25 @@ const OfficeSidebar = () => {
   const pathname = usePathname();
 
   const mainNavItems: MenuItem[] = [
-    { name: 'Office Dashboard', icon: Building2, href: '/office' },
-    { name: 'Back to Main', icon: ArrowLeft, href: '/' },
+    { name: 'Office Dashboard', icon: Building03Icon, href: '/office' },
+    { name: 'Back to Main', icon: ChevronLeftIcon, href: '/' },
   ];
 
   const officeActions: MenuItem[] = [
-    { name: 'Analytics', icon: BarChart3, href: '/office/analytics' },
-    { name: 'Guest Database', icon: Users, href: '/guests' },
-    { name: 'Employees', icon: UserCog, href: '/office/employees' },
-    { name: 'Financial', icon: DollarSign, href: '/office/financial' },
-    { name: 'Warehouse', icon: Package, href: '/office/warehouse' },
-    { name: 'Schedules', icon: Calendar, href: '/office/schedules' },
-    { name: 'Reports', icon: FileText, href: '/office/reports' },
-    { name: 'Administration', icon: Shield, href: '/office/admin' },
+    { name: 'Analytics', icon: PieChartIcon, href: '/office/analytics' },
+    { name: 'Guest Database', icon: UserMultipleIcon, href: '/guests' },
+    { name: 'Employees', icon: UserSettings01Icon, href: '/office/employees' },
+    { name: 'Financial', icon: CreditCardIcon, href: '/office/financial' },
+    { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse' },
+    { name: 'Schedules', icon: Calendar01Icon, href: '/office/schedules' },
+    { name: 'Reports', icon: File01Icon, href: '/office/reports' },
+    { name: 'Administration', icon: Shield01Icon, href: '/office/admin' },
   ];
 
   const bottomActions: MenuItem[] = [
-    { name: 'Calendar', icon: Calendar, href: '/calendar' },
-    { name: 'Office Settings', icon: Settings, href: '/office/settings' },
-    { name: 'Profile', icon: User, href: '/profile' },
+    { name: 'Calendar', icon: Calendar01Icon, href: '/calendar' },
+    { name: 'Office Settings', icon: Settings02Icon, href: '/office/settings' },
+    { name: 'Profile', icon: UserIcon, href: '/profile' },
   ];
 
   const isActive = (href: string) => {

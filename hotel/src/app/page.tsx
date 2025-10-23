@@ -1,7 +1,18 @@
 'use client';
 
 import AppLayout from '@/components/AppLayout';
-import { Hotel, TrendingUp, Users, Calendar, Phone, AlertTriangle, Newspaper, ChevronRight, PieChart as PieChartIcon, RefreshCw } from 'lucide-react';
+import {
+  HotelIcon,
+  ArrowUp01Icon,
+  UserMultipleIcon,
+  Calendar01Icon,
+  Call02Icon,
+  AlertCircleIcon,
+  News01Icon,
+  ChevronRightIcon,
+  PieChartIcon,
+  Loading03Icon
+} from '@/lib/icons';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { useDashboardData } from '@/hooks/useDashboardData';
@@ -68,7 +79,7 @@ export default function Home() {
                 disabled={loading}
                 className="flex items-center space-x-2 px-4 py-2 text-[#005357] hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
               >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <Loading03Icon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 <span>Refresh</span>
               </button>
             </div>
@@ -83,7 +94,7 @@ export default function Home() {
                   <p className="text-sm text-gray-100 mt-1">Available hotel capacity</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Hotel className="h-4 w-4 text-[#005357]" />
+                  <HotelIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -105,7 +116,7 @@ export default function Home() {
                   <p className="text-sm text-gray-100 mt-1">Current room utilization</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-[#005357]" />
+                  <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -127,7 +138,7 @@ export default function Home() {
                   <p className="text-sm text-gray-100 mt-1">Currently checked in</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Users className="h-4 w-4 text-[#005357]" />
+                  <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -149,7 +160,7 @@ export default function Home() {
                   <p className="text-sm text-gray-100 mt-1">Scheduled arrivals</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Calendar className="h-4 w-4 text-[#005357]" />
+                  <Calendar01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -250,7 +261,7 @@ export default function Home() {
                   <p className="text-sm text-gray-100 mt-1">Current vs Previous Month Performance</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-[#005357]" />
+                  <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -317,7 +328,7 @@ export default function Home() {
                   <p className="text-sm text-gray-100 mt-1">Hotel updates and announcements</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Newspaper className="h-4 w-4 text-[#005357]" />
+                  <News01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -335,7 +346,7 @@ export default function Home() {
                           {news.date} - {news.time} ({news.location})
                         </p>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
+                      <ChevronRightIcon className="h-4 w-4 text-gray-400" />
                     </div>
                   </div>
                 ))
@@ -354,7 +365,7 @@ export default function Home() {
                   <p className="text-sm text-gray-100 mt-1">{format(currentDate, 'MMMM yyyy')}</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Calendar className="h-4 w-4 text-[#005357]" />
+                  <Calendar01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -386,8 +397,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Emergency Contact Card - 2/3 width */}
-          <div className="bg-white shadow md:col-span-2 lg:col-span-4">
+          {/* Emergency Contact Card - 1/3 width */}
+          <div className="bg-white shadow md:col-span-1 lg:col-span-2">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -395,7 +406,7 @@ export default function Home() {
                   <p className="text-sm text-gray-100 mt-1">Quick access to essential services</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Phone className="h-4 w-4 text-[#005357]" />
+                  <Call02Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -404,7 +415,7 @@ export default function Home() {
                 <div key={index} className="bg-white p-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
                   <div className="flex items-center space-x-3">
                     <div className="w-6 h-6 bg-red-100 flex items-center justify-center">
-                      <AlertTriangle className="h-3 w-3 text-red-600" />
+                      <AlertCircleIcon className="h-3 w-3 text-red-600" />
                     </div>
                     <span className="font-medium text-gray-900 text-sm">{contact.label}</span>
                   </div>

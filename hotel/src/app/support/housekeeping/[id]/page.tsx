@@ -4,48 +4,32 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout from '@/components/AppLayout';
-import { 
-  ArrowLeft,
-  Package,
-  Clock,
-  User,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Edit,
-  Plus,
-  Bed,
-  Bath,
-  Coffee,
-  Trash2,
-  SprayCan,
-  Building,
-  UserCheck,
-  Star,
-  MapPin,
-  Users,
-  ClipboardCheck,
-  Wrench,
-  Phone,
-  MessageSquare,
-  Flag,
-  Award,
-  Play,
-  Pause,
-  RotateCcw,
-  Save,
-  Calendar,
-  Timer,
-  Target,
-  Eye,
-  FileText,
-  Camera,
+import {
+  ChevronLeftIcon,
+  PackageIcon,
+  Clock01Icon,
+  UserIcon,
+  UserCheckIcon,
+  CancelCircleIcon,
+  AlertCircleIcon,
+  PencilEdit02Icon,
+  Add01Icon,
+  BedIcon,
+  Building03Icon,
+  SparklesIcon,
+  Location01Icon,
+  UserMultipleIcon,
+  Wrench01Icon,
+  Call02Icon,
+  Mail01Icon,
+  Loading03Icon,
+  Calendar01Icon,
+  EyeIcon,
+  File01Icon,
+  ViewIcon,
   CheckSquare,
-  Square,
-  AlertCircle,
-  Lightbulb,
-  Zap
-} from 'lucide-react';
+  Square
+} from '@/lib/icons';
 
 interface HousekeepingTask {
   id: number;
@@ -465,11 +449,11 @@ const HousekeepingDetailPage = () => {
 
   const getTaskIcon = (category: string) => {
     switch (category) {
-      case 'cleaning': return <SprayCan className="h-4 w-4" />;
-      case 'maintenance': return <Wrench className="h-4 w-4" />;
-      case 'inspection': return <Eye className="h-4 w-4" />;
-      case 'restocking': return <Package className="h-4 w-4" />;
-      default: return <ClipboardCheck className="h-4 w-4" />;
+      case 'cleaning': return <PackageIcon className="h-4 w-4" />;
+      case 'maintenance': return <Wrench01Icon className="h-4 w-4" />;
+      case 'inspection': return <EyeIcon className="h-4 w-4" />;
+      case 'restocking': return <PackageIcon className="h-4 w-4" />;
+      default: return <UserCheckIcon className="h-4 w-4" />;
     }
   };
 
@@ -583,13 +567,13 @@ const HousekeepingDetailPage = () => {
 
   const getIconComponent = (iconName: string) => {
     switch (iconName) {
-      case 'Bed': return <Bed className="h-4 w-4 text-white" />;
-      case 'Bath': return <Bath className="h-4 w-4 text-white" />;
-      case 'Coffee': return <Coffee className="h-4 w-4 text-white" />;
-      case 'SprayCan': return <SprayCan className="h-4 w-4 text-white" />;
-      case 'CheckCircle': return <CheckCircle className="h-4 w-4 text-white" />;
-      case 'Wrench': return <Wrench className="h-4 w-4 text-white" />;
-      default: return <ClipboardCheck className="h-4 w-4 text-white" />;
+      case 'Bed': return <BedIcon className="h-4 w-4 text-white" />;
+      case 'Bath': return <Shield01Icon className="h-4 w-4 text-white" />;
+      case 'Coffee': return <SparklesIcon className="h-4 w-4 text-white" />;
+      case 'SprayCan': return <PackageIcon className="h-4 w-4 text-white" />;
+      case 'CheckCircle': return <UserCheckIcon className="h-4 w-4 text-white" />;
+      case 'Wrench': return <Wrench01Icon className="h-4 w-4 text-white" />;
+      default: return <UserCheckIcon className="h-4 w-4 text-white" />;
     }
   };
 
@@ -615,12 +599,12 @@ const HousekeepingDetailPage = () => {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'electronics': return <Zap className="h-4 w-4" />;
-      case 'clothing': return <Package className="h-4 w-4" />;
-      case 'jewelry': return <Star className="h-4 w-4" />;
-      case 'documents': return <FileText className="h-4 w-4" />;
-      case 'personal': return <User className="h-4 w-4" />;
-      default: return <Package className="h-4 w-4" />;
+      case 'electronics': return <SparklesIcon className="h-4 w-4" />;
+      case 'clothing': return <PackageIcon className="h-4 w-4" />;
+      case 'jewelry': return <SparklesIcon className="h-4 w-4" />;
+      case 'documents': return <File01Icon className="h-4 w-4" />;
+      case 'personal': return <UserIcon className="h-4 w-4" />;
+      default: return <PackageIcon className="h-4 w-4" />;
     }
   };
 
@@ -674,14 +658,14 @@ const HousekeepingDetailPage = () => {
       <AppLayout>
         <div className="p-6">
           <div className="text-center">
-            <AlertTriangle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <Alert01Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Room Not Found</h2>
             <p className="text-gray-600 mb-6">The room task you're looking for doesn't exist.</p>
             <Link 
               href="/housekeeping"
               className="inline-flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 hover:bg-[#004147] transition-colors"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ChevronLeftIcon className="h-4 w-4" />
               <span>Back to Housekeeping</span>
             </Link>
           </div>
@@ -702,7 +686,7 @@ const HousekeepingDetailPage = () => {
             href="/housekeeping"
             className="inline-flex items-center space-x-2 text-gray-600 hover:text-[#005357] transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ChevronLeftIcon className="h-4 w-4" />
             <span className="text-sm font-medium">Back to Housekeeping</span>
           </Link>
           
@@ -728,7 +712,7 @@ const HousekeepingDetailPage = () => {
                 disabled={progressPercentage < 100}
                 className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors disabled:opacity-50"
               >
-                <CheckCircle className="h-4 w-4" />
+                <UserCheckIcon className="h-4 w-4" />
                 <span>Mark Complete</span>
               </button>
             </div>
@@ -744,7 +728,7 @@ const HousekeepingDetailPage = () => {
                 <p className="text-sm text-gray-600 mt-1">{completedTasks} of {totalTasks} items completed</p>
               </div>
               <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <Target className="h-4 w-4 text-white" />
+                <Location01Icon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -781,7 +765,7 @@ const HousekeepingDetailPage = () => {
                     <p className="text-sm text-green-100 mt-1">Location and specifications</p>
                   </div>
                   <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
-                    <Building className="h-4 w-4 text-white" />
+                    <Building03Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -826,7 +810,7 @@ const HousekeepingDetailPage = () => {
                     <p className="text-sm text-green-100 mt-1">Checkout and checkin times</p>
                   </div>
                   <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
-                    <Calendar className="h-4 w-4 text-white" />
+                    <Calendar01Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -861,14 +845,14 @@ const HousekeepingDetailPage = () => {
                     <p className="text-sm text-green-100 mt-1">Room responsibility</p>
                   </div>
                   <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
-                    <UserCheck className="h-4 w-4 text-white" />
+                    <UserCheckIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
               <div className="p-4 bg-gray-50">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-gray-600" />
+                    <UserIcon className="h-6 w-6 text-gray-600" />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900">{roomTask.assigned_staff}</h4>
@@ -878,7 +862,7 @@ const HousekeepingDetailPage = () => {
                 
                 {roomTask.staff_phone && (
                   <button className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors">
-                    <Phone className="h-4 w-4" />
+                    <Call02Icon className="h-4 w-4" />
                     <span>Contact Staff</span>
                   </button>
                 )}
@@ -897,7 +881,7 @@ const HousekeepingDetailPage = () => {
                     <p className="text-sm text-green-100 mt-1">{totalTasks} items • {completedTasks} completed ({progressPercentage}%)</p>
                   </div>
                   <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
-                    <ClipboardCheck className="h-4 w-4 text-white" />
+                    <UserCheckIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -941,7 +925,7 @@ const HousekeepingDetailPage = () => {
                                   {item}
                                 </span>
                                 {isChecked && (
-                                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                  <UserCheckIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
                                 )}
                               </label>
                             );
@@ -982,7 +966,7 @@ const HousekeepingDetailPage = () => {
                       <p className="text-sm text-green-100 mt-1">Important room-specific requirements</p>
                     </div>
                     <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
-                      <Lightbulb className="h-4 w-4 text-white" />
+                      <SparklesIcon className="h-4 w-4 text-white" />
                     </div>
                   </div>
                 </div>
@@ -1005,7 +989,7 @@ const HousekeepingDetailPage = () => {
                       <p className="text-sm text-green-100 mt-1">{roomTask.guest_requests.length} special requests</p>
                     </div>
                     <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
-                      <Star className="h-4 w-4 text-white" />
+                      <SparklesIcon className="h-4 w-4 text-white" />
                     </div>
                   </div>
                 </div>
@@ -1013,7 +997,7 @@ const HousekeepingDetailPage = () => {
                   <div className="space-y-2">
                     {roomTask.guest_requests.map((request, index) => (
                       <div key={index} className="flex items-center space-x-2 p-2 bg-blue-50 border border-blue-200 rounded">
-                        <Star className="h-4 w-4 text-blue-600" />
+                        <SparklesIcon className="h-4 w-4 text-blue-600" />
                         <span className="text-blue-800 text-sm font-medium">{request}</span>
                       </div>
                     ))}
@@ -1031,7 +1015,7 @@ const HousekeepingDetailPage = () => {
                     <p className="text-sm text-green-100 mt-1">{roomTask.maintenance_issues.length} reported issues</p>
                   </div>
                   <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
-                    <Wrench className="h-4 w-4 text-white" />
+                    <Wrench01Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -1091,7 +1075,7 @@ const HousekeepingDetailPage = () => {
                     <p className="text-sm text-green-100 mt-1">Staff observations and updates</p>
                   </div>
                   <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-white" />
+                    <File01Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -1131,7 +1115,7 @@ const HousekeepingDetailPage = () => {
                     <p className="text-sm text-green-100 mt-1">{roomTask.lost_found_items.length} items found</p>
                   </div>
                   <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
-                    <Package className="h-4 w-4 text-white" />
+                    <PackageIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -1176,7 +1160,7 @@ const HousekeepingDetailPage = () => {
 
                         {item.guest_contacted && (
                           <div className="flex items-center space-x-1 text-green-600 text-xs">
-                            <CheckCircle className="h-3 w-3" />
+                            <UserCheckIcon className="h-3 w-3" />
                             <span>Guest contacted</span>
                           </div>
                         )}
@@ -1269,7 +1253,7 @@ const HousekeepingDetailPage = () => {
                       <p className="text-sm text-green-100 mt-1">Before and after documentation</p>
                     </div>
                     <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
-                      <Camera className="h-4 w-4 text-white" />
+                      <ViewIcon className="h-4 w-4 text-white" />
                     </div>
                   </div>
                 </div>
@@ -1291,7 +1275,7 @@ const HousekeepingDetailPage = () => {
                     </div>
                     
                     <button className="w-full bg-blue-600 text-white px-3 py-2 text-sm font-medium hover:bg-blue-700 transition-colors">
-                      <Camera className="h-4 w-4 inline mr-2" />
+                      <ViewIcon className="h-4 w-4 inline mr-2" />
                       Take After Photos
                     </button>
                   </div>

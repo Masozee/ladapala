@@ -2,38 +2,30 @@
 
 import { useState } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { 
-  Bed, 
-  Plus,
-  Search,
-  Filter,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  User,
-  MapPin,
-  Calendar,
-  Eye,
-  Edit,
-  Trash2,
-  Phone,
-  Mail,
-  Timer,
-  Sparkles,
-  ShowerHead,
-  Coffee,
-  Shirt,
-  Utensils,
-  Wind,
-  Package,
-  RefreshCw,
-  Camera,
-  MoreHorizontal,
-  Users,
-  Star,
-  ClipboardCheck,
-  Settings
-} from 'lucide-react';
+import {
+  BedIcon,
+  Add01Icon,
+  Search02Icon,
+  FilterIcon,
+  Clock01Icon,
+  AlertCircleIcon,
+  UserCheckIcon,
+  UserIcon,
+  Location01Icon,
+  Calendar01Icon,
+  EyeIcon,
+  PencilEdit02Icon,
+  CancelCircleIcon,
+  Call02Icon,
+  Mail01Icon,
+  SparklesIcon,
+  PackageIcon,
+  Loading03Icon,
+  ViewIcon,
+  MoreHorizontalIcon,
+  UserMultipleIcon,
+  Settings02Icon
+} from '@/lib/icons';
 
 export default function HousekeepingPage() {
   const [activeTab, setActiveTab] = useState('pending');
@@ -296,11 +288,11 @@ export default function HousekeepingPage() {
 
   const getTaskTypeIcon = (type: string) => {
     switch (type) {
-      case 'checkout_cleaning': return <RefreshCw className="h-4 w-4" />;
-      case 'daily_cleaning': return <Sparkles className="h-4 w-4" />;
-      case 'maintenance_cleaning': return <Settings className="h-4 w-4" />;
-      case 'vip_cleaning': return <Star className="h-4 w-4" />;
-      default: return <Bed className="h-4 w-4" />;
+      case 'checkout_cleaning': return <Loading03Icon className="h-4 w-4" />;
+      case 'daily_cleaning': return <SparklesIcon className="h-4 w-4" />;
+      case 'maintenance_cleaning': return <Settings02Icon className="h-4 w-4" />;
+      case 'vip_cleaning': return <SparklesIcon className="h-4 w-4" />;
+      default: return <BedIcon className="h-4 w-4" />;
     }
   };
 
@@ -398,7 +390,7 @@ export default function HousekeepingPage() {
                   <p className="text-sm text-gray-100 mt-1">Menunggu dibersihkan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -418,7 +410,7 @@ export default function HousekeepingPage() {
                   <p className="text-sm text-gray-100 mt-1">Sedang dikerjakan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <RefreshCw className="h-4 w-4 text-[#005357]" />
+                  <Loading03Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -438,7 +430,7 @@ export default function HousekeepingPage() {
                   <p className="text-sm text-gray-100 mt-1">Selesai hari ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -458,7 +450,7 @@ export default function HousekeepingPage() {
                   <p className="text-sm text-gray-100 mt-1">Tim housekeeping</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Users className="h-4 w-4 text-[#005357]" />
+                  <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -481,11 +473,11 @@ export default function HousekeepingPage() {
               </div>
               <div className="flex items-center space-x-3">
                 <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
+                  <Add01Icon className="h-4 w-4" />
                   <span>New Task</span>
                 </button>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Bed className="h-4 w-4 text-[#005357]" />
+                  <BedIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -506,7 +498,7 @@ export default function HousekeepingPage() {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
+                    <Search02Icon className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -639,7 +631,7 @@ export default function HousekeepingPage() {
                           <span className="text-gray-600">Guest rating:</span>
                           <div className="flex items-center space-x-1">
                             {[...Array(5)].map((_, i) => (
-                              <Star 
+                              <SparklesIcon 
                                 key={i} 
                                 className={`h-4 w-4 ${i < task.guestRating! ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
                               />
@@ -652,13 +644,13 @@ export default function HousekeepingPage() {
 
                     <div className="flex items-center space-x-2 ml-4">
                       <button className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded">
-                        <Eye className="h-4 w-4" />
+                        <EyeIcon className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                        <Edit className="h-4 w-4" />
+                        <PencilEdit02Icon className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors rounded">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <MoreHorizontalIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -677,7 +669,7 @@ export default function HousekeepingPage() {
                 <p className="text-sm text-gray-100 mt-1">Status dan performa tim housekeeping</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <Users className="h-4 w-4 text-[#005357]" />
+                <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
           </div>
@@ -724,7 +716,7 @@ export default function HousekeepingPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Rating:</span>
                       <div className="flex items-center space-x-1">
-                        <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                        <SparklesIcon className="h-3 w-3 text-yellow-400 fill-current" />
                         <span className="text-gray-900">{staff.rating}</span>
                       </div>
                     </div>
@@ -739,10 +731,10 @@ export default function HousekeepingPage() {
                       Assign Room
                     </button>
                     <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors rounded">
-                      <Phone className="h-4 w-4" />
+                      <Call02Icon className="h-4 w-4" />
                     </button>
                     <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                      <Mail className="h-4 w-4" />
+                      <Mail01Icon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

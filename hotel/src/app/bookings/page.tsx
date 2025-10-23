@@ -6,36 +6,36 @@ import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
 import * as Dialog from '@radix-ui/react-dialog';
-import { 
-  Calendar, 
-  Users, 
-  Clock, 
-  Search, 
-  Filter,
-  Eye,
-  Edit,
-  X,
-  Phone,
-  Mail,
-  MapPin,
-  Bed,
-  CreditCard,
-  Plus,
-  CheckCircle,
-  User,
-  Sparkles,
-  Wrench,
-  Ban,
-  AlertTriangle,
-  List,
-  CalendarDays,
-  MoreHorizontal,
-  ChevronUp,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  LogOut
-} from 'lucide-react';
+import {
+  Calendar01Icon,
+  UserMultipleIcon,
+  Clock01Icon,
+  Search02Icon,
+  FilterIcon,
+  EyeIcon,
+  PencilEdit02Icon,
+  Cancel01Icon,
+  Call02Icon,
+  Mail01Icon,
+  Location01Icon,
+  BedIcon,
+  CreditCardIcon,
+  Add01Icon,
+  UserCheckIcon,
+  UserIcon,
+  SparklesIcon,
+  Wrench01Icon,
+  CancelCircleIcon,
+  AlertCircleIcon,
+  ListViewIcon,
+  Calendar01Icon as CalendarDaysIcon,
+  MoreHorizontalIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Logout01Icon
+} from '@/lib/icons';
 
 interface Guest {
   id: number;
@@ -714,7 +714,7 @@ const BookingsPage = () => {
     }
     
     if (!formData.guest.first_name || !formData.guest.last_name || !formData.guest.email || !formData.guest.phone || !formData.guest.date_of_birth || !formData.guest.id_number) {
-      alert('Please fill in all required guest information (Name, Email, Phone, Date of Birth, and ID Number)');
+      alert('Please fill in all required guest information (Name, Email, Call02Icon, Date of Birth, and ID Number)');
       return;
     }
     
@@ -1318,13 +1318,13 @@ const BookingsPage = () => {
   const getRoomStatusIcon = (status: string) => {
     const iconProps = { className: "h-4 w-4" };
     switch (status) {
-      case 'AVAILABLE': return <CheckCircle {...iconProps} className="h-4 w-4 text-green-600" />;
-      case 'OCCUPIED': return <User {...iconProps} className="h-4 w-4 text-red-600" />;
-      case 'CLEANING': return <Sparkles {...iconProps} className="h-4 w-4 text-yellow-600" />;
-      case 'MAINTENANCE': return <Wrench {...iconProps} className="h-4 w-4 text-orange-600" />;
-      case 'BLOCKED': return <Ban {...iconProps} className="h-4 w-4 text-purple-600" />;
-      case 'OUT_OF_ORDER': return <AlertTriangle {...iconProps} className="h-4 w-4 text-gray-600" />;
-      default: return <CheckCircle {...iconProps} className="h-4 w-4 text-gray-400" />;
+      case 'AVAILABLE': return <UserCheckIcon {...iconProps} className="h-4 w-4 text-green-600" />;
+      case 'OCCUPIED': return <UserIcon {...iconProps} className="h-4 w-4 text-red-600" />;
+      case 'CLEANING': return <SparklesIcon {...iconProps} className="h-4 w-4 text-yellow-600" />;
+      case 'MAINTENANCE': return <Wrench01Icon {...iconProps} className="h-4 w-4 text-orange-600" />;
+      case 'BLOCKED': return <CancelCircleIcon {...iconProps} className="h-4 w-4 text-purple-600" />;
+      case 'OUT_OF_ORDER': return <AlertCircleIcon {...iconProps} className="h-4 w-4 text-gray-600" />;
+      default: return <UserCheckIcon {...iconProps} className="h-4 w-4 text-gray-400" />;
     }
   };
 
@@ -1614,8 +1614,8 @@ const BookingsPage = () => {
   const getSortIcon = (field: string) => {
     if (sortField !== field) return null;
     return sortOrder === 'asc' ? 
-      <ChevronUp className="h-3 w-3 inline ml-1 text-white" /> : 
-      <ChevronDown className="h-3 w-3 inline ml-1 text-white" />;
+      <ChevronUpIcon className="h-3 w-3 inline ml-1 text-white" /> : 
+      <ChevronDownIcon className="h-3 w-3 inline ml-1 text-white" />;
   };
 
   if (loading) {
@@ -1657,7 +1657,7 @@ const BookingsPage = () => {
                 : 'bg-white text-gray-600 hover:text-[#005357] border border-gray-200'
             }`}
           >
-            <List className="h-4 w-4" />
+            <ListViewIcon className="h-4 w-4" />
             <span>List View</span>
           </button>
           <button
@@ -1668,7 +1668,7 @@ const BookingsPage = () => {
                 : 'bg-white text-gray-600 hover:text-[#005357] border border-gray-200'
             }`}
           >
-            <CalendarDays className="h-4 w-4" />
+            <CalendarDaysIcon className="h-4 w-4" />
             <span>Calendar View</span>
           </button>
         </div>
@@ -1677,7 +1677,7 @@ const BookingsPage = () => {
           onClick={() => router.push('/reservations/new')}
           className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-4 text-sm font-bold hover:bg-[#004147] transition-colors"
         >
-          <Plus className="h-4 w-4" />
+          <Add01Icon className="h-4 w-4" />
           <span>New Reservation</span>
         </button>
       </div>
@@ -1698,7 +1698,7 @@ const BookingsPage = () => {
               <div className="flex items-center space-x-4">
                 {/* Search Form */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search reservations..."
@@ -1710,7 +1710,7 @@ const BookingsPage = () => {
                 
                 {/* Date Range Picker */}
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+                  <Calendar01Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
                   <input 
                     type="text" 
                     value={`${selectedDateRange.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${selectedDateRange.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
@@ -1808,7 +1808,7 @@ const BookingsPage = () => {
                 </div>
                 
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <CalendarDays className="h-4 w-4 text-white" />
+                  <CalendarDaysIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -1900,7 +1900,7 @@ const BookingsPage = () => {
                       disabled={roomsCurrentPage === 1 || roomsLoading}
                       className="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeftIcon className="h-4 w-4" />
                     </button>
                     
                     {(() => {
@@ -1962,7 +1962,7 @@ const BookingsPage = () => {
                       disabled={roomsCurrentPage === roomsTotalPages || roomsLoading}
                       className="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRightIcon className="h-4 w-4" />
                     </button>
                   </nav>
                 </div>
@@ -1987,7 +1987,7 @@ const BookingsPage = () => {
               <div className="flex items-center space-x-3">
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search..."
@@ -2028,7 +2028,7 @@ const BookingsPage = () => {
 
                 {/* Date Range Filter - Single Component */}
                 <div className="flex items-center space-x-2 px-3 py-2 border border-gray-300 bg-white text-sm">
-                  <Calendar className="h-4 w-4 text-gray-400" />
+                  <Calendar01Icon className="h-4 w-4 text-gray-400" />
                   <input
                     type="date"
                     value={checkInDateFilter || ''}
@@ -2128,7 +2128,7 @@ const BookingsPage = () => {
                   <th className="text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                     <div className="flex items-center justify-end">
                       <span>Actions</span>
-                      <ChevronDown className="h-3 w-3 ml-1 text-white opacity-70" />
+                      <ChevronDownIcon className="h-3 w-3 ml-1 text-white opacity-70" />
                     </div>
                   </th>
                 </tr>
@@ -2137,7 +2137,7 @@ const BookingsPage = () => {
                 {reservations.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center">
-                      <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <Calendar01Icon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-500">No reservations found</p>
                     </td>
                   </tr>
@@ -2222,7 +2222,7 @@ const BookingsPage = () => {
                             className="flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors rounded"
                             title="More actions"
                           >
-                            <MoreHorizontal className="h-4 w-4" />
+                            <MoreHorizontalIcon className="h-4 w-4" />
                           </button>
                           
                           {openMenuId === reservation.id && (
@@ -2241,14 +2241,14 @@ const BookingsPage = () => {
                                     className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                     onClick={() => setOpenMenuId(null)}
                                   >
-                                    <Eye className="h-4 w-4" />
+                                    <EyeIcon className="h-4 w-4" />
                                     <span>View Details</span>
                                   </Link>
                                   <button
                                     onClick={() => setOpenMenuId(null)}
                                     className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
                                   >
-                                    <Edit className="h-4 w-4" />
+                                    <PencilEdit02Icon className="h-4 w-4" />
                                     <span>Edit Reservation</span>
                                   </button>
                                   <div className="border-t border-gray-100 my-1"></div>
@@ -2273,7 +2273,7 @@ const BookingsPage = () => {
                                         }}
                                         className="flex items-center space-x-2 px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors w-full text-left"
                                       >
-                                        <CheckCircle className="h-4 w-4" />
+                                        <UserCheckIcon className="h-4 w-4" />
                                         <span>Check In</span>
                                       </button>
                                       <button
@@ -2283,7 +2283,7 @@ const BookingsPage = () => {
                                         }}
                                         className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
                                       >
-                                        <CreditCard className="h-4 w-4" />
+                                        <CreditCardIcon className="h-4 w-4" />
                                         <span>Process Payment</span>
                                       </button>
                                     </>
@@ -2308,14 +2308,14 @@ const BookingsPage = () => {
                                         }}
                                         className="flex items-center space-x-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors w-full text-left"
                                       >
-                                        <LogOut className="h-4 w-4" />
+                                        <Logout01Icon className="h-4 w-4" />
                                         <span>Check Out</span>
                                       </button>
                                       <button
                                         onClick={() => setOpenMenuId(null)}
                                         className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
                                       >
-                                        <CreditCard className="h-4 w-4" />
+                                        <CreditCardIcon className="h-4 w-4" />
                                         <span>Process Additional Charges</span>
                                       </button>
                                     </>
@@ -2330,7 +2330,7 @@ const BookingsPage = () => {
                                         }}
                                         className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
                                       >
-                                        <CreditCard className="h-4 w-4" />
+                                        <CreditCardIcon className="h-4 w-4" />
                                         <span>Process Payment</span>
                                       </button>
                                       <button
@@ -2350,7 +2350,7 @@ const BookingsPage = () => {
                                         }}
                                         className="flex items-center space-x-2 px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors w-full text-left"
                                       >
-                                        <CheckCircle className="h-4 w-4" />
+                                        <UserCheckIcon className="h-4 w-4" />
                                         <span>Confirm Reservation</span>
                                       </button>
                                     </>
@@ -2390,7 +2390,7 @@ const BookingsPage = () => {
                                         }}
                                         className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
                                       >
-                                        <X className="h-4 w-4" />
+                                        <Cancel01Icon className="h-4 w-4" />
                                         <span>Cancel Reservation</span>
                                       </button>
                                     </>
@@ -2449,7 +2449,7 @@ const BookingsPage = () => {
                       disabled={currentPage === 1 || loading}
                       className="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeftIcon className="h-4 w-4" />
                     </button>
                     
                     {(() => {
@@ -2510,7 +2510,7 @@ const BookingsPage = () => {
                       disabled={currentPage === getTotalPages() || loading}
                       className="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRightIcon className="h-4 w-4" />
                     </button>
                   </nav>
                 </div>
@@ -2536,7 +2536,7 @@ const BookingsPage = () => {
                 </div>
                 <Dialog.Close asChild>
                   <button className="p-2 text-white hover:text-gray-200">
-                    <X className="h-5 w-5" />
+                    <Cancel01Icon className="h-5 w-5" />
                   </button>
                 </Dialog.Close>
               </div>

@@ -3,23 +3,22 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import OfficeLayout from '@/components/OfficeLayout';
-import { 
-  Calendar,
-  CalendarDays,
-  Clock,
-  Users,
-  Search,
-  Filter,
-  Plus,
-  Edit,
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-  AlertCircle,
-  User,
-  Mail,
-  Phone
-} from 'lucide-react';
+import {
+  Calendar01Icon,
+  Clock01Icon,
+  UserMultipleIcon,
+  Search02Icon,
+  FilterIcon,
+  Add01Icon,
+  PencilEdit02Icon,
+  EyeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  AlertCircleIcon,
+  UserIcon,
+  Mail01Icon,
+  Call02Icon
+} from '@/lib/icons';
 
 export default function SchedulesPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -259,11 +258,11 @@ export default function SchedulesPage() {
               </div>
               <div className="flex items-center space-x-3">
                 <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
+                  <Add01Icon className="h-4 w-4" />
                   <span>Buat Jadwal Baru</span>
                 </button>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <CalendarDays className="h-4 w-4 text-[#005357]" />
+                  <Calendar01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -280,7 +279,7 @@ export default function SchedulesPage() {
                   onClick={() => setSelectedWeek(selectedWeek - 1)}
                   className="p-2 hover:bg-gray-100 transition-colors"
                 >
-                  <ChevronLeft className="h-5 w-5 text-gray-600" />
+                  <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
                 </button>
                 <div className="text-center">
                   <h2 className="text-lg font-semibold text-gray-900">
@@ -296,7 +295,7 @@ export default function SchedulesPage() {
                   onClick={() => setSelectedWeek(selectedWeek + 1)}
                   className="p-2 hover:bg-gray-100 transition-colors"
                 >
-                  <ChevronRight className="h-5 w-5 text-gray-600" />
+                  <ChevronRightIcon className="h-5 w-5 text-gray-600" />
                 </button>
               </div>
               
@@ -315,7 +314,7 @@ export default function SchedulesPage() {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
+                    <Search02Icon className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -464,13 +463,13 @@ export default function SchedulesPage() {
                               className="p-1 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
                               title="Lihat Karyawan"
                             >
-                              <Eye className="h-4 w-4" />
+                              <EyeIcon className="h-4 w-4" />
                             </Link>
                             <button 
                               className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded"
                               title="Edit Jadwal"
                             >
-                              <Edit className="h-4 w-4" />
+                              <PencilEdit02Icon className="h-4 w-4" />
                             </button>
                           </div>
                         </td>
@@ -483,7 +482,7 @@ export default function SchedulesPage() {
 
             {filteredEmployees.length === 0 && (
               <div className="text-center py-8">
-                <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <AlertCircleIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">Tidak ada karyawan yang sesuai dengan filter.</p>
               </div>
             )}
@@ -499,7 +498,7 @@ export default function SchedulesPage() {
                 <p className="text-sm text-gray-100 mt-1">Coverage per shift untuk minggu ini</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <Clock className="h-4 w-4 text-[#005357]" />
+                <Clock01Icon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
           </div>
@@ -508,7 +507,7 @@ export default function SchedulesPage() {
               <div className="bg-yellow-50 p-4 border-l-4 border-yellow-400">
                 <div className="flex items-center space-x-3 mb-2">
                   <div className="w-8 h-8 bg-yellow-400 flex items-center justify-center">
-                    <Clock className="h-4 w-4 text-white" />
+                    <Clock01Icon className="h-4 w-4 text-white" />
                   </div>
                   <h4 className="font-bold text-yellow-800">Shift Pagi</h4>
                 </div>
@@ -522,7 +521,7 @@ export default function SchedulesPage() {
               <div className="bg-blue-50 p-4 border-l-4 border-blue-400">
                 <div className="flex items-center space-x-3 mb-2">
                   <div className="w-8 h-8 bg-blue-400 flex items-center justify-center">
-                    <Clock className="h-4 w-4 text-white" />
+                    <Clock01Icon className="h-4 w-4 text-white" />
                   </div>
                   <h4 className="font-bold text-blue-800">Shift Siang</h4>
                 </div>
@@ -536,7 +535,7 @@ export default function SchedulesPage() {
               <div className="bg-purple-50 p-4 border-l-4 border-purple-400">
                 <div className="flex items-center space-x-3 mb-2">
                   <div className="w-8 h-8 bg-purple-400 flex items-center justify-center">
-                    <Clock className="h-4 w-4 text-white" />
+                    <Clock01Icon className="h-4 w-4 text-white" />
                   </div>
                   <h4 className="font-bold text-purple-800">Shift Malam</h4>
                 </div>

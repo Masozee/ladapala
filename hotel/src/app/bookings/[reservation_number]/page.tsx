@@ -6,44 +6,30 @@ import Link from 'next/link';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
 import * as Dialog from '@radix-ui/react-dialog';
-import { 
-  ArrowLeft,
-  Calendar, 
-  Users, 
-  Clock, 
-  Edit,
-  Phone,
-  Mail,
-  MapPin,
-  Bed,
-  CreditCard,
-  CheckCircle,
-  User,
-  MessageSquare,
-  AlertTriangle,
-  FileText,
-  Star,
-  Coffee,
-  Wifi,
-  Car,
-  UtensilsCrossed,
-  Baby,
-  Cigarette,
-  BedDouble,
-  Bath,
-  AirVent,
-  Tv,
-  Shield,
-  Award,
-  Plane,
-  Plus,
-  Gift,
-  CalendarCheck,
-  Hotel,
-  X,
-  Printer,
-  Download
-} from 'lucide-react';
+import {
+  ChevronLeftIcon,
+  Calendar01Icon,
+  UserMultipleIcon,
+  Clock01Icon,
+  PencilEdit02Icon,
+  Call02Icon,
+  Mail01Icon,
+  Location01Icon,
+  BedIcon,
+  CreditCardIcon,
+  UserCheckIcon,
+  UserIcon,
+  AlertCircleIcon,
+  File01Icon,
+  SparklesIcon,
+  PackageIcon,
+  CancelCircleIcon,
+  Shield01Icon,
+  Add01Icon,
+  HotelIcon,
+  Cancel01Icon,
+  ChevronDownIcon
+} from '@/lib/icons';
 
 interface Guest {
   id: number;
@@ -442,13 +428,13 @@ const BookingDetailPage = () => {
 
   const getAmenityIcon = (amenity: string) => {
     switch (amenity.toLowerCase()) {
-      case 'wifi': return <Wifi className="h-4 w-4" />;
-      case 'tv': return <Tv className="h-4 w-4" />;
+      case 'wifi': return <SparklesIcon className="h-4 w-4" />;
+      case 'tv': return <ViewIcon className="h-4 w-4" />;
       case 'ac': return <AirVent className="h-4 w-4" />;
-      case 'mini bar': return <Coffee className="h-4 w-4" />;
+      case 'mini bar': return <SparklesIcon className="h-4 w-4" />;
       case 'room service': return <UtensilsCrossed className="h-4 w-4" />;
       case 'safe': return <Shield className="h-4 w-4" />;
-      default: return <CheckCircle className="h-4 w-4" />;
+      default: return <UserCheckIcon className="h-4 w-4" />;
     }
   };
 
@@ -474,14 +460,14 @@ const BookingDetailPage = () => {
       <AppLayout breadcrumb={[{ label: 'Home', href: '/' }, { label: 'Bookings', href: '/bookings' }, { label: 'Not Found' }]}>
         <div className="p-6">
           <div className="text-center">
-            <AlertTriangle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <Alert01Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Booking Not Found</h2>
             <p className="text-gray-600 mb-6">The booking you&apos;re looking for doesn&apos;t exist or has been removed.</p>
             <Link 
               href="/bookings"
               className="inline-flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 hover:bg-[#004147] transition-colors"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ChevronLeftIcon className="h-4 w-4" />
               <span>Back to Bookings</span>
             </Link>
           </div>
@@ -510,7 +496,7 @@ const BookingDetailPage = () => {
                 </span>
                 {booking.guest_details?.vip_status && (
                   <span className="inline-flex items-center space-x-1 bg-yellow-100 text-yellow-800 px-2 py-1 text-xs font-medium">
-                    <Star className="h-3 w-3" />
+                    <SparklesIcon className="h-3 w-3" />
                     <span>VIP Guest</span>
                   </span>
                 )}
@@ -525,18 +511,18 @@ const BookingDetailPage = () => {
               onClick={() => setShowInvoice(true)}
               className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors"
             >
-              <FileText className="h-4 w-4" />
+              <File01Icon className="h-4 w-4" />
               <span>Generate Invoice</span>
             </button>
             <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
-              <Edit className="h-4 w-4" />
+              <PencilEdit02Icon className="h-4 w-4" />
               <span>Edit Booking</span>
             </button>
           </div>
         </div>
 
 
-        {/* Main Content Grid - 1/3 Guest Info, 2/3 Booking Info */}
+        {/* Main Content Grid - 1/3 Guest Alert01Icon, 2/3 Booking Info */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Guest Information (1/3) - Sticky */}
           <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-6 lg:h-fit">
@@ -549,7 +535,7 @@ const BookingDetailPage = () => {
                     <p className="text-sm text-gray-200 mt-1">Primary guest and contact details</p>
                   </div>
                   <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
+                    <UserIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -563,15 +549,15 @@ const BookingDetailPage = () => {
                       <p className="text-gray-900 font-bold text-base">{booking.guest_details?.full_name}</p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-gray-500" />
+                      <Mail01Icon className="h-4 w-4 text-gray-500" />
                       <span className="text-gray-700 text-base">{booking.guest_details?.email}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4 text-gray-500" />
+                      <Call02Icon className="h-4 w-4 text-gray-500" />
                       <span className="text-gray-700 text-base">{booking.guest_details?.phone}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <MapPin className="h-4 w-4 text-gray-500" />
+                      <Location01Icon className="h-4 w-4 text-gray-500" />
                       <span className="text-gray-700 text-base">{booking.guest_details?.nationality}</span>
                     </div>
                     <div>
@@ -696,7 +682,7 @@ const BookingDetailPage = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3">
                       {/* Check-in */}
                       <div className="flex items-start space-x-3">
-                        <Calendar className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <Calendar01Icon className="h-4 w-4 text-gray-400 mt-0.5" />
                         <div>
                           <p className="text-sm text-gray-500 font-medium">Check-in</p>
                           <p className="font-bold text-gray-900 text-base">{formatDate(booking.check_in_date)}</p>
@@ -705,7 +691,7 @@ const BookingDetailPage = () => {
                       
                       {/* Check-out */}
                       <div className="flex items-start space-x-3">
-                        <Calendar className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <Calendar01Icon className="h-4 w-4 text-gray-400 mt-0.5" />
                         <div>
                           <p className="text-sm text-gray-500 font-medium">Check-out</p>
                           <p className="font-bold text-gray-900 text-base">{formatDate(booking.check_out_date)}</p>
@@ -714,7 +700,7 @@ const BookingDetailPage = () => {
                       
                       {/* Duration */}
                       <div className="flex items-start space-x-3">
-                        <Clock className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <Clock01Icon className="h-4 w-4 text-gray-400 mt-0.5" />
                         <div>
                           <p className="text-sm text-gray-500 font-medium">Duration</p>
                           <p className="font-bold text-[#005357] text-base">{booking.nights} nights</p>
@@ -723,7 +709,7 @@ const BookingDetailPage = () => {
                       
                       {/* Guests */}
                       <div className="flex items-start space-x-3">
-                        <Users className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <UserMultipleIcon className="h-4 w-4 text-gray-400 mt-0.5" />
                         <div>
                           <p className="text-sm text-gray-500 font-medium">Guests</p>
                           <p className="font-bold text-gray-900 text-base">{booking.adults + booking.children} total</p>
@@ -772,7 +758,7 @@ const BookingDetailPage = () => {
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-[#005357] rounded flex items-center justify-center">
-                              <Bed className="h-5 w-5 text-white" />
+                              <BedIcon className="h-5 w-5 text-white" />
                             </div>
                             <div>
                               <h4 className="font-bold text-gray-900 text-base">Room {room.room_number}</h4>
@@ -805,7 +791,7 @@ const BookingDetailPage = () => {
                     <div className="bg-yellow-50 shadow rounded p-4">
                       <div className="flex items-start space-x-3">
                         <div className="w-8 h-8 bg-yellow-100 rounded flex items-center justify-center flex-shrink-0">
-                          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                          <Alert01Icon className="h-4 w-4 text-yellow-600" />
                         </div>
                         <div className="flex-1">
                           <h4 className="font-bold text-gray-900 mb-1 text-base">Important Staff Notes</h4>
@@ -910,7 +896,7 @@ const BookingDetailPage = () => {
                     <p className="text-sm text-gray-200 mt-1">Guest preferences and requirements</p>
                   </div>
                   <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                    <MessageSquare className="h-4 w-4 text-white" />
+                    <Mail01Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -954,7 +940,7 @@ const BookingDetailPage = () => {
                     <p className="text-sm text-gray-200 mt-1">Charges and payment status</p>
                   </div>
                   <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                    <CreditCard className="h-4 w-4 text-white" />
+                    <CreditCardIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -1045,11 +1031,11 @@ const BookingDetailPage = () => {
                   className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded"
                   title="Download PDF"
                 >
-                  <Download className="h-5 w-5" />
+                  <ChevronDownIcon className="h-5 w-5" />
                 </button>
                 <Dialog.Close asChild>
                   <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded">
-                    <X className="h-5 w-5" />
+                    <Cancel01Icon className="h-5 w-5" />
                   </button>
                 </Dialog.Close>
               </div>

@@ -2,33 +2,29 @@
 
 import { useState } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { 
-  AlertTriangle, 
-  Plus,
-  Search,
-  Clock,
-  CheckCircle,
-  User,
-  Phone,
-  MapPin,
-  Calendar,
-  Eye,
-  Edit,
-  MoreHorizontal,
-  Siren,
-  Flame,
-  Droplets,
-  Zap,
-  Shield,
-  Users,
-  Activity,
-  Bell,
-  Radio,
-  Timer,
-  FileText,
-  Download,
-  RefreshCw
-} from 'lucide-react';
+import {
+  AlertCircleIcon,
+  Add01Icon,
+  Search02Icon,
+  Clock01Icon,
+  UserCheckIcon,
+  UserIcon,
+  Call02Icon,
+  Location01Icon,
+  Calendar01Icon,
+  EyeIcon,
+  PencilEdit02Icon,
+  MoreHorizontalIcon,
+  SparklesIcon,
+  PackageIcon,
+  Shield01Icon,
+  UserMultipleIcon,
+  PieChartIcon,
+  Notification02Icon,
+  File01Icon,
+  ChevronDownIcon,
+  Loading03Icon
+} from '@/lib/icons';
 
 export default function EmergencyPage() {
   const [activeTab, setActiveTab] = useState('active');
@@ -313,12 +309,12 @@ export default function EmergencyPage() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'fire': return <Flame className="h-4 w-4" />;
+      case 'fire': return <SparklesIcon className="h-4 w-4" />;
       case 'medical': return <Activity className="h-4 w-4" />;
-      case 'power': return <Zap className="h-4 w-4" />;
+      case 'power': return <SparklesIcon className="h-4 w-4" />;
       case 'security': return <Shield className="h-4 w-4" />;
-      case 'flood': return <Droplets className="h-4 w-4" />;
-      default: return <AlertTriangle className="h-4 w-4" />;
+      case 'flood': return <PackageIcon className="h-4 w-4" />;
+      default: return <Alert01Icon className="h-4 w-4" />;
     }
   };
 
@@ -409,7 +405,7 @@ export default function EmergencyPage() {
         {emergencyStats.activeAlerts > 0 && (
           <div className="bg-red-100 p-4 shadow animate-pulse">
             <div className="flex items-center space-x-3">
-              <Siren className="h-6 w-6 text-red-600" />
+              <AlertCircleIcon className="h-6 w-6 text-red-600" />
               <div>
                 <h3 className="font-bold text-red-800">EMERGENCY ACTIVE</h3>
                 <p className="text-red-700 text-sm">{emergencyStats.activeAlerts} active emergency incident(s) require immediate attention</p>
@@ -431,7 +427,7 @@ export default function EmergencyPage() {
                   <p className="text-sm text-gray-100 mt-1">Darurat aktif</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Siren className="h-4 w-4 text-[#005357]" />
+                  <AlertCircleIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -453,7 +449,7 @@ export default function EmergencyPage() {
                   <p className="text-sm text-gray-100 mt-1">Diselesaikan hari ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -473,7 +469,7 @@ export default function EmergencyPage() {
                   <p className="text-sm text-gray-100 mt-1">Rata-rata respons</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Timer className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -493,7 +489,7 @@ export default function EmergencyPage() {
                   <p className="text-sm text-gray-100 mt-1">Total bulan ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Calendar className="h-4 w-4 text-[#005357]" />
+                  <Calendar01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -516,11 +512,11 @@ export default function EmergencyPage() {
               </div>
               <div className="flex items-center space-x-3">
                 <button className="bg-red-600 text-white px-4 py-2 text-sm font-medium hover:bg-red-700 transition-colors flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
+                  <Add01Icon className="h-4 w-4" />
                   <span>Report Emergency</span>
                 </button>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <AlertTriangle className="h-4 w-4 text-[#005357]" />
+                  <Alert01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -540,7 +536,7 @@ export default function EmergencyPage() {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
+                    <Search02Icon className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -587,7 +583,7 @@ export default function EmergencyPage() {
                         </span>
                         {incident.authoritiesNotified && (
                           <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800">
-                            <Radio className="h-3 w-3 mr-1" />
+                            <PackageIcon className="h-3 w-3 mr-1" />
                             Authorities Notified
                           </span>
                         )}
@@ -677,13 +673,13 @@ export default function EmergencyPage() {
 
                     <div className="flex items-center space-x-2 ml-4">
                       <button className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded">
-                        <Eye className="h-4 w-4" />
+                        <EyeIcon className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                        <Edit className="h-4 w-4" />
+                        <PencilEdit02Icon className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors rounded">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <MoreHorizontalIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -704,7 +700,7 @@ export default function EmergencyPage() {
                   <p className="text-sm text-gray-100 mt-1">Kontak darurat penting</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Phone className="h-4 w-4 text-[#005357]" />
+                  <Call02Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -747,7 +743,7 @@ export default function EmergencyPage() {
                   <p className="text-sm text-gray-100 mt-1">Tim respons darurat internal</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Users className="h-4 w-4 text-[#005357]" />
+                  <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -792,7 +788,7 @@ export default function EmergencyPage() {
                         Call {member.phone}
                       </a>
                       <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                        <Radio className="h-4 w-4" />
+                        <PackageIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>

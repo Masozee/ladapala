@@ -4,29 +4,29 @@ import { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
 import {
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Clock,
-  MapPin,
-  Users,
-  Edit3,
-  Trash2,
-  Eye,
-  Filter,
-  Search,
-  Download,
-  Upload,
-  Bell,
-  User,
-  Settings,
-  CheckCircle,
-  AlertCircle,
-  Info,
-  X,
-  Star
-} from 'lucide-react';
+  Calendar01Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Add01Icon,
+  Clock01Icon,
+  Location01Icon,
+  UserMultipleIcon,
+  PencilEdit02Icon,
+  CancelCircleIcon,
+  EyeIcon,
+  FilterIcon,
+  Search02Icon,
+  ChevronDownIcon,
+  ArrowUp01Icon,
+  Notification02Icon,
+  UserIcon,
+  Settings02Icon,
+  UserCheckIcon,
+  AlertCircleIcon,
+  Alert01Icon,
+  Cancel01Icon,
+  SparklesIcon
+} from '@/lib/icons';
 import * as Dialog from '@radix-ui/react-dialog';
 
 interface CalendarEvent {
@@ -332,7 +332,7 @@ const CalendarPage = () => {
               <span>{monthEvents.length} events</span>
             </div>
             <div className="flex items-center space-x-1">
-              <Star className="h-3 w-3 text-red-500" />
+              <SparklesIcon className="h-3 w-3 text-red-500" />
               <span>{monthHolidays.length} holidays</span>
             </div>
           </div>
@@ -436,7 +436,7 @@ const CalendarPage = () => {
                   </select>
                 </div>
                 <button className="flex items-center space-x-2 px-4 py-2 bg-white/10 text-white hover:bg-white/20 transition-colors">
-                  <Plus className="h-4 w-4" />
+                  <Add01Icon className="h-4 w-4" />
                   <span>Add Event</span>
                 </button>
               </div>
@@ -452,7 +452,7 @@ const CalendarPage = () => {
                   onClick={() => navigateMonth('prev')}
                   className="p-2 hover:bg-white/20 transition-colors text-white"
                 >
-                  <ChevronLeft className="h-5 w-5" />
+                  <ChevronLeftIcon className="h-5 w-5" />
                 </button>
                 <h2 className="text-xl font-semibold text-white">
                   {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
@@ -461,7 +461,7 @@ const CalendarPage = () => {
                   onClick={() => navigateMonth('next')}
                   className="p-2 hover:bg-white/20 transition-colors text-white"
                 >
-                  <ChevronRight className="h-5 w-5" />
+                  <ChevronRightIcon className="h-5 w-5" />
                 </button>
               </div>
               <div className="flex items-center space-x-2">
@@ -522,7 +522,7 @@ const CalendarPage = () => {
                       }`}>
                         {day.date}
                         {dayHolidays.length > 0 && (
-                          <Star className="h-3 w-3 text-red-500 inline ml-1" />
+                          <SparklesIcon className="h-3 w-3 text-red-500 inline ml-1" />
                         )}
                       </div>
                       
@@ -602,22 +602,22 @@ const CalendarPage = () => {
                     <p className="text-sm text-gray-600 mt-1">{event.description || 'No description'}</p>
                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                       <div className="flex items-center space-x-1">
-                        <Calendar className="h-3 w-3" />
+                        <Calendar01Icon className="h-3 w-3" />
                         <span>{new Date(event.start_datetime).toLocaleDateString()}</span>
                       </div>
                       <div className="flex items-center space-x-1">
-                        <Clock className="h-3 w-3" />
+                        <Clock01Icon className="h-3 w-3" />
                         <span>{formatTime(event.start_datetime)}</span>
                       </div>
                       {event.location && (
                         <div className="flex items-center space-x-1">
-                          <MapPin className="h-3 w-3" />
+                          <Location01Icon className="h-3 w-3" />
                           <span>{event.location}</span>
                         </div>
                       )}
                       {event.room_number && (
                         <div className="flex items-center space-x-1">
-                          <MapPin className="h-3 w-3" />
+                          <Location01Icon className="h-3 w-3" />
                           <span>Room {event.room_number}</span>
                         </div>
                       )}
@@ -631,10 +631,10 @@ const CalendarPage = () => {
                       }}
                       className="p-1 text-gray-400 hover:text-gray-600"
                     >
-                      <Eye className="h-4 w-4" />
+                      <EyeIcon className="h-4 w-4" />
                     </button>
                     <button className="p-1 text-gray-400 hover:text-blue-600">
-                      <Edit3 className="h-4 w-4" />
+                      <PencilEdit02Icon className="h-4 w-4" />
                     </button>
                     <button className="p-1 text-gray-400 hover:text-red-600">
                       <Trash2 className="h-4 w-4" />
@@ -643,7 +643,7 @@ const CalendarPage = () => {
                 </div>
               )) : (
                 <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                  <Calendar01Icon className="h-12 w-12 mx-auto text-gray-300 mb-4" />
                   <p className="text-gray-500">No upcoming events in the next 7 days</p>
                   <p className="text-sm text-gray-400 mt-1">Try adjusting your filter or check other months</p>
                 </div>
@@ -668,7 +668,7 @@ const CalendarPage = () => {
                       </div>
                       <Dialog.Close asChild>
                         <button className="p-1 hover:bg-white/20 text-white">
-                          <X className="h-5 w-5" />
+                          <Cancel01Icon className="h-5 w-5" />
                         </button>
                       </Dialog.Close>
                     </div>
@@ -684,11 +684,11 @@ const CalendarPage = () => {
                           <h4 className="font-medium text-gray-900 mb-2">Date & Time</h4>
                           <div className="space-y-1 text-sm text-gray-600">
                             <div className="flex items-center space-x-2">
-                              <Calendar className="h-4 w-4" />
+                              <Calendar01Icon className="h-4 w-4" />
                               <span>{new Date(selectedEvent.start_datetime).toLocaleDateString()}</span>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <Clock className="h-4 w-4" />
+                              <Clock01Icon className="h-4 w-4" />
                               <span>{formatTime(selectedEvent.start_datetime)} ({selectedEvent.duration_hours}h)</span>
                             </div>
                           </div>
@@ -696,7 +696,7 @@ const CalendarPage = () => {
                         <div>
                           <h4 className="font-medium text-gray-900 mb-2">Location</h4>
                           <div className="flex items-center space-x-2 text-sm text-gray-600">
-                            <MapPin className="h-4 w-4" />
+                            <Location01Icon className="h-4 w-4" />
                             <span>{selectedEvent.location || selectedEvent.room_number ? `Room ${selectedEvent.room_number}` : 'No location specified'}</span>
                           </div>
                         </div>
@@ -707,13 +707,13 @@ const CalendarPage = () => {
                           <div className="space-y-1">
                             {selectedEvent.guest_name && (
                               <div className="flex items-center space-x-2 text-sm text-gray-600">
-                                <User className="h-3 w-3" />
+                                <UserIcon className="h-3 w-3" />
                                 <span>Guest: {selectedEvent.guest_name}</span>
                               </div>
                             )}
                             {selectedEvent.assigned_employee_name && (
                               <div className="flex items-center space-x-2 text-sm text-gray-600">
-                                <User className="h-3 w-3" />
+                                <UserIcon className="h-3 w-3" />
                                 <span>Assigned: {selectedEvent.assigned_employee_name}</span>
                               </div>
                             )}
@@ -808,7 +808,7 @@ const CalendarPage = () => {
                   {/* Holidays */}
                   {nextMonthHolidays.map((holiday) => (
                     <div key={holiday.id} className="flex items-center space-x-2 text-sm">
-                      <Star className="h-3 w-3 text-red-500 flex-shrink-0" />
+                      <SparklesIcon className="h-3 w-3 text-red-500 flex-shrink-0" />
                       <div>
                         <div className="font-medium text-gray-900">{holiday.name}</div>
                         <div className="text-xs text-gray-500">
@@ -900,7 +900,7 @@ const CalendarPage = () => {
             <div className="p-4 bg-gray-50">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-900">Indonesian Holidays</h4>
-                <Star className="h-4 w-4 text-red-500" />
+                <SparklesIcon className="h-4 w-4 text-red-500" />
               </div>
             </div>
             <div className="p-4">
@@ -914,7 +914,7 @@ const CalendarPage = () => {
                       <div className="text-sm font-medium text-gray-900">{holiday.name}</div>
                       <div className="text-xs text-gray-600 mt-1">{holiday.name_id}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        <Calendar className="h-3 w-3 inline mr-1" />
+                        <Calendar01Icon className="h-3 w-3 inline mr-1" />
                         {new Date(holiday.date).toLocaleDateString('id-ID', {
                           weekday: 'short',
                           day: 'numeric', 
@@ -942,7 +942,7 @@ const CalendarPage = () => {
                     <div key={event.id} className="p-2 bg-gray-50 border-l-4 border-[#005357]">
                       <div className="text-sm font-medium text-gray-900">{event.title}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        <Clock className="h-3 w-3 inline mr-1" />
+                        <Clock01Icon className="h-3 w-3 inline mr-1" />
                         {formatTime(event.start_datetime)}
                       </div>
                     </div>

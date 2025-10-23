@@ -2,34 +2,29 @@
 
 import { useState } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { 
-  Wrench, 
-  Plus,
-  Search,
-  Filter,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  User,
-  MapPin,
-  Calendar,
-  Eye,
-  Edit,
-  Trash2,
-  Phone,
-  Mail,
-  Timer,
-  Settings,
-  Zap,
-  Droplets,
-  Wind,
-  Thermometer,
-  Lightbulb,
-  Wifi,
-  Lock,
-  Camera,
-  MoreHorizontal
-} from 'lucide-react';
+import {
+  Wrench01Icon,
+  Add01Icon,
+  Search02Icon,
+  FilterIcon,
+  Clock01Icon,
+  AlertCircleIcon,
+  UserCheckIcon,
+  UserIcon,
+  Location01Icon,
+  Calendar01Icon,
+  EyeIcon,
+  PencilEdit02Icon,
+  CancelCircleIcon,
+  Call02Icon,
+  Mail01Icon,
+  Settings02Icon,
+  SparklesIcon,
+  PackageIcon,
+  Shield01Icon,
+  ViewIcon,
+  MoreHorizontalIcon
+} from '@/lib/icons';
 
 export default function MaintenancePage() {
   const [activeTab, setActiveTab] = useState('active');
@@ -249,13 +244,13 @@ export default function MaintenancePage() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'HVAC': return <Wind className="h-4 w-4" />;
-      case 'Plumbing': return <Droplets className="h-4 w-4" />;
-      case 'Electrical': return <Zap className="h-4 w-4" />;
-      case 'Network': return <Wifi className="h-4 w-4" />;
-      case 'Security': return <Lock className="h-4 w-4" />;
-      case 'General': return <Settings className="h-4 w-4" />;
-      default: return <Wrench className="h-4 w-4" />;
+      case 'HVAC': return <PackageIcon className="h-4 w-4" />;
+      case 'Plumbing': return <PackageIcon className="h-4 w-4" />;
+      case 'Electrical': return <SparklesIcon className="h-4 w-4" />;
+      case 'Network': return <SparklesIcon className="h-4 w-4" />;
+      case 'Security': return <Shield01Icon className="h-4 w-4" />;
+      case 'General': return <Settings02Icon className="h-4 w-4" />;
+      default: return <Wrench01Icon className="h-4 w-4" />;
     }
   };
 
@@ -273,11 +268,11 @@ export default function MaintenancePage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'in_progress': return <Clock className="h-4 w-4 text-blue-600" />;
-      case 'pending': return <Timer className="h-4 w-4 text-yellow-600" />;
-      case 'cancelled': return <AlertTriangle className="h-4 w-4 text-red-600" />;
-      default: return <Clock className="h-4 w-4 text-gray-600" />;
+      case 'completed': return <UserCheckIcon className="h-4 w-4 text-green-600" />;
+      case 'in_progress': return <Clock01Icon className="h-4 w-4 text-blue-600" />;
+      case 'pending': return <Clock01Icon className="h-4 w-4 text-yellow-600" />;
+      case 'cancelled': return <Alert01Icon className="h-4 w-4 text-red-600" />;
+      default: return <Clock01Icon className="h-4 w-4 text-gray-600" />;
     }
   };
 
@@ -336,7 +331,7 @@ export default function MaintenancePage() {
                   <p className="text-sm text-gray-100 mt-1">Sedang dikerjakan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -356,7 +351,7 @@ export default function MaintenancePage() {
                   <p className="text-sm text-gray-100 mt-1">Menunggu dikerjakan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Timer className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -376,7 +371,7 @@ export default function MaintenancePage() {
                   <p className="text-sm text-gray-100 mt-1">Prioritas tinggi</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <AlertTriangle className="h-4 w-4 text-[#005357]" />
+                  <Alert01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -396,7 +391,7 @@ export default function MaintenancePage() {
                   <p className="text-sm text-gray-100 mt-1">Selesai hari ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -422,11 +417,11 @@ export default function MaintenancePage() {
                   onClick={() => setShowCreateForm(true)}
                   className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Add01Icon className="h-4 w-4" />
                   <span>New Request</span>
                 </button>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Wrench className="h-4 w-4 text-[#005357]" />
+                  <Wrench01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -447,7 +442,7 @@ export default function MaintenancePage() {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
+                    <Search02Icon className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -517,19 +512,19 @@ export default function MaintenancePage() {
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-500 mb-3">
                         <div className="flex items-center space-x-1">
-                          <MapPin className="h-3 w-3" />
+                          <Location01Icon className="h-3 w-3" />
                           <span>{request.location}</span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <User className="h-3 w-3" />
+                          <UserIcon className="h-3 w-3" />
                           <span>{request.assignedTo}</span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <Calendar className="h-3 w-3" />
+                          <Calendar01Icon className="h-3 w-3" />
                           <span>{formatDate(request.createdAt)}</span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <Timer className="h-3 w-3" />
+                          <Clock01Icon className="h-3 w-3" />
                           <span>ETA: {request.estimatedTime}</span>
                         </div>
                       </div>
@@ -546,7 +541,7 @@ export default function MaintenancePage() {
                         <span>Reported by: {request.reportedBy}</span>
                         {request.images > 0 && (
                           <div className="flex items-center space-x-1">
-                            <Camera className="h-3 w-3" />
+                            <ViewIcon className="h-3 w-3" />
                             <span>{request.images} foto</span>
                           </div>
                         )}
@@ -555,13 +550,13 @@ export default function MaintenancePage() {
 
                     <div className="flex items-center space-x-2 ml-4">
                       <button className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded">
-                        <Eye className="h-4 w-4" />
+                        <EyeIcon className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                        <Edit className="h-4 w-4" />
+                        <PencilEdit02Icon className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors rounded">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <MoreHorizontalIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -580,7 +575,7 @@ export default function MaintenancePage() {
                 <p className="text-sm text-gray-100 mt-1">Status dan ketersediaan teknisi maintenance</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <User className="h-4 w-4 text-[#005357]" />
+                <UserIcon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
           </div>
@@ -631,10 +626,10 @@ export default function MaintenancePage() {
                       Assign Job
                     </button>
                     <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors rounded">
-                      <Phone className="h-4 w-4" />
+                      <Call02Icon className="h-4 w-4" />
                     </button>
                     <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                      <Mail className="h-4 w-4" />
+                      <Mail01Icon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

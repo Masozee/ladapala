@@ -4,37 +4,31 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
-import { 
-  Search,
-  Users,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  Star,
-  Award,
-  CreditCard,
-  User,
-  Grid3X3,
-  List,
-  Filter,
-  Plus,
-  Settings,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  Badge,
-  TrendingUp,
-  Gift,
-  Clock,
-  CheckCircle,
-  X,
-  Heart,
-  Crown,
-  Diamond,
-  Sparkles
-} from 'lucide-react';
+import {
+  Search02Icon,
+  UserMultipleIcon,
+  Call02Icon,
+  Mail01Icon,
+  Location01Icon,
+  Calendar01Icon,
+  SparklesIcon,
+  CreditCardIcon,
+  UserIcon,
+  ViewIcon,
+  ListViewIcon,
+  FilterIcon,
+  Add01Icon,
+  Settings02Icon,
+  MoreHorizontalIcon,
+  EyeIcon,
+  PencilEdit02Icon,
+  CancelCircleIcon,
+  ArrowUp01Icon,
+  PackageIcon,
+  Clock01Icon,
+  UserCheckIcon,
+  Cancel01Icon
+} from '@/lib/icons';
 
 // Django API interfaces
 interface DjangoGuest {
@@ -302,6 +296,7 @@ const fetchGuests = async (): Promise<Guest[]> => {
 
 // Helper functions for data mapping
 const mapLoyaltyLevel = (level: string): 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond' => {
+  if (!level) return 'Bronze';
   switch (level.toLowerCase()) {
     case 'bronze': return 'Bronze';
     case 'silver': return 'Silver';
@@ -599,10 +594,10 @@ const GuestsPage = () => {
   const getTierIcon = (tier: string) => {
     switch (tier) {
       case 'Bronze': return <Award className="h-3 w-3" />;
-      case 'Silver': return <Badge className="h-3 w-3" />;
-      case 'Gold': return <Crown className="h-3 w-3" />;
-      case 'Platinum': return <Star className="h-3 w-3" />;
-      case 'Diamond': return <Diamond className="h-3 w-3" />;
+      case 'Silver': return <SparklesIcon className="h-3 w-3" />;
+      case 'Gold': return <SparklesIcon className="h-3 w-3" />;
+      case 'Platinum': return <SparklesIcon className="h-3 w-3" />;
+      case 'Diamond': return <SparklesIcon className="h-3 w-3" />;
       default: return <Award className="h-3 w-3" />;
     }
   };
@@ -797,7 +792,7 @@ const GuestsPage = () => {
               onClick={() => setShowAdvancedFilter(true)}
               className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors"
             >
-              <Settings className="h-4 w-4" />
+              <Settings02Icon className="h-4 w-4" />
               <span>Advanced Filter</span>
             </button>
             
@@ -808,7 +803,7 @@ const GuestsPage = () => {
               }}
               className="flex items-center space-x-2 px-4 py-2 border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
             >
-              <Plus className="h-4 w-4" />
+              <Add01Icon className="h-4 w-4" />
               <span>New Guest</span>
             </button>
           </div>
@@ -825,7 +820,7 @@ const GuestsPage = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <Grid3X3 className="h-4 w-4" />
+                <ViewIcon className="h-4 w-4" />
                 <span>Cards</span>
               </button>
               <button
@@ -836,7 +831,7 @@ const GuestsPage = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <List className="h-4 w-4" />
+                <ListViewIcon className="h-4 w-4" />
                 <span>Table</span>
               </button>
             </div>
@@ -855,7 +850,7 @@ const GuestsPage = () => {
                     <p className="text-sm text-gray-600 mt-1">Find guests with specific criteria</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <Filter className="h-4 w-4 text-white" />
+                    <FilterIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -871,7 +866,7 @@ const GuestsPage = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Search Guests</label>
                         <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           <input
                             type="text"
                             placeholder="Name, email, or phone..."
@@ -1041,7 +1036,7 @@ const GuestsPage = () => {
           <div className="bg-red-50 border border-red-200 rounded p-4 mb-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <X className="h-5 w-5 text-red-400" />
+                <Cancel01Icon className="h-5 w-5 text-red-400" />
               </div>
               <div className="ml-3">
                 <p className="text-sm text-red-800">{error}</p>
@@ -1082,28 +1077,28 @@ const GuestsPage = () => {
                         </button>
                         {guest.vip_status && (
                           <span className="inline-flex items-center space-x-1 bg-yellow-100 text-yellow-800 px-2 py-1 text-xs font-medium rounded">
-                            <Star className="h-3 w-3 fill-current" />
+                            <SparklesIcon className="h-3 w-3 fill-current" />
                             <span>VIP</span>
                           </span>
                         )}
                       </div>
                       <div className="space-y-1 text-sm text-gray-600">
                         <div className="flex items-center space-x-2">
-                          <Mail className="h-3 w-3" />
+                          <Mail01Icon className="h-3 w-3" />
                           <span className="truncate">{guest.email}</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Phone className="h-3 w-3" />
+                          <Call02Icon className="h-3 w-3" />
                           <span>{guest.phone}</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <MapPin className="h-3 w-3" />
+                          <Location01Icon className="h-3 w-3" />
                           <span>{guest.nationality}</span>
                         </div>
                       </div>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
+                      <UserIcon className="h-4 w-4 text-white" />
                     </div>
                   </div>
                 </div>
@@ -1157,7 +1152,7 @@ const GuestsPage = () => {
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Avg Rating</span>
                       <div className="flex items-center space-x-1">
-                        <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                        <SparklesIcon className="h-3 w-3 text-yellow-400 fill-current" />
                         <span className="font-medium text-gray-900">{guest.avg_rating}</span>
                       </div>
                     </div>
@@ -1169,12 +1164,12 @@ const GuestsPage = () => {
                       onClick={() => router.push(`/guests/${guest.id}`)}
                       className="text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors"
                     >
-                      <Eye className="h-3 w-3 inline mr-1" />
+                      <EyeIcon className="h-3 w-3 inline mr-1" />
                       View Profile
                     </button>
                     <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors">
-                      <Edit className="h-3 w-3 inline mr-1" />
-                      Edit
+                      <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
+                      PencilEdit02Icon
                     </button>
                   </div>
                 </div>
@@ -1193,7 +1188,7 @@ const GuestsPage = () => {
                 <div className="flex items-center space-x-4">
                   {/* Search Form */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search guests..."
@@ -1203,7 +1198,7 @@ const GuestsPage = () => {
                     />
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <Users className="h-4 w-4 text-white" />
+                    <UserMultipleIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -1222,7 +1217,7 @@ const GuestsPage = () => {
                       Rewards
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-bold text-white">
-                      Stay History
+                      Stay Clock01Icon
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-bold text-white">
                       Spending
@@ -1242,7 +1237,7 @@ const GuestsPage = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-gray-600" />
+                            <UserIcon className="h-5 w-5 text-gray-600" />
                           </div>
                           <div>
                             <div className="flex items-center space-x-2">
@@ -1253,7 +1248,7 @@ const GuestsPage = () => {
                                 {guest.full_name}
                               </button>
                               {guest.vip_status && (
-                                <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                                <SparklesIcon className="h-3 w-3 text-yellow-400 fill-current" />
                               )}
                             </div>
                             <p className="text-xs text-gray-600">{guest.nationality}</p>
@@ -1302,7 +1297,7 @@ const GuestsPage = () => {
                             </div>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <SparklesIcon className="h-3 w-3 text-yellow-400 fill-current" />
                             <span className="text-xs text-gray-600">{guest.avg_rating} avg rating</span>
                           </div>
                         </div>
@@ -1332,7 +1327,7 @@ const GuestsPage = () => {
                             onClick={() => setActiveDropdown(activeDropdown === guest.id ? null : guest.id)}
                             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
                           >
-                            <MoreHorizontal className="h-4 w-4" />
+                            <MoreHorizontalIcon className="h-4 w-4" />
                           </button>
                           
                           {/* Dropdown Menu */}
@@ -1346,14 +1341,14 @@ const GuestsPage = () => {
                                   }}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
-                                  <Eye className="h-4 w-4" />
+                                  <EyeIcon className="h-4 w-4" />
                                   <span>View Profile</span>
                                 </button>
                                 <button
                                   onClick={() => setActiveDropdown(null)}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
-                                  <Edit className="h-4 w-4" />
+                                  <PencilEdit02Icon className="h-4 w-4" />
                                   <span>Edit Guest</span>
                                 </button>
                                 <div className="border-t border-gray-100 my-1"></div>
@@ -1371,14 +1366,14 @@ const GuestsPage = () => {
                                   onClick={() => setActiveDropdown(null)}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
-                                  <Calendar className="h-4 w-4" />
+                                  <Calendar01Icon className="h-4 w-4" />
                                   <span>Booking History</span>
                                 </button>
                                 <button
                                   onClick={() => setActiveDropdown(null)}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
-                                  <Plus className="h-4 w-4" />
+                                  <Add01Icon className="h-4 w-4" />
                                   <span>New Reservation</span>
                                 </button>
                               </div>
@@ -1397,7 +1392,7 @@ const GuestsPage = () => {
         {/* No Results */}
         {!loading && !error && filteredGuests.length === 0 && (
           <div className="text-center py-12">
-            <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <UserMultipleIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No guests found</h3>
             <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
           </div>
@@ -1415,7 +1410,7 @@ const GuestsPage = () => {
                     <p className="text-sm text-gray-600 mt-1">Create a new guest profile</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
+                    <UserIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -1426,7 +1421,7 @@ const GuestsPage = () => {
                 {createError && (
                   <div className="bg-red-50 border border-red-200 rounded p-3 mb-6">
                     <div className="flex items-center">
-                      <X className="h-5 w-5 text-red-400 mr-3" />
+                      <Cancel01Icon className="h-5 w-5 text-red-400 mr-3" />
                       <p className="text-sm text-red-800">{createError}</p>
                     </div>
                   </div>
@@ -1578,7 +1573,7 @@ const GuestsPage = () => {
                           className="w-4 h-4 text-[#005357] border-gray-300 rounded focus:ring-[#005357]"
                         />
                         <span className="text-sm font-medium text-gray-700">VIP Guest</span>
-                        <Star className="h-4 w-4 text-yellow-400" />
+                        <SparklesIcon className="h-4 w-4 text-yellow-400" />
                       </label>
                     </div>
                   </div>
@@ -1623,7 +1618,7 @@ const GuestsPage = () => {
                         </>
                       ) : (
                         <>
-                          <Plus className="h-4 w-4" />
+                          <Add01Icon className="h-4 w-4" />
                           <span>Create Guest</span>
                         </>
                       )}

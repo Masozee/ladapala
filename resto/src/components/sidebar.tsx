@@ -15,8 +15,7 @@ import {
   MenuRestaurantIcon,
   CellsIcon,
   CreditCardIcon,
-  Menu02Icon,
-  UserMultiple02Icon
+  Menu02Icon
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import {
@@ -189,15 +188,6 @@ export function Sidebar() {
                 >
                   <HugeiconsIcon icon={Building02Icon} size={20} strokeWidth={2} className="text-gray-600 size-5" />
                   <span className="text-sm text-gray-700">Office</span>
-                </Link>
-
-                <Link
-                  href="/customer"
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <HugeiconsIcon icon={UserMultiple02Icon} size={20} strokeWidth={2} className="text-gray-600 size-5" />
-                  <span className="text-sm text-gray-700">Customer</span>
                 </Link>
 
                 <div className="border-t border-gray-200 my-2" />

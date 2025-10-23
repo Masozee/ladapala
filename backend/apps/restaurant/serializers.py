@@ -368,6 +368,15 @@ class ScheduleSerializer(serializers.ModelSerializer):
     staff = serializers.PrimaryKeyRelatedField(queryset=Staff.objects.all(), write_only=True)
     date = serializers.DateField(write_only=True)
 
+    def validate_date(self, value):
+        """Ensure date is parsed correctly without timezone conversion"""
+        from datetime import date as date_type
+        if isinstance(value, date_type):
+            return value
+        # If it's a string, parse it as-is
+        from datetime import datetime
+        return datetime.strptime(str(value), '%Y-%m-%d').date()
+
     class Meta:
         model = Schedule
         fields = [

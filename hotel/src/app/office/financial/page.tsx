@@ -2,31 +2,26 @@
 
 import { useState } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
-import { 
-  DollarSign, 
-  CreditCard, 
-  TrendingUp, 
-  FileText, 
-  Plus,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Download,
-  Calendar,
+import {
+  CreditCardIcon,
+  ArrowUp01Icon,
+  File01Icon,
+  Add01Icon,
+  Search02Icon,
+  FilterIcon,
+  MoreHorizontalIcon,
+  EyeIcon,
+  PencilEdit02Icon,
+  ChevronDownIcon,
+  Calendar01Icon,
   ChevronDown,
   ChevronUp,
-  ArrowUpRight,
-  ArrowDownRight,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Building2,
-  Receipt,
-  Wallet,
-  PieChart
-} from 'lucide-react';
+  AlertCircleIcon,
+  UserCheckIcon,
+  Clock01Icon,
+  Building03Icon,
+  PieChartIcon
+} from '@/lib/icons';
 
 export default function FinancialPage() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -219,8 +214,8 @@ export default function FinancialPage() {
 
   const getTypeIcon = (type: string) => {
     return type === 'revenue' ? 
-      <ArrowUpRight className="h-4 w-4 text-green-600" /> : 
-      <ArrowDownRight className="h-4 w-4 text-red-600" />;
+      <ArrowUp01Icon className="h-4 w-4 text-green-600" /> : 
+      <ArrowUp01Icon className="h-4 w-4 text-red-600" />;
   };
 
   const filteredTransactions = transactions.filter(transaction => {
@@ -256,10 +251,10 @@ export default function FinancialPage() {
         {/* Tab Navigation */}
         <div className="bg-white shadow">
           <div className="flex space-x-1 p-1 bg-gray-50">
-            <TabButton tabId="overview" label="Ringkasan" icon={PieChart} />
-            <TabButton tabId="transactions" label="Transaksi" icon={Receipt} />
-            <TabButton tabId="invoices" label="Faktur" icon={FileText} />
-            <TabButton tabId="reports" label="Laporan" icon={TrendingUp} />
+            <TabButton tabId="overview" label="Ringkasan" icon={PieChartIcon} />
+            <TabButton tabId="transactions" label="Transaksi" icon={File01Icon} />
+            <TabButton tabId="invoices" label="Faktur" icon={File01Icon} />
+            <TabButton tabId="reports" label="Laporan" icon={ArrowUp01Icon} />
           </div>
 
           {/* Overview Tab */}
@@ -272,7 +267,7 @@ export default function FinancialPage() {
                     <p className="text-sm text-gray-100 mt-1">Gambaran umum performa keuangan bulan ini</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <PieChart className="h-4 w-4 text-[#005357]" />
+                    <PieChartIcon className="h-4 w-4 text-[#005357]" />
                   </div>
                 </div>
               </div>
@@ -288,7 +283,7 @@ export default function FinancialPage() {
                           <p className="text-sm text-gray-100 mt-1">Bulan ini</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <DollarSign className="h-4 w-4 text-[#005357]" />
+                          <CreditCardIcon className="h-4 w-4 text-[#005357]" />
                         </div>
                       </div>
                     </div>
@@ -299,7 +294,7 @@ export default function FinancialPage() {
                         </div>
                         <div className="text-sm text-gray-600">
                           <div className="flex items-center justify-center space-x-1">
-                            <ArrowUpRight className="h-3 w-3 text-green-500" />
+                            <ArrowUp01Icon className="h-3 w-3 text-green-500" />
                             <span className="text-green-600">+{revenueData.growth}% dari bulan lalu</span>
                           </div>
                         </div>
@@ -315,7 +310,7 @@ export default function FinancialPage() {
                           <p className="text-sm text-gray-100 mt-1">Bulan ini</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <ArrowDownRight className="h-4 w-4 text-[#005357]" />
+                          <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
                         </div>
                       </div>
                     </div>
@@ -337,7 +332,7 @@ export default function FinancialPage() {
                           <p className="text-sm text-gray-100 mt-1">Margin keuntungan</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <TrendingUp className="h-4 w-4 text-[#005357]" />
+                          <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
                         </div>
                       </div>
                     </div>
@@ -361,7 +356,7 @@ export default function FinancialPage() {
                           <p className="text-sm text-gray-100 mt-1">Pendapatan per hari</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <Calendar className="h-4 w-4 text-[#005357]" />
+                          <Calendar01Icon className="h-4 w-4 text-[#005357]" />
                         </div>
                       </div>
                     </div>
@@ -386,7 +381,7 @@ export default function FinancialPage() {
                           <p className="text-sm text-gray-100 mt-1">Kategori pengeluaran bulan ini</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <PieChart className="h-4 w-4 text-[#005357]" />
+                          <PieChartIcon className="h-4 w-4 text-[#005357]" />
                         </div>
                       </div>
                     </div>
@@ -423,7 +418,7 @@ export default function FinancialPage() {
                           <p className="text-sm text-gray-100 mt-1">Fitur manajemen keuangan</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <Wallet className="h-4 w-4 text-[#005357]" />
+                          <CreditCardIcon className="h-4 w-4 text-[#005357]" />
                         </div>
                       </div>
                     </div>
@@ -434,7 +429,7 @@ export default function FinancialPage() {
                             <h3 className="font-medium text-gray-900">Proses Pembayaran</h3>
                             <p className="text-sm text-gray-600 mt-1">Kelola pembayaran tamu dan tagihan</p>
                           </div>
-                          <CreditCard className="h-5 w-5 text-gray-400" />
+                          <CreditCardIcon className="h-5 w-5 text-gray-400" />
                         </div>
                       </button>
                       <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors border border-gray-100">
@@ -443,7 +438,7 @@ export default function FinancialPage() {
                             <h3 className="font-medium text-gray-900">Buat Faktur</h3>
                             <p className="text-sm text-gray-600 mt-1">Generate faktur untuk reservasi</p>
                           </div>
-                          <FileText className="h-5 w-5 text-gray-400" />
+                          <File01Icon className="h-5 w-5 text-gray-400" />
                         </div>
                       </button>
                       <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors border border-gray-100">
@@ -452,7 +447,7 @@ export default function FinancialPage() {
                             <h3 className="font-medium text-gray-900">Laporan Keuangan</h3>
                             <p className="text-sm text-gray-600 mt-1">Export laporan bulanan/tahunan</p>
                           </div>
-                          <Download className="h-5 w-5 text-gray-400" />
+                          <ChevronDownIcon className="h-5 w-5 text-gray-400" />
                         </div>
                       </button>
                     </div>
@@ -473,11 +468,11 @@ export default function FinancialPage() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
-                      <Plus className="h-4 w-4" />
+                      <Add01Icon className="h-4 w-4" />
                       <span>Tambah Transaksi</span>
                     </button>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <Receipt className="h-4 w-4 text-[#005357]" />
+                      <File01Icon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -489,7 +484,7 @@ export default function FinancialPage() {
                   <div className="flex items-center space-x-4">
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-gray-400" />
+                        <Search02Icon className="h-4 w-4 text-gray-400" />
                       </div>
                       <input
                         type="text"
@@ -521,7 +516,7 @@ export default function FinancialPage() {
                     </select>
                   </div>
                   <button className="bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors border border-gray-300 flex items-center space-x-2">
-                    <Download className="h-4 w-4" />
+                    <ChevronDownIcon className="h-4 w-4" />
                     <span>Export</span>
                   </button>
                 </div>
@@ -608,13 +603,13 @@ export default function FinancialPage() {
                                 className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
                                 title="Lihat Detail"
                               >
-                                <Eye className="h-4 w-4" />
+                                <EyeIcon className="h-4 w-4" />
                               </button>
                               <button 
                                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded"
                                 title="Download Receipt"
                               >
-                                <Download className="h-4 w-4" />
+                                <ChevronDownIcon className="h-4 w-4" />
                               </button>
                             </div>
                           </td>
@@ -638,11 +633,11 @@ export default function FinancialPage() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
-                      <Plus className="h-4 w-4" />
+                      <Add01Icon className="h-4 w-4" />
                       <span>Buat Faktur</span>
                     </button>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <FileText className="h-4 w-4 text-[#005357]" />
+                      <File01Icon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -654,7 +649,7 @@ export default function FinancialPage() {
                   <div className="bg-white p-6 shadow">
                     <div className="flex items-center">
                       <div className="w-12 h-12 bg-green-100 flex items-center justify-center">
-                        <CheckCircle className="h-6 w-6 text-green-600" />
+                        <UserCheckIcon className="h-6 w-6 text-green-600" />
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Faktur Lunas</p>
@@ -668,7 +663,7 @@ export default function FinancialPage() {
                   <div className="bg-white p-6 shadow">
                     <div className="flex items-center">
                       <div className="w-12 h-12 bg-yellow-100 flex items-center justify-center">
-                        <Clock className="h-6 w-6 text-yellow-600" />
+                        <Clock01Icon className="h-6 w-6 text-yellow-600" />
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Menunggu Pembayaran</p>
@@ -682,7 +677,7 @@ export default function FinancialPage() {
                   <div className="bg-white p-6 shadow">
                     <div className="flex items-center">
                       <div className="w-12 h-12 bg-red-100 flex items-center justify-center">
-                        <AlertCircle className="h-6 w-6 text-red-600" />
+                        <AlertCircleIcon className="h-6 w-6 text-red-600" />
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Terlambat</p>
@@ -758,19 +753,19 @@ export default function FinancialPage() {
                                 className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
                                 title="Lihat Faktur"
                               >
-                                <Eye className="h-4 w-4" />
+                                <EyeIcon className="h-4 w-4" />
                               </button>
                               <button 
                                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded"
                                 title="Edit Faktur"
                               >
-                                <Edit className="h-4 w-4" />
+                                <PencilEdit02Icon className="h-4 w-4" />
                               </button>
                               <button 
                                 className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors rounded"
                                 title="Download PDF"
                               >
-                                <Download className="h-4 w-4" />
+                                <ChevronDownIcon className="h-4 w-4" />
                               </button>
                             </div>
                           </td>
@@ -793,7 +788,7 @@ export default function FinancialPage() {
                     <p className="text-sm text-gray-100 mt-1">Generate dan export laporan keuangan</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <TrendingUp className="h-4 w-4 text-[#005357]" />
+                    <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
                   </div>
                 </div>
               </div>
@@ -809,7 +804,7 @@ export default function FinancialPage() {
                           <p className="text-sm text-gray-600 mt-1">Analisis pendapatan harian, bulanan, tahunan</p>
                         </div>
                         <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          <TrendingUp className="h-4 w-4 text-white" />
+                          <ArrowUp01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>
@@ -840,7 +835,7 @@ export default function FinancialPage() {
                           <p className="text-sm text-gray-600 mt-1">Tracking dan analisis pengeluaran</p>
                         </div>
                         <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          <ArrowDownRight className="h-4 w-4 text-white" />
+                          <ArrowUp01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>
@@ -871,7 +866,7 @@ export default function FinancialPage() {
                           <p className="text-sm text-gray-600 mt-1">Laporan siap untuk perpajakan</p>
                         </div>
                         <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          <FileText className="h-4 w-4 text-white" />
+                          <File01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>

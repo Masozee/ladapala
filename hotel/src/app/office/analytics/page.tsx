@@ -1,7 +1,24 @@
 'use client';
 
 import OfficeLayout from '@/components/OfficeLayout';
-import { BarChart3, TrendingUp, DollarSign, Users, PieChart, Calendar, Star, Target, ArrowUpRight, ArrowDownRight, UserCheck, ClipboardList, Building, Briefcase, FileText, Clock, AlertTriangle, CheckCircle, UserX, Zap } from 'lucide-react';
+import {
+  PieChartIcon,
+  ArrowUp01Icon,
+  CreditCardIcon,
+  UserMultipleIcon,
+  Calendar01Icon,
+  SparklesIcon,
+  Location01Icon,
+  UserCheckIcon,
+  ClipboardList,
+  Building03Icon,
+  PackageIcon,
+  File01Icon,
+  Clock01Icon,
+  AlertCircleIcon,
+  Cancel01Icon,
+  Alert01Icon
+} from '@/lib/icons';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line, AreaChart, Area, ComposedChart } from 'recharts';
 
 export default function AnalyticsPage() {
@@ -82,7 +99,7 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-gray-100 mt-1">Staf aktif saat ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Users className="h-4 w-4 text-[#005357]" />
+                  <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -103,7 +120,7 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-gray-100 mt-1">Analisis keuangan bulanan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-[#005357]" />
+                  <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -150,7 +167,7 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-gray-100 mt-1">Operasional</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Zap className="h-4 w-4 text-[#005357]" />
+                  <SparklesIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -158,7 +175,7 @@ export default function AnalyticsPage() {
               <div className="text-center">
                 <div className="flex items-center justify-center space-x-2">
                   <div className="text-3xl font-bold text-green-600 mb-2">88%</div>
-                  <ArrowUpRight className="h-5 w-5 text-green-600" />
+                  <ArrowUp01Icon className="h-5 w-5 text-green-600" />
                 </div>
                 <div className="text-sm text-gray-600">rata-rata</div>
               </div>
@@ -174,7 +191,7 @@ export default function AnalyticsPage() {
                   <p className="text-xs text-gray-100 mt-1">Mingguan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <UserCheck className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -205,7 +222,7 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-gray-100 mt-1">Distribusi biaya</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <PieChart className="h-4 w-4 text-[#005357]" />
+                  <PieChartIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -254,7 +271,7 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-gray-100 mt-1">Bulanan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <DollarSign className="h-4 w-4 text-[#005357]" />
+                  <CreditCardIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -275,7 +292,7 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-gray-100 mt-1">Efisiensi dan kontribusi</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Target className="h-4 w-4 text-[#005357]" />
+                  <Location01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -320,7 +337,7 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-gray-100 mt-1">Ringkasan hari ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <BarChart3 className="h-4 w-4 text-[#005357]" />
+                  <PieChartIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -329,7 +346,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-between bg-white p-3">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-green-100 flex items-center justify-center">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <UserCheckIcon className="h-4 w-4 text-green-600" />
                     </div>
                     <span className="text-sm text-gray-900">Fasilitas Normal</span>
                   </div>
@@ -338,7 +355,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-between bg-white p-3">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-yellow-100 flex items-center justify-center">
-                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      <Alert01Icon className="h-4 w-4 text-yellow-600" />
                     </div>
                     <span className="text-sm text-gray-900">Perlu Perhatian</span>
                   </div>
@@ -347,7 +364,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-between bg-white p-3">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-blue-100 flex items-center justify-center">
-                      <Star className="h-4 w-4 text-blue-600" />
+                      <SparklesIcon className="h-4 w-4 text-blue-600" />
                     </div>
                     <span className="text-sm text-gray-900">Rating Kepuasan</span>
                   </div>
@@ -356,7 +373,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-between bg-white p-3">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-purple-100 flex items-center justify-center">
-                      <Users className="h-4 w-4 text-purple-600" />
+                      <UserMultipleIcon className="h-4 w-4 text-purple-600" />
                     </div>
                     <span className="text-sm text-gray-900">Turnover Rate</span>
                   </div>
@@ -375,7 +392,7 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-gray-100 mt-1">Kondisi dan biaya maintenance fasilitas</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Building className="h-4 w-4 text-[#005357]" />
+                  <Building03Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -412,7 +429,7 @@ export default function AnalyticsPage() {
                   <p className="text-sm text-gray-100 mt-1">Tools untuk HR, GA, dan operasional</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <BarChart3 className="h-4 w-4 text-[#005357]" />
+                  <PieChartIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -420,21 +437,21 @@ export default function AnalyticsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button className="p-4 text-left bg-white hover:bg-gray-50 transition-colors">
                   <div className="flex items-center space-x-3 mb-2">
-                    <Users className="h-5 w-5 text-[#005357]" />
+                    <UserMultipleIcon className="h-5 w-5 text-[#005357]" />
                     <h3 className="font-medium text-gray-900">Manajemen HR</h3>
                   </div>
                   <p className="text-sm text-gray-600">Karyawan, kehadiran, dan performa</p>
                 </button>
                 <button className="p-4 text-left bg-white hover:bg-gray-50 transition-colors">
                   <div className="flex items-center space-x-3 mb-2">
-                    <Building className="h-5 w-5 text-[#005357]" />
+                    <Building03Icon className="h-5 w-5 text-[#005357]" />
                     <h3 className="font-medium text-gray-900">General Affairs</h3>
                   </div>
                   <p className="text-sm text-gray-600">Fasilitas, maintenance, dan operasional</p>
                 </button>
                 <button className="p-4 text-left bg-white hover:bg-gray-50 transition-colors">
                   <div className="flex items-center space-x-3 mb-2">
-                    <BarChart3 className="h-5 w-5 text-[#005357]" />
+                    <PieChartIcon className="h-5 w-5 text-[#005357]" />
                     <h3 className="font-medium text-gray-900">Business Intelligence</h3>
                   </div>
                   <p className="text-sm text-gray-600">Analytics menyeluruh dan pelaporan</p>

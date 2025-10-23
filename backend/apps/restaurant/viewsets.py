@@ -187,7 +187,7 @@ class InventoryTransactionViewSet(viewsets.ModelViewSet):
         elif transaction.transaction_type in ['OUT', 'WASTE']:
             inventory.quantity -= transaction.quantity
         elif transaction.transaction_type == 'ADJUST':
-            inventory.quantity = transaction.quantity
+            inventory.quantity += transaction.quantity
 
         inventory.save()
 

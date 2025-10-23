@@ -64,6 +64,14 @@ const ROLE_LABELS: Record<string, string> = {
   "ADMIN": "Admin"
 }
 
+// Helper function to format date to YYYY-MM-DD without timezone conversion
+const formatDateLocal = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedView, setSelectedView] = useState<"week" | "day">("week")
@@ -95,7 +103,7 @@ export default function SchedulePage() {
   useEffect(() => {
     if (scrollContainerRef.current && selectedView === 'week') {
       const today = new Date()
-      const todayElement = scrollContainerRef.current.querySelector(`[data-date="${today.toISOString().split('T')[0]}"]`)
+      const todayElement = scrollContainerRef.current.querySelector(`[data-date="${formatDateLocal(today)}"]`)
       if (todayElement) {
         todayElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
       }
@@ -210,12 +218,12 @@ export default function SchedulePage() {
   }
 
   const getShiftForEmployeeAndDate = (employeeId: number, date: Date) => {
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = formatDateLocal(date)
     return schedules.find(s => s.employee === employeeId && s.shift_date === dateStr)
   }
 
   const getTodaySchedules = () => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = formatDateLocal(new Date())
     return schedules.filter(s => s.shift_date === today)
   }
 
@@ -394,12 +402,12 @@ export default function SchedulePage() {
                       {monthDates.map((date, dateIndex) => {
                         const isToday = date.toDateString() === new Date().toDateString()
                         const isWeekend = date.getDay() === 0 || date.getDay() === 6
-                        const dateStr = date.toISOString().split('T')[0]
+                        const dateStr = formatDateLocal(date)
                         return (
                           <div
                             key={dateIndex}
                             data-date={dateStr}
-                            className={`border-r border-gray-300 last:border-r-0 ${isToday ? 'ring-2 ring-[#58ff34] ring-inset' : ''}`}
+                            className={`border-r border-gray-300 last:border-r-0 ${isToday ? 'sticky left-[200px] z-10 ring-2 ring-[#58ff34] ring-inset' : ''}`}
                             style={{ minWidth: '140px' }}
                           >
                             {/* Date Header */}

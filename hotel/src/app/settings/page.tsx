@@ -3,45 +3,38 @@
 import { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import {
-  Settings,
-  Building,
-  User,
-  Mail,
-  Shield,
-  CreditCard,
-  Bell,
-  Globe,
-  Database,
-  Wifi,
-  Printer,
-  Calendar,
-  Clock,
-  Users,
-  Bed,
-  DollarSign,
-  FileText,
-  Eye,
-  EyeOff,
-  Save,
-  RefreshCw,
-  Upload,
-  Download,
-  Trash2,
-  Plus,
-  Minus,
-  CheckCircle,
-  X,
-  AlertCircle,
-  Info,
-  Moon,
-  Sun,
-  Smartphone
-} from 'lucide-react';
+  Settings02Icon,
+  Building03Icon,
+  UserIcon,
+  Mail01Icon,
+  Shield01Icon,
+  CreditCardIcon,
+  Notification02Icon,
+  PackageIcon,
+  File01Icon,
+  Calendar01Icon,
+  Clock01Icon,
+  UserMultipleIcon,
+  BedIcon,
+  EyeIcon,
+  Loading03Icon,
+  ArrowUp01Icon,
+  ChevronDownIcon,
+  CancelCircleIcon,
+  Add01Icon,
+  Cancel01Icon,
+  UserCheckIcon,
+  AlertCircleIcon,
+  Alert01Icon,
+  Moon02Icon,
+  Sun03Icon,
+  Call02Icon
+} from '@/lib/icons';
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState({
-    // General Settings
+    // General Settings02Icon
     general: {
       hotelName: 'Kapulaga Hotel',
       hotelDescription: 'Premium hospitality experience in the heart of the city',
@@ -187,61 +180,61 @@ const SettingsPage = () => {
     {
       id: 'general',
       name: 'Info',
-      icon: Settings,
+      icon: Settings02Icon,
       description: 'Basic hotel information and system settings'
     },
     {
       id: 'users',
       name: 'Users',
-      icon: Users,
+      icon: UserMultipleIcon,
       description: 'User management and authentication settings'
     },
     {
       id: 'notifications',
       name: 'Alerts',
-      icon: Bell,
+      icon: Notification02Icon,
       description: 'Notification preferences and alert settings'
     },
     {
       id: 'security',
       name: 'Security',
-      icon: Shield,
+      icon: Shield01Icon,
       description: 'Security policies and access controls'
     },
     {
       id: 'payment',
       name: 'Payment',
-      icon: CreditCard,
+      icon: CreditCardIcon,
       description: 'Payment gateways and billing settings'
     },
     {
       id: 'rooms',
       name: 'Rooms',
-      icon: Bed,
+      icon: BedIcon,
       description: 'Room management and housekeeping settings'
     },
     {
       id: 'booking',
       name: 'Booking',
-      icon: Calendar,
+      icon: Calendar01Icon,
       description: 'Reservation policies and booking rules'
     },
     {
       id: 'integrations',
       name: 'API',
-      icon: Wifi,
+      icon: PackageIcon,
       description: 'Third-party services and API connections'
     },
     {
       id: 'appearance',
       name: 'Theme',
-      icon: Eye,
+      icon: EyeIcon,
       description: 'Themes, colors, and visual customization'
     },
     {
       id: 'backup',
       name: 'Backup',
-      icon: Database,
+      icon: PackageIcon,
       description: 'Data backup and system maintenance'
     }
   ];
@@ -256,7 +249,7 @@ const SettingsPage = () => {
               <p className="text-sm text-gray-100 mt-1">Basic details about your hotel</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <Building className="h-4 w-4 text-[#005357]" />
+              <Building03Icon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
@@ -328,7 +321,7 @@ const SettingsPage = () => {
               <p className="text-sm text-gray-100 mt-1">Localization and format preferences</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <Globe className="h-4 w-4 text-[#005357]" />
+              <Location01Icon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
@@ -397,7 +390,7 @@ const SettingsPage = () => {
               <p className="text-sm text-gray-100 mt-1">User registration and login policies</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <User className="h-4 w-4 text-[#005357]" />
+              <UserIcon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
@@ -502,7 +495,7 @@ const SettingsPage = () => {
               <p className="text-sm text-gray-100 mt-1">Choose how you want to receive notifications</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <Bell className="h-4 w-4 text-[#005357]" />
+              <Notification02Icon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
@@ -511,7 +504,7 @@ const SettingsPage = () => {
             <div className="flex items-center justify-between p-4 bg-white border">
               <div>
                 <div className="flex items-center space-x-2">
-                  <Mail className="h-5 w-5 text-[#005357]" />
+                  <Mail01Icon className="h-5 w-5 text-[#005357]" />
                   <label className="text-sm font-medium text-gray-700">Email Notifications</label>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Receive notifications via email</p>
@@ -530,7 +523,7 @@ const SettingsPage = () => {
             <div className="flex items-center justify-between p-4 bg-white border">
               <div>
                 <div className="flex items-center space-x-2">
-                  <Smartphone className="h-5 w-5 text-[#005357]" />
+                  <Call02Icon className="h-5 w-5 text-[#005357]" />
                   <label className="text-sm font-medium text-gray-700">SMS Notifications</label>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Receive notifications via SMS</p>
@@ -549,7 +542,7 @@ const SettingsPage = () => {
             <div className="flex items-center justify-between p-4 bg-white border">
               <div>
                 <div className="flex items-center space-x-2">
-                  <Bell className="h-5 w-5 text-[#005357]" />
+                  <Notification02Icon className="h-5 w-5 text-[#005357]" />
                   <label className="text-sm font-medium text-gray-700">Push Notifications</label>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Browser push notifications</p>
@@ -568,7 +561,7 @@ const SettingsPage = () => {
             <div className="flex items-center justify-between p-4 bg-white border">
               <div>
                 <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-5 w-5 text-[#005357]" />
+                  <UserCheckIcon className="h-5 w-5 text-[#005357]" />
                   <label className="text-sm font-medium text-gray-700">Notification Sound</label>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Play sound for notifications</p>
@@ -595,18 +588,18 @@ const SettingsPage = () => {
               <p className="text-sm text-gray-100 mt-1">Choose which events trigger notifications</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <AlertCircle className="h-4 w-4 text-[#005357]" />
+              <AlertCircleIcon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
         <div className="p-6 bg-gray-50">
           <div className="space-y-4">
             {[
-              { key: 'bookingNotifications', label: 'Booking Notifications', icon: Calendar },
-              { key: 'maintenanceAlerts', label: 'Maintenance Alerts', icon: Settings },
-              { key: 'paymentAlerts', label: 'Payment Alerts', icon: CreditCard },
-              { key: 'guestRequestAlerts', label: 'Guest Request Alerts', icon: User },
-              { key: 'systemAlerts', label: 'System Alerts', icon: AlertCircle }
+              { key: 'bookingNotifications', label: 'Booking Notifications', icon: Calendar01Icon },
+              { key: 'maintenanceAlerts', label: 'Maintenance Alerts', icon: Settings02Icon },
+              { key: 'paymentAlerts', label: 'Payment Alerts', icon: CreditCardIcon },
+              { key: 'guestRequestAlerts', label: 'Guest Request Alerts', icon: UserIcon },
+              { key: 'systemAlerts', label: 'System Alerts', icon: AlertCircleIcon }
             ].map((item) => (
               <div key={item.key} className="flex items-center justify-between p-3 bg-white border">
                 <div className="flex items-center space-x-3">
@@ -648,13 +641,13 @@ const SettingsPage = () => {
                   <p className="text-sm text-gray-100 mt-1">This section is under development</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Settings className="h-4 w-4 text-[#005357]" />
+                  <Settings02Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
             <div className="p-6 bg-gray-50">
               <div className="text-center py-12">
-                <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <Alert01Icon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Settings Coming Soon</h3>
                 <p className="text-gray-600">This settings section is currently being developed and will be available soon.</p>
               </div>
@@ -696,10 +689,10 @@ const SettingsPage = () => {
         {/* Tab Description */}
         <div className="bg-blue-50 p-4 border border-blue-200">
           <div className="flex items-start space-x-3">
-            <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+            <Alert01Icon className="h-5 w-5 text-blue-600 mt-0.5" />
             <div>
               <h4 className="text-sm font-medium text-blue-900">
-                {tabs.find(tab => tab.id === activeTab)?.name} Settings
+                {tabs.find(tab => tab.id === activeTab)?.name} Settings02Icon
               </h4>
               <p className="text-sm text-blue-800 mt-1">
                 {tabs.find(tab => tab.id === activeTab)?.description}
@@ -714,11 +707,11 @@ const SettingsPage = () => {
         {/* Save Button */}
         <div className="flex justify-end space-x-4">
           <button className="flex items-center space-x-2 px-6 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
-            <RefreshCw className="h-4 w-4" />
+            <Loading03Icon className="h-4 w-4" />
             <span>Reset</span>
           </button>
           <button className="flex items-center space-x-2 px-6 py-3 bg-[#005357] text-white hover:bg-[#004147] transition-colors">
-            <Save className="h-4 w-4" />
+            <PackageIcon className="h-4 w-4" />
             <span>Save Changes</span>
           </button>
         </div>

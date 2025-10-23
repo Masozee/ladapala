@@ -2,28 +2,25 @@
 
 import { useState } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  FileText, 
-  Calendar,
-  Users,
-  BedDouble,
-  DollarSign,
-  PieChart,
-  Download,
-  Filter,
+import {
+  PieChartIcon,
+  ArrowUp01Icon,
+  File01Icon,
+  Calendar01Icon,
+  UserMultipleIcon,
+  BedIcon,
+  CreditCardIcon,
+  ChevronDownIcon,
+  FilterIcon,
   ChevronDown,
-  Building2,
-  Clock,
-  Target,
-  Activity,
-  Percent,
-  Star,
-  MapPin,
-  Phone,
-  Mail
-} from 'lucide-react';
+  Building03Icon,
+  Clock01Icon,
+  Location01Icon,
+  PackageIcon,
+  SparklesIcon,
+  Call02Icon,
+  Mail01Icon
+} from '@/lib/icons';
 
 export default function ReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('thisMonth');
@@ -45,7 +42,7 @@ export default function ReportsPage() {
       id: 'occupancy',
       title: 'Laporan Okupansi',
       description: 'Tingkat okupansi kamar harian, bulanan dan tahunan',
-      icon: BedDouble,
+      icon: BedIcon,
       category: 'operations',
       lastGenerated: '2024-08-28',
       status: 'ready'
@@ -54,7 +51,7 @@ export default function ReportsPage() {
       id: 'revenue',
       title: 'Laporan Pendapatan',
       description: 'Analisis pendapatan dari kamar, F&B, dan layanan tambahan',
-      icon: DollarSign,
+      icon: CreditCardIcon,
       category: 'financial',
       lastGenerated: '2024-08-28',
       status: 'ready'
@@ -63,7 +60,7 @@ export default function ReportsPage() {
       id: 'guest-analytics',
       title: 'Analisis Tamu',
       description: 'Demografi tamu, preferensi, dan pola booking',
-      icon: Users,
+      icon: UserMultipleIcon,
       category: 'guest',
       lastGenerated: '2024-08-27',
       status: 'ready'
@@ -72,7 +69,7 @@ export default function ReportsPage() {
       id: 'staff-performance',
       title: 'Performa Karyawan',
       description: 'Evaluasi kinerja dan produktivitas karyawan',
-      icon: Target,
+      icon: Location01Icon,
       category: 'hr',
       lastGenerated: '2024-08-26',
       status: 'generating'
@@ -81,7 +78,7 @@ export default function ReportsPage() {
       id: 'satisfaction',
       title: 'Survei Kepuasan',
       description: 'Rating dan review tamu, analisis feedback',
-      icon: Star,
+      icon: SparklesIcon,
       category: 'guest',
       lastGenerated: '2024-08-25',
       status: 'ready'
@@ -90,7 +87,7 @@ export default function ReportsPage() {
       id: 'maintenance',
       title: 'Laporan Maintenance',
       description: 'Status pemeliharaan fasilitas dan equipment',
-      icon: Activity,
+      icon: PieChartIcon,
       category: 'operations',
       lastGenerated: '2024-08-28',
       status: 'ready'
@@ -99,7 +96,7 @@ export default function ReportsPage() {
       id: 'inventory',
       title: 'Laporan Inventaris',
       description: 'Stock amenities, supplies, dan kebutuhan operasional',
-      icon: Building2,
+      icon: Building03Icon,
       category: 'operations',
       lastGenerated: '2024-08-27',
       status: 'ready'
@@ -108,7 +105,7 @@ export default function ReportsPage() {
       id: 'tax',
       title: 'Laporan Pajak',
       description: 'Pajak hotel, PPN, dan kewajiban perpajakan',
-      icon: FileText,
+      icon: File01Icon,
       category: 'financial',
       lastGenerated: '2024-08-20',
       status: 'outdated'
@@ -183,7 +180,7 @@ export default function ReportsPage() {
                   <p className="text-sm text-gray-600 mt-1">Bulan ini</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <Calendar className="h-4 w-4 text-white" />
+                  <Calendar01Icon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -203,7 +200,7 @@ export default function ReportsPage() {
                   <p className="text-sm text-gray-600 mt-1">Rata-rata bulan ini</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <Percent className="h-4 w-4 text-white" />
+                  <PackageIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -223,7 +220,7 @@ export default function ReportsPage() {
                   <p className="text-sm text-gray-600 mt-1">Per hari</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <DollarSign className="h-4 w-4 text-white" />
+                  <CreditCardIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -245,7 +242,7 @@ export default function ReportsPage() {
                   <p className="text-sm text-gray-600 mt-1">Rating rata-rata</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <Star className="h-4 w-4 text-white" />
+                  <SparklesIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -267,7 +264,7 @@ export default function ReportsPage() {
                 <p className="text-sm text-gray-600 mt-1">Generate dan download berbagai jenis laporan analitik</p>
               </div>
               <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <BarChart3 className="h-4 w-4 text-white" />
+                <PieChartIcon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -300,7 +297,7 @@ export default function ReportsPage() {
                 </select>
               </div>
               <button className="bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004347] transition-colors flex items-center space-x-2">
-                <Download className="h-4 w-4" />
+                <ChevronDownIcon className="h-4 w-4" />
                 <span>Bulk Export</span>
               </button>
             </div>
@@ -352,7 +349,7 @@ export default function ReportsPage() {
                         className="px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
                         disabled={report.status !== 'ready'}
                       >
-                        <Download className="h-4 w-4" />
+                        <ChevronDownIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -371,7 +368,7 @@ export default function ReportsPage() {
                 <p className="text-sm text-gray-600 mt-1">Shortcut untuk tugas reporting yang sering dilakukan</p>
               </div>
               <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-white" />
+                <ArrowUp01Icon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -381,7 +378,7 @@ export default function ReportsPage() {
               <button className="p-4 bg-white hover:bg-gray-50 transition-colors text-left">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-blue-100 flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <Calendar01Icon className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">Laporan Harian</h3>
@@ -393,7 +390,7 @@ export default function ReportsPage() {
               <button className="p-4 bg-white hover:bg-gray-50 transition-colors text-left">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-green-100 flex items-center justify-center">
-                    <PieChart className="h-5 w-5 text-green-600" />
+                    <PieChartIcon className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">Dashboard Executive</h3>
@@ -405,7 +402,7 @@ export default function ReportsPage() {
               <button className="p-4 bg-white hover:bg-gray-50 transition-colors text-left">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-purple-100 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-purple-600" />
+                    <File01Icon className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">Laporan Custom</h3>

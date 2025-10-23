@@ -96,7 +96,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='products', default=5)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='products', default=7)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)

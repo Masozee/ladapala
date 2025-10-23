@@ -2,30 +2,28 @@
 
 import { useState } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { 
-  ClipboardCheck, 
-  Plus,
-  Search,
-  Clock,
-  CheckCircle,
-  User,
-  Calendar,
-  Eye,
-  Edit,
-  MoreHorizontal,
-  AlertTriangle,
-  Timer,
-  FileText,
-  MapPin,
-  Wrench,
-  Bed,
-  Package,
-  Users,
-  Star,
-  TrendingUp,
-  Download,
-  Filter
-} from 'lucide-react';
+import {
+  UserCheckIcon,
+  Add01Icon,
+  Search02Icon,
+  Clock01Icon,
+  UserIcon,
+  Calendar01Icon,
+  EyeIcon,
+  PencilEdit02Icon,
+  MoreHorizontalIcon,
+  AlertCircleIcon,
+  File01Icon,
+  Location01Icon,
+  Wrench01Icon,
+  BedIcon,
+  PackageIcon,
+  UserMultipleIcon,
+  SparklesIcon,
+  ArrowUp01Icon,
+  ChevronDownIcon,
+  FilterIcon
+} from '@/lib/icons';
 
 export default function WorkOrdersPage() {
   const [activeTab, setActiveTab] = useState('open');
@@ -182,11 +180,11 @@ export default function WorkOrdersPage() {
   ];
 
   const departments = [
-    { id: 'maintenance', name: 'Maintenance', color: 'bg-blue-100 text-blue-800', icon: Wrench },
-    { id: 'housekeeping', name: 'Housekeeping', color: 'bg-purple-100 text-purple-800', icon: Bed },
-    { id: 'it', name: 'IT Support', color: 'bg-green-100 text-green-800', icon: FileText },
-    { id: 'concierge', name: 'Concierge', color: 'bg-pink-100 text-pink-800', icon: Package },
-    { id: 'security', name: 'Security', color: 'bg-red-100 text-red-800', icon: AlertTriangle }
+    { id: 'maintenance', name: 'Maintenance', color: 'bg-blue-100 text-blue-800', icon: Wrench01Icon },
+    { id: 'housekeeping', name: 'Housekeeping', color: 'bg-purple-100 text-purple-800', icon: BedIcon },
+    { id: 'it', name: 'IT Support', color: 'bg-green-100 text-green-800', icon: File01Icon },
+    { id: 'concierge', name: 'Concierge', color: 'bg-pink-100 text-pink-800', icon: PackageIcon },
+    { id: 'security', name: 'Security', color: 'bg-red-100 text-red-800', icon: AlertCircleIcon }
   ];
 
   const formatDate = (dateString: string) => {
@@ -319,7 +317,7 @@ export default function WorkOrdersPage() {
                   <p className="text-sm text-gray-100 mt-1">Aktif & pending</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -339,7 +337,7 @@ export default function WorkOrdersPage() {
                   <p className="text-sm text-gray-100 mt-1">Sedang dikerjakan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Timer className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -359,7 +357,7 @@ export default function WorkOrdersPage() {
                   <p className="text-sm text-gray-100 mt-1">Selesai hari ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -379,7 +377,7 @@ export default function WorkOrdersPage() {
                   <p className="text-sm text-gray-100 mt-1">Terlambat</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <AlertTriangle className="h-4 w-4 text-[#005357]" />
+                  <Alert01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -402,11 +400,11 @@ export default function WorkOrdersPage() {
               </div>
               <div className="flex items-center space-x-3">
                 <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
+                  <Add01Icon className="h-4 w-4" />
                   <span>New Work Order</span>
                 </button>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <ClipboardCheck className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -426,7 +424,7 @@ export default function WorkOrdersPage() {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
+                    <Search02Icon className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -459,7 +457,7 @@ export default function WorkOrdersPage() {
                 </select>
               </div>
               <button className="bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
-                <Download className="h-4 w-4" />
+                <ChevronDownIcon className="h-4 w-4" />
                 <span>Export</span>
               </button>
             </div>
@@ -491,7 +489,7 @@ export default function WorkOrdersPage() {
                           </span>
                           {isOverdue && (
                             <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800">
-                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              <Alert01Icon className="h-3 w-3 mr-1" />
                               Overdue
                             </span>
                           )}
@@ -562,7 +560,7 @@ export default function WorkOrdersPage() {
                           <div className="space-y-2">
                             {order.tasks.map((task) => (
                               <div key={task.id} className="flex items-center space-x-3 text-sm">
-                                <CheckCircle className={`h-4 w-4 ${getTaskStatusColor(task.status)}`} />
+                                <UserCheckIcon className={`h-4 w-4 ${getTaskStatusColor(task.status)}`} />
                                 <span className={`flex-1 ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
                                   {task.task}
                                 </span>
@@ -599,13 +597,13 @@ export default function WorkOrdersPage() {
 
                       <div className="flex items-center space-x-2 ml-4">
                         <button className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded">
-                          <Eye className="h-4 w-4" />
+                          <EyeIcon className="h-4 w-4" />
                         </button>
                         <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                          <Edit className="h-4 w-4" />
+                          <PencilEdit02Icon className="h-4 w-4" />
                         </button>
                         <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors rounded">
-                          <MoreHorizontal className="h-4 w-4" />
+                          <MoreHorizontalIcon className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -625,7 +623,7 @@ export default function WorkOrdersPage() {
                 <p className="text-sm text-gray-100 mt-1">Performa work order per departemen</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-[#005357]" />
+                <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
           </div>

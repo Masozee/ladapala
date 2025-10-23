@@ -3,42 +3,33 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import SupportLayout from '@/components/SupportLayout';
-import { 
-  Wrench,
-  Search,
-  Filter,
-  Calendar,
-  Clock,
-  User,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Eye,
-  Edit,
-  Plus,
-  Grid3X3,
-  List,
-  Zap,
-  Thermometer,
-  Wifi,
-  Droplets,
-  Lightbulb,
-  Shield,
-  Building,
-  Users,
-  Phone,
-  MessageSquare,
-  Flag,
-  Timer,
-  TrendingUp,
-  BarChart3,
-  Target,
-  Gauge,
-  Settings,
-  AlertCircle,
-  HardHat,
-  ClipboardCheck
-} from 'lucide-react';
+import {
+  Wrench01Icon,
+  Search02Icon,
+  FilterIcon,
+  Calendar01Icon,
+  Clock01Icon,
+  UserIcon,
+  AlertCircleIcon,
+  UserCheckIcon,
+  CancelCircleIcon,
+  EyeIcon,
+  PencilEdit02Icon,
+  Add01Icon,
+  ViewIcon,
+  ListViewIcon,
+  SparklesIcon,
+  PackageIcon,
+  Shield01Icon,
+  Building03Icon,
+  UserMultipleIcon,
+  Call02Icon,
+  Mail01Icon,
+  ArrowUp01Icon,
+  PieChartIcon,
+  Location01Icon,
+  Settings02Icon
+} from '@/lib/icons';
 
 interface MaintenanceRequest {
   id: number;
@@ -408,16 +399,16 @@ const MaintenancePage = () => {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'hvac': return <Thermometer className="h-4 w-4" />;
-      case 'plumbing': return <Droplets className="h-4 w-4" />;
-      case 'electrical': return <Zap className="h-4 w-4" />;
-      case 'elevator': return <Building className="h-4 w-4" />;
+      case 'hvac': return <PackageIcon className="h-4 w-4" />;
+      case 'plumbing': return <PackageIcon className="h-4 w-4" />;
+      case 'electrical': return <SparklesIcon className="h-4 w-4" />;
+      case 'elevator': return <Building03Icon className="h-4 w-4" />;
       case 'security': return <Shield className="h-4 w-4" />;
-      case 'it_network': return <Wifi className="h-4 w-4" />;
-      case 'general': return <Wrench className="h-4 w-4" />;
-      case 'furniture': return <Settings className="h-4 w-4" />;
-      case 'appliances': return <Gauge className="h-4 w-4" />;
-      default: return <Wrench className="h-4 w-4" />;
+      case 'it_network': return <SparklesIcon className="h-4 w-4" />;
+      case 'general': return <Wrench01Icon className="h-4 w-4" />;
+      case 'furniture': return <Settings02Icon className="h-4 w-4" />;
+      case 'appliances': return <PieChartIcon className="h-4 w-4" />;
+      default: return <Wrench01Icon className="h-4 w-4" />;
     }
   };
 
@@ -496,11 +487,11 @@ const MaintenancePage = () => {
           </div>
           <div className="flex items-center space-x-2">
             <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
-              <BarChart3 className="h-4 w-4" />
+              <PieChartIcon className="h-4 w-4" />
               <span>Reports</span>
             </button>
             <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
-              <Plus className="h-4 w-4" />
+              <Add01Icon className="h-4 w-4" />
               <span>New Request</span>
             </button>
           </div>
@@ -519,7 +510,7 @@ const MaintenancePage = () => {
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Open</p>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <AlertCircle className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                      <AlertCircleIcon className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
@@ -533,7 +524,7 @@ const MaintenancePage = () => {
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Assigned</p>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <User className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                      <UserIcon className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
@@ -547,7 +538,7 @@ const MaintenancePage = () => {
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">In Progress</p>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <Wrench className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                      <Wrench01Icon className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
@@ -563,7 +554,7 @@ const MaintenancePage = () => {
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">On Hold</p>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <Timer className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                      <Clock01Icon className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
@@ -577,7 +568,7 @@ const MaintenancePage = () => {
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Completed</p>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <CheckCircle className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                      <UserCheckIcon className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
@@ -591,7 +582,7 @@ const MaintenancePage = () => {
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Urgent</p>
                     </div>
                     <div className="w-8 h-8 bg-red-500 group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <AlertTriangle className="h-4 w-4 text-white group-hover:text-red-500 transition-colors duration-200" />
+                      <Alert01Icon className="h-4 w-4 text-white group-hover:text-red-500 transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
@@ -606,7 +597,7 @@ const MaintenancePage = () => {
               <div className="p-6 h-full flex flex-col justify-center">
                 <div className="text-center">
                   <div className="w-12 h-12 bg-[#005357] group-hover:bg-white flex items-center justify-center mx-auto mb-4 rounded-full transition-colors duration-200">
-                    <Wrench className="h-6 w-6 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                    <Wrench01Icon className="h-6 w-6 text-white group-hover:text-[#005357] transition-colors duration-200" />
                   </div>
                   <h3 className="text-3xl font-bold text-gray-900 group-hover:text-white mb-2">{stats.total}</h3>
                   <p className="text-sm text-gray-600 group-hover:text-gray-200">Total Requests</p>
@@ -622,13 +613,13 @@ const MaintenancePage = () => {
             <button
               className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors"
             >
-              <Settings className="h-4 w-4" />
+              <Settings02Icon className="h-4 w-4" />
               <span>Advanced Filter</span>
             </button>
             
             {/* Search Form */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search tickets, titles, location..."
@@ -651,7 +642,7 @@ const MaintenancePage = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <Grid3X3 className="h-4 w-4" />
+                <ViewIcon className="h-4 w-4" />
                 <span>Cards</span>
               </button>
               <button
@@ -662,7 +653,7 @@ const MaintenancePage = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <List className="h-4 w-4" />
+                <ListViewIcon className="h-4 w-4" />
                 <span>Table</span>
               </button>
             </div>
@@ -720,7 +711,7 @@ const MaintenancePage = () => {
                     {request.assigned_to && (
                       <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded">
                         <div className="flex items-center space-x-2">
-                          <HardHat className="h-4 w-4 text-blue-600" />
+                          <Shield01Icon className="h-4 w-4 text-blue-600" />
                           <span className="text-blue-800 text-sm font-medium">
                             Assigned to: {request.assigned_to}
                           </span>
@@ -732,7 +723,7 @@ const MaintenancePage = () => {
                     <div className="space-y-2 mb-4">
                       {request.guest_impact && (
                         <div className="flex items-center space-x-2 p-2 bg-orange-50 border border-orange-200 rounded">
-                          <AlertTriangle className="h-3 w-3 text-orange-600" />
+                          <Alert01Icon className="h-3 w-3 text-orange-600" />
                           <span className="text-orange-800 text-xs font-medium">Guest Impact</span>
                         </div>
                       )}
@@ -744,7 +735,7 @@ const MaintenancePage = () => {
                       )}
                       {request.vendor_required && (
                         <div className="flex items-center space-x-2 p-2 bg-purple-50 border border-purple-200 rounded">
-                          <Users className="h-3 w-3 text-purple-600" />
+                          <UserMultipleIcon className="h-3 w-3 text-purple-600" />
                           <span className="text-purple-800 text-xs font-medium">Vendor: {request.vendor_name}</span>
                         </div>
                       )}
@@ -777,11 +768,11 @@ const MaintenancePage = () => {
                         href={`/maintenance/${request.id}`}
                         className="text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors text-center"
                       >
-                        <Eye className="h-3 w-3 inline mr-1" />
+                        <EyeIcon className="h-3 w-3 inline mr-1" />
                         View Details
                       </Link>
                       <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors">
-                        <Edit className="h-3 w-3 inline mr-1" />
+                        <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
                         Update
                       </button>
                     </div>
@@ -905,11 +896,11 @@ const MaintenancePage = () => {
                               href={`/maintenance/${request.id}`}
                               className="text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors rounded"
                             >
-                              <Eye className="h-3 w-3 inline mr-1" />
+                              <EyeIcon className="h-3 w-3 inline mr-1" />
                               View
                             </Link>
                             <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors rounded">
-                              <Edit className="h-3 w-3 inline mr-1" />
+                              <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
                               Update
                             </button>
                           </div>
@@ -931,7 +922,7 @@ const MaintenancePage = () => {
                 <p className="text-sm text-gray-600 mt-1">Current availability and workload</p>
               </div>
               <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <Users className="h-4 w-4 text-white" />
+                <UserMultipleIcon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -941,7 +932,7 @@ const MaintenancePage = () => {
                 <div key={tech.id} className="bg-white p-4 bg-gray-100 rounded">
                   <div className="flex items-center space-x-3 mb-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tech.available ? 'bg-green-100' : 'bg-red-100'}`}>
-                      <HardHat className={`h-4 w-4 ${tech.available ? 'text-green-600' : 'text-red-600'}`} />
+                      <Shield01Icon className={`h-4 w-4 ${tech.available ? 'text-green-600' : 'text-red-600'}`} />
                     </div>
                     <div>
                       <h4 className="font-bold text-gray-900 text-sm">{tech.name}</h4>
@@ -980,7 +971,7 @@ const MaintenancePage = () => {
                   </div>
                   
                   <button className="w-full mt-3 text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors">
-                    <Phone className="h-3 w-3 inline mr-1" />
+                    <Call02Icon className="h-3 w-3 inline mr-1" />
                     Contact
                   </button>
                 </div>
@@ -992,7 +983,7 @@ const MaintenancePage = () => {
         {/* No Results */}
         {filteredRequests.length === 0 && (
           <div className="text-center py-12">
-            <Wrench className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <Wrench01Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No maintenance requests found</h3>
             <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
           </div>

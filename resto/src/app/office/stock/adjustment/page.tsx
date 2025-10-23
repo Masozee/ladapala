@@ -11,6 +11,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Edit01Icon,
   Alert01Icon,
+  InformationCircleIcon,
 } from "@hugeicons/core-free-icons"
 import {
   Select,
@@ -24,7 +25,35 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { RoleGuard } from "@/components/role-guard"
 import { StockActionTabs } from "@/components/stock-action-tabs"
-import { api, type Inventory } from "@/lib/api"
+import { api, type Inventory, type InventoryTransaction } from "@/lib/api"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Add01Icon } from "@hugeicons/core-free-icons"
 
 export default function AdjustmentPage() {
   const router = useRouter()
@@ -33,8 +62,12 @@ export default function AdjustmentPage() {
 
   const [warehouseInventory, setWarehouseInventory] = useState<Inventory[]>([])
   const [kitchenInventory, setKitchenInventory] = useState<Inventory[]>([])
+  const [adjustmentHistory, setAdjustmentHistory] = useState<InventoryTransaction[]>([])
   const [activeTab, setActiveTab] = useState("warehouse")
   const [submitting, setSubmitting] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false)
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
 
   const [adjustmentForm, setAdjustmentForm] = useState({
     item_id: '',
@@ -46,6 +79,7 @@ export default function AdjustmentPage() {
 
   useEffect(() => {
     fetchInventory()
+    fetchAdjustmentHistory()
   }, [staff])
 
   const fetchInventory = async () => {
@@ -68,9 +102,58 @@ export default function AdjustmentPage() {
     }
   }
 
-  const handleAdjustment = async (e: React.FormEvent) => {
+  const fetchAdjustmentHistory = async () => {
+    if (!staff?.branch?.id) return
+
+    try {
+      const response = await api.getInventoryTransactions({
+        branch: staff.branch.id,
+        transaction_type: 'ADJUST',
+        ordering: '-created_at',
+        limit: 50
+      })
+      setAdjustmentHistory(response.results || [])
+    } catch (error) {
+      console.error('Error fetching adjustment history:', error)
+    }
+  }
+
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validate item exists
+    const item = [...warehouseInventory, ...kitchenInventory].find(i => i.id === parseInt(adjustmentForm.item_id))
+
+    if (!item) {
+      toast({
+        title: "Error",
+        description: "Item tidak ditemukan",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Validate quantity for reduction
+    const adjustmentQty = adjustmentForm.adjustment_type === 'reduce'
+      ? -Math.abs(parseFloat(adjustmentForm.quantity))
+      : Math.abs(parseFloat(adjustmentForm.quantity))
+
+    if (adjustmentForm.adjustment_type === 'reduce' && Math.abs(adjustmentQty) > item.quantity) {
+      toast({
+        title: "Error",
+        description: `Stok tidak cukup untuk dikurangi. Tersedia: ${item.quantity} ${item.unit}`,
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Show confirmation dialog
+    setConfirmDialogOpen(true)
+  }
+
+  const handleConfirmAdjustment = async () => {
     setSubmitting(true)
+    setConfirmDialogOpen(false)
 
     try {
       const item = [...warehouseInventory, ...kitchenInventory].find(i => i.id === parseInt(adjustmentForm.item_id))
@@ -88,15 +171,6 @@ export default function AdjustmentPage() {
         ? -Math.abs(parseFloat(adjustmentForm.quantity))
         : Math.abs(parseFloat(adjustmentForm.quantity))
 
-      if (adjustmentForm.adjustment_type === 'reduce' && Math.abs(adjustmentQty) > item.quantity) {
-        toast({
-          title: "Error",
-          description: `Stok tidak cukup untuk dikurangi. Tersedia: ${item.quantity} ${item.unit}`,
-          variant: "destructive"
-        })
-        return
-      }
-
       await api.createInventoryTransaction({
         inventory: parseInt(adjustmentForm.item_id),
         transaction_type: 'ADJUST',
@@ -110,7 +184,7 @@ export default function AdjustmentPage() {
         description: "Koreksi stok berhasil dicatat"
       })
 
-      // Reset form
+      // Reset form and close dialog
       setAdjustmentForm({
         item_id: '',
         adjustment_type: 'reduce',
@@ -118,8 +192,10 @@ export default function AdjustmentPage() {
         reason: '',
         notes: ''
       })
+      setDialogOpen(false)
 
       fetchInventory()
+      fetchAdjustmentHistory()
     } catch (error: any) {
       console.error('Error adjusting stock:', error)
       toast({
@@ -150,7 +226,50 @@ export default function AdjustmentPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Koreksi Stok</h1>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              Koreksi Stok
+              <Dialog open={infoDialogOpen} onOpenChange={setInfoDialogOpen}>
+                <DialogTrigger asChild>
+                  <button className="text-blue-600 hover:text-blue-700 transition-colors">
+                    <HugeiconsIcon icon={InformationCircleIcon} size={28} strokeWidth={2} />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-purple-900">Informasi Koreksi Stok</DialogTitle>
+                    <DialogDescription>
+                      Panduan penggunaan fitur koreksi stok
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-3 mt-4">
+                    <div className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-2"></div>
+                      <p className="text-sm text-purple-900">
+                        <strong>Kurangi Stok:</strong> Untuk barang rusak, kadaluarsa, hilang, atau selisih negatif
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-2"></div>
+                      <p className="text-sm text-purple-900">
+                        <strong>Tambah Stok:</strong> Untuk koreksi kesalahan input atau selisih positif
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-2"></div>
+                      <p className="text-sm text-purple-900">
+                        <strong>Audit Trail:</strong> Semua koreksi tercatat dengan alasan untuk audit
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-2"></div>
+                      <p className="text-sm text-purple-900">
+                        <strong>Validasi:</strong> Pengurangan stok hanya bisa dilakukan jika stok tersedia
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </h1>
             <p className="text-muted-foreground">Sesuaikan stok untuk selisih fisik, kerusakan, atau kadaluarsa</p>
           </div>
         </div>
@@ -158,20 +277,33 @@ export default function AdjustmentPage() {
         {/* Quick Action Tabs */}
         <StockActionTabs />
 
-        {/* Adjustment Form */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="bg-white rounded-lg border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <HugeiconsIcon icon={Edit01Icon} size={24} strokeWidth={2} className="text-purple-600" />
-                Form Koreksi Stok
-              </CardTitle>
-              <CardDescription>
-                Tambah atau kurangi stok dengan alasan yang jelas
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAdjustment} className="space-y-4">
+        {/* Adjustment History Table */}
+        <Card className="bg-white rounded-lg border">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Riwayat Koreksi Stok</CardTitle>
+                <CardDescription>50 koreksi terakhir (penambahan dan pengurangan)</CardDescription>
+              </div>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black">
+                <HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={2} className="mr-2" />
+                Koreksi Stok
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <HugeiconsIcon icon={Edit01Icon} size={24} strokeWidth={2} className="text-purple-600" />
+                  Form Koreksi Stok
+                </DialogTitle>
+                <DialogDescription>
+                  Tambah atau kurangi stok dengan alasan yang jelas
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleFormSubmit} className="space-y-4 mt-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="warehouse">Gudang</TabsTrigger>
@@ -292,128 +424,163 @@ export default function AdjustmentPage() {
 
                 <Button
                   type="submit"
-                  className="w-full rounded bg-[#58ff34] hover:bg-[#4de82a]"
+                  className="w-full rounded bg-[#58ff34] hover:bg-[#4de82a] text-black"
                   disabled={submitting}
                 >
                   <HugeiconsIcon icon={Edit01Icon} size={18} strokeWidth={2} className="mr-2" />
                   {submitting ? 'Menyimpan...' : 'Simpan Koreksi'}
                 </Button>
               </form>
-            </CardContent>
-          </Card>
+            </DialogContent>
+          </Dialog>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {adjustmentHistory.length === 0 ? (
+              <div className="text-center py-12 px-6">
+                <HugeiconsIcon icon={Edit01Icon} size={48} strokeWidth={1.5} className="mx-auto mb-2 opacity-30" />
+                <p className="text-muted-foreground">Belum ada riwayat koreksi stok</p>
+              </div>
+            ) : (
+              <div className="rounded-lg border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50 hover:bg-gray-50">
+                      <TableHead className="font-semibold text-gray-900 py-4 px-6">Tanggal & Waktu</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4 px-6">Item</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4 px-6">Lokasi</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4 px-6">Jenis</TableHead>
+                      <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Jumlah</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4 px-6">Oleh</TableHead>
+                      <TableHead className="font-semibold text-gray-900 py-4 px-6">Alasan</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {adjustmentHistory.map((adjustment) => {
+                      const isAddition = parseFloat(adjustment.quantity.toString()) > 0
 
-          {/* Info Card */}
-          <div className="space-y-4">
-            <Card className="bg-purple-50 rounded-lg border-purple-200">
-              <CardHeader>
-                <CardTitle className="text-purple-900">Informasi Koreksi Stok</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-2"></div>
-                  <p className="text-purple-900">
-                    <strong>Kurangi Stok:</strong> Untuk barang rusak, kadaluarsa, hilang, atau selisih negatif
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-2"></div>
-                  <p className="text-purple-900">
-                    <strong>Tambah Stok:</strong> Untuk koreksi kesalahan input atau selisih positif
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-2"></div>
-                  <p className="text-purple-900">
-                    <strong>Audit Trail:</strong> Semua koreksi tercatat dengan alasan untuk audit
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-purple-600 mt-2"></div>
-                  <p className="text-purple-900">
-                    <strong>Validasi:</strong> Pengurangan stok hanya bisa dilakukan jika stok tersedia
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                      return (
+                        <TableRow key={adjustment.id} className="hover:bg-gray-50 border-b">
+                          <TableCell className="py-4 px-6 whitespace-nowrap">
+                            {new Date(adjustment.created_at).toLocaleDateString('id-ID', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </TableCell>
+                          <TableCell className="font-medium py-4 px-6">{adjustment.inventory_name}</TableCell>
+                          <TableCell className="py-4 px-6">
+                            <Badge variant="outline" className="font-normal">
+                              {adjustment.inventory_location === 'WAREHOUSE' ? 'Gudang' : 'Dapur'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-4 px-6">
+                            <Badge className={isAddition ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}>
+                              {isAddition ? 'Penambahan (+)' : 'Pengurangan (-)'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className={`text-right font-semibold py-4 px-6 ${isAddition ? 'text-green-600' : 'text-red-600'}`}>
+                            {isAddition ? '+' : ''}{parseFloat(adjustment.quantity.toString()).toLocaleString('id-ID')}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground py-4 px-6">{adjustment.performed_by_name}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm py-4 px-6 max-w-xs">
+                            <div className="whitespace-normal break-words">
+                              {adjustment.notes || '-'}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-            <Card className="bg-yellow-50 rounded-lg border-yellow-200">
-              <CardHeader>
-                <CardTitle className="text-yellow-900 flex items-center gap-2">
-                  <HugeiconsIcon icon={Alert01Icon} size={20} strokeWidth={2} />
-                  Peringatan
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-yellow-900">
-                <p>
+        {/* Confirmation Alert Dialog */}
+        <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-yellow-900">
+                <HugeiconsIcon icon={Alert01Icon} size={24} strokeWidth={2} />
+                Peringatan - Konfirmasi Koreksi Stok
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-4">
+                <p className="text-yellow-900 font-medium">
                   Koreksi stok akan langsung mempengaruhi jumlah stok. Pastikan:
                 </p>
-                <ul className="list-disc list-inside space-y-1 ml-2">
+                <ul className="list-disc list-inside space-y-1 ml-2 text-yellow-900">
                   <li>Alasan koreksi jelas dan akurat</li>
                   <li>Jumlah koreksi sudah diverifikasi</li>
                   <li>Catatan detail untuk audit trail</li>
                 </ul>
-              </CardContent>
-            </Card>
 
-            {selectedItem && adjustmentForm.quantity && (
-              <Card className="bg-green-50 rounded-lg border-green-200">
-                <CardHeader>
-                  <CardTitle className="text-green-900">Ringkasan Koreksi</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-green-700">Item:</span>
-                    <span className="font-semibold text-green-900">{selectedItem.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-green-700">Lokasi:</span>
-                    <span className="font-semibold text-green-900">
-                      {selectedItem.location === 'WAREHOUSE' ? 'Gudang' : 'Dapur'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-green-700">Jenis:</span>
-                    <span className="font-semibold text-green-900">
-                      {adjustmentForm.adjustment_type === 'reduce' ? 'Pengurangan (-)' : 'Penambahan (+)'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-green-700">Jumlah:</span>
-                    <span className="font-semibold text-green-900">
-                      {adjustmentForm.adjustment_type === 'reduce' ? '-' : '+'}
-                      {parseFloat(adjustmentForm.quantity).toLocaleString('id-ID')} {selectedItem.unit}
-                    </span>
-                  </div>
-                  <div className="border-t border-green-300 my-2"></div>
-                  <div className="flex justify-between">
-                    <span className="text-green-700">Stok Saat Ini:</span>
-                    <span className="font-semibold text-green-900">
-                      {parseFloat(selectedItem.quantity.toString()).toLocaleString('id-ID')} {selectedItem.unit}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-base">
-                    <span className="text-green-700 font-semibold">Stok Setelah Koreksi:</span>
-                    <span className="font-bold text-green-900">
-                      {(
-                        parseFloat(selectedItem.quantity.toString()) +
-                        (adjustmentForm.adjustment_type === 'reduce' ? -1 : 1) * parseFloat(adjustmentForm.quantity)
-                      ).toLocaleString('id-ID')} {selectedItem.unit}
-                    </span>
-                  </div>
-                  {adjustmentForm.reason && (
-                    <>
-                      <div className="border-t border-green-300 my-2"></div>
+                {selectedItem && adjustmentForm.quantity && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="font-semibold text-blue-900 mb-2">Ringkasan Koreksi:</p>
+                    <div className="space-y-1 text-sm text-blue-900">
                       <div className="flex justify-between">
-                        <span className="text-green-700">Alasan:</span>
-                        <span className="font-semibold text-green-900">{adjustmentForm.reason}</span>
+                        <span>Item:</span>
+                        <span className="font-semibold">{selectedItem.name}</span>
                       </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
+                      <div className="flex justify-between">
+                        <span>Jenis:</span>
+                        <span className="font-semibold">
+                          {adjustmentForm.adjustment_type === 'reduce' ? 'Pengurangan (-)' : 'Penambahan (+)'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Jumlah:</span>
+                        <span className="font-semibold">
+                          {adjustmentForm.adjustment_type === 'reduce' ? '-' : '+'}
+                          {parseFloat(adjustmentForm.quantity).toLocaleString('id-ID')} {selectedItem.unit}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-blue-300 pt-1 mt-1">
+                        <span>Stok Saat Ini:</span>
+                        <span className="font-semibold">
+                          {parseFloat(selectedItem.quantity.toString()).toLocaleString('id-ID')} {selectedItem.unit}
+                        </span>
+                      </div>
+                      <div className="flex justify-between font-bold text-base">
+                        <span>Stok Setelah Koreksi:</span>
+                        <span className="text-blue-900">
+                          {(
+                            parseFloat(selectedItem.quantity.toString()) +
+                            (adjustmentForm.adjustment_type === 'reduce' ? -1 : 1) * parseFloat(adjustmentForm.quantity)
+                          ).toLocaleString('id-ID')} {selectedItem.unit}
+                        </span>
+                      </div>
+                      {adjustmentForm.reason && (
+                        <div className="flex justify-between border-t border-blue-300 pt-1 mt-1">
+                          <span>Alasan:</span>
+                          <span className="font-semibold">{adjustmentForm.reason}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-sm text-gray-600 mt-4">
+                  Apakah Anda yakin ingin melanjutkan koreksi stok ini?
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={submitting}>Batal</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmAdjustment}
+                disabled={submitting}
+                className="bg-[#58ff34] hover:bg-[#4de82a] text-black"
+              >
+                {submitting ? 'Memproses...' : 'Ya, Lanjutkan Koreksi'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </RoleGuard>
   )

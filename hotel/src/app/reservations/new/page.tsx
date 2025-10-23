@@ -5,25 +5,24 @@ import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
 import {
-  Search,
-  Plus,
-  User,
-  Calendar,
-  MapPin,
-  Phone,
-  Mail,
+  Search02Icon,
+  Add01Icon,
+  UserIcon,
+  Calendar01Icon,
+  Location01Icon,
+  Call02Icon,
+  Mail01Icon,
   IdCard,
-  ArrowLeft,
-  Check,
-  Clock,
-  Bed,
-  Users,
-  CreditCard,
-  FileText,
-  X,
-  Star,
-  MessageSquare
-} from 'lucide-react';
+  ChevronLeftIcon,
+  UserCheckIcon,
+  Clock01Icon,
+  BedIcon,
+  UserMultipleIcon,
+  CreditCardIcon,
+  File01Icon,
+  Cancel01Icon,
+  SparklesIcon
+} from '@/lib/icons';
 
 interface Guest {
   id: number;
@@ -357,7 +356,7 @@ export default function NewReservationPage() {
             onClick={() => router.push('/bookings')}
             className="flex items-center text-gray-600 hover:text-gray-900"
           >
-            <ArrowLeft className="h-5 w-5 mr-2" />
+            <ChevronLeftIcon className="h-5 w-5 mr-2" />
             Back to Bookings
           </button>
         </div>
@@ -379,7 +378,7 @@ export default function NewReservationPage() {
                     <p className="text-sm text-gray-200 mt-1">Search existing customer or create new</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <User className="h-4 w-4 text-[#005357]" />
+                    <UserIcon className="h-4 w-4 text-[#005357]" />
                   </div>
                 </div>
               </div>
@@ -392,7 +391,7 @@ export default function NewReservationPage() {
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                           selectedGuest.is_vip ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
                         }`}>
-                          {selectedGuest.is_vip ? <Star className="h-5 w-5" /> : <User className="h-5 w-5" />}
+                          {selectedGuest.is_vip ? <SparklesIcon className="h-5 w-5" /> : <UserIcon className="h-5 w-5" />}
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900 flex items-center">
@@ -413,7 +412,7 @@ export default function NewReservationPage() {
                         }}
                         className="text-gray-400 hover:text-gray-600"
                       >
-                        <X className="h-4 w-4" />
+                        <Cancel01Icon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -421,7 +420,7 @@ export default function NewReservationPage() {
                   <div className="space-y-4">
                     {/* Search */}
                     <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Search02Icon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <input
                         type="text"
                         placeholder="Search by name, email, phone..."
@@ -434,7 +433,7 @@ export default function NewReservationPage() {
                     {/* Search Results */}
                     {loading && searchQuery && (
                       <div className="text-center py-4">
-                        <Clock className="h-4 w-4 animate-spin mx-auto mb-2" />
+                        <Clock01Icon className="h-4 w-4 animate-spin mx-auto mb-2" />
                         <p className="text-sm text-gray-500">Searching...</p>
                       </div>
                     )}
@@ -451,7 +450,7 @@ export default function NewReservationPage() {
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                                 guest.is_vip ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'
                               }`}>
-                                {guest.is_vip ? <Star className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                                {guest.is_vip ? <SparklesIcon className="h-4 w-4" /> : <UserIcon className="h-4 w-4" />}
                               </div>
                               <div>
                                 <p className="font-medium text-gray-900 text-sm">
@@ -472,7 +471,7 @@ export default function NewReservationPage() {
                         onClick={() => setShowNewGuestForm(!showNewGuestForm)}
                         className="w-full flex items-center justify-center px-4 py-2 border border-[#005357] text-[#005357] hover:bg-[#005357] hover:text-white transition-colors"
                       >
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Add01Icon className="h-4 w-4 mr-2" />
                         Create New Customer
                       </button>
                     </div>
@@ -791,7 +790,7 @@ export default function NewReservationPage() {
                     <p className="text-sm text-gray-200 mt-1">Stay dates and guest information</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Calendar className="h-4 w-4 text-[#005357]" />
+                    <Calendar01Icon className="h-4 w-4 text-[#005357]" />
                   </div>
                 </div>
               </div>
@@ -850,7 +849,7 @@ export default function NewReservationPage() {
                       onClick={() => setShowSpecialRequests(!showSpecialRequests)}
                       className="flex items-center text-sm text-[#005357] hover:text-[#004147] transition-colors"
                     >
-                      <MessageSquare className="h-4 w-4 mr-1" />
+                      <Mail01Icon className="h-4 w-4 mr-1" />
                       {showSpecialRequests ? 'Hide Options' : 'Quick Select'}
                     </button>
                   </div>
@@ -904,7 +903,7 @@ export default function NewReservationPage() {
                     </p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Bed className="h-4 w-4 text-[#005357]" />
+                    <BedIcon className="h-4 w-4 text-[#005357]" />
                   </div>
                 </div>
               </div>
@@ -912,12 +911,12 @@ export default function NewReservationPage() {
               <div className="p-4 bg-gray-50">
                 {roomSearchLoading ? (
                   <div className="text-center py-8">
-                    <Clock className="h-8 w-8 animate-spin mx-auto mb-2 text-[#005357]" />
+                    <Clock01Icon className="h-8 w-8 animate-spin mx-auto mb-2 text-[#005357]" />
                     <p className="text-gray-500">Searching available rooms...</p>
                   </div>
                 ) : availableRooms.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    <Bed className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <BedIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                     <p>No available rooms</p>
                     <p className="text-sm">Select check-in and check-out dates to see availability</p>
                   </div>
@@ -982,7 +981,7 @@ export default function NewReservationPage() {
                       <p className="text-sm text-gray-200 mt-1">Review before creating reservation</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <FileText className="h-4 w-4 text-[#005357]" />
+                      <File01Icon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -1034,7 +1033,7 @@ export default function NewReservationPage() {
                     >
                       {loading ? (
                         <div className="flex items-center justify-center">
-                          <Clock className="h-4 w-4 animate-spin mr-2" />
+                          <Clock01Icon className="h-4 w-4 animate-spin mr-2" />
                           Creating Reservation...
                         </div>
                       ) : (

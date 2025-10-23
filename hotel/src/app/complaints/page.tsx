@@ -5,42 +5,34 @@ import { useRouter } from 'next/navigation';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
 import Link from 'next/link';
-import { 
-  Search,
-  AlertTriangle,
-  MessageSquare,
-  User,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Eye,
-  Edit,
-  Filter,
-  Calendar,
-  Star,
-  Phone,
-  Mail,
-  MapPin,
-  Grid3X3,
-  List,
-  Plus,
-  X,
-  Flag,
-  Users,
-  Building,
-  Utensils,
-  Wifi,
-  Car,
-  Bath,
-  Bed,
-  Coffee,
-  Shield,
-  AlertCircle,
-  FileText,
-  UserCheck,
-  Headphones,
-  Camera
-} from 'lucide-react';
+import {
+  Search02Icon,
+  AlertCircleIcon,
+  Mail01Icon,
+  UserIcon,
+  Clock01Icon,
+  UserCheckIcon,
+  CancelCircleIcon,
+  EyeIcon,
+  PencilEdit02Icon,
+  FilterIcon,
+  Calendar01Icon,
+  SparklesIcon,
+  Call02Icon,
+  Location01Icon,
+  ViewIcon,
+  ListViewIcon,
+  Add01Icon,
+  Cancel01Icon,
+  UserMultipleIcon,
+  Building03Icon,
+  PackageIcon,
+  BedIcon,
+  Shield01Icon,
+  File01Icon,
+  HeadphonesIcon,
+  Alert01Icon
+} from '@/lib/icons';
 
 interface ComplaintCategory {
   id: number;
@@ -240,17 +232,17 @@ const ComplaintsPage = () => {
   };
 
   const getCategoryIcon = (categoryName: string, className: string = "h-4 w-4 text-white") => {
-    if (!categoryName) return <AlertTriangle className={className} />;
+    if (!categoryName) return <Alert01Icon className={className} />;
     const lowerName = categoryName.toLowerCase();
-    if (lowerName.includes('room')) return <Bed className={className} />;
-    if (lowerName.includes('service')) return <UserCheck className={className} />;
-    if (lowerName.includes('food') || lowerName.includes('beverage')) return <Utensils className={className} />;
-    if (lowerName.includes('noise')) return <Headphones className={className} />;
-    if (lowerName.includes('clean')) return <Bath className={className} />;
-    if (lowerName.includes('amenities')) return <Coffee className={className} />;
-    if (lowerName.includes('billing')) return <FileText className={className} />;
-    if (lowerName.includes('staff')) return <Users className={className} />;
-    return <AlertTriangle className={className} />;
+    if (lowerName.includes('room')) return <BedIcon className={className} />;
+    if (lowerName.includes('service')) return <UserCheckIcon className={className} />;
+    if (lowerName.includes('food') || lowerName.includes('beverage')) return <PackageIcon className={className} />;
+    if (lowerName.includes('noise')) return <HeadphonesIcon className={className} />;
+    if (lowerName.includes('clean')) return <Shield01Icon className={className} />;
+    if (lowerName.includes('amenities')) return <SparklesIcon className={className} />;
+    if (lowerName.includes('billing')) return <File01Icon className={className} />;
+    if (lowerName.includes('staff')) return <UserMultipleIcon className={className} />;
+    return <Alert01Icon className={className} />;
   };
 
   const filteredComplaints = complaintsData?.results?.filter(complaint => {
@@ -297,7 +289,7 @@ const ComplaintsPage = () => {
           </div>
           <div>
             <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
-              <Plus className="h-4 w-4" />
+              <Add01Icon className="h-4 w-4" />
               <span>New Complaint</span>
             </button>
           </div>
@@ -312,7 +304,7 @@ const ComplaintsPage = () => {
                 <div className="text-sm text-gray-600">In Progress</div>
               </div>
               <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <Clock className="h-4 w-4 text-white" />
+                <Clock01Icon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -323,7 +315,7 @@ const ComplaintsPage = () => {
                 <div className="text-sm text-gray-600">Completed</div>
               </div>
               <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <CheckCircle className="h-4 w-4 text-white" />
+                <UserCheckIcon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -334,7 +326,7 @@ const ComplaintsPage = () => {
                 <div className="text-sm text-gray-600">Escalated</div>
               </div>
               <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <Flag className="h-4 w-4 text-white" />
+                <SparklesIcon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -345,7 +337,7 @@ const ComplaintsPage = () => {
                 <div className="text-sm text-gray-600">Urgent</div>
               </div>
               <div className="w-8 h-8 bg-red-600 flex items-center justify-center">
-                <AlertTriangle className="h-4 w-4 text-white" />
+                <Alert01Icon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -356,7 +348,7 @@ const ComplaintsPage = () => {
                 <div className="text-sm text-gray-600">High Priority</div>
               </div>
               <div className="w-8 h-8 bg-orange-600 flex items-center justify-center">
-                <AlertCircle className="h-4 w-4 text-white" />
+                <AlertCircleIcon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -367,7 +359,7 @@ const ComplaintsPage = () => {
                 <div className="text-sm text-gray-600">Overdue</div>
               </div>
               <div className="w-8 h-8 bg-red-800 flex items-center justify-center">
-                <XCircle className="h-4 w-4 text-white" />
+                <CancelCircleIcon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -378,7 +370,7 @@ const ComplaintsPage = () => {
           <div className="flex items-center space-x-2 h-10">
             {/* Search Form */}
             <div className="relative h-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search complaints, guests, or complaint numbers..."
@@ -393,7 +385,7 @@ const ComplaintsPage = () => {
               onClick={() => setShowAdvancedFilter(true)}
               className="flex items-center space-x-2 px-4 h-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm"
             >
-              <Filter className="h-4 w-4" />
+              <FilterIcon className="h-4 w-4" />
               <span>Advanced Filter</span>
             </button>
             
@@ -407,7 +399,7 @@ const ComplaintsPage = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <Grid3X3 className="h-4 w-4" />
+                <ViewIcon className="h-4 w-4" />
                 <span>Cards</span>
               </button>
               <button
@@ -418,7 +410,7 @@ const ComplaintsPage = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <List className="h-4 w-4" />
+                <ListViewIcon className="h-4 w-4" />
                 <span>Table</span>
               </button>
             </div>
@@ -439,7 +431,7 @@ const ComplaintsPage = () => {
         {error && (
           <div className="bg-red-50 border border-red-200 p-4">
             <div className="flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <Alert01Icon className="h-5 w-5 text-red-600" />
               <span className="text-red-800">{error}</span>
             </div>
           </div>
@@ -517,12 +509,12 @@ const ComplaintsPage = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-1">
-                              <MessageSquare className="h-3 w-3" />
+                              <Mail01Icon className="h-3 w-3" />
                               <span>{complaint.response_count} response{complaint.response_count !== 1 ? 's' : ''}</span>
                             </div>
                             {complaint.image_count > 0 && (
                               <div className="flex items-center space-x-1">
-                                <Camera className="h-3 w-3" />
+                                <ViewIcon className="h-3 w-3" />
                                 <span>{complaint.image_count} image{complaint.image_count !== 1 ? 's' : ''}</span>
                               </div>
                             )}
@@ -531,7 +523,7 @@ const ComplaintsPage = () => {
                         </div>
                         {complaint.assigned_department && (
                           <div className="flex items-center space-x-2 mt-1">
-                            <UserCheck className="h-3 w-3" />
+                            <UserCheckIcon className="h-3 w-3" />
                             <span>Assigned: {complaint.assigned_department.name}</span>
                           </div>
                         )}
@@ -541,7 +533,7 @@ const ComplaintsPage = () => {
                       {complaint.follow_up_required && (
                         <div className="mb-4 p-2 bg-orange-50 border border-orange-200 text-xs text-orange-800">
                           <div className="flex items-center space-x-1">
-                            <Clock className="h-3 w-3" />
+                            <Clock01Icon className="h-3 w-3" />
                             <span>Follow-up required</span>
                           </div>
                         </div>
@@ -551,7 +543,7 @@ const ComplaintsPage = () => {
                       {complaint.is_escalated && (
                         <div className="mb-4 p-2 bg-red-50 border border-red-200 text-xs text-red-800">
                           <div className="flex items-center space-x-1">
-                            <Flag className="h-3 w-3" />
+                            <SparklesIcon className="h-3 w-3" />
                             <span>Escalated complaint</span>
                           </div>
                         </div>
@@ -563,11 +555,11 @@ const ComplaintsPage = () => {
                           href={`/complaints/${complaint.complaint_number}`}
                           className="text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors text-center"
                         >
-                          <Eye className="h-3 w-3 inline mr-1" />
+                          <EyeIcon className="h-3 w-3 inline mr-1" />
                           View Details
                         </Link>
                         <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors">
-                          <Edit className="h-3 w-3 inline mr-1" />
+                          <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
                           Update
                         </button>
                       </div>
@@ -585,7 +577,7 @@ const ComplaintsPage = () => {
                   <p className="text-sm text-gray-600 mt-1">Track and manage all guest complaints</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <MessageSquare className="h-4 w-4 text-white" />
+                  <Mail01Icon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -661,20 +653,20 @@ const ComplaintsPage = () => {
                         <div className="flex items-center space-x-3 mt-1">
                           {complaint.response_count > 0 && (
                             <div className="text-xs text-gray-500 flex items-center space-x-1">
-                              <MessageSquare className="h-3 w-3" />
+                              <Mail01Icon className="h-3 w-3" />
                               <span>{complaint.response_count} response{complaint.response_count !== 1 ? 's' : ''}</span>
                             </div>
                           )}
                           {complaint.image_count > 0 && (
                             <div className="text-xs text-gray-500 flex items-center space-x-1">
-                              <Camera className="h-3 w-3" />
+                              <ViewIcon className="h-3 w-3" />
                               <span>{complaint.image_count} image{complaint.image_count !== 1 ? 's' : ''}</span>
                             </div>
                           )}
                         </div>
                         {complaint.is_escalated && (
                           <div className="text-xs text-red-600 mt-1 flex items-center space-x-1">
-                            <Flag className="h-3 w-3" />
+                            <SparklesIcon className="h-3 w-3" />
                             <span>Escalated</span>
                           </div>
                         )}
@@ -687,13 +679,13 @@ const ComplaintsPage = () => {
                         </span>
                         {complaint.follow_up_required && (
                           <div className="text-xs text-orange-600 mt-1 flex items-center space-x-1">
-                            <Clock className="h-3 w-3" />
+                            <Clock01Icon className="h-3 w-3" />
                             <span>Follow-up due</span>
                           </div>
                         )}
                         {complaint.is_overdue && (
                           <div className="text-xs text-red-600 mt-1 flex items-center space-x-1">
-                            <XCircle className="h-3 w-3" />
+                            <CancelCircleIcon className="h-3 w-3" />
                             <span>Overdue</span>
                           </div>
                         )}
@@ -729,21 +721,21 @@ const ComplaintsPage = () => {
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                 onClick={() => setOpenDropdown(null)}
                               >
-                                <Eye className="h-4 w-4 inline mr-2" />
+                                <EyeIcon className="h-4 w-4 inline mr-2" />
                                 View Details
                               </Link>
                               <button
                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                 onClick={() => setOpenDropdown(null)}
                               >
-                                <Edit className="h-4 w-4 inline mr-2" />
+                                <PencilEdit02Icon className="h-4 w-4 inline mr-2" />
                                 Edit Complaint
                               </button>
                               <button
                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                 onClick={() => setOpenDropdown(null)}
                               >
-                                <UserCheck className="h-4 w-4 inline mr-2" />
+                                <UserCheckIcon className="h-4 w-4 inline mr-2" />
                                 Assign Staff
                               </button>
                               <div className="border-t border-gray-100 my-1"></div>
@@ -751,7 +743,7 @@ const ComplaintsPage = () => {
                                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                                 onClick={() => setOpenDropdown(null)}
                               >
-                                <XCircle className="h-4 w-4 inline mr-2" />
+                                <CancelCircleIcon className="h-4 w-4 inline mr-2" />
                                 Close Complaint
                               </button>
                             </div>
@@ -781,13 +773,13 @@ const ComplaintsPage = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                      <Filter className="h-4 w-4 text-white" />
+                      <FilterIcon className="h-4 w-4 text-white" />
                     </div>
                     <button
                       onClick={() => setShowAdvancedFilter(false)}
                       className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      <X className="h-4 w-4" />
+                      <Cancel01Icon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -939,7 +931,7 @@ const ComplaintsPage = () => {
         {/* No Results */}
         {!loading && !error && filteredComplaints.length === 0 && (
           <div className="text-center py-12">
-            <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <Mail01Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No complaints found</h3>
             <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
           </div>

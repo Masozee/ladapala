@@ -1408,11 +1408,13 @@ class ApiClient {
   // ===========================
 
   // Customer APIs
-  async getCustomers(params?: { membership_tier?: string; is_active?: boolean; search?: string }): Promise<{ count: number; results: Customer[] }> {
+  async getCustomers(params?: { membership_tier?: string; is_active?: boolean; search?: string; page?: number; page_size?: number }): Promise<{ count: number; results: Customer[] }> {
     const searchParams = new URLSearchParams();
     if (params?.membership_tier) searchParams.append('membership_tier', params.membership_tier);
     if (params?.is_active !== undefined) searchParams.append('is_active', params.is_active.toString());
     if (params?.search) searchParams.append('search', params.search);
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
 
     return this.fetch(`/customers/?${searchParams.toString()}`);
   }
@@ -1485,10 +1487,12 @@ class ApiClient {
   }
 
   // Reward APIs
-  async getRewards(params?: { reward_type?: string; is_active?: boolean }): Promise<{ count: number; results: Reward[] }> {
+  async getRewards(params?: { reward_type?: string; is_active?: boolean; page?: number; page_size?: number }): Promise<{ count: number; results: Reward[] }> {
     const searchParams = new URLSearchParams();
     if (params?.reward_type) searchParams.append('reward_type', params.reward_type);
     if (params?.is_active !== undefined) searchParams.append('is_active', params.is_active.toString());
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
 
     return this.fetch(`/rewards/?${searchParams.toString()}`);
   }
@@ -1522,10 +1526,12 @@ class ApiClient {
   }
 
   // Feedback APIs
-  async getFeedbacks(params?: { status?: string; customer?: number }): Promise<{ count: number; results: CustomerFeedback[] }> {
+  async getFeedbacks(params?: { status?: string; customer?: number; page?: number; page_size?: number }): Promise<{ count: number; results: CustomerFeedback[] }> {
     const searchParams = new URLSearchParams();
     if (params?.status) searchParams.append('status', params.status);
     if (params?.customer) searchParams.append('customer', params.customer.toString());
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
 
     return this.fetch(`/feedback/?${searchParams.toString()}`);
   }

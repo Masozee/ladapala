@@ -3,24 +3,22 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import OfficeLayout from '@/components/OfficeLayout';
-import { 
-  ArrowLeft, 
-  User, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  Clock, 
-  Award, 
-  TrendingUp,
-  AlertCircle,
-  CheckCircle,
-  Edit,
-  Save,
-  X,
-  UserCheck,
-  CalendarDays,
-  BarChart3
-} from 'lucide-react';
+import {
+  ChevronLeftIcon,
+  UserIcon,
+  Mail01Icon,
+  Call02Icon,
+  Calendar01Icon,
+  Clock01Icon,
+  SparklesIcon,
+  ArrowUp01Icon,
+  AlertCircleIcon,
+  UserCheckIcon,
+  PencilEdit02Icon,
+  PackageIcon,
+  Cancel01Icon,
+  PieChartIcon
+} from '@/lib/icons';
 
 interface EmployeeDetailPageProps {
   params: Promise<{ id: string }>;
@@ -136,7 +134,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
               href="/office/employees"
               className="p-2 hover:bg-gray-100 transition-colors"
             >
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
+              <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
             </Link>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{employee.name}</h1>
@@ -148,7 +146,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
               onClick={() => setIsEditing(!isEditing)}
               className="bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors flex items-center space-x-2"
             >
-              <Edit className="h-4 w-4" />
+              <PencilEdit02Icon className="h-4 w-4" />
               <span>{isEditing ? 'Batal' : 'Edit'}</span>
             </button>
           </div>
@@ -165,35 +163,35 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
                   <p className="text-sm text-gray-100 mt-1">Data personal karyawan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <User className="h-4 w-4 text-[#005357]" />
+                  <UserIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
             <div className="p-6 bg-gray-50">
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <Mail className="h-4 w-4 text-gray-400" />
+                  <Mail01Icon className="h-4 w-4 text-gray-400" />
                   <div>
                     <div className="text-sm text-gray-600">Email</div>
                     <div className="font-medium text-gray-900">{employee.email}</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Phone className="h-4 w-4 text-gray-400" />
+                  <Call02Icon className="h-4 w-4 text-gray-400" />
                   <div>
                     <div className="text-sm text-gray-600">Telepon</div>
                     <div className="font-medium text-gray-900">{employee.phone}</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Calendar className="h-4 w-4 text-gray-400" />
+                  <Calendar01Icon className="h-4 w-4 text-gray-400" />
                   <div>
                     <div className="text-sm text-gray-600">Tanggal Bergabung</div>
                     <div className="font-medium text-gray-900">{new Date(employee.joinDate).toLocaleDateString('id-ID')}</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <User className="h-4 w-4 text-gray-400" />
+                  <UserIcon className="h-4 w-4 text-gray-400" />
                   <div>
                     <div className="text-sm text-gray-600">Kontak Darurat</div>
                     <div className="font-medium text-gray-900">{employee.emergencyContact.name}</div>
@@ -213,7 +211,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
                   <p className="text-sm text-gray-100 mt-1">Detail pekerjaan dan shift</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -297,7 +295,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
                 <p className="text-sm text-gray-100 mt-1">Pengaturan shift kerja</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <CalendarDays className="h-4 w-4 text-[#005357]" />
+                <Calendar01Icon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
           </div>
@@ -344,7 +342,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
                   <option value="2023-11">November 2023</option>
                 </select>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <BarChart3 className="h-4 w-4 text-[#005357]" />
+                  <PieChartIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -374,13 +372,13 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
                       <td className="px-4 py-4">
                         <div className="flex items-center space-x-2">
                           {record.status === 'present' ? (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <UserCheckIcon className="h-4 w-4 text-green-600" />
                           ) : record.status === 'late' ? (
-                            <AlertCircle className="h-4 w-4 text-yellow-600" />
+                            <AlertCircleIcon className="h-4 w-4 text-yellow-600" />
                           ) : record.status === 'off' ? (
-                            <X className="h-4 w-4 text-gray-400" />
+                            <Cancel01Icon className="h-4 w-4 text-gray-400" />
                           ) : (
-                            <X className="h-4 w-4 text-red-600" />
+                            <Cancel01Icon className="h-4 w-4 text-red-600" />
                           )}
                           <span className={`text-sm font-medium ${getStatusColor(record.status)}`}>
                             {getStatusLabel(record.status)}

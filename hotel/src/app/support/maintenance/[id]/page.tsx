@@ -4,50 +4,35 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
-import { 
-  ArrowLeft,
-  Wrench,
-  Clock,
-  User,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Plus,
-  Building,
-  Phone,
-  MessageSquare,
-  Flag,
-  Calendar,
-  Timer,
-  Target,
-  Eye,
-  FileText,
-  Camera,
+import {
+  ChevronLeftIcon,
+  Wrench01Icon,
+  Clock01Icon,
+  UserIcon,
+  UserCheckIcon,
+  CancelCircleIcon,
+  AlertCircleIcon,
+  Add01Icon,
+  Building03Icon,
+  Call02Icon,
+  Mail01Icon,
+  SparklesIcon,
+  Calendar01Icon,
+  Location01Icon,
+  EyeIcon,
+  File01Icon,
+  ViewIcon,
   CheckSquare,
   Square,
-  AlertCircle,
-  Lightbulb,
-  Zap,
-  Thermometer,
-  Wifi,
-  Droplets,
-  Shield,
-  Settings,
-  Gauge,
-  HardHat,
-  ClipboardCheck,
-  Save,
-  Play,
-  Pause,
-  RotateCcw,
-  Users,
-  DollarSign,
-  Package,
-  Star,
-  MapPin,
-  TrendingUp,
-  BarChart3
-} from 'lucide-react';
+  PackageIcon,
+  Shield01Icon,
+  Settings02Icon,
+  PieChartIcon,
+  Loading03Icon,
+  UserMultipleIcon,
+  CreditCardIcon,
+  ArrowUp01Icon
+} from '@/lib/icons';
 
 interface MaintenanceRequest {
   id: number;
@@ -321,16 +306,16 @@ const MaintenanceDetailPage = () => {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'hvac': return <Thermometer className="h-4 w-4" />;
-      case 'plumbing': return <Droplets className="h-4 w-4" />;
-      case 'electrical': return <Zap className="h-4 w-4" />;
-      case 'elevator': return <Building className="h-4 w-4" />;
+      case 'hvac': return <PackageIcon className="h-4 w-4" />;
+      case 'plumbing': return <PackageIcon className="h-4 w-4" />;
+      case 'electrical': return <SparklesIcon className="h-4 w-4" />;
+      case 'elevator': return <Building03Icon className="h-4 w-4" />;
       case 'security': return <Shield className="h-4 w-4" />;
-      case 'it_network': return <Wifi className="h-4 w-4" />;
-      case 'general': return <Wrench className="h-4 w-4" />;
-      case 'furniture': return <Settings className="h-4 w-4" />;
-      case 'appliances': return <Gauge className="h-4 w-4" />;
-      default: return <Wrench className="h-4 w-4" />;
+      case 'it_network': return <SparklesIcon className="h-4 w-4" />;
+      case 'general': return <Wrench01Icon className="h-4 w-4" />;
+      case 'furniture': return <Settings02Icon className="h-4 w-4" />;
+      case 'appliances': return <PieChartIcon className="h-4 w-4" />;
+      default: return <Wrench01Icon className="h-4 w-4" />;
     }
   };
 
@@ -383,7 +368,7 @@ const MaintenanceDetailPage = () => {
       <AppLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <Wrench className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <Wrench01Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900">Loading request details...</h3>
           </div>
         </div>
@@ -401,7 +386,7 @@ const MaintenanceDetailPage = () => {
               href="/maintenance"
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ChevronLeftIcon className="h-4 w-4" />
               <span className="text-sm font-medium">Back to Maintenance</span>
             </Link>
           </div>
@@ -454,18 +439,18 @@ const MaintenanceDetailPage = () => {
                 <h3 className="font-semibold text-gray-900 mb-3">Location & Impact</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center space-x-2">
-                    <MapPin className="h-3 w-3 text-gray-400" />
+                    <Location01Icon className="h-3 w-3 text-gray-400" />
                     <span className="text-gray-600">Location:</span>
                     <span className="text-gray-900">{request.location}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Building className="h-3 w-3 text-gray-400" />
+                    <Building03Icon className="h-3 w-3 text-gray-400" />
                     <span className="text-gray-600">Section:</span>
                     <span className="text-gray-900">{request.building_section}</span>
                   </div>
                   {request.guest_impact && (
                     <div className="flex items-center space-x-2 p-2 bg-orange-50 border border-orange-200 rounded">
-                      <AlertTriangle className="h-3 w-3 text-orange-600" />
+                      <Alert01Icon className="h-3 w-3 text-orange-600" />
                       <span className="text-orange-800 text-xs font-medium">Guest Impact</span>
                     </div>
                   )}
@@ -499,7 +484,7 @@ const MaintenanceDetailPage = () => {
                     </div>
                   )}
                   <div className="flex items-center space-x-2">
-                    <Clock className="h-3 w-3 text-gray-400" />
+                    <Clock01Icon className="h-3 w-3 text-gray-400" />
                     <span className="text-gray-600">Est. Time:</span>
                     <span className="text-gray-900">{request.labor_hours || 'TBD'}h</span>
                   </div>
@@ -518,7 +503,7 @@ const MaintenanceDetailPage = () => {
                   </div>
                   {request.warranty_covered && (
                     <div className="text-center p-2 bg-green-50 border border-green-200 rounded">
-                      <CheckCircle className="h-4 w-4 text-green-600 mx-auto mb-1" />
+                      <UserCheckIcon className="h-4 w-4 text-green-600 mx-auto mb-1" />
                       <span className="text-green-800 text-xs font-medium">Warranty Covered</span>
                     </div>
                   )}
@@ -550,20 +535,20 @@ const MaintenanceDetailPage = () => {
                     <p className="text-sm text-gray-100 mt-1">Current technician working on this request</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <HardHat className="h-4 w-4 text-[#005357]" />
+                    <Shield01Icon className="h-4 w-4 text-[#005357]" />
                   </div>
                 </div>
               </div>
               <div className="p-4 bg-gray-50">
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-blue-600" />
+                    <UserIcon className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900">{technician.name}</h4>
                     <p className="text-sm text-gray-600">{technician.skill_level} level</p>
                     <div className="flex items-center space-x-1 mt-1">
-                      <Star className="h-3 w-3 text-yellow-400" />
+                      <SparklesIcon className="h-3 w-3 text-yellow-400" />
                       <span className="text-xs text-gray-600">{technician.efficiency_rating} rating</span>
                     </div>
                   </div>
@@ -571,11 +556,11 @@ const MaintenanceDetailPage = () => {
                 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center space-x-2">
-                    <Phone className="h-3 w-3 text-gray-400" />
+                    <Call02Icon className="h-3 w-3 text-gray-400" />
                     <span className="text-sm text-gray-900">{technician.phone}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <MessageSquare className="h-3 w-3 text-gray-400" />
+                    <Mail01Icon className="h-3 w-3 text-gray-400" />
                     <span className="text-sm text-gray-900">{technician.email}</span>
                   </div>
                 </div>
@@ -599,7 +584,7 @@ const MaintenanceDetailPage = () => {
                     <p className="text-sm text-gray-100 mt-1">Track active work time on this request</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Timer className="h-4 w-4 text-[#005357]" />
+                    <Clock01Icon className="h-4 w-4 text-[#005357]" />
                   </div>
                 </div>
               </div>
@@ -620,20 +605,20 @@ const MaintenanceDetailPage = () => {
                         : 'bg-green-600 text-white hover:bg-green-700'
                     }`}
                   >
-                    {workTimer.started ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                    {workTimer.started ? <PackageIcon className="h-3 w-3" /> : <PackageIcon className="h-3 w-3" />}
                     <span>{workTimer.started ? 'Pause' : 'Start'}</span>
                   </button>
                   <button
                     onClick={resetWorkTimer}
                     className="flex items-center justify-center space-x-1 bg-gray-600 text-white px-3 py-2 text-sm font-medium rounded hover:bg-gray-700 transition-colors"
                   >
-                    <RotateCcw className="h-3 w-3" />
+                    <Loading03Icon className="h-3 w-3" />
                     <span>Reset</span>
                   </button>
                   <button
                     className="flex items-center justify-center space-x-1 bg-blue-600 text-white px-3 py-2 text-sm font-medium rounded hover:bg-blue-700 transition-colors"
                   >
-                    <Save className="h-3 w-3" />
+                    <PackageIcon className="h-3 w-3" />
                     <span>Log</span>
                   </button>
                 </div>
@@ -646,10 +631,10 @@ const MaintenanceDetailPage = () => {
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {[
-              { id: 'details', name: 'Details', icon: FileText },
-              { id: 'work-log', name: 'Work Log', icon: ClipboardCheck },
-              { id: 'parts', name: 'Parts & Materials', icon: Package },
-              { id: 'costs', name: 'Cost Breakdown', icon: BarChart3 }
+              { id: 'details', name: 'Details', icon: File01Icon },
+              { id: 'work-log', name: 'Work Log', icon: UserCheckIcon },
+              { id: 'parts', name: 'Parts & Materials', icon: PackageIcon },
+              { id: 'costs', name: 'Cost Breakdown', icon: PieChartIcon }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -680,7 +665,7 @@ const MaintenanceDetailPage = () => {
                       <p className="text-sm text-gray-100 mt-1">Detailed description of the reported issue</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <FileText className="h-4 w-4 text-[#005357]" />
+                      <File01Icon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -711,7 +696,7 @@ const MaintenanceDetailPage = () => {
                       <p className="text-sm text-gray-100 mt-1">Materials needed for repair</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <Package className="h-4 w-4 text-[#005357]" />
+                      <PackageIcon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -720,7 +705,7 @@ const MaintenanceDetailPage = () => {
                     {request.parts_needed.map((part, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded">
                         <div className="flex items-center space-x-2">
-                          <Package className="h-4 w-4 text-gray-400" />
+                          <PackageIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm text-gray-900">{part}</span>
                         </div>
                         <span className="text-xs text-gray-600">Required</span>
@@ -749,7 +734,7 @@ const MaintenanceDetailPage = () => {
                         <p className="text-sm text-gray-100 mt-1">Documentation of the issue</p>
                       </div>
                       <div className="w-8 h-8 bg-white flex items-center justify-center">
-                        <Camera className="h-4 w-4 text-[#005357]" />
+                        <ViewIcon className="h-4 w-4 text-[#005357]" />
                       </div>
                     </div>
                   </div>
@@ -758,7 +743,7 @@ const MaintenanceDetailPage = () => {
                       {request.photos.map((photo, index) => (
                         <div key={index} className="bg-gray-100 aspect-video rounded border-2 border-dashed border-gray-300 flex items-center justify-center">
                           <div className="text-center">
-                            <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                            <ViewIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                             <p className="text-sm text-gray-600">Photo {index + 1}</p>
                             <p className="text-xs text-gray-500">{photo}</p>
                           </div>
@@ -782,7 +767,7 @@ const MaintenanceDetailPage = () => {
                       <p className="text-sm text-gray-100 mt-1">Record progress and updates</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <Plus className="h-4 w-4 text-[#005357]" />
+                      <Add01Icon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -820,7 +805,7 @@ const MaintenanceDetailPage = () => {
                       <p className="text-sm text-gray-100 mt-1">Complete history of work performed</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <ClipboardCheck className="h-4 w-4 text-[#005357]" />
+                      <UserCheckIcon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -830,7 +815,7 @@ const MaintenanceDetailPage = () => {
                       <div key={entry.id} className="flex space-x-4">
                         <div className="flex-shrink-0">
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <ClipboardCheck className="h-4 w-4 text-blue-600" />
+                            <UserCheckIcon className="h-4 w-4 text-blue-600" />
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
@@ -874,7 +859,7 @@ const MaintenanceDetailPage = () => {
                       <p className="text-sm text-gray-100 mt-1">Materials consumed during repair</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <Package className="h-4 w-4 text-[#005357]" />
+                      <PackageIcon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -929,7 +914,7 @@ const MaintenanceDetailPage = () => {
                       <p className="text-sm text-gray-100 mt-1">Current stock levels for required parts</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <Target className="h-4 w-4 text-[#005357]" />
+                      <Location01Icon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -969,7 +954,7 @@ const MaintenanceDetailPage = () => {
                       <p className="text-sm text-gray-100 mt-1">Detailed cost analysis for this repair</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <BarChart3 className="h-4 w-4 text-[#005357]" />
+                      <PieChartIcon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -978,7 +963,7 @@ const MaintenanceDetailPage = () => {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded">
                         <div className="flex items-center space-x-2">
-                          <HardHat className="h-4 w-4 text-gray-400" />
+                          <Shield01Icon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm text-gray-900">Labor Cost</span>
                         </div>
                         <span className="font-medium text-gray-900">{formatCurrency(request.cost_breakdown.labor_cost)}</span>
@@ -986,7 +971,7 @@ const MaintenanceDetailPage = () => {
                       
                       <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded">
                         <div className="flex items-center space-x-2">
-                          <Package className="h-4 w-4 text-gray-400" />
+                          <PackageIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm text-gray-900">Parts Cost</span>
                         </div>
                         <span className="font-medium text-gray-900">{formatCurrency(request.cost_breakdown.parts_cost)}</span>
@@ -994,7 +979,7 @@ const MaintenanceDetailPage = () => {
                       
                       <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded">
                         <div className="flex items-center space-x-2">
-                          <Wrench className="h-4 w-4 text-gray-400" />
+                          <Wrench01Icon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm text-gray-900">Equipment Rental</span>
                         </div>
                         <span className="font-medium text-gray-900">{formatCurrency(request.cost_breakdown.equipment_rental)}</span>
@@ -1002,7 +987,7 @@ const MaintenanceDetailPage = () => {
                       
                       <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded">
                         <div className="flex items-center space-x-2">
-                          <Users className="h-4 w-4 text-gray-400" />
+                          <UserMultipleIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm text-gray-900">Vendor Fees</span>
                         </div>
                         <span className="font-medium text-gray-900">{formatCurrency(request.cost_breakdown.vendor_fees)}</span>
@@ -1010,7 +995,7 @@ const MaintenanceDetailPage = () => {
                       
                       <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded">
                         <div className="flex items-center space-x-2">
-                          <DollarSign className="h-4 w-4 text-gray-400" />
+                          <CreditCardIcon className="h-4 w-4 text-gray-400" />
                           <span className="text-sm text-gray-900">Additional Charges</span>
                         </div>
                         <span className="font-medium text-gray-900">{formatCurrency(request.cost_breakdown.additional_charges)}</span>
@@ -1038,7 +1023,7 @@ const MaintenanceDetailPage = () => {
                         {request.warranty_covered && (
                           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
                             <div className="flex items-center space-x-2">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              <UserCheckIcon className="h-4 w-4 text-green-600" />
                               <span className="text-green-800 text-sm font-medium">Covered under warranty</span>
                             </div>
                             <p className="text-green-700 text-xs mt-1">Customer charge: {formatCurrency(0)}</p>
@@ -1059,7 +1044,7 @@ const MaintenanceDetailPage = () => {
                       <p className="text-sm text-gray-100 mt-1">Comparison of estimated and actual costs</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <TrendingUp className="h-4 w-4 text-[#005357]" />
+                      <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>

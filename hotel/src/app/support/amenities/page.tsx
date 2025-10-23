@@ -2,33 +2,24 @@
 
 import { useState } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { 
-  Package, 
-  Plus,
-  Search,
-  Clock,
-  CheckCircle,
-  User,
-  MapPin,
-  Calendar,
-  Eye,
-  Edit,
-  MoreHorizontal,
-  Coffee,
-  Utensils,
-  Shirt,
-  Wine,
-  Flower,
-  Bed,
-  ShowerHead,
-  Wifi,
-  Car,
-  Phone,
-  Mail,
-  Timer,
-  AlertTriangle,
-  Star
-} from 'lucide-react';
+import {
+  PackageIcon,
+  Add01Icon,
+  Search02Icon,
+  Clock01Icon,
+  UserCheckIcon,
+  UserIcon,
+  Location01Icon,
+  Calendar01Icon,
+  EyeIcon,
+  PencilEdit02Icon,
+  MoreHorizontalIcon,
+  SparklesIcon,
+  BedIcon,
+  Call02Icon,
+  Mail01Icon,
+  AlertCircleIcon
+} from '@/lib/icons';
 
 export default function AmenitiesPage() {
   const [activeTab, setActiveTab] = useState('pending');
@@ -160,7 +151,7 @@ export default function AmenitiesPage() {
     {
       id: 'food_beverage',
       name: 'Food & Beverage',
-      icon: Coffee,
+      icon: PackageIcon,
       items: ['Welcome Basket', 'Room Service', 'Mini Bar', 'Special Dietary'],
       stockLevel: 95,
       dailyRequests: 8
@@ -168,7 +159,7 @@ export default function AmenitiesPage() {
     {
       id: 'toiletries',
       name: 'Toiletries & Bath',
-      icon: ShowerHead,
+      icon: PackageIcon,
       items: ['Premium Toiletries', 'Extra Towels', 'Bath Robes', 'Slippers'],
       stockLevel: 78,
       dailyRequests: 12
@@ -176,7 +167,7 @@ export default function AmenitiesPage() {
     {
       id: 'beverage',
       name: 'Beverages',
-      icon: Wine,
+      icon: PackageIcon,
       items: ['Champagne', 'Wine Selection', 'Coffee/Tea', 'Soft Drinks'],
       stockLevel: 85,
       dailyRequests: 6
@@ -184,7 +175,7 @@ export default function AmenitiesPage() {
     {
       id: 'laundry',
       name: 'Laundry & Cleaning',
-      icon: Shirt,
+      icon: PackageIcon,
       items: ['Express Laundry', 'Dry Cleaning', 'Shoe Shine', 'Pressing'],
       stockLevel: 100,
       dailyRequests: 4
@@ -192,7 +183,7 @@ export default function AmenitiesPage() {
     {
       id: 'technology',
       name: 'Technology',
-      icon: Wifi,
+      icon: PackageIcon,
       items: ['WiFi Support', 'Charging Cables', 'Adapters', 'Tech Setup'],
       stockLevel: 92,
       dailyRequests: 3
@@ -200,7 +191,7 @@ export default function AmenitiesPage() {
     {
       id: 'flowers',
       name: 'Flowers & Decor',
-      icon: Flower,
+      icon: SparklesIcon,
       items: ['Flower Arrangements', 'Special Occasions', 'Room Decoration'],
       stockLevel: 65,
       dailyRequests: 2
@@ -388,7 +379,7 @@ export default function AmenitiesPage() {
                   <p className="text-sm text-gray-100 mt-1">Menunggu diproses</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -408,7 +399,7 @@ export default function AmenitiesPage() {
                   <p className="text-sm text-gray-100 mt-1">Sedang diproses</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Timer className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -428,7 +419,7 @@ export default function AmenitiesPage() {
                   <p className="text-sm text-gray-100 mt-1">Selesai hari ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -448,7 +439,7 @@ export default function AmenitiesPage() {
                   <p className="text-sm text-gray-100 mt-1">Prioritas tinggi</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <AlertTriangle className="h-4 w-4 text-[#005357]" />
+                  <Alert01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -471,11 +462,11 @@ export default function AmenitiesPage() {
               </div>
               <div className="flex items-center space-x-3">
                 <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
+                  <Add01Icon className="h-4 w-4" />
                   <span>New Request</span>
                 </button>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Package className="h-4 w-4 text-[#005357]" />
+                  <PackageIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -496,7 +487,7 @@ export default function AmenitiesPage() {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
+                    <Search02Icon className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -609,7 +600,7 @@ export default function AmenitiesPage() {
                           <span className="text-gray-600">Guest rating:</span>
                           <div className="flex items-center space-x-1">
                             {[...Array(5)].map((_, i) => (
-                              <Star 
+                              <SparklesIcon 
                                 key={i} 
                                 className={`h-4 w-4 ${i < request.guestRating! ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
                               />
@@ -622,13 +613,13 @@ export default function AmenitiesPage() {
 
                     <div className="flex items-center space-x-2 ml-4">
                       <button className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded">
-                        <Eye className="h-4 w-4" />
+                        <EyeIcon className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                        <Edit className="h-4 w-4" />
+                        <PencilEdit02Icon className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors rounded">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <MoreHorizontalIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -647,7 +638,7 @@ export default function AmenitiesPage() {
                 <p className="text-sm text-gray-100 mt-1">Kategori amenities dan status inventaris</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <Package className="h-4 w-4 text-[#005357]" />
+                <PackageIcon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
           </div>
@@ -708,7 +699,7 @@ export default function AmenitiesPage() {
                 <p className="text-sm text-gray-100 mt-1">Tim layanan amenities dan guest services</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <User className="h-4 w-4 text-[#005357]" />
+                <UserIcon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
           </div>
@@ -759,10 +750,10 @@ export default function AmenitiesPage() {
                       Assign Request
                     </button>
                     <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors rounded">
-                      <Phone className="h-4 w-4" />
+                      <Call02Icon className="h-4 w-4" />
                     </button>
                     <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                      <Mail className="h-4 w-4" />
+                      <Mail01Icon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

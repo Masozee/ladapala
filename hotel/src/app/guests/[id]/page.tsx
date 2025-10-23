@@ -4,38 +4,31 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
-import { 
-  Search,
-  Users,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  Star,
-  Award,
-  CreditCard,
-  User,
-  Edit,
-  Trash2,
-  Badge,
-  TrendingUp,
-  Gift,
-  Clock,
-  CheckCircle,
-  X,
-  Heart,
-  Crown,
-  Diamond,
-  Sparkles,
-  ArrowLeft,
-  Save,
-  Plus,
-  AlertTriangle,
-  Shield,
-  FileText,
-  Settings,
-  MoreHorizontal
-} from 'lucide-react';
+import {
+  Search02Icon,
+  UserMultipleIcon,
+  Call02Icon,
+  Mail01Icon,
+  Location01Icon,
+  Calendar01Icon,
+  SparklesIcon,
+  CreditCardIcon,
+  UserIcon,
+  PencilEdit02Icon,
+  CancelCircleIcon,
+  ArrowUp01Icon,
+  PackageIcon,
+  Clock01Icon,
+  UserCheckIcon,
+  Cancel01Icon,
+  ChevronLeftIcon,
+  Add01Icon,
+  AlertCircleIcon,
+  Shield01Icon,
+  File01Icon,
+  Settings02Icon,
+  MoreHorizontalIcon
+} from '@/lib/icons';
 
 interface GuestRewards {
   program_name: string;
@@ -298,10 +291,10 @@ const GuestDetailPage = () => {
   const getTierIcon = (tier: string) => {
     switch (tier) {
       case 'Bronze': return <Award className="h-4 w-4" />;
-      case 'Silver': return <Badge className="h-4 w-4" />;
-      case 'Gold': return <Crown className="h-4 w-4" />;
-      case 'Platinum': return <Star className="h-4 w-4" />;
-      case 'Diamond': return <Diamond className="h-4 w-4" />;
+      case 'Silver': return <SparklesIcon className="h-4 w-4" />;
+      case 'Gold': return <SparklesIcon className="h-4 w-4" />;
+      case 'Platinum': return <SparklesIcon className="h-4 w-4" />;
+      case 'Diamond': return <SparklesIcon className="h-4 w-4" />;
       default: return <Award className="h-4 w-4" />;
     }
   };
@@ -330,7 +323,7 @@ const GuestDetailPage = () => {
       <AppLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <UserIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Loading guest profile...</h3>
           </div>
         </div>
@@ -355,7 +348,7 @@ const GuestDetailPage = () => {
               onClick={() => router.back()}
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ChevronLeftIcon className="h-4 w-4" />
               <span>Back to Guests</span>
             </button>
           </div>
@@ -373,29 +366,29 @@ const GuestDetailPage = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-6">
                 <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
-                  <User className="h-10 w-10 text-gray-600" />
+                  <UserIcon className="h-10 w-10 text-gray-600" />
                 </div>
                 <div>
                   <div className="flex items-center space-x-3 mb-2">
                     <h2 className="text-2xl font-bold text-gray-900">{guest.full_name}</h2>
                     {guest.vip_status && (
                       <span className="inline-flex items-center space-x-1 bg-yellow-100 text-yellow-800 px-3 py-1 text-sm font-medium rounded">
-                        <Star className="h-4 w-4 fill-current" />
+                        <SparklesIcon className="h-4 w-4 fill-current" />
                         <span>VIP Guest</span>
                       </span>
                     )}
                   </div>
                   <div className="flex items-center space-x-6 text-sm text-gray-600">
                     <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4" />
+                      <Mail01Icon className="h-4 w-4" />
                       <span>{guest.email}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4" />
+                      <Call02Icon className="h-4 w-4" />
                       <span>{guest.phone}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <MapPin className="h-4 w-4" />
+                      <Location01Icon className="h-4 w-4" />
                       <span>{guest.nationality}</span>
                     </div>
                   </div>
@@ -406,11 +399,11 @@ const GuestDetailPage = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
-                  <Edit className="h-4 w-4" />
+                  <PencilEdit02Icon className="h-4 w-4" />
                   <span>Edit Profile</span>
                 </button>
                 <button className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white hover:bg-[#004147] transition-colors">
-                  <Plus className="h-4 w-4" />
+                  <Add01Icon className="h-4 w-4" />
                   <span>New Reservation</span>
                 </button>
               </div>
@@ -434,7 +427,7 @@ const GuestDetailPage = () => {
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center space-x-1">
-                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                  <SparklesIcon className="h-5 w-5 text-yellow-400 fill-current" />
                   <span className="text-2xl font-bold text-gray-900">{guest.avg_rating}</span>
                 </div>
                 <div className="text-sm text-gray-600">Average Rating</div>
@@ -456,7 +449,7 @@ const GuestDetailPage = () => {
                     <p className="text-sm text-gray-200 mt-1">Personal details and contact info</p>
                   </div>
                   <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                    <Phone className="h-4 w-4 text-white" />
+                    <Call02Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -514,7 +507,7 @@ const GuestDetailPage = () => {
                     <p className="text-sm text-gray-200 mt-1">Guest preferences and dietary restrictions</p>
                   </div>
                   <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                    <Heart className="h-4 w-4 text-white" />
+                    <SparklesIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -536,7 +529,7 @@ const GuestDetailPage = () => {
                       <div className="flex flex-wrap gap-2">
                         {guest.allergies.map((allergy, index) => (
                           <span key={index} className="inline-flex items-center space-x-1 bg-red-100 text-red-800 px-3 py-1 text-xs rounded-full">
-                            <AlertTriangle className="h-3 w-3" />
+                            <Alert01Icon className="h-3 w-3" />
                             <span>{allergy}</span>
                           </span>
                         ))}
@@ -614,7 +607,7 @@ const GuestDetailPage = () => {
                     {guest.rewards.points_expiring > 0 && (
                       <div className="bg-yellow-50 border border-yellow-200 p-3 rounded">
                         <div className="flex items-start space-x-2">
-                          <Clock className="h-4 w-4 text-yellow-600 mt-0.5" />
+                          <Clock01Icon className="h-4 w-4 text-yellow-600 mt-0.5" />
                           <div className="text-sm">
                             <p className="font-medium text-yellow-800">Points Expiring Soon</p>
                             <p className="text-yellow-700">{guest.rewards.points_expiring.toLocaleString()} points expire on {formatDate(guest.rewards.expiry_date)}</p>
@@ -648,7 +641,7 @@ const GuestDetailPage = () => {
                         onClick={() => setIsEditing(true)}
                         className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded"
                       >
-                        <Edit className="h-4 w-4" />
+                        <PencilEdit02Icon className="h-4 w-4" />
                       </button>
                     ) : (
                       <div className="flex items-center space-x-2">
@@ -656,7 +649,7 @@ const GuestDetailPage = () => {
                           onClick={handleSaveNotes}
                           className="p-2 text-green-300 hover:bg-white/10 rounded"
                         >
-                          <Save className="h-4 w-4" />
+                          <PackageIcon className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => {
@@ -665,12 +658,12 @@ const GuestDetailPage = () => {
                           }}
                           className="p-2 text-white/70 hover:bg-white/10 rounded"
                         >
-                          <X className="h-4 w-4" />
+                          <Cancel01Icon className="h-4 w-4" />
                         </button>
                       </div>
                     )}
                     <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                      <FileText className="h-4 w-4 text-white" />
+                      <File01Icon className="h-4 w-4 text-white" />
                     </div>
                   </div>
                 </div>
@@ -703,7 +696,7 @@ const GuestDetailPage = () => {
                 <p className="text-sm text-gray-200 mt-1">Complete booking and stay records</p>
               </div>
               <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                <Calendar className="h-4 w-4 text-white" />
+                <Calendar01Icon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -768,7 +761,7 @@ const GuestDetailPage = () => {
                     <td className="px-6 py-4">
                       {stay.rating ? (
                         <div className="flex items-center space-x-1">
-                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                          <SparklesIcon className="h-4 w-4 text-yellow-400 fill-current" />
                           <span className="text-sm text-gray-900">{stay.rating}/5</span>
                         </div>
                       ) : (
@@ -802,7 +795,7 @@ const GuestDetailPage = () => {
                   <p className="text-sm text-gray-600 mt-1">Reviews from recent stays</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <Star className="h-4 w-4 text-white" />
+                  <SparklesIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -819,7 +812,7 @@ const GuestDetailPage = () => {
                         </div>
                         {stay.rating && (
                           <div className="flex items-center space-x-1">
-                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                            <SparklesIcon className="h-4 w-4 text-yellow-400 fill-current" />
                             <span className="text-sm font-bold text-gray-900">{stay.rating}/5</span>
                           </div>
                         )}
@@ -847,7 +840,7 @@ const GuestDetailPage = () => {
                   onClick={() => setShowRewardsDetail(false)}
                   className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded"
                 >
-                  <X className="h-6 w-6" />
+                  <Cancel01Icon className="h-6 w-6" />
                 </button>
               </div>
               
@@ -885,7 +878,7 @@ const GuestDetailPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {guest.rewards.tier_benefits.map((benefit, index) => (
                       <div key={index} className="flex items-center space-x-2 bg-green-50 p-3 rounded">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <UserCheckIcon className="h-4 w-4 text-green-600" />
                         <span className="text-sm text-gray-800">{benefit}</span>
                       </div>
                     ))}

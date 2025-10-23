@@ -3,45 +3,33 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import SupportLayout, { SupportHeaderActions } from '@/components/SupportLayout';
-import { 
-  Package,
-  Search,
-  Filter,
-  Calendar,
-  Clock,
-  User,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Eye,
-  Edit,
-  Plus,
-  Grid3X3,
-  List,
-  Bed,
-  Bath,
-  Coffee,
-  Trash2,
-  SprayCan,
-  Shirt,
-  Building,
-  UserCheck,
-  Timer,
-  AlertCircle,
-  Star,
-  MapPin,
-  Users,
-  ClipboardCheck,
-  Wrench,
-  Phone,
-  MessageSquare,
-  Flag,
-  Award,
-  TrendingUp,
-  BarChart3,
-  Target,
-  Settings
-} from 'lucide-react';
+import {
+  PackageIcon,
+  Search02Icon,
+  FilterIcon,
+  Calendar01Icon,
+  Clock01Icon,
+  UserIcon,
+  UserCheckIcon,
+  CancelCircleIcon,
+  AlertCircleIcon,
+  EyeIcon,
+  PencilEdit02Icon,
+  Add01Icon,
+  ViewIcon,
+  ListViewIcon,
+  BedIcon,
+  Building03Icon,
+  SparklesIcon,
+  Location01Icon,
+  UserMultipleIcon,
+  Wrench01Icon,
+  Call02Icon,
+  Mail01Icon,
+  ArrowUp01Icon,
+  PieChartIcon,
+  Settings02Icon
+} from '@/lib/icons';
 
 interface HousekeepingTask {
   id: number;
@@ -324,12 +312,12 @@ const HousekeepingPage = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'dirty': return <Trash2 className="h-4 w-4" />;
-      case 'cleaning': return <SprayCan className="h-4 w-4" />;
-      case 'inspecting': return <Eye className="h-4 w-4" />;
-      case 'clean': return <CheckCircle className="h-4 w-4" />;
-      case 'out_of_order': return <XCircle className="h-4 w-4" />;
-      case 'maintenance': return <Wrench className="h-4 w-4" />;
-      default: return <AlertTriangle className="h-4 w-4" />;
+      case 'cleaning': return <PackageIcon className="h-4 w-4" />;
+      case 'inspecting': return <EyeIcon className="h-4 w-4" />;
+      case 'clean': return <UserCheckIcon className="h-4 w-4" />;
+      case 'out_of_order': return <CancelCircleIcon className="h-4 w-4" />;
+      case 'maintenance': return <Wrench01Icon className="h-4 w-4" />;
+      default: return <Alert01Icon className="h-4 w-4" />;
     }
   };
 
@@ -402,11 +390,11 @@ const HousekeepingPage = () => {
           </div>
           <div className="flex items-center space-x-2">
             <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
-              <ClipboardCheck className="h-4 w-4" />
+              <UserCheckIcon className="h-4 w-4" />
               <span>Daily Report</span>
             </button>
             <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
-              <Plus className="h-4 w-4" />
+              <Add01Icon className="h-4 w-4" />
               <span>New Task</span>
             </button>
           </div>
@@ -436,7 +424,7 @@ const HousekeepingPage = () => {
                   <p className="text-sm text-gray-600 mt-1">In Progress</p>
                 </div>
                 <div className="w-8 h-8 bg-yellow-500 flex items-center justify-center">
-                  <SprayCan className="h-4 w-4 text-white" />
+                  <PackageIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -450,7 +438,7 @@ const HousekeepingPage = () => {
                   <p className="text-sm text-gray-600 mt-1">Inspection</p>
                 </div>
                 <div className="w-8 h-8 bg-blue-500 flex items-center justify-center">
-                  <Eye className="h-4 w-4 text-white" />
+                  <EyeIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -464,7 +452,7 @@ const HousekeepingPage = () => {
                   <p className="text-sm text-gray-600 mt-1">Ready</p>
                 </div>
                 <div className="w-8 h-8 bg-green-500 flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-white" />
+                  <UserCheckIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -478,7 +466,7 @@ const HousekeepingPage = () => {
                   <p className="text-sm text-gray-600 mt-1">Out of Order</p>
                 </div>
                 <div className="w-8 h-8 bg-gray-500 flex items-center justify-center">
-                  <XCircle className="h-4 w-4 text-white" />
+                  <CancelCircleIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -492,7 +480,7 @@ const HousekeepingPage = () => {
                   <p className="text-sm text-gray-600 mt-1">Total Rooms</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <Building className="h-4 w-4 text-white" />
+                  <Building03Icon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -506,13 +494,13 @@ const HousekeepingPage = () => {
             <button
               className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors"
             >
-              <Settings className="h-4 w-4" />
+              <Settings02Icon className="h-4 w-4" />
               <span>Advanced Filter</span>
             </button>
             
             {/* Search Form */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search rooms, staff, or room type..."
@@ -535,7 +523,7 @@ const HousekeepingPage = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <Grid3X3 className="h-4 w-4" />
+                <ViewIcon className="h-4 w-4" />
                 <span>Cards</span>
               </button>
               <button
@@ -546,7 +534,7 @@ const HousekeepingPage = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <List className="h-4 w-4" />
+                <ListViewIcon className="h-4 w-4" />
                 <span>Table</span>
               </button>
             </div>
@@ -584,15 +572,15 @@ const HousekeepingPage = () => {
                         <p className="text-sm text-gray-600 mb-2">{room.room_type}</p>
                         <div className="space-y-1 text-sm text-gray-600">
                           <div className="flex items-center space-x-2">
-                            <Building className="h-3 w-3" />
+                            <Building03Icon className="h-3 w-3" />
                             <span>Floor {room.floor}</span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <UserCheck className="h-3 w-3" />
+                            <UserCheckIcon className="h-3 w-3" />
                             <span>{room.assigned_staff}</span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Clock className="h-3 w-3" />
+                            <Clock01Icon className="h-3 w-3" />
                             <span className={timeDeadline.color}>{timeDeadline.text}</span>
                           </div>
                         </div>
@@ -645,7 +633,7 @@ const HousekeepingPage = () => {
                       <div className="space-y-1">
                         {room.tasks.slice(0, 3).map((task, index) => (
                           <div key={task.id} className="flex items-center space-x-2 text-xs">
-                            <CheckCircle className="h-3 w-3 text-green-500" />
+                            <UserCheckIcon className="h-3 w-3 text-green-500" />
                             <span className="text-gray-700">{task.task_name}</span>
                             <span className="text-gray-500">({task.estimated_time}min)</span>
                           </div>
@@ -683,9 +671,9 @@ const HousekeepingPage = () => {
                       <div className={`mb-4 p-2 rounded ${room.inspection_passed ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
                         <div className="flex items-center space-x-2">
                           {room.inspection_passed ? (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <UserCheckIcon className="h-4 w-4 text-green-600" />
                           ) : (
-                            <XCircle className="h-4 w-4 text-red-600" />
+                            <CancelCircleIcon className="h-4 w-4 text-red-600" />
                           )}
                           <span className={`text-xs font-medium ${room.inspection_passed ? 'text-green-900' : 'text-red-900'}`}>
                             Inspection {room.inspection_passed ? 'Passed' : 'Failed'}
@@ -703,11 +691,11 @@ const HousekeepingPage = () => {
                         href={`/housekeeping/${room.id}`}
                         className="text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors text-center"
                       >
-                        <Eye className="h-3 w-3 inline mr-1" />
+                        <EyeIcon className="h-3 w-3 inline mr-1" />
                         View Details
                       </Link>
                       <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors">
-                        <Edit className="h-3 w-3 inline mr-1" />
+                        <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
                         Update Status
                       </button>
                     </div>
@@ -754,7 +742,7 @@ const HousekeepingPage = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
-                            <Bed className="h-5 w-5 text-gray-600" />
+                            <BedIcon className="h-5 w-5 text-gray-600" />
                           </div>
                           <div>
                             <div className="font-bold text-gray-900">Room {room.room_number}</div>
@@ -782,7 +770,7 @@ const HousekeepingPage = () => {
                       {/* Staff */}
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
-                          <UserCheck className="h-4 w-4 text-gray-500" />
+                          <UserCheckIcon className="h-4 w-4 text-gray-500" />
                           <div>
                             <div className="text-sm font-medium text-gray-900">{room.assigned_staff}</div>
                             <div className="text-xs text-gray-500">
@@ -835,7 +823,7 @@ const HousekeepingPage = () => {
                         <div className="space-y-1">
                           {room.maintenance_issues?.length ? (
                             <div className="flex items-center space-x-1">
-                              <AlertTriangle className="h-3 w-3 text-orange-500" />
+                              <Alert01Icon className="h-3 w-3 text-orange-500" />
                               <span className="text-xs text-orange-600">
                                 {room.maintenance_issues.length} issue{room.maintenance_issues.length !== 1 ? 's' : ''}
                               </span>
@@ -847,12 +835,12 @@ const HousekeepingPage = () => {
                             <div className="flex items-center space-x-1">
                               {room.inspection_passed ? (
                                 <>
-                                  <CheckCircle className="h-3 w-3 text-green-500" />
+                                  <UserCheckIcon className="h-3 w-3 text-green-500" />
                                   <span className="text-xs text-green-600">Inspection passed</span>
                                 </>
                               ) : (
                                 <>
-                                  <XCircle className="h-3 w-3 text-red-500" />
+                                  <CancelCircleIcon className="h-3 w-3 text-red-500" />
                                   <span className="text-xs text-red-600">Inspection failed</span>
                                 </>
                               )}
@@ -868,11 +856,11 @@ const HousekeepingPage = () => {
                             href={`/housekeeping/${room.id}`}
                             className="text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors rounded"
                           >
-                            <Eye className="h-3 w-3 inline mr-1" />
+                            <EyeIcon className="h-3 w-3 inline mr-1" />
                             View
                           </Link>
                           <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors rounded">
-                            <Edit className="h-3 w-3 inline mr-1" />
+                            <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
                             Update
                           </button>
                         </div>
@@ -894,7 +882,7 @@ const HousekeepingPage = () => {
                 <p className="text-sm text-gray-600 mt-1">Current shift efficiency and task completion</p>
               </div>
               <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <Users className="h-4 w-4 text-white" />
+                <UserMultipleIcon className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -904,7 +892,7 @@ const HousekeepingPage = () => {
                 <div key={staff.id} className="bg-white p-4 shadow">
                   <div className="flex items-center space-x-3 mb-3">
                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-gray-600" />
+                      <UserIcon className="h-4 w-4 text-gray-600" />
                     </div>
                     <div>
                       <h4 className="font-bold text-gray-900 text-sm">{staff.name}</h4>
@@ -924,7 +912,7 @@ const HousekeepingPage = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Efficiency</span>
                       <div className="flex items-center space-x-1">
-                        <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                        <SparklesIcon className="h-3 w-3 text-yellow-400 fill-current" />
                         <span className="font-medium text-gray-900">{staff.efficiency_rating}</span>
                       </div>
                     </div>
@@ -935,7 +923,7 @@ const HousekeepingPage = () => {
                   </div>
                   
                   <button className="w-full mt-3 text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors">
-                    <Phone className="h-3 w-3 inline mr-1" />
+                    <Call02Icon className="h-3 w-3 inline mr-1" />
                     Contact
                   </button>
                 </div>
@@ -947,7 +935,7 @@ const HousekeepingPage = () => {
         {/* No Results */}
         {filteredRooms.length === 0 && (
           <div className="text-center py-12">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <PackageIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No rooms found</h3>
             <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
           </div>

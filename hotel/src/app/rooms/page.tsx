@@ -4,31 +4,25 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
-import { 
-  Search,
-  Calendar,
-  Users,
-  Wifi,
-  Tv,
-  Coffee,
-  Car,
-  UtensilsCrossed,
-  AirVent,
-  Bath,
-  Shield,
-  Phone,
-  Bed,
-  MapPin,
-  Star,
-  CheckCircle,
-  X,
-  Eye,
-  Grid3X3,
-  List,
-  MoreHorizontal,
-  Filter,
-  Settings
-} from 'lucide-react';
+import {
+  Search02Icon,
+  Calendar01Icon,
+  UserMultipleIcon,
+  PackageIcon,
+  Shield01Icon,
+  Call02Icon,
+  BedIcon,
+  Location01Icon,
+  SparklesIcon,
+  UserCheckIcon,
+  Cancel01Icon,
+  EyeIcon,
+  ViewIcon,
+  ListViewIcon,
+  MoreHorizontalIcon,
+  FilterIcon,
+  Settings02Icon
+} from '@/lib/icons';
 
 interface Room {
   id: number;
@@ -307,19 +301,19 @@ const RoomsPage = () => {
 
   const getAmenityIcon = (amenity: string) => {
     switch (amenity.toLowerCase()) {
-      case 'wifi': return <Wifi className="h-4 w-4" />;
-      case 'tv': return <Tv className="h-4 w-4" />;
-      case 'ac': return <AirVent className="h-4 w-4" />;
-      case 'mini bar': return <Coffee className="h-4 w-4" />;
-      case 'room service': return <UtensilsCrossed className="h-4 w-4" />;
-      case 'safe': return <Shield className="h-4 w-4" />;
-      case 'phone': return <Phone className="h-4 w-4" />;
-      case 'bathtub': return <Bath className="h-4 w-4" />;
-      case 'jacuzzi': return <Bath className="h-4 w-4" />;
-      case 'balcony': return <MapPin className="h-4 w-4" />;
-      case 'city view': return <Eye className="h-4 w-4" />;
-      case 'panoramic view': return <Eye className="h-4 w-4" />;
-      default: return <CheckCircle className="h-4 w-4" />;
+      case 'wifi': return <PackageIcon className="h-4 w-4" />;
+      case 'tv': return <PackageIcon className="h-4 w-4" />;
+      case 'ac': return <PackageIcon className="h-4 w-4" />;
+      case 'mini bar': return <PackageIcon className="h-4 w-4" />;
+      case 'room service': return <PackageIcon className="h-4 w-4" />;
+      case 'safe': return <Shield01Icon className="h-4 w-4" />;
+      case 'phone': return <Call02Icon className="h-4 w-4" />;
+      case 'bathtub': return <PackageIcon className="h-4 w-4" />;
+      case 'jacuzzi': return <PackageIcon className="h-4 w-4" />;
+      case 'balcony': return <Location01Icon className="h-4 w-4" />;
+      case 'city view': return <EyeIcon className="h-4 w-4" />;
+      case 'panoramic view': return <EyeIcon className="h-4 w-4" />;
+      default: return <UserCheckIcon className="h-4 w-4" />;
     }
   };
 
@@ -440,7 +434,7 @@ const RoomsPage = () => {
           </div>
           <div className="flex items-center space-x-2">
             <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
-              <Settings className="h-4 w-4" />
+              <Settings02Icon className="h-4 w-4" />
               <span>Room Settings</span>
             </button>
           </div>
@@ -452,7 +446,7 @@ const RoomsPage = () => {
             onClick={() => setShowAdvancedFilter(true)}
             className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors"
           >
-            <Settings className="h-4 w-4" />
+            <Settings02Icon className="h-4 w-4" />
             <span>Advanced Filter</span>
           </button>
           
@@ -468,7 +462,7 @@ const RoomsPage = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <Grid3X3 className="h-4 w-4" />
+                <ViewIcon className="h-4 w-4" />
                 <span>Cards</span>
               </button>
               <button
@@ -479,7 +473,7 @@ const RoomsPage = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <List className="h-4 w-4" />
+                <ListViewIcon className="h-4 w-4" />
                 <span>Table</span>
               </button>
             </div>
@@ -498,7 +492,7 @@ const RoomsPage = () => {
                     <p className="text-sm text-gray-600 mt-1">Find the perfect room for your stay</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <Filter className="h-4 w-4 text-white" />
+                    <FilterIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -514,7 +508,7 @@ const RoomsPage = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Check-in Date</label>
                         <div className="relative">
-                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Calendar01Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           <input
                             type="date"
                             value={checkInDate}
@@ -528,7 +522,7 @@ const RoomsPage = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Check-out Date</label>
                         <div className="relative">
-                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Calendar01Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           <input
                             type="date"
                             value={checkOutDate}
@@ -542,7 +536,7 @@ const RoomsPage = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Guests</label>
                         <div className="relative">
-                          <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <UserMultipleIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           <select
                             value={guests}
                             onChange={(e) => setGuests(parseInt(e.target.value))}
@@ -559,7 +553,7 @@ const RoomsPage = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Room Type</label>
                         <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           <input
                             type="text"
                             placeholder="Search room types..."
@@ -713,7 +707,7 @@ const RoomsPage = () => {
           <div className="bg-red-50 border border-red-200 rounded p-4 mb-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <X className="h-5 w-5 text-red-400" />
+                <Cancel01Icon className="h-5 w-5 text-red-400" />
               </div>
               <div className="ml-3">
                 <p className="text-sm text-red-800">{error}</p>
@@ -746,11 +740,11 @@ const RoomsPage = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-1">
                     {[1,2,3,4,5].map(star => (
-                      <Star key={star} className="h-4 w-4 text-yellow-400 fill-current" />
+                      <SparklesIcon key={star} className="h-4 w-4 text-yellow-400 fill-current" />
                     ))}
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <Bed className="h-4 w-4 text-white" />
+                    <BedIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -870,7 +864,7 @@ const RoomsPage = () => {
                 <div className="flex items-center space-x-4">
                   {/* Search Form */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search rooms..."
@@ -880,7 +874,7 @@ const RoomsPage = () => {
                     />
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <List className="h-4 w-4 text-white" />
+                    <ListViewIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -930,7 +924,7 @@ const RoomsPage = () => {
                               <h4 className="font-bold text-gray-900">{roomType.name}</h4>
                               <div className="flex items-center space-x-1">
                                 {[1,2,3,4,5].map(star => (
-                                  <Star key={star} className="h-3 w-3 text-yellow-400 fill-current" />
+                                  <SparklesIcon key={star} className="h-3 w-3 text-yellow-400 fill-current" />
                                 ))}
                               </div>
                             </div>
@@ -964,7 +958,7 @@ const RoomsPage = () => {
                               onClick={() => router.push(`/rooms/${roomType.id}`)}
                               className="flex items-center space-x-1 bg-gray-200 px-2 py-1 rounded text-xs text-gray-600 hover:bg-gray-300"
                             >
-                              <MoreHorizontal className="h-3 w-3" />
+                              <MoreHorizontalIcon className="h-3 w-3" />
                               <span>+{roomType.amenities.length - 4}</span>
                             </button>
                           )}
@@ -1026,7 +1020,7 @@ const RoomsPage = () => {
                             onClick={() => setActiveDropdown(activeDropdown === roomType.id ? null : roomType.id)}
                             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
                           >
-                            <MoreHorizontal className="h-4 w-4" />
+                            <MoreHorizontalIcon className="h-4 w-4" />
                           </button>
                           
                           {/* Dropdown Menu */}
@@ -1040,7 +1034,7 @@ const RoomsPage = () => {
                                   }}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
-                                  <Eye className="h-4 w-4" />
+                                  <EyeIcon className="h-4 w-4" />
                                   <span>View Details</span>
                                 </button>
                                 <button
@@ -1048,7 +1042,7 @@ const RoomsPage = () => {
                                   disabled={roomType.available_rooms === 0}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                  <Bed className="h-4 w-4" />
+                                  <BedIcon className="h-4 w-4" />
                                   <span>{roomType.available_rooms === 0 ? 'Sold Out' : 'Book Now'}</span>
                                 </button>
                                 <div className="border-t border-gray-100 my-1"></div>
@@ -1056,21 +1050,21 @@ const RoomsPage = () => {
                                   onClick={() => setActiveDropdown(null)}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
-                                  <Settings className="h-4 w-4" />
+                                  <Settings02Icon className="h-4 w-4" />
                                   <span>Edit Room Type</span>
                                 </button>
                                 <button
                                   onClick={() => setActiveDropdown(null)}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
-                                  <Users className="h-4 w-4" />
+                                  <UserMultipleIcon className="h-4 w-4" />
                                   <span>Manage Availability</span>
                                 </button>
                                 <button
                                   onClick={() => setActiveDropdown(null)}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
-                                  <Calendar className="h-4 w-4" />
+                                  <Calendar01Icon className="h-4 w-4" />
                                   <span>View Calendar</span>
                                 </button>
                               </div>
@@ -1100,7 +1094,7 @@ const RoomsPage = () => {
                   onClick={() => setSelectedRoomType(null)}
                   className="p-2 text-gray-400 hover:text-gray-600"
                 >
-                  <X className="h-6 w-6" />
+                  <Cancel01Icon className="h-6 w-6" />
                 </button>
               </div>
 
@@ -1210,7 +1204,7 @@ const RoomsPage = () => {
         {/* No Results */}
         {!loading && !error && filteredRoomTypes.length === 0 && (
           <div className="text-center py-12">
-            <Bed className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <BedIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No rooms found</h3>
             <p className="text-gray-600">Try adjusting your search criteria or dates.</p>
           </div>

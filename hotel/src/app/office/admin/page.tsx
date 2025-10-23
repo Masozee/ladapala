@@ -2,38 +2,30 @@
 
 import { useState } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
-import { 
-  Shield, 
-  Users, 
-  Settings, 
-  Database,
-  Server,
-  Lock,
-  Key,
-  Monitor,
-  Activity,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  HardDrive,
-  Cpu,
-  Wifi,
-  Globe,
-  Mail,
-  Bell,
-  User,
-  UserPlus,
-  UserMinus,
-  Eye,
-  Edit,
-  Trash2,
-  MoreHorizontal,
-  Download,
-  Upload,
-  RefreshCw,
-  Search,
-  Filter
-} from 'lucide-react';
+import {
+  Shield01Icon,
+  UserMultipleIcon,
+  Settings02Icon,
+  PackageIcon,
+  ViewIcon,
+  PieChartIcon,
+  AlertCircleIcon,
+  UserCheckIcon,
+  Clock01Icon,
+  Mail01Icon,
+  Notification02Icon,
+  UserIcon,
+  Add01Icon,
+  CancelCircleIcon,
+  EyeIcon,
+  PencilEdit02Icon,
+  MoreHorizontalIcon,
+  ChevronDownIcon,
+  ArrowUp01Icon,
+  Loading03Icon,
+  Search02Icon,
+  FilterIcon
+} from '@/lib/icons';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -236,11 +228,11 @@ export default function AdminPage() {
         {/* Tab Navigation */}
         <div className="bg-white shadow">
           <div className="flex space-x-1 p-1 bg-gray-50">
-            <TabButton tabId="dashboard" label="Dashboard" icon={Monitor} />
-            <TabButton tabId="users" label="Pengguna" icon={Users} />
-            <TabButton tabId="system" label="Sistem" icon={Server} />
-            <TabButton tabId="security" label="Keamanan" icon={Shield} />
-            <TabButton tabId="logs" label="Log Aktivitas" icon={Activity} />
+            <TabButton tabId="dashboard" label="Dashboard" icon={ViewIcon} />
+            <TabButton tabId="users" label="Pengguna" icon={UserMultipleIcon} />
+            <TabButton tabId="system" label="Sistem" icon={PackageIcon} />
+            <TabButton tabId="security" label="Keamanan" icon={Shield01Icon} />
+            <TabButton tabId="logs" label="Log Aktivitas" icon={PieChartIcon} />
           </div>
 
           {/* Dashboard Tab */}
@@ -269,7 +261,7 @@ export default function AdminPage() {
                           <p className="text-sm text-gray-600 mt-1">Terdaftar aktif</p>
                         </div>
                         <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          <Users className="h-4 w-4 text-white" />
+                          <UserMultipleIcon className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>
@@ -329,7 +321,7 @@ export default function AdminPage() {
                           <p className="text-sm text-gray-600 mt-1">Peringatan keamanan</p>
                         </div>
                         <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          <AlertTriangle className="h-4 w-4 text-white" />
+                          <Alert01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>
@@ -360,28 +352,28 @@ export default function AdminPage() {
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <CheckCircle className="h-5 w-5 text-green-500" />
+                            <UserCheckIcon className="h-5 w-5 text-green-500" />
                             <span className="text-sm font-medium">Database Server</span>
                           </div>
                           <span className="text-xs bg-green-100 text-green-800 px-2 py-1">Online</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <CheckCircle className="h-5 w-5 text-green-500" />
+                            <UserCheckIcon className="h-5 w-5 text-green-500" />
                             <span className="text-sm font-medium">Web Server</span>
                           </div>
                           <span className="text-xs bg-green-100 text-green-800 px-2 py-1">Online</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                            <Alert01Icon className="h-5 w-5 text-yellow-500" />
                             <span className="text-sm font-medium">Backup Server</span>
                           </div>
                           <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1">Warning</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <CheckCircle className="h-5 w-5 text-green-500" />
+                            <UserCheckIcon className="h-5 w-5 text-green-500" />
                             <span className="text-sm font-medium">Email Service</span>
                           </div>
                           <span className="text-xs bg-green-100 text-green-800 px-2 py-1">Online</span>
@@ -463,7 +455,7 @@ export default function AdminPage() {
                       <span>Tambah Pengguna</span>
                     </button>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <Users className="h-4 w-4 text-[#005357]" />
+                      <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
                     </div>
                   </div>
                 </div>
@@ -475,7 +467,7 @@ export default function AdminPage() {
                   <div className="flex items-center space-x-4">
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-gray-400" />
+                        <Search02Icon className="h-4 w-4 text-gray-400" />
                       </div>
                       <input
                         type="text"
@@ -497,7 +489,7 @@ export default function AdminPage() {
                     </select>
                   </div>
                   <button className="bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
-                    <Download className="h-4 w-4" />
+                    <ChevronDownIcon className="h-4 w-4" />
                     <span>Export</span>
                   </button>
                 </div>
@@ -569,13 +561,13 @@ export default function AdminPage() {
                                 className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
                                 title="Lihat Detail"
                               >
-                                <Eye className="h-4 w-4" />
+                                <EyeIcon className="h-4 w-4" />
                               </button>
                               <button 
                                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded"
                                 title="Edit Pengguna"
                               >
-                                <Edit className="h-4 w-4" />
+                                <PencilEdit02Icon className="h-4 w-4" />
                               </button>
                               <button 
                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors rounded"
@@ -620,14 +612,14 @@ export default function AdminPage() {
                           <p className="text-sm text-gray-600 mt-1">Tools pemeliharaan sistem</p>
                         </div>
                         <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          <Settings className="h-4 w-4 text-white" />
+                          <Settings02Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>
                     <div className="p-4 bg-gray-50 space-y-3">
                       <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                         <div className="flex items-center space-x-3">
-                          <RefreshCw className="h-5 w-5 text-blue-600" />
+                          <Loading03Icon className="h-5 w-5 text-blue-600" />
                           <div>
                             <h3 className="font-medium text-gray-900">Restart Services</h3>
                             <p className="text-sm text-gray-600">Restart layanan sistem</p>
@@ -662,7 +654,7 @@ export default function AdminPage() {
                     <div className="p-4 bg-gray-50 space-y-3">
                       <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                         <div className="flex items-center space-x-3">
-                          <Upload className="h-5 w-5 text-blue-600" />
+                          <ArrowUp01Icon className="h-5 w-5 text-blue-600" />
                           <div>
                             <h3 className="font-medium text-gray-900">Create Backup</h3>
                             <p className="text-sm text-gray-600">Buat backup manual</p>
@@ -671,7 +663,7 @@ export default function AdminPage() {
                       </button>
                       <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                         <div className="flex items-center space-x-3">
-                          <Download className="h-5 w-5 text-green-600" />
+                          <ChevronDownIcon className="h-5 w-5 text-green-600" />
                           <div>
                             <h3 className="font-medium text-gray-900">Restore Data</h3>
                             <p className="text-sm text-gray-600">Pulihkan dari backup</p>
@@ -690,14 +682,14 @@ export default function AdminPage() {
                           <p className="text-sm text-gray-600 mt-1">Konfigurasi sistem global</p>
                         </div>
                         <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          <Globe className="h-4 w-4 text-white" />
+                          <Location01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>
                     <div className="p-4 bg-gray-50 space-y-3">
                       <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                         <div className="flex items-center space-x-3">
-                          <Settings className="h-5 w-5 text-purple-600" />
+                          <Settings02Icon className="h-5 w-5 text-purple-600" />
                           <div>
                             <h3 className="font-medium text-gray-900">General Settings</h3>
                             <p className="text-sm text-gray-600">Pengaturan umum sistem</p>
@@ -706,7 +698,7 @@ export default function AdminPage() {
                       </button>
                       <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                         <div className="flex items-center space-x-3">
-                          <Mail className="h-5 w-5 text-orange-600" />
+                          <Mail01Icon className="h-5 w-5 text-orange-600" />
                           <div>
                             <h3 className="font-medium text-gray-900">Email Configuration</h3>
                             <p className="text-sm text-gray-600">Setup SMTP dan notifikasi</p>
@@ -746,7 +738,7 @@ export default function AdminPage() {
                           <p className="text-sm text-gray-600 mt-1">Peringatan keamanan terkini</p>
                         </div>
                         <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          <AlertTriangle className="h-4 w-4 text-white" />
+                          <Alert01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>
@@ -754,14 +746,14 @@ export default function AdminPage() {
                       <div className="space-y-3">
                         <div className="p-3 bg-yellow-50 text-yellow-800">
                           <div className="flex items-center space-x-2">
-                            <AlertTriangle className="h-4 w-4" />
+                            <Alert01Icon className="h-4 w-4" />
                             <span className="text-sm font-medium">Multiple failed login attempts detected</span>
                           </div>
                           <div className="text-xs text-yellow-600 mt-1">IP: 192.168.1.100 - 5 attempts</div>
                         </div>
                         <div className="p-3 bg-red-50 text-red-800">
                           <div className="flex items-center space-x-2">
-                            <AlertTriangle className="h-4 w-4" />
+                            <Alert01Icon className="h-4 w-4" />
                             <span className="text-sm font-medium">Unauthorized access attempt</span>
                           </div>
                           <div className="text-xs text-red-600 mt-1">Admin panel access from unknown IP</div>
@@ -779,7 +771,7 @@ export default function AdminPage() {
                           <p className="text-sm text-gray-600 mt-1">Konfigurasi keamanan sistem</p>
                         </div>
                         <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          <Lock className="h-4 w-4 text-white" />
+                          <Shield01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>
@@ -849,7 +841,7 @@ export default function AdminPage() {
                           Message
                         </th>
                         <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                          User
+                          UserIcon
                         </th>
                       </tr>
                     </thead>

@@ -1,5 +1,15 @@
 import OfficeLayout from '@/components/OfficeLayout';
-import { Building2, TrendingUp, Users, CreditCard, FileText, Settings, UserCog, Clock, Hotel } from 'lucide-react';
+import {
+  Building03Icon,
+  ArrowUp01Icon,
+  UserMultipleIcon,
+  CreditCardIcon,
+  File01Icon,
+  Settings02Icon,
+  UserSettings01Icon,
+  Clock01Icon,
+  HotelIcon
+} from '@/lib/icons';
 
 export default function OfficePage() {
   return (
@@ -15,7 +25,7 @@ export default function OfficePage() {
                   <p className="text-sm text-gray-600 mt-1">Total pendapatan bulan ini</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-white" />
+                  <ArrowUp01Icon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -35,7 +45,7 @@ export default function OfficePage() {
                   <p className="text-sm text-gray-600 mt-1">Anggota staf aktif</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <Users className="h-4 w-4 text-[#005357]" />
+                  <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -55,7 +65,7 @@ export default function OfficePage() {
                   <p className="text-sm text-gray-600 mt-1">Faktur yang belum dibayar</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <CreditCard className="h-4 w-4 text-white" />
+                  <CreditCardIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -75,7 +85,7 @@ export default function OfficePage() {
                   <p className="text-sm text-gray-600 mt-1">Bulan ini</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <FileText className="h-4 w-4 text-white" />
+                  <File01Icon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -97,26 +107,26 @@ export default function OfficePage() {
                   <p className="text-sm text-gray-600 mt-1">Sistem dan manajemen hotel</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <Settings className="h-4 w-4 text-white" />
+                  <Settings02Icon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50 space-y-3">
               <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-3">
-                  <Hotel className="h-4 w-4 text-gray-500" />
+                  <HotelIcon className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-medium">Pengaturan Hotel</span>
                 </div>
               </button>
               <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-3">
-                  <UserCog className="h-4 w-4 text-gray-500" />
+                  <UserSettings01Icon className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-medium">Manajemen Pengguna</span>
                 </div>
               </button>
               <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-3">
-                  <TrendingUp className="h-4 w-4 text-gray-500" />
+                  <ArrowUp01Icon className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-medium">Analitik</span>
                 </div>
               </button>
@@ -131,26 +141,26 @@ export default function OfficePage() {
                   <p className="text-sm text-gray-600 mt-1">Manajemen pembayaran dan penagihan</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <CreditCard className="h-4 w-4 text-white" />
+                  <CreditCardIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50 space-y-3">
               <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-3">
-                  <CreditCard className="h-4 w-4 text-gray-500" />
+                  <CreditCardIcon className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-medium">Pembayaran</span>
                 </div>
               </button>
               <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-3">
-                  <FileText className="h-4 w-4 text-gray-500" />
+                  <File01Icon className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-medium">Penagihan</span>
                 </div>
               </button>
               <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-3">
-                  <TrendingUp className="h-4 w-4 text-gray-500" />
+                  <ArrowUp01Icon className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-medium">Laporan Pendapatan</span>
                 </div>
               </button>
@@ -165,26 +175,26 @@ export default function OfficePage() {
                   <p className="text-sm text-gray-600 mt-1">Alat karyawan dan penjadwalan</p>
                 </div>
                 <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <Users className="h-4 w-4 text-[#005357]" />
+                  <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50 space-y-3">
               <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-3">
-                  <Users className="h-4 w-4 text-gray-500" />
+                  <UserMultipleIcon className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-medium">Karyawan</span>
                 </div>
               </button>
               <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-3">
-                  <Clock className="h-4 w-4 text-gray-500" />
+                  <Clock01Icon className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-medium">Jadwal</span>
                 </div>
               </button>
               <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-3">
-                  <CreditCard className="h-4 w-4 text-gray-500" />
+                  <CreditCardIcon className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-medium">Penggajian</span>
                 </div>
               </button>

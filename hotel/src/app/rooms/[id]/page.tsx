@@ -4,26 +4,20 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
-import { 
-  ArrowLeft,
-  Calendar,
-  Users,
-  Wifi,
-  Tv,
-  Coffee,
-  Car,
-  UtensilsCrossed,
-  AirVent,
-  Bath,
-  Shield,
-  Phone,
-  Bed,
-  MapPin,
-  Star,
-  CheckCircle,
-  Eye,
-  Settings
-} from 'lucide-react';
+import {
+  ChevronLeftIcon,
+  Calendar01Icon,
+  UserMultipleIcon,
+  PackageIcon,
+  Shield01Icon,
+  Call02Icon,
+  BedIcon,
+  Location01Icon,
+  SparklesIcon,
+  UserCheckIcon,
+  EyeIcon,
+  Settings02Icon
+} from '@/lib/icons';
 
 interface RoomType {
   id: number;
@@ -137,19 +131,19 @@ const RoomDetailPage = () => {
 
   const getAmenityIcon = (amenity: string) => {
     switch (amenity.toLowerCase()) {
-      case 'wifi': return <Wifi className="h-5 w-5" />;
-      case 'tv': return <Tv className="h-5 w-5" />;
+      case 'wifi': return <SparklesIcon className="h-5 w-5" />;
+      case 'tv': return <ViewIcon className="h-5 w-5" />;
       case 'ac': return <AirVent className="h-5 w-5" />;
-      case 'mini bar': return <Coffee className="h-5 w-5" />;
+      case 'mini bar': return <SparklesIcon className="h-5 w-5" />;
       case 'room service': return <UtensilsCrossed className="h-5 w-5" />;
       case 'safe': return <Shield className="h-5 w-5" />;
-      case 'phone': return <Phone className="h-5 w-5" />;
-      case 'bathtub': return <Bath className="h-5 w-5" />;
-      case 'jacuzzi': return <Bath className="h-5 w-5" />;
-      case 'balcony': return <MapPin className="h-5 w-5" />;
-      case 'city view': return <Eye className="h-5 w-5" />;
-      case 'panoramic view': return <Eye className="h-5 w-5" />;
-      default: return <CheckCircle className="h-5 w-5" />;
+      case 'phone': return <Call02Icon className="h-5 w-5" />;
+      case 'bathtub': return <Shield01Icon className="h-5 w-5" />;
+      case 'jacuzzi': return <Shield01Icon className="h-5 w-5" />;
+      case 'balcony': return <Location01Icon className="h-5 w-5" />;
+      case 'city view': return <EyeIcon className="h-5 w-5" />;
+      case 'panoramic view': return <EyeIcon className="h-5 w-5" />;
+      default: return <UserCheckIcon className="h-5 w-5" />;
     }
   };
 
@@ -208,7 +202,7 @@ const RoomDetailPage = () => {
     return (
       <AppLayout breadcrumb={breadcrumb}>
         <div className="text-center py-12">
-          <Bed className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <BedIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Room not found</h3>
           <p className="text-gray-600 mb-4">{error || 'This room type does not exist.'}</p>
           <button 
@@ -233,7 +227,7 @@ const RoomDetailPage = () => {
                 onClick={() => router.push('/rooms')}
                 className="flex items-center space-x-2 text-white hover:text-gray-200 transition-colors"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ChevronLeftIcon className="h-5 w-5" />
                 <span>Back to Rooms</span>
               </button>
               <div className="border-l border-white/20 pl-4">
@@ -243,7 +237,7 @@ const RoomDetailPage = () => {
             </div>
             <div className="flex items-center space-x-2">
               <button className="flex items-center space-x-2 bg-white/10 text-white px-4 py-2 text-sm font-medium hover:bg-white/20 transition-colors">
-                <Settings className="h-4 w-4" />
+                <Settings02Icon className="h-4 w-4" />
                 <span>Manage Room</span>
               </button>
             </div>
@@ -262,7 +256,7 @@ const RoomDetailPage = () => {
                     <p className="text-sm text-gray-600 mt-1">View room photos and amenities</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <Eye className="h-4 w-4 text-white" />
+                    <EyeIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -308,7 +302,7 @@ const RoomDetailPage = () => {
                     <p className="text-sm text-gray-600 mt-1">Detailed information about this room type</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <Bed className="h-4 w-4 text-white" />
+                    <BedIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -318,28 +312,28 @@ const RoomDetailPage = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <div className="w-12 h-12 bg-[#005357] text-white rounded-full flex items-center justify-center mx-auto mb-2">
-                      <MapPin className="h-6 w-6" />
+                      <Location01Icon className="h-6 w-6" />
                     </div>
                     <div className="text-sm font-medium text-gray-900">{roomType.room_size} sqm</div>
                     <div className="text-xs text-gray-600">Room Size</div>
                   </div>
                   <div className="text-center">
                     <div className="w-12 h-12 bg-[#005357] text-white rounded-full flex items-center justify-center mx-auto mb-2">
-                      <Users className="h-6 w-6" />
+                      <UserMultipleIcon className="h-6 w-6" />
                     </div>
                     <div className="text-sm font-medium text-gray-900">{roomType.max_occupancy} guests</div>
                     <div className="text-xs text-gray-600">Max Occupancy</div>
                   </div>
                   <div className="text-center">
                     <div className="w-12 h-12 bg-[#005357] text-white rounded-full flex items-center justify-center mx-auto mb-2">
-                      <Bed className="h-6 w-6" />
+                      <BedIcon className="h-6 w-6" />
                     </div>
                     <div className="text-sm font-medium text-gray-900">{roomType.bed_configuration}</div>
                     <div className="text-xs text-gray-600">Bed Type</div>
                   </div>
                   <div className="text-center">
                     <div className="w-12 h-12 bg-[#005357] text-white rounded-full flex items-center justify-center mx-auto mb-2">
-                      <CheckCircle className="h-6 w-6" />
+                      <UserCheckIcon className="h-6 w-6" />
                     </div>
                     <div className="text-sm font-medium text-gray-900">{roomType.available_rooms}/{roomType.room_count}</div>
                     <div className="text-xs text-gray-600">Available</div>
@@ -357,7 +351,7 @@ const RoomDetailPage = () => {
                     <p className="text-sm text-gray-600 mt-1">All included facilities and services</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <Star className="h-4 w-4 text-white" />
+                    <SparklesIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -386,7 +380,7 @@ const RoomDetailPage = () => {
                     <p className="text-sm text-gray-600 mt-1">Select dates and guests</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <Calendar className="h-4 w-4 text-white" />
+                    <Calendar01Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -397,7 +391,7 @@ const RoomDetailPage = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Check-in Date</label>
                     <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Calendar01Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         type="date"
                         value={checkInDate}
@@ -411,7 +405,7 @@ const RoomDetailPage = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Check-out Date</label>
                     <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Calendar01Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <input
                         type="date"
                         value={checkOutDate}
@@ -425,7 +419,7 @@ const RoomDetailPage = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Guests</label>
                     <div className="relative">
-                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <UserMultipleIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <select
                         value={guests}
                         onChange={(e) => setGuests(parseInt(e.target.value))}

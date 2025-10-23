@@ -4,36 +4,28 @@ import { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
 import {
-  BarChart3,
-  Calendar,
-  Clock,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Wrench,
-  CheckCircle,
-  AlertTriangle,
-  DollarSign,
-  FileText,
-  Download,
-  Filter,
-  RefreshCw,
-  Eye,
-  PieChart,
-  Activity,
-  Target,
-  Award,
-  Timer,
-  Building,
-  Settings,
-  HardHat,
-  Package,
-  Zap,
-  Thermometer,
-  Droplets,
-  Wifi,
-  Shield
-} from 'lucide-react';
+  PieChartIcon,
+  Calendar01Icon,
+  Clock01Icon,
+  ArrowUp01Icon,
+  UserMultipleIcon,
+  Wrench01Icon,
+  UserCheckIcon,
+  AlertCircleIcon,
+  CreditCardIcon,
+  File01Icon,
+  ChevronDownIcon,
+  FilterIcon,
+  Loading03Icon,
+  EyeIcon,
+  Location01Icon,
+  SparklesIcon,
+  Building03Icon,
+  Settings02Icon,
+  Shield01Icon,
+  PackageIcon,
+  Alert01Icon
+} from '@/lib/icons';
 
 interface DailyReport {
   date: string;
@@ -204,14 +196,14 @@ const ReportsPage = () => {
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
-      case 'hvac': return <Thermometer className="h-4 w-4" />;
-      case 'plumbing': return <Droplets className="h-4 w-4" />;
-      case 'electrical': return <Zap className="h-4 w-4" />;
-      case 'elevator': return <Building className="h-4 w-4" />;
-      case 'it/network': return <Wifi className="h-4 w-4" />;
-      case 'general': return <Wrench className="h-4 w-4" />;
+      case 'hvac': return <PackageIcon className="h-4 w-4" />;
+      case 'plumbing': return <PackageIcon className="h-4 w-4" />;
+      case 'electrical': return <SparklesIcon className="h-4 w-4" />;
+      case 'elevator': return <Building03Icon className="h-4 w-4" />;
+      case 'it/network': return <SparklesIcon className="h-4 w-4" />;
+      case 'general': return <Wrench01Icon className="h-4 w-4" />;
       case 'security': return <Shield className="h-4 w-4" />;
-      default: return <Settings className="h-4 w-4" />;
+      default: return <Settings02Icon className="h-4 w-4" />;
     }
   };
 
@@ -265,8 +257,8 @@ const ReportsPage = () => {
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {[
-              { id: 'daily', name: 'Daily Reports', icon: Calendar },
-              { id: 'monthly', name: 'Monthly Reports', icon: BarChart3 }
+              { id: 'daily', name: 'Daily Reports', icon: Calendar01Icon },
+              { id: 'monthly', name: 'Monthly Reports', icon: PieChartIcon }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -289,7 +281,7 @@ const ReportsPage = () => {
           <div className="flex items-center space-x-4">
             {activeTab === 'daily' ? (
               <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-gray-400" />
+                <Calendar01Icon className="h-4 w-4 text-gray-400" />
                 <select
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
@@ -304,7 +296,7 @@ const ReportsPage = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-2">
-                <BarChart3 className="h-4 w-4 text-gray-400" />
+                <PieChartIcon className="h-4 w-4 text-gray-400" />
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
@@ -324,11 +316,11 @@ const ReportsPage = () => {
               disabled={loading}
               className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 text-sm font-medium rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <Loading03Icon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               <span>{loading ? 'Loading...' : 'Refresh'}</span>
             </button>
             <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium rounded hover:bg-[#004147] transition-colors">
-              <Download className="h-4 w-4" />
+              <ChevronDownIcon className="h-4 w-4" />
               <span>Export PDF</span>
             </button>
           </div>
@@ -426,7 +418,7 @@ const ReportsPage = () => {
                     <div className="flex items-center justify-between p-3 bg-white rounded">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <Target className="h-4 w-4 text-green-600" />
+                          <Location01Icon className="h-4 w-4 text-green-600" />
                         </div>
                         <span className="text-sm font-medium text-gray-900">Efficiency Rate</span>
                       </div>
@@ -436,7 +428,7 @@ const ReportsPage = () => {
                     <div className="flex items-center justify-between p-3 bg-white rounded">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                          <AlertTriangle className="h-4 w-4 text-orange-600" />
+                          <Alert01Icon className="h-4 w-4 text-orange-600" />
                         </div>
                         <span className="text-sm font-medium text-gray-900">Urgent Requests</span>
                       </div>
@@ -446,7 +438,7 @@ const ReportsPage = () => {
                     <div className="flex items-center justify-between p-3 bg-white rounded">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Clock className="h-4 w-4 text-blue-600" />
+                          <Clock01Icon className="h-4 w-4 text-blue-600" />
                         </div>
                         <span className="text-sm font-medium text-gray-900">Pending Requests</span>
                       </div>
@@ -523,7 +515,7 @@ const ReportsPage = () => {
                   <div className="text-center">
                     <div className="text-3xl font-bold text-[#005357] mb-2">{currentMonthlyReport.total_requests}</div>
                     <div className="flex items-center justify-center space-x-1 text-sm">
-                      <TrendingUp className="h-3 w-3 text-green-500" />
+                      <ArrowUp01Icon className="h-3 w-3 text-green-500" />
                       <span className="text-green-600">+{currentMonthlyReport.trend_comparison}%</span>
                     </div>
                   </div>
@@ -635,7 +627,7 @@ const ReportsPage = () => {
                       <div key={tech.id} className="flex items-center justify-between p-3 bg-white rounded">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <HardHat className="h-4 w-4 text-blue-600" />
+                            <Shield01Icon className="h-4 w-4 text-blue-600" />
                           </div>
                           <div>
                             <span className="font-medium text-gray-900">{tech.name}</span>

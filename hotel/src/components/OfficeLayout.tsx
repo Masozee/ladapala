@@ -5,7 +5,14 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import OfficeSidebar from './OfficeSidebar';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Search, Bell, Sun, Moon, X, ChevronRight } from 'lucide-react';
+import {
+  Search02Icon,
+  Notification02Icon,
+  Sun03Icon,
+  Moon02Icon,
+  Cancel01Icon,
+  ChevronRightIcon
+} from '@/lib/icons';
 
 interface OfficeLayoutProps {
   children: React.ReactNode;
@@ -41,7 +48,7 @@ export const OfficeHeaderActions = () => {
       <Dialog.Root open={searchOpen} onOpenChange={setSearchOpen}>
         <Dialog.Trigger asChild>
           <button className={`p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}>
-            <Search className="h-5 w-5" />
+            <Search02Icon className="h-5 w-5" />
           </button>
         </Dialog.Trigger>
         <Dialog.Portal>
@@ -53,7 +60,7 @@ export const OfficeHeaderActions = () => {
               </Dialog.Title>
               <Dialog.Close asChild>
                 <button className="p-1 hover:bg-gray-100 text-gray-500">
-                  <X className="h-4 w-4" />
+                  <Cancel01Icon className="h-4 w-4" />
                 </button>
               </Dialog.Close>
             </div>
@@ -91,7 +98,7 @@ export const OfficeHeaderActions = () => {
 
       {/* Notifications */}
       <button className={`relative p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}>
-        <Bell className="h-5 w-5" />
+        <Notification02Icon className="h-5 w-5" />
         <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center">
           2
         </span>
@@ -102,7 +109,7 @@ export const OfficeHeaderActions = () => {
         onClick={() => setDarkMode(!darkMode)}
         className={`p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}
       >
-        {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        {darkMode ? <Sun03Icon className="h-5 w-5" /> : <Moon02Icon className="h-5 w-5" />}
       </button>
     </div>
   );
@@ -159,7 +166,7 @@ const OfficeLayout = ({ children, breadcrumb }: OfficeLayoutProps) => {
             <nav className="flex items-center space-x-2 text-sm">
               {breadcrumbItems.map((item, index) => (
                 <div key={index} className="flex items-center">
-                  {index > 0 && <ChevronRight className="h-4 w-4 text-gray-400 mx-2" />}
+                  {index > 0 && <ChevronRightIcon className="h-4 w-4 text-gray-400 mx-2" />}
                   {item.href && index < breadcrumbItems.length - 1 ? (
                     <Link href={item.href} className="text-gray-600 hover:text-[#005357] transition-colors">
                       {item.label}

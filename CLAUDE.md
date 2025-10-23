@@ -4,45 +4,76 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ladapala is a comprehensive Point of Sale (POS) system for Indonesian restaurants. It's a full-stack monorepo with a Next.js 15 frontend (`resto/`) and Django REST API backend (`backend/`), featuring session-based authentication, cashier shift management, and real-time order tracking.
+Ladapala is a comprehensive management system with two main applications:
+
+1. **Restaurant POS (`resto/`)** - Point of Sale system for Indonesian restaurants with session-based authentication, cashier shift management, and real-time order tracking.
+
+2. **Hotel Management (`hotel/`)** - Hotel property management system with booking management, room tracking, guest services, and staff coordination.
+
+**Technology Stack:**
+- **Backend**: Django REST API (`backend/`) - Port 8000
+- **Frontend**: Next.js 16 (Turbopack) - Port 3000
+- **Database**: SQLite (development)
+- **Icons**: @hugeicons/react (hotel), lucide-react (resto)
 
 ## Development Commands
 
-### Backend (Django API)
+### Quick Start - Running Servers
+
+**Backend (Django API) - Port 8000:**
 ```bash
 cd backend
-
-# Run with uv (recommended)
 uv run python manage.py runserver
-
-# Database operations
-python manage.py makemigrations
-python manage.py migrate
-
-# Create test users with staff relationships
-python manage.py seed_auth_users
-
-# Seed restaurant data (products, categories, tables)
-python manage.py seed_resto_data
-
-# Testing
-python manage.py test
-python manage.py test apps.restaurant
 ```
 
-### Frontend (Next.js)
+**Frontend - Restaurant POS (Port 3000):**
 ```bash
 cd resto
+npm run dev
+```
 
-# Install dependencies
-npm install
+**Frontend - Hotel Management (Port 3000):**
+```bash
+cd hotel
+npm run dev
+```
 
-# Development server (uses bun)
-bun dev
+**Important Notes:**
+- Backend must be running before starting frontend
+- Only run ONE frontend at a time (resto OR hotel) as they both use port 3000
+- First time setup requires `npm install` in resto/ and hotel/ directories
+- Database migrations are already applied, no need to run migrate unless schema changes
 
-# Build and production
-npm run build
-npm start
+### Additional Commands (When Needed)
+
+**Database Management:**
+```bash
+cd backend
+python manage.py makemigrations  # Create new migrations
+python manage.py migrate         # Apply migrations
+python manage.py seed_auth_users # Create test users
+python manage.py seed_resto_data # Seed restaurant data
+```
+
+**Frontend Build:**
+```bash
+cd resto  # or cd hotel
+npm run build  # Production build
+npm start      # Production server
+```
+
+**Testing:**
+```bash
+cd backend
+python manage.py test                # Run all tests
+python manage.py test apps.restaurant # Run specific app tests
+```
+
+**Clear Cache (When facing Next.js issues):**
+```bash
+cd resto  # or cd hotel
+rm -rf .next
+npm run dev
 ```
 
 ## Critical Architecture Concepts
@@ -297,6 +328,137 @@ await api.updateOrderStatus(orderId, 'READY')     // Food ready
 await api.updateOrderStatus(orderId, 'COMPLETED') // Delivered to table
 // Now ready for payment
 ```
+
+### Icon Management (Hotel Project)
+
+**CRITICAL**: The hotel project uses **@hugeicons/react** (NOT lucide-react). All icons must be imported from the central icon wrapper file.
+
+**Icon System Architecture:**
+
+1. **Central Icon File**: `hotel/src/lib/icons.tsx`
+   - Wraps all Hugeicons with consistent styling (stroke width: 2)
+   - All imports must use this file: `import { IconName } from '@/lib/icons'`
+   - NEVER import directly from `@hugeicons/react` or `@hugeicons/core-free-icons`
+
+2. **Available Icons**: Check `hotel/src/lib/icons.tsx` for the complete list of available icons
+
+3. **Adding New Icons**:
+   ```typescript
+   // Step 1: Import from @hugeicons/core-free-icons in icons.tsx
+   import { NewIcon as HugeNewIcon } from '@hugeicons/core-free-icons';
+
+   // Step 2: Create wrapper component
+   export const NewIcon = createIconComponent(HugeNewIcon);
+
+   // Step 3: Add display name
+   NewIcon.displayName = 'NewIcon';
+
+   // Step 4: Use in your component
+   import { NewIcon } from '@/lib/icons';
+   <NewIcon className="h-4 w-4" />
+   ```
+
+4. **Common Icon Mappings** (from lucide-react to hugeicons):
+   ```typescript
+   // Navigation & Actions
+   ChevronRight → ChevronRightIcon
+   ChevronLeft → ChevronLeftIcon
+   ChevronUp → ChevronUpIcon
+   ChevronDown → ChevronDownIcon
+   ArrowLeft → ChevronLeftIcon
+   X → Cancel01Icon
+   Plus → Add01Icon
+   Search → Search02Icon
+   Filter → FilterIcon
+   RefreshCw → Loading03Icon
+
+   // User & People
+   User → UserIcon
+   Users → UserMultipleIcon
+   UserCheck → UserCheckIcon
+   UserCog → UserSettings01Icon
+
+   // UI Elements
+   Calendar → Calendar01Icon
+   Clock → Clock01Icon
+   Bell → Notification02Icon
+   Mail → Mail01Icon
+   Phone → Call02Icon
+   Eye → EyeIcon
+   Edit → PencilEdit02Icon
+   Settings → Settings02Icon
+
+   // Status & Alerts
+   AlertTriangle → AlertCircleIcon
+   AlertCircle → AlertCircleIcon
+   CheckCircle → UserCheckIcon
+
+   // Business
+   Hotel → HotelIcon
+   Building → Building03Icon
+   Building2 → Building03Icon
+   Package → PackageIcon
+   CreditCard → CreditCardIcon
+   DollarSign → CreditCardIcon
+
+   // Content
+   FileText → File01Icon
+   Newspaper → News01Icon
+   Star → SparklesIcon
+
+   // Navigation
+   Home → Home01Icon
+   MapPin → Location01Icon
+   Door → Door01Icon
+   Bed → BedIcon
+
+   // Charts
+   PieChart → PieChartIcon
+   TrendingUp → ArrowUp01Icon
+   TrendingDown → ArrowDown01Icon
+   BarChart3 → PieChartIcon
+
+   // UI Controls
+   MoreHorizontal → MoreHorizontalIcon
+   List → ListViewIcon
+   Shield → Shield01Icon
+   Lock → Shield01Icon
+   ```
+
+5. **Icon Migration Checklist**:
+   - [ ] Check if icon exists in `hotel/src/lib/icons.tsx`
+   - [ ] If not available, check @hugeicons free version for alternative
+   - [ ] Add icon wrapper to icons.tsx if needed
+   - [ ] Update import statement: `from '@/lib/icons'`
+   - [ ] Replace icon name in import list with correct Icon suffix
+   - [ ] Replace JSX usage: `<OldIcon />` → `<NewIcon />`
+   - [ ] Clear Next.js cache: `rm -rf .next`
+   - [ ] Test in development mode
+   - [ ] Verify production build: `npm run build`
+
+6. **Common Mistakes to Avoid**:
+   - ❌ `import { Calendar } from 'lucide-react'`
+   - ✅ `import { Calendar01Icon } from '@/lib/icons'`
+
+   - ❌ `<Calendar className="h-4 w-4" />`
+   - ✅ `<Calendar01Icon className="h-4 w-4" />`
+
+   - ❌ Importing non-existent icons without adding them first
+   - ✅ Always verify icon exists in icons.tsx before using
+
+7. **Filter Variables Naming Convention**:
+   - State variables for filters should NOT have "Icon" suffix
+   - ✅ `const [statusFilter, setStatusFilter] = useState('')`
+   - ❌ `const [statusFilterIcon, setStatusFilter] = useState('')`
+   - Icon component names MUST have "Icon" suffix
+   - ✅ `<Calendar01Icon />`
+   - ❌ `<Calendar01 />`
+
+8. **Troubleshooting**:
+   - **Error: "Export [IconName] doesn't exist"**: Icon not added to icons.tsx
+   - **Error: "[iconName] is not defined"**: Variable name mismatch (check for accidental "Icon" suffix)
+   - **Icons not updating**: Clear cache with `rm -rf .next` and restart dev server
+   - **Build fails but dev works**: Check all pages, not just the one you're testing
 
 ## Important Notes
 

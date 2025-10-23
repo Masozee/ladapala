@@ -5,17 +5,17 @@ import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
 import {
-  Search,
-  Plus,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Star,
-  Edit,
-  MoreVertical
-} from 'lucide-react';
+  Search02Icon,
+  Add01Icon,
+  UserIcon,
+  Mail01Icon,
+  Call02Icon,
+  Location01Icon,
+  Calendar01Icon,
+  SparklesIcon,
+  PencilEdit02Icon,
+  MoreHorizontalIcon
+} from '@/lib/icons';
 
 interface Guest {
   id: number;
@@ -105,7 +105,7 @@ export default function CustomersPage() {
             onClick={() => router.push('/reservations/new')}
             className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 rounded-lg hover:bg-[#004147] transition-colors"
           >
-            <Plus className="h-4 w-4" />
+            <Add01Icon className="h-4 w-4" />
             <span>New Reservation</span>
           </button>
         </div>
@@ -114,7 +114,7 @@ export default function CustomersPage() {
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center space-x-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search02Icon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search customers by name, email, phone, or nationality..."
@@ -138,7 +138,7 @@ export default function CustomersPage() {
             </div>
           ) : customers.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <UserIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p>No customers found</p>
               {searchQuery && <p className="text-sm">Try adjusting your search criteria</p>}
             </div>
@@ -181,9 +181,9 @@ export default function CustomersPage() {
                               customer.is_vip ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'
                             }`}>
                               {customer.is_vip ? (
-                                <Star className="h-5 w-5" />
+                                <SparklesIcon className="h-5 w-5" />
                               ) : (
-                                <User className="h-5 w-5" />
+                                <UserIcon className="h-5 w-5" />
                               )}
                             </div>
                             <div className="ml-4">
@@ -206,11 +206,11 @@ export default function CustomersPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="space-y-1">
                             <div className="flex items-center text-sm text-gray-900">
-                              <Mail className="h-3 w-3 mr-2 text-gray-400" />
+                              <Mail01Icon className="h-3 w-3 mr-2 text-gray-400" />
                               {customer.email}
                             </div>
                             <div className="flex items-center text-sm text-gray-500">
-                              <Phone className="h-3 w-3 mr-2 text-gray-400" />
+                              <Call02Icon className="h-3 w-3 mr-2 text-gray-400" />
                               {customer.phone}
                             </div>
                           </div>
@@ -221,14 +221,14 @@ export default function CustomersPage() {
                           </div>
                           {customer.address && (
                             <div className="text-sm text-gray-500 flex items-start">
-                              <MapPin className="h-3 w-3 mr-1 text-gray-400 mt-0.5 flex-shrink-0" />
+                              <Location01Icon className="h-3 w-3 mr-1 text-gray-400 mt-0.5 flex-shrink-0" />
                               <span className="truncate max-w-xs">{customer.address}</span>
                             </div>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center text-sm text-gray-500">
-                            <Calendar className="h-3 w-3 mr-2 text-gray-400" />
+                            <Calendar01Icon className="h-3 w-3 mr-2 text-gray-400" />
                             {formatDate(customer.created_at)}
                           </div>
                           {customer.date_of_birth && (
@@ -256,7 +256,7 @@ export default function CustomersPage() {
                               }}
                               className="text-[#005357] hover:text-[#004147] flex items-center"
                             >
-                              <Plus className="h-4 w-4 mr-1" />
+                              <Add01Icon className="h-4 w-4 mr-1" />
                               Book
                             </button>
                             <button
@@ -266,7 +266,7 @@ export default function CustomersPage() {
                               }}
                               className="text-gray-400 hover:text-gray-500"
                             >
-                              <Edit className="h-4 w-4" />
+                              <PencilEdit02Icon className="h-4 w-4" />
                             </button>
                             <button
                               onClick={(e) => {
@@ -275,7 +275,7 @@ export default function CustomersPage() {
                               }}
                               className="text-gray-400 hover:text-gray-500"
                             >
-                              <MoreVertical className="h-4 w-4" />
+                              <MoreHorizontalIcon className="h-4 w-4" />
                             </button>
                           </div>
                         </td>

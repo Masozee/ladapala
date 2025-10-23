@@ -19,8 +19,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write('Starting to seed Ladapala restaurant data...')
 
-        # Clear existing data
-        self.stdout.write('Clearing existing data...')
+        # Clear existing data (only restaurant-specific data)
+        self.stdout.write('Clearing existing restaurant data...')
         KitchenOrder.objects.all().delete()
         OrderItem.objects.all().delete()
         Payment.objects.all().delete()
@@ -31,10 +31,24 @@ class Command(BaseCommand):
         Inventory.objects.all().delete()
         Product.objects.all().delete()
         Category.objects.all().delete()
-        Staff.objects.all().delete()
+
+        # Only delete staff/users created by THIS seed command (those with @ladapala.co.id emails)
+        # This preserves staff/users created by seed_auth_users or manually
+        seed_user_emails = [
+            'budi.admin@ladapala.co.id',
+            'siti.manager@ladapala.co.id',
+            'sari.kasir@ladapala.co.id',
+            'andi.kasir@ladapala.co.id',
+            'dewi.kasir@ladapala.co.id',
+            'rini.kasir@ladapala.co.id',
+            'agus.dapur@ladapala.co.id',
+            'rina.dapur@ladapala.co.id',
+            'joko.gudang@ladapala.co.id'
+        ]
+        User.objects.filter(email__in=seed_user_emails).delete()
+
         Branch.objects.all().delete()
         Restaurant.objects.all().delete()
-        User.objects.filter(is_superuser=False).delete()
 
         # Create Ladapala Restaurant
         restaurant = Restaurant.objects.create(

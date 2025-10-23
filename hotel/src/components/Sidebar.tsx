@@ -8,28 +8,28 @@ import * as Separator from '@radix-ui/react-separator';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
-  Building2,
-  Users,
-  Headphones,
-  Hotel,
-  Calendar,
-  CreditCard,
-  FileText,
-  Settings,
-  UserCheck,
-  Bed,
-  DoorOpen,
-  Package,
-  UserCog,
-  Clock,
-  TrendingUp,
-  HelpCircle,
-  Wrench,
-  Shield,
-  Home,
-  User,
-  ChevronRight
-} from 'lucide-react';
+  Building03Icon,
+  UserMultiple02Icon,
+  HeadphonesIcon,
+  HotelIcon,
+  Calendar01Icon,
+  CreditCardIcon,
+  File01Icon,
+  Settings02Icon,
+  UserCheckIcon,
+  BedIcon,
+  Door01Icon,
+  PackageIcon,
+  UserSettings01Icon,
+  Clock01Icon,
+  ArrowUp01Icon,
+  QuestionIcon,
+  Wrench01Icon,
+  Shield01Icon,
+  Home01Icon,
+  UserIcon,
+  ChevronRightIcon
+} from '@/lib/icons';
 
 interface MenuItem {
   name: string;
@@ -43,32 +43,32 @@ const Sidebar = () => {
   const pathname = usePathname();
 
   const frontlineActions: MenuItem[] = [
-    { name: 'Dashboard', icon: Home, href: '/' },
-    { name: 'Bookings', icon: Calendar, href: '/bookings', badge: '12' },
-    { name: 'Room Status', icon: Bed, href: '/rooms' },
-    { name: 'Complaints', icon: HelpCircle, href: '/complaints', badge: '5' },
-    { name: 'Payments', icon: CreditCard, href: '/payments' },
-    { name: 'Reports', icon: FileText, href: '/reports' },
+    { name: 'Dashboard', icon: Home01Icon, href: '/' },
+    { name: 'Bookings', icon: Calendar01Icon, href: '/bookings', badge: '12' },
+    { name: 'Room Status', icon: BedIcon, href: '/rooms' },
+    { name: 'Complaints', icon: QuestionIcon, href: '/complaints', badge: '5' },
+    { name: 'Payments', icon: CreditCardIcon, href: '/payments' },
+    { name: 'Reports', icon: File01Icon, href: '/reports' },
   ];
 
   const bottomActions: MenuItem[] = [
     { 
       name: 'Office', 
-      icon: Building2, 
+      icon: Building03Icon, 
       submenu: [
-        { name: 'Office Dashboard', icon: Building2, href: '/office' },
-        { name: 'Analytics', icon: TrendingUp, href: '/office/analytics' },
-        { name: 'Employees', icon: UserCog, href: '/office/employees' },
-        { name: 'Financial', icon: CreditCard, href: '/office/financial' },
-        { name: 'Warehouse', icon: Package, href: '/office/warehouse' },
-        { name: 'Schedules', icon: Clock, href: '/office/schedules' },
-        { name: 'Reports', icon: FileText, href: '/office/reports' },
-        { name: 'Administration', icon: Shield, href: '/office/admin' },
+        { name: 'Office Dashboard', icon: Building03Icon, href: '/office' },
+        { name: 'Analytics', icon: ArrowUp01Icon, href: '/office/analytics' },
+        { name: 'Employees', icon: UserSettings01Icon, href: '/office/employees' },
+        { name: 'Financial', icon: CreditCardIcon, href: '/office/financial' },
+        { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse' },
+        { name: 'Schedules', icon: Clock01Icon, href: '/office/schedules' },
+        { name: 'Reports', icon: File01Icon, href: '/office/reports' },
+        { name: 'Administration', icon: Shield01Icon, href: '/office/admin' },
       ]
     },
-    { name: 'Calendar', icon: Calendar, href: '/calendar' },
-    { name: 'Settings', icon: Settings, href: '/settings' },
-    { name: 'Profile', icon: User, href: '/profile' },
+    { name: 'Calendar', icon: Calendar01Icon, href: '/calendar' },
+    { name: 'Settings', icon: Settings02Icon, href: '/settings' },
+    { name: 'Profile', icon: UserIcon, href: '/profile' },
   ];
 
   const isActive = (href: string) => {

@@ -5,7 +5,19 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Search, Bell, Sun, Moon, X, ChevronRight, Calendar, Clock, MapPin, Users, CheckCircle } from 'lucide-react';
+import {
+  Search02Icon,
+  Notification02Icon,
+  Sun03Icon,
+  Moon02Icon,
+  Cancel01Icon,
+  ChevronRightIcon,
+  Calendar01Icon,
+  Clock01Icon,
+  Location01Icon,
+  UserMultipleIcon,
+  UserCheckIcon
+} from '@/lib/icons';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -79,7 +91,7 @@ export const HeaderActions = () => {
       <Dialog.Root open={searchOpen} onOpenChange={setSearchOpen}>
         <Dialog.Trigger asChild>
           <button className={`p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}>
-            <Search className="h-5 w-5" />
+            <Search02Icon className="h-5 w-5" />
           </button>
         </Dialog.Trigger>
         <Dialog.Portal>
@@ -87,11 +99,11 @@ export const HeaderActions = () => {
           <Dialog.Content className="fixed top-[20%] left-1/2 transform -translate-x-1/2 bg-white shadow-lg max-w-md w-full mx-4 p-6 z-50">
             <div className="flex items-center justify-between mb-4">
               <Dialog.Title className="text-lg font-semibold text-gray-900">
-                Search
+                Search02Icon
               </Dialog.Title>
               <Dialog.Close asChild>
                 <button className="p-1 hover:bg-gray-100 text-gray-500">
-                  <X className="h-4 w-4" />
+                  <Cancel01Icon className="h-4 w-4" />
                 </button>
               </Dialog.Close>
             </div>
@@ -118,7 +130,7 @@ export const HeaderActions = () => {
                     type="submit"
                     className="px-4 py-2 bg-[#005357] text-white hover:bg-[#004147] transition-colors"
                   >
-                    Search
+                    Search02Icon
                   </button>
                 </div>
               </div>
@@ -131,7 +143,7 @@ export const HeaderActions = () => {
       <Dialog.Root open={calendarOpen} onOpenChange={setCalendarOpen}>
         <Dialog.Trigger asChild>
           <button className={`p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}>
-            <Calendar className="h-5 w-5" />
+            <Calendar01Icon className="h-5 w-5" />
           </button>
         </Dialog.Trigger>
         <Dialog.Portal>
@@ -139,12 +151,12 @@ export const HeaderActions = () => {
           <Dialog.Content className="fixed top-[20%] left-1/2 transform -translate-x-1/2 bg-white shadow-lg max-w-md w-full mx-4 p-6 z-50">
             <div className="flex items-center justify-between mb-4">
               <Dialog.Title className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-[#005357]" />
+                <Calendar01Icon className="h-5 w-5 text-[#005357]" />
                 <span>Today's Events</span>
               </Dialog.Title>
               <Dialog.Close asChild>
                 <button className="p-1 hover:bg-gray-100 text-gray-500">
-                  <X className="h-4 w-4" />
+                  <Cancel01Icon className="h-4 w-4" />
                 </button>
               </Dialog.Close>
             </div>
@@ -165,15 +177,15 @@ export const HeaderActions = () => {
                         <h4 className="font-medium text-gray-900">{event.title}</h4>
                         <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
                           <div className="flex items-center space-x-1">
-                            <Clock className="h-3 w-3" />
+                            <Clock01Icon className="h-3 w-3" />
                             <span>{event.time}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <MapPin className="h-3 w-3" />
+                            <Location01Icon className="h-3 w-3" />
                             <span>{event.location}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <Users className="h-3 w-3" />
+                            <UserMultipleIcon className="h-3 w-3" />
                             <span>{event.attendees}</span>
                           </div>
                         </div>
@@ -189,7 +201,7 @@ export const HeaderActions = () => {
                 ))
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  <Calendar className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                  <Calendar01Icon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                   <p>No events scheduled for today</p>
                 </div>
               )}
@@ -200,7 +212,7 @@ export const HeaderActions = () => {
                 className="px-4 py-2 bg-[#005357] text-white hover:bg-[#004147] transition-colors text-sm"
                 onClick={() => setCalendarOpen(false)}
               >
-                View Full Calendar
+                View Full Calendar01Icon
               </Link>
             </div>
           </Dialog.Content>
@@ -209,7 +221,7 @@ export const HeaderActions = () => {
 
       {/* Notifications */}
       <button className={`relative p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}>
-        <Bell className="h-5 w-5" />
+        <Notification02Icon className="h-5 w-5" />
         <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center">
           3
         </span>
@@ -220,7 +232,7 @@ export const HeaderActions = () => {
         onClick={() => setDarkMode(!darkMode)}
         className={`p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}
       >
-        {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        {darkMode ? <Sun03Icon className="h-5 w-5" /> : <Moon02Icon className="h-5 w-5" />}
       </button>
     </div>
   );
@@ -289,7 +301,7 @@ const AppLayout = ({ children, breadcrumb }: AppLayoutProps) => {
             <nav className="flex items-center space-x-2 text-sm">
               {breadcrumbItems.map((item, index) => (
                 <div key={index} className="flex items-center">
-                  {index > 0 && <ChevronRight className="h-4 w-4 text-gray-400 mx-2" />}
+                  {index > 0 && <ChevronRightIcon className="h-4 w-4 text-gray-400 mx-2" />}
                   {item.href && index < breadcrumbItems.length - 1 ? (
                     <Link href={item.href} className="text-gray-600 hover:text-[#005357] transition-colors">
                       {item.label}
@@ -307,7 +319,7 @@ const AppLayout = ({ children, breadcrumb }: AppLayoutProps) => {
             <div className="flex items-center space-x-6">
               {/* Today's Date & Time */}
               <div className="flex items-center space-x-3 text-sm text-gray-600 border-r border-gray-300 pr-6">
-                <Calendar className="h-4 w-4" />
+                <Calendar01Icon className="h-4 w-4" />
                 <div className="flex flex-col">
                   <span className="font-medium">
                     {currentTime.toLocaleDateString('en-US', {
@@ -318,7 +330,7 @@ const AppLayout = ({ children, breadcrumb }: AppLayoutProps) => {
                     })}
                   </span>
                   <div className="flex items-center space-x-1 text-xs text-gray-500">
-                    <Clock className="h-3 w-3" />
+                    <Clock01Icon className="h-3 w-3" />
                     <span>
                       {currentTime.toLocaleTimeString('en-US', {
                         hour: '2-digit',

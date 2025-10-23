@@ -3,58 +3,37 @@
 import { useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Shield,
-  Key,
-  Bell,
-  Clock,
-  Globe,
-  Camera,
-  Edit3,
-  Save,
-  X,
-  Check,
-  Eye,
-  EyeOff,
-  Upload,
-  Download,
-  Settings,
-  Award,
-  Star,
-  TrendingUp,
-  Users,
-  Building,
-  Briefcase,
-  GraduationCap,
-  Languages,
-  Heart,
-  Coffee,
+  UserIcon,
+  Mail01Icon,
+  Call02Icon,
+  Location01Icon,
+  Calendar01Icon,
+  Shield01Icon,
+  Notification02Icon,
+  Clock01Icon,
+  PackageIcon,
+  ViewIcon,
+  PencilEdit02Icon,
+  Cancel01Icon,
+  UserCheckIcon,
+  EyeIcon,
+  ArrowUp01Icon,
+  ChevronDownIcon,
+  Settings02Icon,
+  SparklesIcon,
+  UserMultipleIcon,
+  Building03Icon,
   Gamepad2,
   Music,
   Book,
-  Plane,
-  Car,
   Home,
-  Smartphone,
-  Laptop,
-  Wifi,
-  Lock,
-  AlertTriangle,
-  CheckCircle,
-  Info,
-  Plus,
-  Minus,
-  Trash2,
-  Activity,
-  BarChart3,
-  Target,
-  FileText,
-  Image
-} from 'lucide-react';
+  AlertCircleIcon,
+  Alert01Icon,
+  Add01Icon,
+  CancelCircleIcon,
+  PieChartIcon,
+  File01Icon
+} from '@/lib/icons';
 
 const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -173,7 +152,7 @@ const ProfilePage = () => {
       }
     },
     
-    // Security Settings
+    // Security Settings02Icon
     security: {
       twoFactorEnabled: true,
       lastPasswordChange: '2024-06-15',
@@ -290,13 +269,13 @@ const ProfilePage = () => {
   };
 
   const sections = [
-    { id: 'personal', name: 'Personal', icon: User },
-    { id: 'professional', name: 'Work', icon: Briefcase },
-    { id: 'contact', name: 'Contact', icon: Mail },
-    { id: 'preferences', name: 'Settings', icon: Settings },
-    { id: 'security', name: 'Security', icon: Shield },
-    { id: 'interests', name: 'Interests', icon: Heart },
-    { id: 'statistics', name: 'Stats', icon: BarChart3 }
+    { id: 'personal', name: 'Personal', icon: UserIcon },
+    { id: 'professional', name: 'Work', icon: PackageIcon },
+    { id: 'contact', name: 'Contact', icon: Mail01Icon },
+    { id: 'preferences', name: 'Settings', icon: Settings02Icon },
+    { id: 'security', name: 'Security', icon: Shield01Icon },
+    { id: 'interests', name: 'Interests', icon: SparklesIcon },
+    { id: 'statistics', name: 'Stats', icon: PieChartIcon }
   ];
 
   const renderPersonalInfo = () => (
@@ -310,7 +289,7 @@ const ProfilePage = () => {
               <p className="text-sm text-gray-100 mt-1">Your basic profile details</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <User className="h-4 w-4 text-[#005357]" />
+              <UserIcon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
@@ -320,10 +299,10 @@ const ProfilePage = () => {
             <div className="flex-shrink-0 mb-6 lg:mb-0">
               <div className="relative">
                 <div className="w-32 h-32 bg-gray-200 flex items-center justify-center">
-                  <User className="h-16 w-16 text-gray-400" />
+                  <UserIcon className="h-16 w-16 text-gray-400" />
                 </div>
                 <button className="absolute bottom-0 right-0 w-8 h-8 bg-[#005357] text-white flex items-center justify-center hover:bg-[#004147] transition-colors">
-                  <Camera className="h-4 w-4" />
+                  <ViewIcon className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -420,7 +399,7 @@ const ProfilePage = () => {
               <p className="text-sm text-gray-100 mt-1">Your language abilities and personal skills</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <Languages className="h-4 w-4 text-[#005357]" />
+              <PackageIcon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
@@ -452,7 +431,7 @@ const ProfilePage = () => {
               <p className="text-sm text-gray-100 mt-1">Your work details and career information</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <Briefcase className="h-4 w-4 text-[#005357]" />
+              <PackageIcon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
@@ -491,7 +470,7 @@ const ProfilePage = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Performance Rating</label>
               <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600 flex items-center space-x-2">
-                <Star className="h-4 w-4 text-yellow-500" />
+                <SparklesIcon className="h-4 w-4 text-yellow-500" />
                 <span>{profile.professional.performanceRating}/5.0</span>
               </div>
             </div>
@@ -519,7 +498,7 @@ const ProfilePage = () => {
               <div className="space-y-2">
                 {profile.professional.certifications.map((cert, index) => (
                   <div key={index} className="flex items-center space-x-2 p-2 bg-white border">
-                    <GraduationCap className="h-4 w-4 text-[#005357]" />
+                    <SparklesIcon className="h-4 w-4 text-[#005357]" />
                     <span className="text-sm text-gray-700">{cert}</span>
                   </div>
                 ))}
@@ -589,7 +568,7 @@ const ProfilePage = () => {
                         onClick={() => togglePassword('current')}
                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
                       >
-                        {showPasswords.current ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
+                        {showPasswords.current ? <EyeIcon className="h-4 w-4 text-gray-400" /> : <EyeIcon className="h-4 w-4 text-gray-400" />}
                       </button>
                     </div>
                   </div>
@@ -608,7 +587,7 @@ const ProfilePage = () => {
                           onClick={() => togglePassword('new')}
                           className="absolute inset-y-0 right-0 pr-3 flex items-center"
                         >
-                          {showPasswords.new ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
+                          {showPasswords.new ? <EyeIcon className="h-4 w-4 text-gray-400" /> : <EyeIcon className="h-4 w-4 text-gray-400" />}
                         </button>
                       </div>
                     </div>
@@ -626,7 +605,7 @@ const ProfilePage = () => {
                           onClick={() => togglePassword('confirm')}
                           className="absolute inset-y-0 right-0 pr-3 flex items-center"
                         >
-                          {showPasswords.confirm ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
+                          {showPasswords.confirm ? <EyeIcon className="h-4 w-4 text-gray-400" /> : <EyeIcon className="h-4 w-4 text-gray-400" />}
                         </button>
                       </div>
                     </div>
@@ -682,9 +661,9 @@ const ProfilePage = () => {
                     <div key={device.id} className="flex items-center justify-between p-3 bg-gray-50 border">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          {device.name.includes('MacBook') ? <Laptop className="h-4 w-4 text-white" /> : 
-                           device.name.includes('iPhone') ? <Smartphone className="h-4 w-4 text-white" /> :
-                           <Laptop className="h-4 w-4 text-white" />}
+                          {device.name.includes('MacBook') ? <PackageIcon className="h-4 w-4 text-white" /> : 
+                           device.name.includes('iPhone') ? <Call02Icon className="h-4 w-4 text-white" /> :
+                           <PackageIcon className="h-4 w-4 text-white" />}
                         </div>
                         <div>
                           <div className="font-medium text-gray-900">{device.name}</div>
@@ -713,7 +692,7 @@ const ProfilePage = () => {
               <p className="text-sm text-gray-100 mt-1">Your work performance and achievements</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <BarChart3 className="h-4 w-4 text-[#005357]" />
+              <PieChartIcon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
@@ -787,13 +766,13 @@ const ProfilePage = () => {
                   <p className="text-sm text-gray-100 mt-1">This section is under development</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Info className="h-4 w-4 text-[#005357]" />
+                  <Alert01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
             <div className="p-6 bg-gray-50">
               <div className="text-center py-12">
-                <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <Alert01Icon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Section Coming Soon</h3>
                 <p className="text-gray-600">This profile section is currently being developed.</p>
               </div>
@@ -821,12 +800,12 @@ const ProfilePage = () => {
                   : 'bg-[#005357] text-white hover:bg-[#004147]'
               }`}
             >
-              {isEditing ? <X className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
+              {isEditing ? <Cancel01Icon className="h-4 w-4" /> : <PencilEdit02Icon className="h-4 w-4" />}
               <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
             </button>
             {isEditing && (
               <button className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors text-sm font-medium">
-                <Save className="h-4 w-4" />
+                <PackageIcon className="h-4 w-4" />
                 <span>Save Changes</span>
               </button>
             )}
@@ -838,7 +817,7 @@ const ProfilePage = () => {
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-white/20 flex items-center justify-center">
-                <User className="h-8 w-8 text-white" />
+                <UserIcon className="h-8 w-8 text-white" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">{profile.personal.firstName} {profile.personal.lastName}</h2>

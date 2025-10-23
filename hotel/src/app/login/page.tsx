@@ -4,7 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff, Hotel, Lock, Mail, User, Shield, CheckCircle } from 'lucide-react';
+import {
+  EyeIcon,
+  HotelIcon,
+  Shield01Icon,
+  Mail01Icon,
+  UserIcon,
+  UserCheckIcon
+} from '@/lib/icons';
 import { buildApiUrl } from '@/lib/config';
 
 const LoginPage = () => {
@@ -68,17 +75,17 @@ const LoginPage = () => {
 
   const features = [
     {
-      icon: Hotel,
+      icon: HotelIcon,
       title: 'Complete Hotel Management',
       description: 'Manage rooms, reservations, guests, and operations from one unified platform'
     },
     {
-      icon: Shield,
+      icon: Shield01Icon,
       title: 'Secure & Reliable',
       description: 'Enterprise-grade security with 99.9% uptime guarantee for your peace of mind'
     },
     {
-      icon: CheckCircle,
+      icon: UserCheckIcon,
       title: 'Proven Results',
       description: 'Used by 500+ hotels worldwide with average 30% efficiency improvement'
     }
@@ -92,7 +99,7 @@ const LoginPage = () => {
           <div>
             <div className="flex items-center space-x-3 mb-8">
               <div className="w-12 h-12 bg-gray-50 flex items-center justify-center p-1">
-                <Image
+                <ViewIcon
                   src="/logo.png"
                   alt="Kapulaga Hotel Logo"
                   width={40}
@@ -139,7 +146,7 @@ const LoginPage = () => {
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <div className="w-8 h-8 bg-gray-100 flex items-center justify-center">
-                      <User className="h-4 w-4 text-gray-600" />
+                      <UserIcon className="h-4 w-4 text-gray-600" />
                     </div>
                   </div>
                 </div>
@@ -163,7 +170,7 @@ const LoginPage = () => {
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <div className="w-8 h-8 bg-gray-100 flex items-center justify-center">
-                      <Lock className="h-4 w-4 text-gray-600" />
+                      <Shield01Icon className="h-4 w-4 text-gray-600" />
                     </div>
                   </div>
                   <button
@@ -172,9 +179,9 @@ const LoginPage = () => {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                     ) : (
-                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                     )}
                   </button>
                 </div>

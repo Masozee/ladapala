@@ -2,30 +2,28 @@
 
 import { useState } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { 
-  Wrench, 
-  Bed, 
-  Package, 
-  AlertTriangle,
-  Clock,
-  CheckCircle,
-  Users,
-  TrendingUp,
-  Calendar,
-  MessageSquare,
-  Star,
+import {
+  Wrench01Icon,
+  BedIcon,
+  PackageIcon,
+  AlertCircleIcon,
+  Clock01Icon,
+  UserCheckIcon,
+  UserMultipleIcon,
+  ArrowUp01Icon,
+  Calendar01Icon,
+  Mail01Icon,
+  SparklesIcon,
   ArrowRight,
-  Plus,
-  Filter,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  Phone,
-  Mail,
-  MapPin,
-  Timer
-} from 'lucide-react';
+  Add01Icon,
+  FilterIcon,
+  MoreHorizontalIcon,
+  EyeIcon,
+  PencilEdit02Icon,
+  CancelCircleIcon,
+  Call02Icon,
+  Location01Icon
+} from '@/lib/icons';
 
 export default function SupportDashboard() {
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -199,11 +197,11 @@ export default function SupportDashboard() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'maintenance': return <Wrench className="h-4 w-4" />;
-      case 'housekeeping': return <Bed className="h-4 w-4" />;
-      case 'amenities': return <Package className="h-4 w-4" />;
-      case 'emergency': return <AlertTriangle className="h-4 w-4" />;
-      default: return <MessageSquare className="h-4 w-4" />;
+      case 'maintenance': return <Wrench01Icon className="h-4 w-4" />;
+      case 'housekeeping': return <BedIcon className="h-4 w-4" />;
+      case 'amenities': return <PackageIcon className="h-4 w-4" />;
+      case 'emergency': return <Alert01Icon className="h-4 w-4" />;
+      default: return <Mail01Icon className="h-4 w-4" />;
     }
   };
 
@@ -254,7 +252,7 @@ export default function SupportDashboard() {
                   <p className="text-sm text-gray-100 mt-1">Sedang dikerjakan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Wrench className="h-4 w-4 text-[#005357]" />
+                  <Wrench01Icon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -274,7 +272,7 @@ export default function SupportDashboard() {
                   <p className="text-sm text-gray-100 mt-1">Tugas pending</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Bed className="h-4 w-4 text-[#005357]" />
+                  <BedIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -294,7 +292,7 @@ export default function SupportDashboard() {
                   <p className="text-sm text-gray-100 mt-1">Permintaan baru</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Package className="h-4 w-4 text-[#005357]" />
+                  <PackageIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -314,7 +312,7 @@ export default function SupportDashboard() {
                   <p className="text-sm text-gray-100 mt-1">Selesai hari ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -339,11 +337,11 @@ export default function SupportDashboard() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <button className="bg-[#005357] text-white px-3 py-2 text-sm font-medium hover:bg-[#004347] transition-colors flex items-center space-x-2">
-                    <Plus className="h-4 w-4" />
+                    <Add01Icon className="h-4 w-4" />
                     <span>New Request</span>
                   </button>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <MessageSquare className="h-4 w-4 text-[#005357]" />
+                    <Mail01Icon className="h-4 w-4 text-[#005357]" />
                   </div>
                 </div>
               </div>
@@ -371,25 +369,25 @@ export default function SupportDashboard() {
                         <p className="text-sm text-gray-100 mt-1">{request.description}</p>
                         <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                           <div className="flex items-center space-x-1">
-                            <MapPin className="h-3 w-3" />
+                            <Location01Icon className="h-3 w-3" />
                             <span>{request.location}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <Users className="h-3 w-3" />
+                            <UserMultipleIcon className="h-3 w-3" />
                             <span>{request.assignedTo}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <Timer className="h-3 w-3" />
+                            <Clock01Icon className="h-3 w-3" />
                             <span>{request.estimatedTime}</span>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-1 ml-4">
                         <button className="p-1 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded">
-                          <Eye className="h-4 w-4" />
+                          <EyeIcon className="h-4 w-4" />
                         </button>
                         <button className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                          <Edit className="h-4 w-4" />
+                          <PencilEdit02Icon className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -408,7 +406,7 @@ export default function SupportDashboard() {
                   <p className="text-sm text-gray-100 mt-1">Status real-time tim support</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Users className="h-4 w-4 text-[#005357]" />
+                  <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -437,10 +435,10 @@ export default function SupportDashboard() {
                         <div className="text-xs text-gray-500">{member.location}</div>
                         <div className="flex items-center space-x-2 mt-2">
                           <button className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors rounded">
-                            <Phone className="h-4 w-4" />
+                            <Call02Icon className="h-4 w-4" />
                           </button>
                           <button className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                            <Mail className="h-4 w-4" />
+                            <Mail01Icon className="h-4 w-4" />
                           </button>
                         </div>
                       </div>
@@ -461,7 +459,7 @@ export default function SupportDashboard() {
                 <p className="text-sm text-gray-100 mt-1">Aksi cepat untuk tugas support umum</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-[#005357]" />
+                <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
           </div>
@@ -471,7 +469,7 @@ export default function SupportDashboard() {
               <button className="p-4 bg-white hover:bg-gray-50 transition-colors text-left">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-blue-100 flex items-center justify-center">
-                    <Wrench className="h-5 w-5 text-blue-600" />
+                    <Wrench01Icon className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">Create Maintenance Request</h3>
@@ -483,7 +481,7 @@ export default function SupportDashboard() {
               <button className="p-4 bg-white hover:bg-gray-50 transition-colors text-left">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-purple-100 flex items-center justify-center">
-                    <Bed className="h-5 w-5 text-purple-600" />
+                    <BedIcon className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">Schedule Housekeeping</h3>
@@ -495,7 +493,7 @@ export default function SupportDashboard() {
               <button className="p-4 bg-white hover:bg-gray-50 transition-colors text-left">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-green-100 flex items-center justify-center">
-                    <Package className="h-5 w-5 text-green-600" />
+                    <PackageIcon className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">Request Amenities</h3>

@@ -3,25 +3,22 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
-import { 
-  CreditCard, 
-  DollarSign, 
-  Receipt, 
-  User, 
-  Calendar,
-  Bed,
-  Plus,
-  Minus,
-  Trash2,
-  Save,
-  Printer,
-  ArrowLeft,
+import {
+  CreditCardIcon,
+  File01Icon,
+  UserIcon,
+  Calendar01Icon,
+  BedIcon,
+  Add01Icon,
+  Cancel01Icon,
+  CancelCircleIcon,
+  PackageIcon,
+  ChevronLeftIcon,
   Calculator,
   Hash,
-  Clock,
-  Check,
-  X
-} from 'lucide-react';
+  Clock01Icon,
+  UserCheckIcon
+} from '@/lib/icons';
 
 interface LineItem {
   id: string;
@@ -56,10 +53,10 @@ const PaymentsPage = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   
   const paymentMethods: PaymentMethod[] = [
-    { id: 'cash', name: 'Cash', icon: DollarSign, enabled: true },
-    { id: 'credit_card', name: 'Credit Card', icon: CreditCard, enabled: true },
-    { id: 'debit_card', name: 'Debit Card', icon: CreditCard, enabled: true },
-    { id: 'bank_transfer', name: 'Bank Transfer', icon: Receipt, enabled: true },
+    { id: 'cash', name: 'Cash', icon: CreditCardIcon, enabled: true },
+    { id: 'credit_card', name: 'Credit Card', icon: CreditCardIcon, enabled: true },
+    { id: 'debit_card', name: 'Debit Card', icon: CreditCardIcon, enabled: true },
+    { id: 'bank_transfer', name: 'Bank Transfer', icon: File01Icon, enabled: true },
   ];
 
   const serviceCategories = [
@@ -187,7 +184,7 @@ const PaymentsPage = () => {
               onClick={() => router.back()}
               className="p-2 hover:bg-gray-100 transition-colors"
             >
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
+              <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
             </button>
           </div>
           
@@ -224,7 +221,7 @@ const PaymentsPage = () => {
                       <p className="text-sm text-gray-600 mt-1">Current reservation details</p>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
+                      <UserIcon className="h-4 w-4 text-white" />
                     </div>
                   </div>
                 </div>
@@ -260,7 +257,7 @@ const PaymentsPage = () => {
                     <p className="text-sm text-gray-600 mt-1">Add common hotel services and amenities</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <Plus className="h-4 w-4 text-white" />
+                    <Add01Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -294,7 +291,7 @@ const PaymentsPage = () => {
                     <p className="text-sm text-gray-600 mt-1">Current charges and fees</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <Receipt className="h-4 w-4 text-white" />
+                    <File01Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -302,7 +299,7 @@ const PaymentsPage = () => {
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                   {lineItems.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
-                      <Receipt className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                      <File01Icon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                       <p>No items added</p>
                     </div>
                   ) : (
@@ -319,7 +316,7 @@ const PaymentsPage = () => {
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             className="p-1 hover:bg-gray-100 text-gray-600"
                           >
-                            <Minus className="h-3 w-3" />
+                            <Cancel01Icon className="h-3 w-3" />
                           </button>
                           <span className="text-sm font-medium w-6 text-center">
                             {item.quantity}
@@ -328,7 +325,7 @@ const PaymentsPage = () => {
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             className="p-1 hover:bg-gray-100 text-gray-600"
                           >
-                            <Plus className="h-3 w-3" />
+                            <Add01Icon className="h-3 w-3" />
                           </button>
                           <button
                             onClick={() => removeLineItem(item.id)}
@@ -375,7 +372,7 @@ const PaymentsPage = () => {
                       <p className="text-sm text-gray-600 mt-1">Select payment type</p>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                      <CreditCard className="h-4 w-4 text-white" />
+                      <CreditCardIcon className="h-4 w-4 text-white" />
                     </div>
                   </div>
                 </div>
@@ -441,12 +438,12 @@ const PaymentsPage = () => {
                       </>
                     ) : paymentStatus === 'completed' ? (
                       <>
-                        <Check className="h-5 w-5 mr-2" />
+                        <UserCheckIcon className="h-5 w-5 mr-2" />
                         Payment Completed
                       </>
                     ) : (
                       <>
-                        <CreditCard className="h-5 w-5 mr-2" />
+                        <CreditCardIcon className="h-5 w-5 mr-2" />
                         Process Payment ({formatCurrency(totalAmount)})
                       </>
                     )}

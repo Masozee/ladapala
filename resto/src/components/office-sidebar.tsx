@@ -15,7 +15,8 @@ import {
   UserIcon,
   ArrowLeft01Icon,
   Menu02Icon,
-  UserGroupIcon
+  UserGroupIcon,
+  UserMultiple02Icon
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import {
@@ -41,6 +42,11 @@ const officeItems: SidebarItem[] = [
     name: "Vendor",
     href: "/office/vendor",
     icon: UserGroupIcon,
+  },
+  {
+    name: "Customer",
+    href: "/office/customer",
+    icon: UserMultiple02Icon,
   },
   {
     name: "Jadwal",
