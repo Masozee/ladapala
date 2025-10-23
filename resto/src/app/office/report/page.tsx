@@ -34,6 +34,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { api } from "@/lib/api"
 
 
@@ -50,6 +56,62 @@ export default function ReportPage() {
   useEffect(() => {
     fetchReports()
   }, [selectedPeriod, selectedBranch])
+
+  const handleExportPDF = async () => {
+    try {
+      const params = new URLSearchParams({
+        period: selectedPeriod,
+        ...(selectedBranch !== "all" && { branch: selectedBranch })
+      })
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/export_pdf/?${params}`, {
+        credentials: 'include'
+      })
+
+      if (!response.ok) throw new Error('Export failed')
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `laporan_${new Date().toISOString().split('T')[0]}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      alert('Gagal mengexport PDF')
+    }
+  }
+
+  const handleExportExcel = async () => {
+    try {
+      const params = new URLSearchParams({
+        period: selectedPeriod,
+        ...(selectedBranch !== "all" && { branch: selectedBranch })
+      })
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/export_excel/?${params}`, {
+        credentials: 'include'
+      })
+
+      if (!response.ok) throw new Error('Export failed')
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `data_laporan_${new Date().toISOString().split('T')[0]}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Error exporting Excel:', error)
+      alert('Gagal mengexport Excel')
+    }
+  }
 
   const fetchReports = async () => {
     setLoading(true)
@@ -131,10 +193,24 @@ export default function ReportPage() {
             <HugeiconsIcon icon={FilterIcon} size={16} strokeWidth={2} className="mr-2 h-4 w-4" />
             Filter
           </Button>
-          <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black">
-            <HugeiconsIcon icon={Download01Icon} size={16} strokeWidth={2} className="mr-2 h-4 w-4" />
-            Export
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black">
+                <HugeiconsIcon icon={Download01Icon} size={16} strokeWidth={2} className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportPDF}>
+                <HugeiconsIcon icon={Download01Icon} size={16} strokeWidth={2} className="mr-2" />
+                Export PDF (Laporan Lengkap)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportExcel}>
+                <HugeiconsIcon icon={Download01Icon} size={16} strokeWidth={2} className="mr-2" />
+                Export Excel (Data Saja)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

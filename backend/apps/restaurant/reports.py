@@ -10,8 +10,23 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Avg, Count, F, Q, DecimalField, OuterRef, Subquery
 from django.db.models.functions import TruncDate, Coalesce
 from django.utils import timezone
+from django.http import HttpResponse
 from datetime import timedelta, datetime
 from decimal import Decimal
+from io import BytesIO
+
+# PDF generation
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+
+# Excel generation
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
 
 from .models import Order, OrderItem, Payment, Product, InventoryTransaction, CashierSession
 from .permissions import IsManagerOrAdmin
@@ -554,3 +569,282 @@ class ReportViewSet(viewsets.ViewSet):
                 }
             }
         })
+
+    @action(detail=False, methods=['get'])
+    def export_pdf(self, request):
+        """
+        Export full report as PDF with formatting
+
+        Query params: period, branch, start_date, end_date
+
+        Returns: PDF file with complete formatted report
+        """
+        period = request.query_params.get('period', 'week')
+        branch_id = request.query_params.get('branch')
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+
+        start_date, end_date = self.get_date_range(period, start_date_str, end_date_str)
+
+        # Fetch all report data
+        # Re-use existing action methods to get data
+        request._request.GET = request._request.GET.copy()
+        sales_data = self.sales(request).data
+        expenses_data = self.expenses(request).data
+        products_data = self.products(request).data
+        trends_data = self.trends(request).data
+
+        # Create PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4,
+                                rightMargin=30, leftMargin=30,
+                                topMargin=30, bottomMargin=30)
+
+        # Container for PDF elements
+        elements = []
+        styles = getSampleStyleSheet()
+
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#005357'),
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+
+        elements.append(Paragraph('Laporan Penjualan & Keuangan', title_style))
+        elements.append(Paragraph(f'Periode: {start_date.strftime("%d/%m/%Y")} - {end_date.strftime("%d/%m/%Y")}',
+                                  styles['Normal']))
+        elements.append(Spacer(1, 20))
+
+        # Summary Section
+        elements.append(Paragraph('Ringkasan Penjualan', styles['Heading2']))
+        summary_data = [
+            ['Metrik', 'Nilai'],
+            ['Total Pendapatan', f"Rp {sales_data['summary']['total_revenue']:,.0f}"],
+            ['Total Pesanan', f"{sales_data['summary']['total_orders']}"],
+            ['Rata-rata Nilai Pesanan', f"Rp {sales_data['summary']['avg_order_value']:,.0f}"],
+            ['Total Pengeluaran', f"Rp {sales_data['summary']['total_expenses']:,.0f}"],
+            ['Laba Bersih', f"Rp {sales_data['summary']['net_profit']:,.0f}"],
+            ['Margin Laba', f"{sales_data['summary']['profit_margin']:.1f}%"],
+        ]
+
+        summary_table = Table(summary_data, colWidths=[3*inch, 2*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#005357')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(summary_table)
+        elements.append(Spacer(1, 20))
+
+        # Expenses Breakdown
+        elements.append(Paragraph('Rincian Pengeluaran', styles['Heading2']))
+        expense_data = [['Kategori', 'Jumlah', 'Persentase', 'Tren']]
+        for item in expenses_data['by_category']:
+            expense_data.append([
+                item['category'],
+                f"Rp {item['amount']:,.0f}",
+                f"{item['percentage']:.1f}%",
+                item['trend'].upper()
+            ])
+
+        expense_table = Table(expense_data, colWidths=[2*inch, 1.5*inch, 1*inch, 1*inch])
+        expense_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#005357')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(expense_table)
+        elements.append(Spacer(1, 20))
+
+        # Top Products
+        elements.append(Paragraph('Produk Terlaris', styles['Heading2']))
+        product_data = [['Produk', 'Terjual', 'Pendapatan', 'Kontribusi']]
+        for item in products_data['top_products']:
+            product_data.append([
+                item['product_name'],
+                f"{item['quantity_sold']}",
+                f"Rp {item['revenue']:,.0f}",
+                f"{item['contribution_percentage']:.1f}%"
+            ])
+
+        product_table = Table(product_data, colWidths=[2.5*inch, 1*inch, 1.5*inch, 1*inch])
+        product_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#005357')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(product_table)
+        elements.append(Spacer(1, 20))
+
+        # Trends
+        elements.append(Paragraph('Analisis Tren', styles['Heading2']))
+        trend_comp = trends_data['comparison']
+        trend_data = [
+            ['Metrik', 'Periode Saat Ini', 'Periode Sebelumnya', 'Pertumbuhan'],
+            ['Pendapatan',
+             f"Rp {trend_comp['current_period']['revenue']:,.0f}",
+             f"Rp {trend_comp['previous_period']['revenue']:,.0f}",
+             f"{trend_comp['growth']['revenue_percent']:.1f}%"],
+            ['Jumlah Pesanan',
+             f"{trend_comp['current_period']['orders']}",
+             f"{trend_comp['previous_period']['orders']}",
+             f"{trend_comp['growth']['orders_percent']:.1f}%"],
+        ]
+
+        trend_table = Table(trend_data, colWidths=[2*inch, 1.5*inch, 1.5*inch, 1*inch])
+        trend_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#005357')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(trend_table)
+
+        # Build PDF
+        doc.build(elements)
+
+        # Get PDF from buffer
+        pdf = buffer.getvalue()
+        buffer.close()
+
+        # Create response
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="laporan_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.pdf"'
+        response.write(pdf)
+
+        return response
+
+    @action(detail=False, methods=['get'])
+    def export_excel(self, request):
+        """
+        Export data as Excel (data only, no formatting)
+
+        Query params: period, branch, start_date, end_date
+
+        Returns: Excel file with raw data in separate sheets
+        """
+        period = request.query_params.get('period', 'week')
+        branch_id = request.query_params.get('branch')
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+
+        start_date, end_date = self.get_date_range(period, start_date_str, end_date_str)
+
+        # Fetch all report data
+        request._request.GET = request._request.GET.copy()
+        sales_data = self.sales(request).data
+        expenses_data = self.expenses(request).data
+        products_data = self.products(request).data
+        trends_data = self.trends(request).data
+
+        # Create Excel workbook
+        wb = Workbook()
+
+        # Remove default sheet
+        wb.remove(wb.active)
+
+        # Sheet 1: Sales Summary
+        ws1 = wb.create_sheet('Penjualan')
+        ws1.append(['Laporan Penjualan'])
+        ws1.append([f'Periode: {start_date.strftime("%d/%m/%Y")} - {end_date.strftime("%d/%m/%Y")}'])
+        ws1.append([])
+        ws1.append(['Metrik', 'Nilai'])
+        ws1.append(['Total Pendapatan', sales_data['summary']['total_revenue']])
+        ws1.append(['Total Pesanan', sales_data['summary']['total_orders']])
+        ws1.append(['Rata-rata Nilai Pesanan', sales_data['summary']['avg_order_value']])
+        ws1.append(['Total Pengeluaran', sales_data['summary']['total_expenses']])
+        ws1.append(['Laba Bersih', sales_data['summary']['net_profit']])
+        ws1.append(['Margin Laba (%)', sales_data['summary']['profit_margin']])
+        ws1.append([])
+        ws1.append(['Rincian Harian'])
+        ws1.append(['Tanggal', 'Pendapatan', 'Pesanan', 'Rata-rata Nilai', 'Produk Terlaris'])
+        for day in sales_data['daily_breakdown']:
+            ws1.append([
+                day['date'],
+                day['revenue'],
+                day['orders'],
+                day['avg_order_value'],
+                day['top_product']
+            ])
+
+        # Sheet 2: Expenses
+        ws2 = wb.create_sheet('Pengeluaran')
+        ws2.append(['Rincian Pengeluaran'])
+        ws2.append([f'Periode: {start_date.strftime("%d/%m/%Y")} - {end_date.strftime("%d/%m/%Y")}'])
+        ws2.append([])
+        ws2.append(['Kategori', 'Jumlah', 'Persentase', 'Tren', 'Perubahan (%)'])
+        for item in expenses_data['by_category']:
+            ws2.append([
+                item['category'],
+                item['amount'],
+                item['percentage'],
+                item['trend'],
+                item['change_percentage']
+            ])
+
+        # Sheet 3: Products
+        ws3 = wb.create_sheet('Produk')
+        ws3.append(['Produk Terlaris'])
+        ws3.append([f'Periode: {start_date.strftime("%d/%m/%Y")} - {end_date.strftime("%d/%m/%Y")}'])
+        ws3.append([])
+        ws3.append(['Produk', 'Terjual', 'Pendapatan', 'Laba', 'Margin (%)', 'Kontribusi (%)'])
+        for item in products_data['top_products']:
+            ws3.append([
+                item['product_name'],
+                item['quantity_sold'],
+                item['revenue'],
+                item['profit'],
+                item['profit_margin'],
+                item['contribution_percentage']
+            ])
+
+        # Sheet 4: Trends
+        ws4 = wb.create_sheet('Tren')
+        ws4.append(['Analisis Tren'])
+        ws4.append([f'Periode: {start_date.strftime("%d/%m/%Y")} - {end_date.strftime("%d/%m/%Y")}'])
+        ws4.append([])
+        ws4.append(['Data Harian'])
+        ws4.append(['Tanggal', 'Pendapatan', 'Pesanan', 'Pelanggan Unik'])
+        for item in trends_data['time_series']:
+            ws4.append([
+                item['date'],
+                item['revenue'],
+                item['orders'],
+                item['unique_customers']
+            ])
+
+        # Save to buffer
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        # Create response
+        response = HttpResponse(
+            buffer.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="data_laporan_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.xlsx"'
+
+        return response
