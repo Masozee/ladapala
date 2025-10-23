@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -68,6 +69,7 @@ export default function MenuDetailPage() {
   const [orderHistory, setOrderHistory] = useState<OrderHistory[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [categories, setCategories] = useState<Array<{id: number, name: string}>>([])
 
   const [editForm, setEditForm] = useState({
@@ -177,6 +179,33 @@ export default function MenuDetailPage() {
     }
   }
 
+  const handleDeleteMenu = async () => {
+    try {
+      const csrfToken = getCsrfToken()
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${params.id}/`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRFToken': csrfToken || ''
+        },
+        credentials: 'include'
+      })
+
+      if (!res.ok) {
+        const error = await res.text()
+        console.error('Menu delete failed:', error)
+        alert('Gagal menghapus menu: ' + error)
+        return
+      }
+
+      alert('Menu berhasil dihapus!')
+      router.push('/office/recipe')
+    } catch (error) {
+      console.error('Error deleting menu:', error)
+      alert('Terjadi kesalahan: ' + error)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -216,7 +245,11 @@ export default function MenuDetailPage() {
             <HugeiconsIcon icon={Edit01Icon} size={16} strokeWidth={2} className="mr-2" />
             Edit Menu
           </Button>
-          <Button variant="outline" className="rounded text-red-600 border-red-600 hover:bg-red-50">
+          <Button
+            variant="outline"
+            className="rounded text-red-600 border-red-600 hover:bg-red-50"
+            onClick={() => setIsDeleteOpen(true)}
+          >
             <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} className="mr-2" />
             Hapus
           </Button>
@@ -297,6 +330,34 @@ export default function MenuDetailPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Menu "{menu.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tindakan ini tidak dapat dibatalkan. Menu akan dihapus permanen dari sistem.
+              {salesData && salesData.total_orders > 0 && (
+                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm text-yellow-900 font-medium">
+                    ⚠️ Peringatan: Menu ini memiliki {salesData.total_orders} riwayat pesanan.
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMenu}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Hapus Menu
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Menu Info Cards */}
       <div className="grid grid-cols-4 gap-4">
