@@ -4,74 +4,105 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ladapala is a comprehensive management system with two main applications:
+Ladapala is a comprehensive management system with two main applications organized by business domain:
 
-1. **Restaurant POS (`resto/`)** - Point of Sale system for Indonesian restaurants with session-based authentication, cashier shift management, and real-time order tracking.
+### 1. **Restaurant POS** (`resto/`)
+Point of Sale system for Indonesian restaurants with session-based authentication, cashier shift management, and real-time order tracking.
 
-2. **Hotel Management (`hotel/`)** - Hotel property management system with booking management, room tracking, guest services, and staff coordination.
+```
+resto/
+├── backend/       # Django REST API (Port 8000)
+└── frontend/      # Next.js App (Port 3000)
+```
+
+### 2. **Hotel Management** (`hotel/`)
+Hotel property management system with booking management, room tracking, guest services, and staff coordination.
+
+```
+hotel/
+├── backend/       # Django REST API (Port 8001)
+└── frontend/      # Next.js App (Port 3000)
+```
 
 **Technology Stack:**
-- **Backend**: Django REST API (`backend/`) - Port 8000
-- **Frontend**: Next.js 16 (Turbopack) - Port 3000
-- **Database**: SQLite (development)
+- **Backend**: Django REST Framework, SQLite
+- **Frontend**: Next.js 16 (Turbopack), TypeScript, Tailwind CSS
 - **Icons**: @hugeicons/react (hotel), lucide-react (resto)
+
+**IMPORTANT: Domain Separation**
+- **Restaurant**: All resto code in `resto/` folder (backend + frontend)
+- **Hotel**: All hotel code in `hotel/` folder (backend + frontend)
+- Each domain has its own database, user system, and models
+- Do NOT mix hotel and restaurant code between domains
 
 ## Development Commands
 
 ### Quick Start - Running Servers
 
-**Backend (Django API) - Port 8000:**
+**Restaurant System:**
 ```bash
-cd backend
-uv run python manage.py runserver
-```
+# Terminal 1 - Backend (Port 8000)
+cd resto/backend
+uv run python manage.py runserver 8000
 
-**Frontend - Restaurant POS (Port 3000):**
-```bash
-cd resto
+# Terminal 2 - Frontend (Port 3000)
+cd resto/frontend
 npm run dev
 ```
 
-**Frontend - Hotel Management (Port 3000):**
+**Hotel System:**
 ```bash
-cd hotel
+# Terminal 1 - Backend (Port 8001)
+cd hotel/backend
+uv run python manage.py runserver 8001
+
+# Terminal 2 - Frontend (Port 3000)
+cd hotel/frontend
 npm run dev
 ```
 
 **Important Notes:**
-- Backend must be running before starting frontend
+- Each system has its own backend (resto: 8000, hotel: 8001)
 - Only run ONE frontend at a time (resto OR hotel) as they both use port 3000
-- First time setup requires `npm install` in resto/ and hotel/ directories
-- Database migrations are already applied, no need to run migrate unless schema changes
+- First time setup requires `npm install` in frontend directories
+- Each backend has separate database migrations
 
 ### Additional Commands (When Needed)
 
-**Database Management:**
+**Database Management (Restaurant):**
 ```bash
-cd backend
-python manage.py makemigrations  # Create new migrations
-python manage.py migrate         # Apply migrations
-python manage.py seed_auth_users # Create test users
-python manage.py seed_resto_data # Seed restaurant data
+cd resto/backend
+uv run python manage.py makemigrations  # Create new migrations
+uv run python manage.py migrate         # Apply migrations
+uv run python manage.py seed_auth_users # Create test users
+uv run python manage.py seed_resto_data # Seed restaurant data
+```
+
+**Database Management (Hotel):**
+```bash
+cd hotel/backend
+uv run python manage.py makemigrations  # Create new migrations
+uv run python manage.py migrate         # Apply migrations
+uv run python manage.py seed_hotel_users # Create test users
+uv run python manage.py seed_hotel_data  # Seed hotel data
 ```
 
 **Frontend Build:**
 ```bash
-cd resto  # or cd hotel
-npm run build  # Production build
-npm start      # Production server
+cd resto/frontend  # or cd hotel/frontend
+npm run build      # Production build
+npm start          # Production server
 ```
 
 **Testing:**
 ```bash
-cd backend
-python manage.py test                # Run all tests
-python manage.py test apps.restaurant # Run specific app tests
+cd resto/backend   # or cd hotel/backend
+uv run python manage.py test  # Run all tests
 ```
 
 **Clear Cache (When facing Next.js issues):**
 ```bash
-cd resto  # or cd hotel
+cd resto/frontend  # or cd hotel/frontend
 rm -rf .next
 npm run dev
 ```
@@ -98,19 +129,19 @@ Orders follow a specific lifecycle that reflects restaurant operations:
 
 The system uses **session-based authentication** with Django sessions:
 
-**Backend (`backend/apps/user/views.py`):**
+**Backend (`resto/backend/apps/user/views.py`):**
 - `POST /api/user/login/` - Creates Django session
 - `GET /api/user/check-session/` - Validates session
 - `POST /api/user/logout/` - Destroys session
 - `GET /api/user/profile/` - Returns user + employee + profile + staff info
 
-**Frontend (`resto/middleware.ts`):**
+**Frontend (`resto/frontend/middleware.ts`):**
 - Middleware protects all routes except `/login`
 - Validates session cookie with backend on every request
 - Redirects to `/login` if session invalid
 - Session cookie must be sent with `credentials: 'include'`
 
-**Auth Context (`resto/src/contexts/auth-context.tsx`):**
+**Auth Context (`resto/frontend/src/contexts/auth-context.tsx`):**
 - Centralized auth state management
 - Provides: `user`, `employee`, `profile`, `staff`, `isAuthenticated`
 - Auto-refreshes session on mount
@@ -123,7 +154,7 @@ The system uses **session-based authentication** with Django sessions:
 
 ### Cashier Shift & Session System
 
-**CashierSession Model (`backend/apps/restaurant/models.py:439-548`):**
+**CashierSession Model (`resto/backend/apps/restaurant/models.py:439-548`):**
 
 Sessions track cashier shifts with cash reconciliation:
 - Links to Staff (must have role='CASHIER')
@@ -168,7 +199,7 @@ Sessions track cashier shifts with cash reconciliation:
 
 ### Table Management & Privacy
 
-**Table Page (`resto/src/app/(dashboard)/table/page.tsx`):**
+**Table Page (`resto/frontend/src/app/(dashboard)/table/page.tsx`):**
 - Does NOT show financial information (revenue/prices) on table cards
 - Shows: table status, order count, latest order status, occupied time
 - Financial data only visible in detail popup (staff access)
@@ -214,7 +245,7 @@ app/
 
 ### API Integration
 
-**API Client (`resto/src/lib/api.ts`):**
+**API Client (`resto/frontend/src/lib/api.ts`):**
 - Base URL: `http://localhost:8000/api`
 - All requests include `credentials: 'include'` for session cookies
 - CSRF token automatically extracted from cookies
@@ -238,10 +269,10 @@ app/
 - Order → OrderItem (one-to-many)
 
 **Current Setup:**
-- SQLite database in development
-- Branch ID is hardcoded as 4 in seed data
-- Media files stored in `backend/media/`
-- 15 seeded products with images
+- SQLite database in development (separate for resto and hotel)
+- Restaurant Branch ID is hardcoded as 4 in seed data
+- Media files stored in `resto/backend/media/` and `hotel/backend/media/`
+- 15 seeded products with images (restaurant)
 
 ## Development Guidelines
 
@@ -272,21 +303,37 @@ app/
 
 ## Configuration Files
 
-### Backend
-- `backend/core/settings.py` - Main Django settings
+### Restaurant Backend
+- `resto/backend/core/settings.py` - Main Django settings
   - CORS enabled with credentials
   - Session cookies: `SESSION_COOKIE_SAMESITE = 'Lax'`
   - CSRF trusted origins includes localhost:3000
-- `backend/apps/restaurant/` - Main POS app with all models/viewsets
-- `backend/apps/user/` - User management and authentication
+- `resto/backend/apps/restaurant/` - Main POS app with all models/viewsets
+- `resto/backend/apps/user/` - User management and authentication
 
-### Frontend
-- `resto/.env.local` - Environment variables (not in git)
+### Restaurant Frontend
+- `resto/frontend/.env.local` - Environment variables (not in git)
   - `NEXT_PUBLIC_API_URL=http://localhost:8000/api`
   - `NEXT_PUBLIC_API_BRANCH_ID=4`
-- `resto/next.config.ts` - Next.js configuration
-- `resto/middleware.ts` - Route protection middleware
-- `resto/tsconfig.json` - TypeScript with strict mode, path mapping
+- `resto/frontend/next.config.ts` - Next.js configuration
+- `resto/frontend/middleware.ts` - Route protection middleware
+- `resto/frontend/tsconfig.json` - TypeScript with strict mode, path mapping
+
+### Hotel Backend
+- `hotel/backend/core/settings.py` - Main Django settings
+  - CORS enabled with credentials
+  - Session cookies configured
+  - CSRF trusted origins includes localhost:3000
+- `hotel/backend/apps/hotel/` - Hotel management app with all models/viewsets
+- `hotel/backend/apps/user/` - User management and authentication
+
+### Hotel Frontend
+- `hotel/frontend/.env.local` - Environment variables (not in git)
+  - `NEXT_PUBLIC_API_BASE_URL=http://localhost:8001/api`
+  - `NEXT_PUBLIC_HOTEL_API_URL=http://localhost:8001/api/hotel`
+- `hotel/frontend/next.config.ts` - Next.js configuration
+- `hotel/frontend/middleware.ts` - Route protection middleware
+- `hotel/frontend/tsconfig.json` - TypeScript with strict mode, path mapping
 
 ## Common Patterns
 
@@ -335,12 +382,12 @@ await api.updateOrderStatus(orderId, 'COMPLETED') // Delivered to table
 
 **Icon System Architecture:**
 
-1. **Central Icon File**: `hotel/src/lib/icons.tsx`
+1. **Central Icon File**: `hotel/frontend/src/lib/icons.tsx`
    - Wraps all Hugeicons with consistent styling (stroke width: 2)
    - All imports must use this file: `import { IconName } from '@/lib/icons'`
    - NEVER import directly from `@hugeicons/react` or `@hugeicons/core-free-icons`
 
-2. **Available Icons**: Check `hotel/src/lib/icons.tsx` for the complete list of available icons
+2. **Available Icons**: Check `hotel/frontend/src/lib/icons.tsx` for the complete list of available icons
 
 3. **Adding New Icons**:
    ```typescript
@@ -426,13 +473,13 @@ await api.updateOrderStatus(orderId, 'COMPLETED') // Delivered to table
    ```
 
 5. **Icon Migration Checklist**:
-   - [ ] Check if icon exists in `hotel/src/lib/icons.tsx`
+   - [ ] Check if icon exists in `hotel/frontend/src/lib/icons.tsx`
    - [ ] If not available, check @hugeicons free version for alternative
    - [ ] Add icon wrapper to icons.tsx if needed
    - [ ] Update import statement: `from '@/lib/icons'`
    - [ ] Replace icon name in import list with correct Icon suffix
    - [ ] Replace JSX usage: `<OldIcon />` → `<NewIcon />`
-   - [ ] Clear Next.js cache: `rm -rf .next`
+   - [ ] Clear Next.js cache: `cd hotel/frontend && rm -rf .next`
    - [ ] Test in development mode
    - [ ] Verify production build: `npm run build`
 
