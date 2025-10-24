@@ -3,20 +3,39 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Search01Icon, ShoppingCart01Icon, DollarCircleIcon, Invoice01Icon, Calendar03Icon, CreditCardIcon, Wallet01Icon, MobileNavigator01Icon } from "@hugeicons/core-free-icons"
+import { Search01Icon, ShoppingCart01Icon, DollarCircleIcon, Invoice01Icon, Calendar03Icon, CreditCardIcon, Wallet01Icon, MobileNavigator01Icon, Cancel01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { api, type Order } from "@/lib/api"
+import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/hooks/use-toast"
 
 export default function SalesHistoryPage() {
   const router = useRouter()
+  const { staff } = useAuth()
+  const { toast } = useToast()
   const [orders, setOrders] = useState<Order[]>([])
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [paymentFilter, setPaymentFilter] = useState("all")
   const [typeFilter, setTypeFilter] = useState("all")
+
+  // Void dialog state
+  const [showVoidDialog, setShowVoidDialog] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [voidReason, setVoidReason] = useState("")
+  const [voidingPayment, setVoidingPayment] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -105,6 +124,85 @@ export default function SalesHistoryPage() {
 
   const formatCurrency = (value: string | number) => {
     return `Rp ${parseFloat(value.toString()).toLocaleString('id-ID')}`
+  }
+
+  const isToday = (dateString: string) => {
+    const date = new Date(dateString)
+    const today = new Date()
+    return date.toDateString() === today.toDateString()
+  }
+
+  const canVoidOrder = (order: Order) => {
+    // Only manager or admin can void
+    if (!staff || !['MANAGER', 'ADMIN'].includes(staff.role)) {
+      return false
+    }
+
+    // Must have payments
+    if (!order.payments || order.payments.length === 0) {
+      return false
+    }
+
+    // Payment must be COMPLETED
+    const hasCompletedPayment = order.payments.some(p => p.status === 'COMPLETED')
+    if (!hasCompletedPayment) {
+      return false
+    }
+
+    // Must be from today
+    return isToday(order.created_at)
+  }
+
+  const handleVoidClick = (order: Order, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedOrder(order)
+    setShowVoidDialog(true)
+  }
+
+  const handleVoidPayment = async () => {
+    if (!selectedOrder || !selectedOrder.payments || selectedOrder.payments.length === 0) {
+      return
+    }
+
+    if (!voidReason.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Alasan void wajib diisi',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      setVoidingPayment(true)
+      const completedPayment = selectedOrder.payments.find(p => p.status === 'COMPLETED')
+      if (!completedPayment) {
+        throw new Error('Tidak ada pembayaran yang bisa di-void')
+      }
+
+      await api.voidPayment(completedPayment.id, voidReason)
+
+      toast({
+        title: 'Berhasil',
+        description: 'Pembayaran berhasil di-void',
+      })
+
+      setShowVoidDialog(false)
+      setVoidReason('')
+      setSelectedOrder(null)
+
+      // Refresh orders
+      fetchOrders()
+    } catch (error: any) {
+      console.error('Error voiding payment:', error)
+      toast({
+        title: 'Error',
+        description: error.message || 'Gagal void pembayaran',
+        variant: 'destructive',
+      })
+    } finally {
+      setVoidingPayment(false)
+    }
   }
 
   // Calculate summary statistics
@@ -253,6 +351,9 @@ export default function SalesHistoryPage() {
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Informasi Pembayaran
                     </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -296,6 +397,21 @@ export default function SalesHistoryPage() {
                             <span className="text-xs text-gray-400">Belum dibayar</span>
                           )}
                         </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+                          {canVoidOrder(order) ? (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={(e) => handleVoidClick(order, e)}
+                              className="h-8 px-3 text-xs"
+                            >
+                              <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} className="mr-1" />
+                              Void
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-gray-400">-</span>
+                          )}
+                        </td>
                       </tr>
                     )
                   })}
@@ -305,6 +421,77 @@ export default function SalesHistoryPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Void Payment Dialog */}
+      <Dialog open={showVoidDialog} onOpenChange={setShowVoidDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <HugeiconsIcon icon={Cancel01Icon} size={24} strokeWidth={2} />
+              Void Pembayaran
+            </DialogTitle>
+            <DialogDescription>
+              Tindakan ini akan membatalkan pembayaran dan tidak dapat dikembalikan. Harap masukkan alasan void.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Nomor Order:</span>
+                    <span className="font-medium">{selectedOrder.order_number}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Pelanggan:</span>
+                    <span className="font-medium">{selectedOrder.customer_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total:</span>
+                    <span className="font-medium">{formatCurrency(selectedOrder.total_amount)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Alasan Void <span className="text-red-500">*</span>
+                </label>
+                <Textarea
+                  value={voidReason}
+                  onChange={(e) => setVoidReason(e.target.value)}
+                  placeholder="Masukkan alasan pembatalan pembayaran"
+                  rows={4}
+                  className="resize-none"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowVoidDialog(false)
+                setVoidReason('')
+                setSelectedOrder(null)
+              }}
+              disabled={voidingPayment}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleVoidPayment}
+              disabled={voidingPayment || !voidReason.trim()}
+            >
+              <HugeiconsIcon icon={Delete02Icon} size={18} strokeWidth={2} className="mr-2" />
+              {voidingPayment ? 'Memproses...' : 'Void Pembayaran'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

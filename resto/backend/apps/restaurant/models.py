@@ -852,6 +852,7 @@ class SessionAuditLog(models.Model):
         ('OVERRIDE_APPLIED', 'Manager Override Applied'),
         ('SCHEDULE_WARNING', 'Schedule Warning'),
         ('CASH_DISCREPANCY', 'Cash Discrepancy Detected'),
+        ('PAYMENT_VOIDED', 'Payment Voided'),
     ]
 
     session = models.ForeignKey(CashierSession, on_delete=models.CASCADE, related_name='audit_logs')

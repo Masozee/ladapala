@@ -541,11 +541,20 @@ class PaymentViewSet(viewsets.ModelViewSet):
         Void a payment transaction
         - Only MANAGER or ADMIN can void
         - Only COMPLETED payments can be voided
+        - Can only void payments from the same day
         - Updates payment status to REFUNDED
         - Reverts order status back to COMPLETED
         - Creates audit log entry
         """
         payment = self.get_object()
+
+        # Check if user has staff relationship
+        if not hasattr(request.user, 'staff'):
+            return Response(
+                {'error': 'Only staff members can void payments'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         staff = request.user.staff
 
         # Authorization check - only MANAGER or ADMIN
@@ -559,6 +568,17 @@ class PaymentViewSet(viewsets.ModelViewSet):
         if payment.status != 'COMPLETED':
             return Response(
                 {'error': f'Only COMPLETED payments can be voided. Current status: {payment.status}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check if payment is from today
+        from django.utils import timezone
+        today = timezone.now().date()
+        payment_date = payment.created_at.date()
+
+        if payment_date != today:
+            return Response(
+                {'error': 'Can only void payments from the same day. This payment was created on ' + payment_date.strftime('%d %b %Y')},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -586,8 +606,9 @@ class PaymentViewSet(viewsets.ModelViewSet):
         if payment.cashier_session:
             from .models import SessionAuditLog
             SessionAuditLog.objects.create(
-                cashier_session=payment.cashier_session,
+                session=payment.cashier_session,
                 event_type='PAYMENT_VOIDED',
+                performed_by=staff,
                 event_data={
                     'payment_id': payment.id,
                     'transaction_id': payment.transaction_id,
@@ -596,8 +617,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
                     'order_number': order.order_number,
                     'voided_by': staff.user.get_full_name() or staff.user.email,
                     'void_reason': void_reason,
-                },
-                performed_by=staff
+                }
             )
 
         return Response({
@@ -2200,6 +2220,8 @@ class CustomerFeedbackViewSet(viewsets.ModelViewSet):
         from django.db.models import Avg, Count
 
         total_count = CustomerFeedback.objects.count()
+        responded_count = CustomerFeedback.objects.filter(staff_response__isnull=False).count()
+
         avg_ratings = CustomerFeedback.objects.aggregate(
             avg_overall=Avg('overall_rating'),
             avg_food=Avg('food_rating'),
@@ -2209,16 +2231,21 @@ class CustomerFeedbackViewSet(viewsets.ModelViewSet):
         )
 
         status_counts = CustomerFeedback.objects.values('status').annotate(count=Count('id'))
-        response_rate = CustomerFeedback.objects.filter(staff_response__isnull=False).count() / max(total_count, 1) * 100
+        response_rate = responded_count / max(total_count, 1) * 100
 
         # Rating distribution
         rating_dist = CustomerFeedback.objects.values('overall_rating').annotate(count=Count('id'))
 
         return Response({
-            'total_count': total_count,
-            'average_ratings': avg_ratings,
-            'status_counts': list(status_counts),
+            'total_feedbacks': total_count,
+            'responded_count': responded_count,
+            'overall_avg': avg_ratings['avg_overall'] or 0,
+            'food_avg': avg_ratings['avg_food'] or 0,
+            'service_avg': avg_ratings['avg_service'] or 0,
+            'ambiance_avg': avg_ratings['avg_ambiance'] or 0,
+            'value_avg': avg_ratings['avg_value'] or 0,
             'response_rate': round(response_rate, 2),
+            'status_counts': list(status_counts),
             'rating_distribution': list(rating_dist),
         })
 
