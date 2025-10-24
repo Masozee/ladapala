@@ -16,7 +16,8 @@ import {
   SparklesIcon,
   UserCheckIcon,
   EyeIcon,
-  Settings02Icon
+  Settings02Icon,
+  ViewIcon
 } from '@/lib/icons';
 
 interface RoomType {
@@ -133,10 +134,10 @@ const RoomDetailPage = () => {
     switch (amenity.toLowerCase()) {
       case 'wifi': return <SparklesIcon className="h-5 w-5" />;
       case 'tv': return <ViewIcon className="h-5 w-5" />;
-      case 'ac': return <AirVent className="h-5 w-5" />;
+      case 'ac': return <SparklesIcon className="h-5 w-5" />;
       case 'mini bar': return <SparklesIcon className="h-5 w-5" />;
-      case 'room service': return <UtensilsCrossed className="h-5 w-5" />;
-      case 'safe': return <Shield className="h-5 w-5" />;
+      case 'room service': return <PackageIcon className="h-5 w-5" />;
+      case 'safe': return <Shield01Icon className="h-5 w-5" />;
       case 'phone': return <Call02Icon className="h-5 w-5" />;
       case 'bathtub': return <Shield01Icon className="h-5 w-5" />;
       case 'jacuzzi': return <Shield01Icon className="h-5 w-5" />;

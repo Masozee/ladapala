@@ -165,7 +165,7 @@ export default function NewReservationPage() {
 
     try {
       setLoading(true);
-      const response = await fetch(buildApiUrl(`guests/?search=${encodeURIComponent(query)}`));
+      const response = await fetch(buildApiUrl(`hotel/guests/?search=${encodeURIComponent(query)}`));
       if (response.ok) {
         const data = await response.json();
         setSearchResults(data.results || data);
@@ -181,7 +181,7 @@ export default function NewReservationPage() {
   const createNewGuest = async () => {
     try {
       setLoading(true);
-      const response = await fetch(buildApiUrl('guests/'), {
+      const response = await fetch(buildApiUrl('hotel/guests/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +229,7 @@ export default function NewReservationPage() {
       }
 
       // Fetch all rooms
-      const response = await fetch(buildApiUrl('rooms/'));
+      const response = await fetch(buildApiUrl('hotel/rooms/'));
       if (response.ok) {
         const data = await response.json();
         const rooms = data.results || data;
@@ -299,7 +299,7 @@ export default function NewReservationPage() {
         }]
       };
 
-      const response = await fetch(buildApiUrl('reservations/'), {
+      const response = await fetch(buildApiUrl('hotel/reservations/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
