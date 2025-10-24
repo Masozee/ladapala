@@ -49,6 +49,12 @@ import {
   MoreHorizontalIcon as HugeMoreHorizontal,
   Logout01Icon as HugeLogout01,
   CancelSquareIcon as HugeCancelSquare,
+  Delete02Icon as HugeDelete02,
+  ComputerIcon as HugeComputer,
+  Activity02Icon as HugeActivity02,
+  CpuIcon as HugeCpu,
+  DatabaseIcon as HugeDatabase,
+  HardDriveIcon as HugeHardDrive,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 
@@ -107,6 +113,20 @@ export const Menu01Icon = createIconComponent(HugeMenu01);
 export const MoreHorizontalIcon = createIconComponent(HugeMoreHorizontal);
 export const Logout01Icon = createIconComponent(HugeLogout01);
 export const CancelSquareIcon = createIconComponent(HugeCancelSquare);
+export const Delete02Icon = createIconComponent(HugeDelete02);
+export const ComputerIcon = createIconComponent(HugeComputer);
+export const Activity02Icon = createIconComponent(HugeActivity02);
+export const CpuIcon = createIconComponent(HugeCpu);
+export const DatabaseIcon = createIconComponent(HugeDatabase);
+export const HardDriveIcon = createIconComponent(HugeHardDrive);
+
+// Aliases for compatibility
+export const Trash2 = Delete02Icon;
+export const Monitor = ComputerIcon;
+export const Activity = Activity02Icon;
+export const Cpu = CpuIcon;
+export const Server = DatabaseIcon; // Using Database icon as Server alternative
+export const HardDrive = HardDriveIcon;
 
 // Chevron icons using Arrow icons as alternatives (chevrons not in free package)
 export const ChevronUpIcon = createIconComponent(HugeArrowUp01);
@@ -167,3 +187,15 @@ ChevronLeftIcon.displayName = 'ChevronLeftIcon';
 ChevronRightIcon.displayName = 'ChevronRightIcon';
 Logout01Icon.displayName = 'Logout01Icon';
 CancelSquareIcon.displayName = 'CancelSquareIcon';
+Delete02Icon.displayName = 'Delete02Icon';
+ComputerIcon.displayName = 'ComputerIcon';
+Activity02Icon.displayName = 'Activity02Icon';
+CpuIcon.displayName = 'CpuIcon';
+DatabaseIcon.displayName = 'DatabaseIcon';
+HardDriveIcon.displayName = 'HardDriveIcon';
+Trash2.displayName = 'Trash2';
+Monitor.displayName = 'Monitor';
+Activity.displayName = 'Activity';
+Cpu.displayName = 'Cpu';
+Server.displayName = 'Server';
+HardDrive.displayName = 'HardDrive';

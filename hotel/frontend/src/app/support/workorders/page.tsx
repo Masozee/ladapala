@@ -309,7 +309,7 @@ export default function WorkOrdersPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -329,7 +329,7 @@ export default function WorkOrdersPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -349,7 +349,7 @@ export default function WorkOrdersPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -369,7 +369,7 @@ export default function WorkOrdersPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -391,7 +391,7 @@ export default function WorkOrdersPage() {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -470,7 +470,7 @@ export default function WorkOrdersPage() {
                 const isOverdue = new Date(order.dueDate) < new Date() && order.status !== 'completed';
 
                 return (
-                  <div key={order.id} className="bg-white p-6 shadow-sm">
+                  <div key={order.id} className="bg-white p-6 border border-gray-200">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
@@ -615,7 +615,7 @@ export default function WorkOrdersPage() {
         </div>
 
         {/* Department Performance */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -637,7 +637,7 @@ export default function WorkOrdersPage() {
                   (completedOrders.reduce((sum, order) => sum + order.actualHours, 0) / completedOrders.length).toFixed(1) : '0';
 
                 return (
-                  <div key={dept.id} className="bg-white p-4 shadow-sm">
+                  <div key={dept.id} className="bg-white p-4 border border-gray-200">
                     <div className="flex items-center space-x-3 mb-3">
                       <div className="w-12 h-12 bg-[#005357] flex items-center justify-center">
                         <dept.icon className="h-6 w-6 text-white" />

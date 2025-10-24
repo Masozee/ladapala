@@ -331,7 +331,7 @@ const ReportsPage = () => {
           <div className="space-y-6">
             {/* Daily Overview Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -348,7 +348,7 @@ const ReportsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -367,7 +367,7 @@ const ReportsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -384,7 +384,7 @@ const ReportsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -404,7 +404,7 @@ const ReportsPage = () => {
 
             {/* Daily Details */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -458,7 +458,7 @@ const ReportsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -502,7 +502,7 @@ const ReportsPage = () => {
           <div className="space-y-6">
             {/* Monthly Overview Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -522,7 +522,7 @@ const ReportsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -541,7 +541,7 @@ const ReportsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -558,7 +558,7 @@ const ReportsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -579,7 +579,7 @@ const ReportsPage = () => {
             {/* Monthly Details */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Category Breakdown */}
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -612,7 +612,7 @@ const ReportsPage = () => {
               </div>
 
               {/* Technician Performance */}
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -651,7 +651,7 @@ const ReportsPage = () => {
             </div>
 
             {/* Monthly Summary */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357] text-white">
                 <div className="flex items-center justify-between">
                   <div>

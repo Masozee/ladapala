@@ -252,7 +252,7 @@ export default function CreatePurchaseOrderPage() {
         tax_id: taxId || undefined,
         order_date: orderDate,
         expected_delivery_date: expectedDeliveryDate || undefined,
-        created_by: user.id,
+        created_by: staff.id,
         notes: notes || undefined,
         terms_and_conditions: termsAndConditions || undefined,
         items: items.map(item => ({

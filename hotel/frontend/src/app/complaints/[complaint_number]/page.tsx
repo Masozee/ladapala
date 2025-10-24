@@ -623,7 +623,7 @@ const ComplaintDetailPage = () => {
             
             <div className="space-y-6">
             {/* Guest Information */}
-            <div className="bg-[#004147] shadow">
+            <div className="bg-[#004147] border border-gray-200">
               <div className="p-6 border-b border-[#003035]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -663,7 +663,7 @@ const ComplaintDetailPage = () => {
             </div>
 
             {/* Complaint Description */}
-            <div className="bg-[#004147] shadow">
+            <div className="bg-[#004147] border border-gray-200">
               <div className="p-6 border-b border-[#003035]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -688,7 +688,7 @@ const ComplaintDetailPage = () => {
             </div>
 
             {/* Attachments */}
-            <div className="bg-[#004147] shadow">
+            <div className="bg-[#004147] border border-gray-200">
               <div className="p-6 border-b border-[#003035]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -722,7 +722,7 @@ const ComplaintDetailPage = () => {
           {/* Middle Column - Internal Details */}
           <div className="space-y-6">
             {/* Complaint Details */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -770,7 +770,7 @@ const ComplaintDetailPage = () => {
             </div>
 
             {/* Status Information */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -823,7 +823,7 @@ const ComplaintDetailPage = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -879,7 +879,7 @@ const ComplaintDetailPage = () => {
           {/* Right Column - Timeline & Actions */}
           <div className="space-y-6">
             {/* Images Section */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -924,7 +924,7 @@ const ComplaintDetailPage = () => {
                                 className="bg-red-600 text-white p-2 hover:bg-red-700 transition-colors"
                                 title="Delete image"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Delete02Icon className="h-4 w-4" />
                               </button>
                             </div>
                           </div>
@@ -1036,7 +1036,7 @@ const ComplaintDetailPage = () => {
               </div>
             </div>
             {/* Complaint Timeline */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1107,7 +1107,7 @@ const ComplaintDetailPage = () => {
 
             {/* Responses Section */}
             {complaint.responses && complaint.responses.length > 0 && (
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1185,7 +1185,7 @@ const ComplaintDetailPage = () => {
             )}
 
             {/* Add Response */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>

@@ -28,7 +28,10 @@ import {
   Add01Icon,
   HotelIcon,
   Cancel01Icon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  ViewIcon,
+  Alert01Icon,
+  Delete02Icon
 } from '@/lib/icons';
 
 interface Guest {
@@ -430,10 +433,10 @@ const BookingDetailPage = () => {
     switch (amenity.toLowerCase()) {
       case 'wifi': return <SparklesIcon className="h-4 w-4" />;
       case 'tv': return <ViewIcon className="h-4 w-4" />;
-      case 'ac': return <AirVent className="h-4 w-4" />;
-      case 'mini bar': return <SparklesIcon className="h-4 w-4" />;
-      case 'room service': return <UtensilsCrossed className="h-4 w-4" />;
-      case 'safe': return <Shield className="h-4 w-4" />;
+      case 'ac': return <SparklesIcon className="h-4 w-4" />;
+      case 'mini bar': return <PackageIcon className="h-4 w-4" />;
+      case 'room service': return <PackageIcon className="h-4 w-4" />;
+      case 'safe': return <Shield01Icon className="h-4 w-4" />;
       default: return <UserCheckIcon className="h-4 w-4" />;
     }
   };
@@ -527,7 +530,7 @@ const BookingDetailPage = () => {
           {/* Left Column - Guest Information (1/3) - Sticky */}
           <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-6 lg:h-fit">
             {/* Guest Details */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -585,7 +588,7 @@ const BookingDetailPage = () => {
                     <h4 className="font-bold text-gray-900 mb-4">Additional Guests ({booking.additional_guests.length})</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {(booking.additional_guests || []).map((guest) => (
-                        <div key={guest.id} className="bg-white p-4 shadow">
+                        <div key={guest.id} className="bg-white p-4 border border-gray-200">
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
                               <h5 className="font-bold text-gray-900">{guest.full_name}</h5>
@@ -663,7 +666,7 @@ const BookingDetailPage = () => {
           {/* Right Column - Booking Information (2/3) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Unified Booking Overview Card */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -671,7 +674,7 @@ const BookingDetailPage = () => {
                     <p className="text-sm text-gray-200 mt-1">Essential booking information and room details</p>
                   </div>
                   <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                    <CalendarCheck className="h-4 w-4 text-white" />
+                    <Calendar01Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
@@ -722,7 +725,7 @@ const BookingDetailPage = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 mt-4 pt-4 border-t border-gray-100">
                       {/* Booking Source */}
                       <div className="flex items-start space-x-3">
-                        <Hotel className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <HotelIcon className="h-4 w-4 text-gray-400 mt-0.5" />
                         <div>
                           <p className="text-sm text-gray-500 font-medium">Source</p>
                           <p className="font-bold text-gray-900 text-base">{booking.booking_source}</p>
@@ -732,7 +735,7 @@ const BookingDetailPage = () => {
                       {/* Loyalty Program */}
                       {booking.loyalty_program && (
                         <div className="md:col-span-2 flex items-start space-x-3">
-                          <Award className="h-4 w-4 text-yellow-500 mt-0.5" />
+                          <SparklesIcon className="h-4 w-4 text-yellow-500 mt-0.5" />
                           <div>
                             <p className="text-sm text-gray-500 font-medium">{booking.loyalty_program.program_name}</p>
                             <div className="flex items-center space-x-2">
@@ -788,7 +791,7 @@ const BookingDetailPage = () => {
 
                   {/* Internal Notes - Prominent Alert */}
                   {booking.booking_notes && (
-                    <div className="bg-yellow-50 shadow rounded p-4">
+                    <div className="bg-yellow-50 border border-gray-200 rounded p-4">
                       <div className="flex items-start space-x-3">
                         <div className="w-8 h-8 bg-yellow-100 rounded flex items-center justify-center flex-shrink-0">
                           <Alert01Icon className="h-4 w-4 text-yellow-600" />
@@ -808,7 +811,7 @@ const BookingDetailPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Transportation */}
               {booking.transportation && booking.transportation.length > 0 && (
-                <div className="bg-white shadow">
+                <div className="bg-white border border-gray-200">
                   <div className="p-6 bg-[#005357]">
                     <div className="flex items-center justify-between">
                       <div>
@@ -816,7 +819,7 @@ const BookingDetailPage = () => {
                         <p className="text-sm text-gray-200 mt-1">Pickup and drop-off services</p>
                       </div>
                       <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                        <Car className="h-4 w-4 text-white" />
+                        <PackageIcon className="h-4 w-4 text-white" />
                       </div>
                     </div>
                   </div>
@@ -849,7 +852,7 @@ const BookingDetailPage = () => {
 
               {/* Extras & Services */}
               {booking.extras && booking.extras.length > 0 && (
-                <div className="bg-white shadow">
+                <div className="bg-white border border-gray-200">
                   <div className="p-6 bg-[#005357]">
                     <div className="flex items-center justify-between">
                       <div>
@@ -857,7 +860,7 @@ const BookingDetailPage = () => {
                         <p className="text-sm text-gray-200 mt-1">Additional amenities and services</p>
                       </div>
                       <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                        <Gift className="h-4 w-4 text-white" />
+                        <PackageIcon className="h-4 w-4 text-white" />
                       </div>
                     </div>
                   </div>
@@ -888,7 +891,7 @@ const BookingDetailPage = () => {
             </div>
 
             {/* Special Requests - Compact */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -904,7 +907,7 @@ const BookingDetailPage = () => {
                 {booking.special_requests?.length > 0 ? (
                   <div className="space-y-2">
                     {(booking.special_requests || []).map((request) => (
-                      <div key={request.id} className="bg-white p-3 shadow">
+                      <div key={request.id} className="bg-white p-3 border border-gray-200">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center space-x-2">
                             <span className="font-medium text-gray-900 text-base">{request.type}</span>
@@ -932,7 +935,7 @@ const BookingDetailPage = () => {
             </div>
 
             {/* Payment Information - Compact */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1004,7 +1007,7 @@ const BookingDetailPage = () => {
       <Dialog.Root open={showInvoice} onOpenChange={setShowInvoice}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto z-50">
+          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto z-50">
             {/* Header */}
             <div className="p-6 bg-[#005357] flex items-center justify-between">
               <div>
@@ -1021,7 +1024,7 @@ const BookingDetailPage = () => {
                   className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded"
                   title="Print Invoice"
                 >
-                  <Printer className="h-5 w-5" />
+                  <File01Icon className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => {

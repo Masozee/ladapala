@@ -297,7 +297,7 @@ const ComplaintsPage = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-          <div className="bg-white shadow p-4">
+          <div className="bg-white border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-gray-900">{stats.in_progress}</div>
@@ -308,7 +308,7 @@ const ComplaintsPage = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white shadow p-4">
+          <div className="bg-white border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-gray-900">{stats.completed}</div>
@@ -319,7 +319,7 @@ const ComplaintsPage = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white shadow p-4">
+          <div className="bg-white border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-gray-900">{stats.escalated}</div>
@@ -330,7 +330,7 @@ const ComplaintsPage = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white shadow p-4">
+          <div className="bg-white border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-gray-900">{stats.urgent}</div>
@@ -341,7 +341,7 @@ const ComplaintsPage = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white shadow p-4">
+          <div className="bg-white border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-gray-900">{stats.high_priority}</div>
@@ -352,7 +352,7 @@ const ComplaintsPage = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white shadow p-4">
+          <div className="bg-white border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-gray-900">{stats.overdue}</div>
@@ -451,7 +451,7 @@ const ComplaintsPage = () => {
               /* Card View */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredComplaints.map((complaint) => (
-                  <div key={complaint.id} className="bg-white shadow">
+                  <div key={complaint.id} className="bg-white border border-gray-200">
                     {/* Card Header */}
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
@@ -569,7 +569,7 @@ const ComplaintsPage = () => {
               </div>
         ) : (
           /* Table View */
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -715,7 +715,7 @@ const ComplaintsPage = () => {
                             •••
                           </button>
                           {openDropdown === complaint.id && (
-                            <div className="absolute right-0 mt-1 w-48 bg-white shadow-lg border py-1 z-10">
+                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-300 border py-1 z-10">
                               <Link
                                 href={`/complaints/${complaint.complaint_number}`}
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"

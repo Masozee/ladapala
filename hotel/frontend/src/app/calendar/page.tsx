@@ -76,9 +76,13 @@ const CalendarPage = () => {
       if (month) params.append('month', month.toString());
       if (year) params.append('year', year.toString());
       
-      const response = await fetch(buildApiUrl(`calendar/events/?${params}`));
-      if (!response.ok) throw new Error('Failed to fetch events');
-      
+      const response = await fetch(buildApiUrl(`hotel/events/?${params}`));
+      if (!response.ok) {
+        // Events endpoint might not exist yet, return empty array
+        console.warn('Events endpoint not available yet');
+        return [];
+      }
+
       const data = await response.json();
       return data.results || [];
     } catch (err) {
@@ -92,8 +96,8 @@ const CalendarPage = () => {
     try {
       const params = new URLSearchParams();
       if (year) params.append('year', year.toString());
-      
-      const response = await fetch(buildApiUrl(`calendar/holidays/?${params}`));
+
+      const response = await fetch(buildApiUrl(`hotel/holidays/?${params}`));
       if (!response.ok) throw new Error('Failed to fetch holidays');
       
       const data = await response.json();
@@ -320,7 +324,7 @@ const CalendarPage = () => {
     });
     
     return (
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-4 bg-gray-50">
           <h4 className="font-medium text-gray-900 text-center">{title}</h4>
           <p className="text-sm text-gray-500 text-center">
@@ -410,7 +414,7 @@ const CalendarPage = () => {
         {/* Main Calendar Area */}
         <div className="flex-1 space-y-6">
           {/* Header */}
-          <div className="bg-[#005357] text-white p-6 shadow">
+          <div className="bg-[#005357] text-white p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-white">Calendar</h1>
@@ -444,7 +448,7 @@ const CalendarPage = () => {
           </div>
 
           {/* Calendar Controls */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -567,7 +571,7 @@ const CalendarPage = () => {
         </div>
 
         {/* Upcoming Events */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-gray-50">
             <h3 className="text-lg font-semibold text-gray-900">Upcoming Events</h3>
             <p className="text-sm text-gray-500 mt-1">Next 7 days across all months</p>
@@ -637,7 +641,7 @@ const CalendarPage = () => {
                       <PencilEdit02Icon className="h-4 w-4" />
                     </button>
                     <button className="p-1 text-gray-400 hover:text-red-600">
-                      <Trash2 className="h-4 w-4" />
+                      <Delete02Icon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -657,7 +661,7 @@ const CalendarPage = () => {
         <Dialog.Root open={showEventDialog} onOpenChange={setShowEventDialog}>
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-            <Dialog.Content className="fixed top-[10%] left-1/2 transform -translate-x-1/2 bg-white shadow-lg max-w-lg w-full mx-4 z-50">
+            <Dialog.Content className="fixed top-[10%] left-1/2 transform -translate-x-1/2 bg-white border border-gray-300 max-w-lg w-full mx-4 z-50">
               {selectedEvent && (
                 <>
                   <div className="p-6 bg-[#005357] text-white">
@@ -798,7 +802,7 @@ const CalendarPage = () => {
             if (nextMonthEvents.length === 0 && nextMonthHolidays.length === 0) return null;
 
             return (
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-4 bg-gray-50">
                   <h4 className="font-medium text-gray-900">
                     {monthNames[nextMonth.getMonth()]} Highlights
@@ -842,7 +846,7 @@ const CalendarPage = () => {
           })()}
 
           {/* Quick Stats */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-4 bg-gray-50">
               <h4 className="font-medium text-gray-900">This Month</h4>
             </div>
@@ -896,7 +900,7 @@ const CalendarPage = () => {
           </div>
 
           {/* Indonesian Holidays */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-4 bg-gray-50">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-900">Indonesian Holidays</h4>
@@ -931,7 +935,7 @@ const CalendarPage = () => {
           </div>
 
           {/* Today's Events */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-4 bg-gray-50">
               <h4 className="font-medium text-gray-900">Today's Events</h4>
             </div>

@@ -1063,7 +1063,7 @@ const GuestsPage = () => {
           /* Card View */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredGuests.map((guest) => (
-              <div key={guest.id} className="bg-white shadow">
+              <div key={guest.id} className="bg-white border border-gray-200">
                 {/* Guest Card Header */}
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-start justify-between">
@@ -1131,11 +1131,11 @@ const GuestsPage = () => {
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="text-center">
-                      <div className="text-lg font-bold text-[#005357]">{guest.total_stays}</div>
+                      <div className="text-lg font-bold text-[#005357]">{guest.total_stays || 0}</div>
                       <div className="text-xs text-gray-600">Stays</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-bold text-[#005357]">{guest.total_nights}</div>
+                      <div className="text-lg font-bold text-[#005357]">{guest.total_nights || 0}</div>
                       <div className="text-xs text-gray-600">Nights</div>
                     </div>
                   </div>
@@ -1143,7 +1143,7 @@ const GuestsPage = () => {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Total Spent</span>
-                      <span className="font-medium text-gray-900">{formatCurrency(guest.total_spent)}</span>
+                      <span className="font-medium text-gray-900">{formatCurrency(guest.total_spent || 0)}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Last Stay</span>
@@ -1153,7 +1153,7 @@ const GuestsPage = () => {
                       <span className="text-gray-600">Avg Rating</span>
                       <div className="flex items-center space-x-1">
                         <SparklesIcon className="h-3 w-3 text-yellow-400 fill-current" />
-                        <span className="font-medium text-gray-900">{guest.avg_rating}</span>
+                        <span className="font-medium text-gray-900">{guest.avg_rating || 0}</span>
                       </div>
                     </div>
                   </div>
@@ -1178,7 +1178,7 @@ const GuestsPage = () => {
           </div>
         ) : !loading && !error ? (
           /* Table View */
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -1288,17 +1288,17 @@ const GuestsPage = () => {
                         <div className="text-sm space-y-1">
                           <div className="flex items-center space-x-4">
                             <div className="text-center">
-                              <div className="font-bold text-[#005357]">{guest.total_stays}</div>
+                              <div className="font-bold text-[#005357]">{guest.total_stays || 0}</div>
                               <div className="text-xs text-gray-600">stays</div>
                             </div>
                             <div className="text-center">
-                              <div className="font-bold text-[#005357]">{guest.total_nights}</div>
+                              <div className="font-bold text-[#005357]">{guest.total_nights || 0}</div>
                               <div className="text-xs text-gray-600">nights</div>
                             </div>
                           </div>
                           <div className="flex items-center space-x-1">
                             <SparklesIcon className="h-3 w-3 text-yellow-400 fill-current" />
-                            <span className="text-xs text-gray-600">{guest.avg_rating} avg rating</span>
+                            <span className="text-xs text-gray-600">{guest.avg_rating || 0} avg rating</span>
                           </div>
                         </div>
                       </td>
@@ -1332,7 +1332,7 @@ const GuestsPage = () => {
                           
                           {/* Dropdown Menu */}
                           {activeDropdown === guest.id && (
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 shadow-lg z-50">
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 border border-gray-300 z-50">
                               <div className="py-1">
                                 <button
                                   onClick={() => {

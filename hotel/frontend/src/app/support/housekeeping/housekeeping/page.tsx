@@ -382,7 +382,7 @@ export default function HousekeepingPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -402,7 +402,7 @@ export default function HousekeepingPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -422,7 +422,7 @@ export default function HousekeepingPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -442,7 +442,7 @@ export default function HousekeepingPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -464,7 +464,7 @@ export default function HousekeepingPage() {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -525,7 +525,7 @@ export default function HousekeepingPage() {
             {/* Tasks List */}
             <div className="space-y-4">
               {filteredTasks.map((task) => (
-                <div key={task.id} className="bg-white p-6 shadow-sm">
+                <div key={task.id} className="bg-white p-6 border border-gray-200">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-3">
@@ -661,7 +661,7 @@ export default function HousekeepingPage() {
         </div>
 
         {/* Staff Status */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -677,7 +677,7 @@ export default function HousekeepingPage() {
           <div className="p-6 bg-gray-50">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {housekeepingStaff.map((staff) => (
-                <div key={staff.id} className="bg-white p-4 shadow-sm">
+                <div key={staff.id} className="bg-white p-4 border border-gray-200">
                   <div className="flex items-center space-x-3 mb-3">
                     <div className="w-12 h-12 bg-[#005357] flex items-center justify-center text-white font-bold">
                       {staff.name.split(' ').map(n => n[0]).join('')}

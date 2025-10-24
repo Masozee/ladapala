@@ -28,7 +28,8 @@ import {
   Alert01Icon,
   Moon02Icon,
   Sun03Icon,
-  Call02Icon
+  Call02Icon,
+  Location01Icon
 } from '@/lib/icons';
 
 const SettingsPage = () => {
@@ -241,7 +242,7 @@ const SettingsPage = () => {
 
   const renderGeneralSettings = () => (
     <div className="space-y-6">
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -313,7 +314,7 @@ const SettingsPage = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -382,7 +383,7 @@ const SettingsPage = () => {
 
   const renderUserSettings = () => (
     <div className="space-y-6">
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -487,7 +488,7 @@ const SettingsPage = () => {
 
   const renderNotificationSettings = () => (
     <div className="space-y-6">
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -580,7 +581,7 @@ const SettingsPage = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -633,7 +634,7 @@ const SettingsPage = () => {
         return renderNotificationSettings();
       default:
         return (
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>

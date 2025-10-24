@@ -86,7 +86,7 @@ export default function Home() {
           </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -108,7 +108,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -130,7 +130,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -152,7 +152,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -175,7 +175,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -206,7 +206,7 @@ export default function Home() {
         {/* Bento Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {/* Demographic Visitor Chart - 1/3 width */}
-          <div className="bg-white shadow md:col-span-1 lg:col-span-2">
+          <div className="bg-white border border-gray-200 md:col-span-1 lg:col-span-2">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -253,7 +253,7 @@ export default function Home() {
           </div>
 
           {/* Daily Occupation Chart - 2/3 width */}
-          <div className="bg-white shadow md:col-span-2 lg:col-span-4">
+          <div className="bg-white border border-gray-200 md:col-span-2 lg:col-span-4">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -320,7 +320,7 @@ export default function Home() {
           </div>
 
           {/* News Card - 1/3 width */}
-          <div className="bg-white shadow md:col-span-1 lg:col-span-2">
+          <div className="bg-white border border-gray-200 md:col-span-1 lg:col-span-2">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -357,7 +357,7 @@ export default function Home() {
           </div>
 
           {/* Calendar Card - 1/3 width */}
-          <div className="bg-white shadow md:col-span-1 lg:col-span-2">
+          <div className="bg-white border border-gray-200 md:col-span-1 lg:col-span-2">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -398,7 +398,7 @@ export default function Home() {
           </div>
 
           {/* Emergency Contact Card - 1/3 width */}
-          <div className="bg-white shadow md:col-span-1 lg:col-span-2">
+          <div className="bg-white border border-gray-200 md:col-span-1 lg:col-span-2">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>

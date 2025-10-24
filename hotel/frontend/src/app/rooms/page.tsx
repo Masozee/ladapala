@@ -734,7 +734,7 @@ const RoomsPage = () => {
           /* Card View */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRoomTypes.map((roomType) => (
-            <div key={roomType.id} className="bg-white shadow">
+            <div key={roomType.id} className="bg-white border border-gray-200">
               {/* Room Type Header */}
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
@@ -854,7 +854,7 @@ const RoomsPage = () => {
           </div>
         ) : !loading && !error ? (
           /* Table View */
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -1025,7 +1025,7 @@ const RoomsPage = () => {
                           
                           {/* Dropdown Menu */}
                           {activeDropdown === roomType.id && (
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-white shadow-lg z-50">
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-300 z-50">
                               <div className="py-1">
                                 <button
                                   onClick={() => {

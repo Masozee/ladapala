@@ -17,7 +17,8 @@ import {
   Calculator,
   Hash,
   Clock01Icon,
-  UserCheckIcon
+  UserCheckIcon,
+  Delete02Icon
 } from '@/lib/icons';
 
 interface LineItem {
@@ -213,7 +214,7 @@ const PaymentsPage = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Guest Information Card */}
             {(guestName || roomNumber) && (
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
@@ -249,7 +250,7 @@ const PaymentsPage = () => {
             )}
 
             {/* Quick Services */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -267,7 +268,7 @@ const PaymentsPage = () => {
                     <button
                       key={index}
                       onClick={() => addLineItem(service)}
-                      className="group p-3 bg-white border hover:border-[#005357] hover:bg-[#005357] hover:text-white hover:shadow-md transition-all text-left"
+                      className="group p-3 bg-white border hover:border-[#005357] hover:bg-[#005357] hover:text-white hover:border-gray-400 transition-all text-left"
                     >
                       <div className="font-medium text-sm">{service.name}</div>
                       <div className="text-[#005357] group-hover:text-white font-bold text-sm mt-1">
@@ -283,7 +284,7 @@ const PaymentsPage = () => {
           {/* Right Panel - Order Summary & Payment */}
           <div className="space-y-6">
             {/* Order Summary */}
-            <div className="bg-white shadow border">
+            <div className="bg-white border border-gray-200 border">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -331,7 +332,7 @@ const PaymentsPage = () => {
                             onClick={() => removeLineItem(item.id)}
                             className="p-1 hover:bg-red-100 text-red-600 ml-2"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Delete02Icon className="h-3 w-3" />
                           </button>
                         </div>
                         <div className="font-bold text-sm ml-4 min-w-[80px] text-right">
@@ -364,7 +365,7 @@ const PaymentsPage = () => {
 
             {/* Payment Method */}
             {lineItems.length > 0 && (
-              <div className="bg-white shadow border">
+              <div className="bg-white border border-gray-200 border">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>

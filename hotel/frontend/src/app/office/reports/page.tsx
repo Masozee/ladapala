@@ -172,7 +172,7 @@ export default function ReportsPage() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -192,7 +192,7 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -212,7 +212,7 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -234,7 +234,7 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -256,7 +256,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Main Report Section */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
@@ -305,7 +305,7 @@ export default function ReportsPage() {
             {/* Reports Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredReports.map((report) => (
-                <div key={report.id} className="bg-white shadow">
+                <div key={report.id} className="bg-white border border-gray-200">
                   <div className="p-6 border-b border-gray-200">
                     <div className="flex items-center justify-between">
                       <div>
@@ -360,7 +360,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>

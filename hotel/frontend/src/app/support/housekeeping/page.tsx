@@ -311,7 +311,7 @@ const HousekeepingPage = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'dirty': return <Trash2 className="h-4 w-4" />;
+      case 'dirty': return <Delete02Icon className="h-4 w-4" />;
       case 'cleaning': return <PackageIcon className="h-4 w-4" />;
       case 'inspecting': return <EyeIcon className="h-4 w-4" />;
       case 'clean': return <UserCheckIcon className="h-4 w-4" />;
@@ -402,7 +402,7 @@ const HousekeepingPage = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -410,13 +410,13 @@ const HousekeepingPage = () => {
                   <p className="text-sm text-gray-600 mt-1">Needs Cleaning</p>
                 </div>
                 <div className="w-8 h-8 bg-red-500 flex items-center justify-center">
-                  <Trash2 className="h-4 w-4 text-white" />
+                  <Delete02Icon className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50"></div>
           </div>
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -430,7 +430,7 @@ const HousekeepingPage = () => {
             </div>
             <div className="p-4 bg-gray-50"></div>
           </div>
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -444,7 +444,7 @@ const HousekeepingPage = () => {
             </div>
             <div className="p-4 bg-gray-50"></div>
           </div>
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -458,7 +458,7 @@ const HousekeepingPage = () => {
             </div>
             <div className="p-4 bg-gray-50"></div>
           </div>
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -472,7 +472,7 @@ const HousekeepingPage = () => {
             </div>
             <div className="p-4 bg-gray-50"></div>
           </div>
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -553,7 +553,7 @@ const HousekeepingPage = () => {
             {filteredRooms.map((room) => {
               const timeDeadline = getTimeUntilDeadline(room.estimated_completion);
               return (
-                <div key={room.id} className="bg-white shadow">
+                <div key={room.id} className="bg-white border border-gray-200">
                   {/* Room Card Header */}
                   <div className="p-6 border-b border-gray-200">
                     <div className="flex items-start justify-between">
@@ -707,7 +707,7 @@ const HousekeepingPage = () => {
         ) : (
           /* Table View */
           <div className="overflow-x-auto">
-            <table className="w-full bg-white shadow">
+            <table className="w-full bg-white border border-gray-200">
               <thead className="bg-[#005357]">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-medium text-white">
@@ -874,7 +874,7 @@ const HousekeepingPage = () => {
         )}
 
         {/* Staff Performance Summary */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -889,7 +889,7 @@ const HousekeepingPage = () => {
           <div className="p-4 bg-gray-50">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               {MOCK_STAFF.map((staff) => (
-                <div key={staff.id} className="bg-white p-4 shadow">
+                <div key={staff.id} className="bg-white p-4 border border-gray-200">
                   <div className="flex items-center space-x-3 mb-3">
                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                       <UserIcon className="h-4 w-4 text-gray-600" />

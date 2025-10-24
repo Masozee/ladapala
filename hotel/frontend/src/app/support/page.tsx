@@ -244,7 +244,7 @@ export default function SupportDashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -264,7 +264,7 @@ export default function SupportDashboard() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -284,7 +284,7 @@ export default function SupportDashboard() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -304,7 +304,7 @@ export default function SupportDashboard() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -328,7 +328,7 @@ export default function SupportDashboard() {
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Requests */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -350,7 +350,7 @@ export default function SupportDashboard() {
             <div className="p-4 bg-gray-50">
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {recentRequests.map((request) => (
-                  <div key={request.id} className="bg-white p-4 shadow-sm">
+                  <div key={request.id} className="bg-white p-4 border border-gray-200">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
@@ -398,7 +398,7 @@ export default function SupportDashboard() {
           </div>
 
           {/* Team Status */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -414,7 +414,7 @@ export default function SupportDashboard() {
             <div className="p-4 bg-gray-50">
               <div className="space-y-4">
                 {teamMembers.map((member) => (
-                  <div key={member.id} className="bg-white p-4 shadow-sm">
+                  <div key={member.id} className="bg-white p-4 border border-gray-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-[#005357] flex items-center justify-center text-white font-bold">
@@ -451,7 +451,7 @@ export default function SupportDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>

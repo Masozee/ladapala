@@ -1510,7 +1510,7 @@ const BookingsPage = () => {
               className={`py-2 px-1 text-center text-xs border-l border-gray-100 relative ${isToday ? 'bg-blue-50' : ''}`}
             >
               <div 
-                className={`${color} text-white px-2 py-3 text-xs font-medium shadow-sm cursor-pointer hover:opacity-90 transition-opacity relative`}
+                className={`${color} text-white px-2 py-3 text-xs font-medium border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity relative`}
                 title={`${reservation.guest_name} (${reservation.reservation_number})\n${reservation.adults} adults${reservation.children > 0 ? `, ${reservation.children} children` : ''}\n${formatDate(reservation.check_in_date)} - ${formatDate(reservation.check_out_date)}\n${formatCurrency(reservation.total_amount)}`}
               >
                 <div className="font-semibold truncate">
@@ -1685,7 +1685,7 @@ const BookingsPage = () => {
 
       {/* Calendar View */}
       {viewMode === 'calendar' ? (
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           {/* Calendar Header with Compact Filters */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -1722,7 +1722,7 @@ const BookingsPage = () => {
                   
                   {/* Date Range Picker */}
                   {showDateRangePicker && (
-                    <div className="absolute top-full mt-1 right-0 bg-white border border-gray-200 shadow-lg z-50 p-4 date-range-picker">
+                    <div className="absolute top-full mt-1 right-0 bg-white border border-gray-200 border border-gray-300 z-50 p-4 date-range-picker">
                       <div className="grid grid-cols-2 gap-4">
                         {/* Start Date Calendar */}
                         <div>
@@ -1823,7 +1823,7 @@ const BookingsPage = () => {
                   <th className="text-left py-3 px-4 text-sm font-bold text-white uppercase tracking-wider w-[152px] sticky left-0 bg-[#005357] z-20">
                     Room
                   </th>
-                  <th className="text-center py-3 px-4 text-sm font-bold text-white uppercase tracking-wider w-[120px] sticky left-[152px] bg-[#005357] z-20 shadow-lg" style={{boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'}}>
+                  <th className="text-center py-3 px-4 text-sm font-bold text-white uppercase tracking-wider w-[120px] sticky left-[152px] bg-[#005357] z-20 border border-gray-300" style={{boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'}}>
                     Status
                   </th>
                   {getCalendarDates().map((date) => (
@@ -1894,7 +1894,7 @@ const BookingsPage = () => {
                   </p>
                 </div>
                 <div>
-                  <nav className="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
+                  <nav className="relative z-0 inline-flex border border-gray-200 -space-x-px" aria-label="Pagination">
                     <button
                       onClick={() => loadRooms(Math.max(1, roomsCurrentPage - 1))}
                       disabled={roomsCurrentPage === 1 || roomsLoading}
@@ -1972,7 +1972,7 @@ const BookingsPage = () => {
         </div>
       ) : (
         /* List View - Existing Reservations Table */
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           {/* Table Header with Filters */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -2234,7 +2234,7 @@ const BookingsPage = () => {
                               ></div>
                               
                               {/* Dropdown Menu */}
-                              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg z-20">
+                              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded border border-gray-300 z-20">
                                 <div className="py-1">
                                   <Link
                                     href={`/bookings/${reservation.reservation_number}`}
@@ -2443,7 +2443,7 @@ const BookingsPage = () => {
                   </p>
                 </div>
                 <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <nav className="relative z-0 inline-flex rounded-md border border-gray-200 -space-x-px" aria-label="Pagination">
                     <button
                       onClick={() => loadReservations(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1 || loading}
@@ -2524,7 +2524,7 @@ const BookingsPage = () => {
       <Dialog.Root open={showAddReservation} onOpenChange={setShowAddReservation}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto z-50">
+          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto z-50">
             {/* Header */}
             <div className="p-6 bg-[#005357]">
               <div className="flex items-center justify-between">
@@ -2576,7 +2576,7 @@ const BookingsPage = () => {
               <form onSubmit={handleFormSubmit} className="space-y-6">
                 {/* Step 1: Guest Information */}
                 {wizardStep === 1 && (
-                  <div className="bg-white p-6 rounded shadow">
+                  <div className="bg-white p-6 rounded border border-gray-200">
                     <h3 className="font-bold text-gray-900 mb-4">Guest Information</h3>
                     
                     {/* Return Customer Check */}
@@ -2817,7 +2817,7 @@ const BookingsPage = () => {
 
                 {/* Step 2: Booking Details */}
                 {wizardStep === 2 && (
-                  <div className="bg-white p-6 rounded shadow">
+                  <div className="bg-white p-6 rounded border border-gray-200">
                     <h3 className="font-bold text-gray-900 mb-4">Booking Details</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -2915,7 +2915,7 @@ const BookingsPage = () => {
 
                 {/* Step 3: Room Selection */}
                 {wizardStep === 3 && (
-                  <div className="bg-white p-6 rounded shadow">
+                  <div className="bg-white p-6 rounded border border-gray-200">
                     <h3 className="font-bold text-gray-900 mb-4">Select Room</h3>
                     {availableRooms.length > 0 ? (
                       <div className="space-y-4">
@@ -3017,7 +3017,7 @@ const BookingsPage = () => {
 
                 {/* Step 4: Confirmation */}
                 {wizardStep === 4 && (
-                  <div className="bg-white p-6 rounded shadow">
+                  <div className="bg-white p-6 rounded border border-gray-200">
                     <h3 className="font-bold text-gray-900 mb-4">Review & Confirm</h3>
                     
                     {/* Guest Information Summary */}

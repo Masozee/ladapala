@@ -155,7 +155,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
         {/* Employee Information Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Personal Information */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -203,7 +203,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
           </div>
 
           {/* Work Information */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -246,7 +246,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
           </div>
 
           {/* Performance Stats */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -287,7 +287,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
         </div>
 
         {/* Weekly Schedule */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -324,7 +324,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
         </div>
 
         {/* Attendance History */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>

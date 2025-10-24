@@ -394,7 +394,7 @@ const MaintenanceDetailPage = () => {
         </div>
 
         {/* Request Overview */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -527,7 +527,7 @@ const MaintenanceDetailPage = () => {
         {technician && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Technician Info */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357] text-white">
                 <div className="flex items-center justify-between">
                   <div>
@@ -576,7 +576,7 @@ const MaintenanceDetailPage = () => {
             </div>
 
             {/* Work Timer */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357] text-white">
                 <div className="flex items-center justify-between">
                   <div>
@@ -657,7 +657,7 @@ const MaintenanceDetailPage = () => {
           {activeTab === 'details' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Problem Description */}
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -688,7 +688,7 @@ const MaintenanceDetailPage = () => {
               </div>
 
               {/* Parts Needed */}
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -726,7 +726,7 @@ const MaintenanceDetailPage = () => {
 
               {/* Request Photos */}
               {request.photos.length > 0 && (
-                <div className="lg:col-span-2 bg-white shadow">
+                <div className="lg:col-span-2 bg-white border border-gray-200">
                   <div className="p-6 bg-[#005357] text-white">
                     <div className="flex items-center justify-between">
                       <div>
@@ -759,7 +759,7 @@ const MaintenanceDetailPage = () => {
           {activeTab === 'work-log' && (
             <div className="space-y-6">
               {/* Add New Log Entry */}
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -797,7 +797,7 @@ const MaintenanceDetailPage = () => {
               </div>
 
               {/* Work Log Timeline */}
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -851,7 +851,7 @@ const MaintenanceDetailPage = () => {
           {activeTab === 'parts' && (
             <div className="space-y-6">
               {/* Parts Used */}
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -906,7 +906,7 @@ const MaintenanceDetailPage = () => {
               </div>
 
               {/* Parts Inventory Check */}
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -946,7 +946,7 @@ const MaintenanceDetailPage = () => {
           {activeTab === 'costs' && request.cost_breakdown && (
             <div className="space-y-6">
               {/* Cost Breakdown */}
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1036,7 +1036,7 @@ const MaintenanceDetailPage = () => {
               </div>
 
               {/* Cost Comparison */}
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357] text-white">
                   <div className="flex items-center justify-between">
                     <div>

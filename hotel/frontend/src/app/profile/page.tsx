@@ -23,10 +23,6 @@ import {
   SparklesIcon,
   UserMultipleIcon,
   Building03Icon,
-  Gamepad2,
-  Music,
-  Book,
-  Home,
   AlertCircleIcon,
   Alert01Icon,
   Add01Icon,
@@ -281,7 +277,7 @@ const ProfilePage = () => {
   const renderPersonalInfo = () => (
     <div className="space-y-6">
       {/* Profile Picture & Basic Info */}
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -391,7 +387,7 @@ const ProfilePage = () => {
       </div>
 
       {/* Languages & Skills */}
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -423,7 +419,7 @@ const ProfilePage = () => {
 
   const renderProfessionalInfo = () => (
     <div className="space-y-6">
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -479,7 +475,7 @@ const ProfilePage = () => {
       </div>
 
       {/* Certifications */}
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -487,7 +483,7 @@ const ProfilePage = () => {
               <p className="text-sm text-gray-100 mt-1">Your professional qualifications and awards</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <Award className="h-4 w-4 text-[#005357]" />
+              <SparklesIcon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
@@ -509,7 +505,7 @@ const ProfilePage = () => {
               <div className="space-y-2">
                 {profile.professional.achievements.map((achievement, index) => (
                   <div key={index} className="flex items-center space-x-2 p-2 bg-white border">
-                    <Award className="h-4 w-4 text-yellow-500" />
+                    <SparklesIcon className="h-4 w-4 text-yellow-500" />
                     <span className="text-sm text-gray-700">{achievement}</span>
                   </div>
                 ))}
@@ -523,7 +519,7 @@ const ProfilePage = () => {
 
   const renderSecurityInfo = () => (
     <div className="space-y-6">
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -531,7 +527,7 @@ const ProfilePage = () => {
               <p className="text-sm text-gray-100 mt-1">Manage your account security and privacy</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <Shield className="h-4 w-4 text-[#005357]" />
+              <Shield01Icon className="h-4 w-4 text-[#005357]" />
             </div>
           </div>
         </div>
@@ -684,7 +680,7 @@ const ProfilePage = () => {
 
   const renderStatistics = () => (
     <div className="space-y-6">
-      <div className="bg-white shadow">
+      <div className="bg-white border border-gray-200">
         <div className="p-6 bg-[#005357] text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -758,7 +754,7 @@ const ProfilePage = () => {
         return renderStatistics();
       default:
         return (
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -813,7 +809,7 @@ const ProfilePage = () => {
         </div>
 
         {/* Profile Summary Card */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-white/20 flex items-center justify-center">

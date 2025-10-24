@@ -249,7 +249,7 @@ export default function FinancialPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="flex space-x-1 p-1 bg-gray-50">
             <TabButton tabId="overview" label="Ringkasan" icon={PieChartIcon} />
             <TabButton tabId="transactions" label="Transaksi" icon={File01Icon} />
@@ -275,7 +275,7 @@ export default function FinancialPage() {
               <div className="p-6 bg-gray-50">
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 bg-[#005357] text-white">
                       <div className="flex items-center justify-between">
                         <div>
@@ -302,7 +302,7 @@ export default function FinancialPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 bg-[#005357] text-white">
                       <div className="flex items-center justify-between">
                         <div>
@@ -324,7 +324,7 @@ export default function FinancialPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 bg-[#005357] text-white">
                       <div className="flex items-center justify-between">
                         <div>
@@ -348,7 +348,7 @@ export default function FinancialPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 bg-[#005357] text-white">
                       <div className="flex items-center justify-between">
                         <div>
@@ -373,7 +373,7 @@ export default function FinancialPage() {
 
                 {/* Expense Breakdown */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 bg-[#005357] text-white">
                       <div className="flex items-center justify-between">
                         <div>
@@ -410,7 +410,7 @@ export default function FinancialPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 bg-[#005357] text-white">
                       <div className="flex items-center justify-between">
                         <div>
@@ -646,7 +646,7 @@ export default function FinancialPage() {
               <div className="p-6 bg-gray-50">
                 {/* Invoice Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="bg-white p-6 shadow">
+                  <div className="bg-white p-6 border border-gray-200">
                     <div className="flex items-center">
                       <div className="w-12 h-12 bg-green-100 flex items-center justify-center">
                         <UserCheckIcon className="h-6 w-6 text-green-600" />
@@ -660,7 +660,7 @@ export default function FinancialPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white p-6 shadow">
+                  <div className="bg-white p-6 border border-gray-200">
                     <div className="flex items-center">
                       <div className="w-12 h-12 bg-yellow-100 flex items-center justify-center">
                         <Clock01Icon className="h-6 w-6 text-yellow-600" />
@@ -674,7 +674,7 @@ export default function FinancialPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white p-6 shadow">
+                  <div className="bg-white p-6 border border-gray-200">
                     <div className="flex items-center">
                       <div className="w-12 h-12 bg-red-100 flex items-center justify-center">
                         <AlertCircleIcon className="h-6 w-6 text-red-600" />
@@ -796,7 +796,7 @@ export default function FinancialPage() {
               <div className="p-6 bg-gray-50">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* Revenue Report */}
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -827,7 +827,7 @@ export default function FinancialPage() {
                   </div>
 
                   {/* Expense Report */}
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -858,7 +858,7 @@ export default function FinancialPage() {
                   </div>
 
                   {/* Tax Report */}
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>

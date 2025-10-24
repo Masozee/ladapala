@@ -24,7 +24,16 @@ import {
   ArrowUp01Icon,
   Loading03Icon,
   Search02Icon,
-  FilterIcon
+  FilterIcon,
+  Monitor,
+  Activity,
+  Cpu,
+  Alert01Icon,
+  Server,
+  HardDrive,
+  Delete02Icon,
+  Location01Icon,
+  DatabaseIcon
 } from '@/lib/icons';
 
 export default function AdminPage() {
@@ -226,7 +235,7 @@ export default function AdminPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="flex space-x-1 p-1 bg-gray-50">
             <TabButton tabId="dashboard" label="Dashboard" icon={ViewIcon} />
             <TabButton tabId="users" label="Pengguna" icon={UserMultipleIcon} />
@@ -253,7 +262,7 @@ export default function AdminPage() {
               <div className="p-6 bg-gray-50">
                 {/* System Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -273,7 +282,7 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -293,7 +302,7 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -313,7 +322,7 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -336,7 +345,7 @@ export default function AdminPage() {
 
                 {/* System Health */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -382,7 +391,7 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -451,7 +460,7 @@ export default function AdminPage() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
-                      <UserPlus className="h-4 w-4" />
+                      <Add01Icon className="h-4 w-4" />
                       <span>Tambah Pengguna</span>
                     </button>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
@@ -573,7 +582,7 @@ export default function AdminPage() {
                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors rounded"
                                 title="Hapus Pengguna"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Delete02Icon className="h-4 w-4" />
                               </button>
                             </div>
                           </td>
@@ -604,7 +613,7 @@ export default function AdminPage() {
               <div className="p-6 bg-gray-50">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* System Maintenance */}
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -628,7 +637,7 @@ export default function AdminPage() {
                       </button>
                       <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                         <div className="flex items-center space-x-3">
-                          <Database className="h-5 w-5 text-green-600" />
+                          <DatabaseIcon className="h-5 w-5 text-green-600" />
                           <div>
                             <h3 className="font-medium text-gray-900">Database Optimization</h3>
                             <p className="text-sm text-gray-600">Optimasi performa database</p>
@@ -639,7 +648,7 @@ export default function AdminPage() {
                   </div>
 
                   {/* Backup & Recovery */}
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -674,7 +683,7 @@ export default function AdminPage() {
                   </div>
 
                   {/* System Configuration */}
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -722,7 +731,7 @@ export default function AdminPage() {
                     <p className="text-sm text-gray-100 mt-1">Monitoring dan pengaturan keamanan</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Shield className="h-4 w-4 text-[#005357]" />
+                    <Shield01Icon className="h-4 w-4 text-[#005357]" />
                   </div>
                 </div>
               </div>
@@ -730,7 +739,7 @@ export default function AdminPage() {
               <div className="p-6 bg-gray-50">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Security Alerts */}
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -763,7 +772,7 @@ export default function AdminPage() {
                   </div>
 
                   {/* Security Settings */}
-                  <div className="bg-white shadow">
+                  <div className="bg-white border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div>
@@ -779,7 +788,7 @@ export default function AdminPage() {
                       <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <Key className="h-5 w-5 text-blue-600" />
+                            <Shield01Icon className="h-5 w-5 text-blue-600" />
                             <div>
                               <h3 className="font-medium text-gray-900">Password Policy</h3>
                               <p className="text-sm text-gray-600">Atur kebijakan password</p>
@@ -791,7 +800,7 @@ export default function AdminPage() {
                       <button className="w-full p-3 text-left bg-white hover:bg-gray-50 transition-colors">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <Shield className="h-5 w-5 text-green-600" />
+                            <Shield01Icon className="h-5 w-5 text-green-600" />
                             <div>
                               <h3 className="font-medium text-gray-900">Two-Factor Auth</h3>
                               <p className="text-sm text-gray-600">Aktifkan 2FA untuk admin</p>

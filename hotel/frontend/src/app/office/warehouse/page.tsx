@@ -12,7 +12,9 @@ import {
   CancelCircleIcon,
   EyeIcon,
   MoreHorizontalIcon,
-  PieChartIcon
+  PieChartIcon,
+  Alert01Icon,
+  Delete02Icon
 } from '@/lib/icons';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 
@@ -143,7 +145,7 @@ export default function WarehousePage() {
       <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -163,7 +165,7 @@ export default function WarehousePage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -185,7 +187,7 @@ export default function WarehousePage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -207,7 +209,7 @@ export default function WarehousePage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -233,7 +235,7 @@ export default function WarehousePage() {
         {/* Analytics Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Stock Level by Category Chart */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -301,7 +303,7 @@ export default function WarehousePage() {
           </div>
 
           {/* Category Distribution Chart */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -349,7 +351,7 @@ export default function WarehousePage() {
         </div>
 
         {/* Inventory Management */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -517,7 +519,7 @@ export default function WarehousePage() {
                               ></div>
                               
                               {/* Dropdown Menu */}
-                              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg z-20">
+                              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded border border-gray-300 z-20">
                                 <div className="py-1">
                                   <button
                                     onClick={() => {
@@ -578,7 +580,7 @@ export default function WarehousePage() {
                                     }}
                                     className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Delete02Icon className="h-4 w-4" />
                                     <span>Hapus Item</span>
                                   </button>
                                 </div>

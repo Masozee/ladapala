@@ -403,7 +403,7 @@ export default function EmergencyPage() {
 
         {/* Alert Banner for Active Emergencies */}
         {emergencyStats.activeAlerts > 0 && (
-          <div className="bg-red-100 p-4 shadow animate-pulse">
+          <div className="bg-red-100 p-4 border border-gray-200 animate-pulse">
             <div className="flex items-center space-x-3">
               <AlertCircleIcon className="h-6 w-6 text-red-600" />
               <div>
@@ -419,7 +419,7 @@ export default function EmergencyPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -441,7 +441,7 @@ export default function EmergencyPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -461,7 +461,7 @@ export default function EmergencyPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -481,7 +481,7 @@ export default function EmergencyPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -503,7 +503,7 @@ export default function EmergencyPage() {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -564,7 +564,7 @@ export default function EmergencyPage() {
             {/* Incidents List */}
             <div className="space-y-6">
               {filteredIncidents.map((incident) => (
-                <div key={incident.id} className="bg-white p-6 shadow-sm">
+                <div key={incident.id} className="bg-white p-6 border border-gray-200">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
@@ -692,7 +692,7 @@ export default function EmergencyPage() {
         {/* Emergency Contacts & Team */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Emergency Contacts */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -708,7 +708,7 @@ export default function EmergencyPage() {
             <div className="p-6 bg-gray-50">
               <div className="space-y-3">
                 {emergencyContacts.map((contact) => (
-                  <div key={contact.id} className="bg-white p-4 shadow-sm flex items-center justify-between">
+                  <div key={contact.id} className="bg-white p-4 border border-gray-200 flex items-center justify-between">
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-900">{contact.name}</h4>
                       <p className="text-sm text-gray-600">{contact.available}</p>
@@ -735,7 +735,7 @@ export default function EmergencyPage() {
           </div>
 
           {/* Emergency Team */}
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -751,7 +751,7 @@ export default function EmergencyPage() {
             <div className="p-6 bg-gray-50">
               <div className="space-y-4">
                 {emergencyTeam.map((member) => (
-                  <div key={member.id} className="bg-white p-4 shadow-sm">
+                  <div key={member.id} className="bg-white p-4 border border-gray-200">
                     <div className="flex items-center space-x-3 mb-3">
                       <div className="w-12 h-12 bg-[#005357] flex items-center justify-center text-white font-bold">
                         {member.name.split(' ').map(n => n[0]).join('')}

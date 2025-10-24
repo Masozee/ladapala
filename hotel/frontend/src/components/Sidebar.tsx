@@ -82,7 +82,7 @@ const Sidebar = () => {
 
   return (
     <Tooltip.Provider delayDuration={300}>
-      <div className="w-20 bg-[#005357] shadow flex flex-col">
+      <div className="w-20 bg-[#005357] border border-gray-200 flex flex-col">
         {/* Header */}
         <div className="p-4">
           <div className="flex items-center justify-center">
@@ -137,7 +137,7 @@ const Sidebar = () => {
                       <DropdownMenu.Content
                         side="right"
                         sideOffset={12}
-                        className="bg-white shadow-lg border min-w-48 py-2 z-50"
+                        className="bg-white border border-gray-300 border min-w-48 py-2 z-50"
                       >
                         <div className="px-3 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
                           {item.name}
@@ -201,7 +201,7 @@ const Sidebar = () => {
                     <Tooltip.Content
                       side="right"
                       sideOffset={12}
-                      className="bg-gray-900 text-white px-2 py-1 text-sm shadow-lg z-50"
+                      className="bg-gray-900 text-white px-2 py-1 text-sm border border-gray-300 z-50"
                     >
                       {item.name}
                       <Tooltip.Arrow className="fill-gray-900" />
@@ -250,7 +250,7 @@ const Sidebar = () => {
                       <DropdownMenu.Content
                         side="right"
                         sideOffset={12}
-                        className="bg-white shadow-lg border min-w-48 py-2 z-50"
+                        className="bg-white border border-gray-300 border min-w-48 py-2 z-50"
                       >
                         <div className="px-3 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
                           {item.name}
@@ -309,7 +309,7 @@ const Sidebar = () => {
                     <Tooltip.Content
                       side="right"
                       sideOffset={12}
-                      className="bg-gray-900 text-white px-2 py-1 text-sm shadow-lg z-50"
+                      className="bg-gray-900 text-white px-2 py-1 text-sm border border-gray-300 z-50"
                     >
                       {item.name}
                       <Tooltip.Arrow className="fill-gray-900" />

@@ -502,7 +502,7 @@ const MaintenancePage = () => {
           {/* First Column - 6 cards in 2 rows */}
           <div className="col-span-9">
             <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -516,7 +516,7 @@ const MaintenancePage = () => {
                 </div>
                 <div className="p-4 bg-gray-50"></div>
               </div>
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -530,7 +530,7 @@ const MaintenancePage = () => {
                 </div>
                 <div className="p-4 bg-gray-50"></div>
               </div>
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -546,7 +546,7 @@ const MaintenancePage = () => {
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -560,7 +560,7 @@ const MaintenancePage = () => {
                 </div>
                 <div className="p-4 bg-gray-50"></div>
               </div>
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -574,7 +574,7 @@ const MaintenancePage = () => {
                 </div>
                 <div className="p-4 bg-gray-50"></div>
               </div>
-              <div className="bg-white shadow hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -593,7 +593,7 @@ const MaintenancePage = () => {
           
           {/* Second Column - Total card */}
           <div className="col-span-3">
-            <div className="bg-white shadow h-full hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+            <div className="bg-white border border-gray-200 h-full hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
               <div className="p-6 h-full flex flex-col justify-center">
                 <div className="text-center">
                   <div className="w-12 h-12 bg-[#005357] group-hover:bg-white flex items-center justify-center mx-auto mb-4 rounded-full transition-colors duration-200">
@@ -672,7 +672,7 @@ const MaintenancePage = () => {
             {filteredRequests.map((request) => {
               const timeDeadline = request.estimated_completion ? getTimeUntilDeadline(request.estimated_completion) : null;
               return (
-                <div key={request.id} className="bg-white shadow flex flex-col h-full">
+                <div key={request.id} className="bg-white border border-gray-200 flex flex-col h-full">
                   {/* Request Card Header */}
                   <div className="p-6 bg-[#005357] text-white">
                     <div className="flex items-center justify-between">
@@ -784,7 +784,7 @@ const MaintenancePage = () => {
         ) : (
           /* Table View */
           <div className="overflow-x-auto">
-            <table className="w-full bg-white shadow">
+            <table className="w-full bg-white border border-gray-200">
               <thead className="bg-[#005357]">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-medium text-white">
@@ -914,7 +914,7 @@ const MaintenancePage = () => {
         )}
 
         {/* Technician Status */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 ">
             <div className="flex items-center justify-between">
               <div>

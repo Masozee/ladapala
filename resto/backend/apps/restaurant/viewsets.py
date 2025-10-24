@@ -1585,8 +1585,8 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
                 notes=f'Received from PO {purchase_order.po_number} - Supplier: {purchase_order.supplier_name}'
             )
 
-            # Update inventory quantity
-            po_item.inventory_item.quantity += quantity_received
+            # Note: Inventory quantity will be updated by the signal when PO status changes to RECEIVED
+            # No need to manually update quantity here to avoid double-counting
 
             # Update earliest expiry date for this inventory item
             earliest_batch = InventoryBatch.objects.filter(

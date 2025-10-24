@@ -53,7 +53,7 @@ export const SupportHeaderActions = () => {
         </Dialog.Trigger>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-          <Dialog.Content className="fixed top-[20%] left-1/2 transform -translate-x-1/2 bg-white shadow-lg max-w-md w-full mx-4 p-6 z-50">
+          <Dialog.Content className="fixed top-[20%] left-1/2 transform -translate-x-1/2 bg-white border border-gray-300 max-w-md w-full mx-4 p-6 z-50">
             <div className="flex items-center justify-between mb-4">
               <Dialog.Title className="text-lg font-semibold text-gray-900">
                 Cari
@@ -161,7 +161,7 @@ const SupportLayout = ({ children, breadcrumb }: SupportLayoutProps) => {
         <SupportSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Navbar */}
-          <header className="bg-white shadow-sm h-16 flex items-center justify-between px-6">
+          <header className="bg-white border border-gray-200 h-16 flex items-center justify-between px-6">
             {/* Breadcrumb */}
             <nav className="flex items-center space-x-2 text-sm">
               {breadcrumbItems.map((item, index) => (

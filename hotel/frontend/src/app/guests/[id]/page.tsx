@@ -361,7 +361,7 @@ const GuestDetailPage = () => {
         </div>
 
         {/* Guest Profile Header */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-6">
@@ -441,7 +441,7 @@ const GuestDetailPage = () => {
           {/* Left Column - Personal Information */}
           <div className="space-y-6">
             {/* Contact Information */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -499,7 +499,7 @@ const GuestDetailPage = () => {
             </div>
 
             {/* Preferences & Allergies */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -555,7 +555,7 @@ const GuestDetailPage = () => {
           <div className="space-y-6">
             {/* Rewards Program */}
             {guest.rewards && (
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357]">
                   <div className="flex items-center justify-between">
                     <div>
@@ -628,7 +628,7 @@ const GuestDetailPage = () => {
             )}
 
             {/* Guest Notes */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -688,7 +688,7 @@ const GuestDetailPage = () => {
         </div>
 
         {/* Stay History Section - Full Width Below */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357]">
             <div className="flex items-center justify-between">
               <div>
@@ -787,7 +787,7 @@ const GuestDetailPage = () => {
 
         {/* Guest Reviews Section */}
         {guest.recent_stays.some(stay => stay.review) && (
-          <div className="bg-white shadow">
+          <div className="bg-white border border-gray-200">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>

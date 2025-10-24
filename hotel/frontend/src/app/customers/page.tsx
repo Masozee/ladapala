@@ -111,7 +111,7 @@ export default function CustomersPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center space-x-4">
             <div className="flex-1 relative">
               <Search02Icon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -130,7 +130,7 @@ export default function CustomersPage() {
         </div>
 
         {/* Customer List */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white rounded-lg border border-gray-200">
           {loading ? (
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#005357] mx-auto"></div>
@@ -315,7 +315,7 @@ export default function CustomersPage() {
                       </p>
                     </div>
                     <div>
-                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                      <nav className="relative z-0 inline-flex rounded-md border border-gray-200 -space-x-px" aria-label="Pagination">
                         <button
                           onClick={() => loadCustomers(Math.max(1, currentPage - 1), searchQuery)}
                           disabled={currentPage === 1}

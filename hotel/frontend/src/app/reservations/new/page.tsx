@@ -370,7 +370,7 @@ export default function NewReservationPage() {
           {/* Left Column - Customer & Booking Details */}
           <div className="space-y-6">
             {/* Customer Selection */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -782,7 +782,7 @@ export default function NewReservationPage() {
             </div>
 
             {/* Booking Details */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -893,7 +893,7 @@ export default function NewReservationPage() {
           {/* Right Column - Room Selection */}
           <div className="space-y-6">
             {/* Room Selection */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -973,7 +973,7 @@ export default function NewReservationPage() {
 
             {/* Booking Summary */}
             {selectedRoom && selectedGuest && (
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 border-b border-gray-200 bg-[#005357]">
                   <div className="flex items-center justify-between">
                     <div>

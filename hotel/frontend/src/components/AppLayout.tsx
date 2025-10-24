@@ -96,7 +96,7 @@ export const HeaderActions = () => {
         </Dialog.Trigger>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-          <Dialog.Content className="fixed top-[20%] left-1/2 transform -translate-x-1/2 bg-white shadow-lg max-w-md w-full mx-4 p-6 z-50">
+          <Dialog.Content className="fixed top-[20%] left-1/2 transform -translate-x-1/2 bg-white border border-gray-300 max-w-md w-full mx-4 p-6 z-50">
             <div className="flex items-center justify-between mb-4">
               <Dialog.Title className="text-lg font-semibold text-gray-900">
                 Search02Icon
@@ -148,7 +148,7 @@ export const HeaderActions = () => {
         </Dialog.Trigger>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-          <Dialog.Content className="fixed top-[20%] left-1/2 transform -translate-x-1/2 bg-white shadow-lg max-w-md w-full mx-4 p-6 z-50">
+          <Dialog.Content className="fixed top-[20%] left-1/2 transform -translate-x-1/2 bg-white border border-gray-300 max-w-md w-full mx-4 p-6 z-50">
             <div className="flex items-center justify-between mb-4">
               <Dialog.Title className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
                 <Calendar01Icon className="h-5 w-5 text-[#005357]" />
@@ -331,7 +331,7 @@ const AppLayout = ({ children, breadcrumb }: AppLayoutProps) => {
                   </span>
                   <div className="flex items-center space-x-1 text-xs text-gray-500">
                     <Clock01Icon className="h-3 w-3" />
-                    <span>
+                    <span suppressHydrationWarning>
                       {currentTime.toLocaleTimeString('en-US', {
                         hour: '2-digit',
                         minute: '2-digit',

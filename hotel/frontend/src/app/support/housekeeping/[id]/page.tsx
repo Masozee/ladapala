@@ -720,7 +720,7 @@ const HousekeepingDetailPage = () => {
         </div>
 
         {/* Progress Bar */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -757,7 +757,7 @@ const HousekeepingDetailPage = () => {
           {/* Left Column - Room & Guest Info */}
           <div className="space-y-6 sticky top-6 self-start">
             {/* Room Information */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -802,7 +802,7 @@ const HousekeepingDetailPage = () => {
             </div>
 
             {/* Guest Schedule */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -837,7 +837,7 @@ const HousekeepingDetailPage = () => {
             </div>
 
             {/* Staff Assignment */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -873,7 +873,7 @@ const HousekeepingDetailPage = () => {
           {/* Middle Column - Tasks & Progress */}
           <div className="space-y-6">
             {/* Housekeeping Checklist */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -888,7 +888,7 @@ const HousekeepingDetailPage = () => {
               <div className="p-4 bg-gray-50">
                 <div className="space-y-6">
                   {HOUSEKEEPING_CHECKLIST.map((category, categoryIndex) => (
-                    <div key={categoryIndex} className="bg-white shadow">
+                    <div key={categoryIndex} className="bg-white border border-gray-200">
                       <div className="p-4">
                         <div className="flex items-center justify-between mb-4">
                           <div>
@@ -958,7 +958,7 @@ const HousekeepingDetailPage = () => {
 
             {/* Special Instructions */}
             {roomTask.special_instructions && (
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357]">
                   <div className="flex items-center justify-between">
                     <div>
@@ -981,7 +981,7 @@ const HousekeepingDetailPage = () => {
           <div className="space-y-6">
             {/* Guest Requests */}
             {roomTask.guest_requests && roomTask.guest_requests.length > 0 && (
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357]">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1007,7 +1007,7 @@ const HousekeepingDetailPage = () => {
             )}
 
             {/* Maintenance Issues */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1067,7 +1067,7 @@ const HousekeepingDetailPage = () => {
             </div>
 
             {/* Room Notes */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1107,7 +1107,7 @@ const HousekeepingDetailPage = () => {
             </div>
 
             {/* Guest Lost & Found */}
-            <div className="bg-white shadow">
+            <div className="bg-white border border-gray-200">
               <div className="p-6 bg-[#005357]">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1123,7 +1123,7 @@ const HousekeepingDetailPage = () => {
                 {roomTask.lost_found_items.length > 0 ? (
                   <div className="space-y-3">
                     {roomTask.lost_found_items.map((item) => (
-                      <div key={item.id} className="bg-white p-3 shadow">
+                      <div key={item.id} className="bg-white p-3 border border-gray-200">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center space-x-2">
                             <div className="w-6 h-6 bg-gray-100 flex items-center justify-center">
@@ -1178,7 +1178,7 @@ const HousekeepingDetailPage = () => {
                 )}
 
                 {/* Add New Lost Item */}
-                <div className="mt-4 p-3 bg-blue-50 shadow">
+                <div className="mt-4 p-3 bg-blue-50 border border-gray-200">
                   <h4 className="font-medium text-blue-900 mb-3">Report Found Item</h4>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
@@ -1245,7 +1245,7 @@ const HousekeepingDetailPage = () => {
 
             {/* Photos */}
             {(roomTask.photos_before && roomTask.photos_before.length > 0) && (
-              <div className="bg-white shadow">
+              <div className="bg-white border border-gray-200">
                 <div className="p-6 bg-[#005357]">
                   <div className="flex items-center justify-between">
                     <div>

@@ -91,7 +91,7 @@ export default function AnalyticsPage() {
         {/* Bento Grid Layout */}
         <div className="grid grid-cols-12 gap-6 h-auto">
           {/* Total Karyawan - Large Square */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-3 bg-white shadow">
+          <div className="col-span-12 md:col-span-6 lg:col-span-3 bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -112,7 +112,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Revenue vs Expenses Chart - Large Rectangle */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-6 bg-white shadow">
+          <div className="col-span-12 md:col-span-6 lg:col-span-6 bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -159,7 +159,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Efficiency - Medium Square */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-3 bg-white shadow">
+          <div className="col-span-12 md:col-span-6 lg:col-span-3 bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -183,7 +183,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Attendance - Small Rectangle */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-white shadow">
+          <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Expense Categories - Medium Rectangle */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-5 bg-white shadow">
+          <div className="col-span-12 md:col-span-6 lg:col-span-5 bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -263,7 +263,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Cost - Small Square */}
-          <div className="col-span-12 md:col-span-6 lg:col-span-3 bg-white shadow">
+          <div className="col-span-12 md:col-span-6 lg:col-span-3 bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -284,7 +284,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Department Performance - Wide Rectangle */}
-          <div className="col-span-12 lg:col-span-8 bg-white shadow">
+          <div className="col-span-12 lg:col-span-8 bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -329,7 +329,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Quick Stats - Tall Rectangle */}
-          <div className="col-span-12 lg:col-span-4 bg-white shadow">
+          <div className="col-span-12 lg:col-span-4 bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -384,7 +384,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* General Affairs Facilities - Full Width */}
-          <div className="col-span-12 bg-white shadow">
+          <div className="col-span-12 bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -421,7 +421,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Management Tools - Full Width */}
-          <div className="col-span-12 bg-white shadow">
+          <div className="col-span-12 bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center justify-between">
                 <div>

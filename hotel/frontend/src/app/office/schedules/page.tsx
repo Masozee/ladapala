@@ -249,7 +249,7 @@ export default function SchedulesPage() {
     <OfficeLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -270,7 +270,7 @@ export default function SchedulesPage() {
         </div>
 
         {/* Week Navigation & Filters */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6">
             {/* Week Navigation */}
             <div className="flex items-center justify-between mb-6">
@@ -367,7 +367,7 @@ export default function SchedulesPage() {
         </div>
 
         {/* Calendar Schedule Table */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-4 bg-gray-50">
             <div className="overflow-x-auto">
               <div style={{ minWidth: `${250 + (7 * 120)}px` }}>
@@ -377,7 +377,7 @@ export default function SchedulesPage() {
                       <th className="text-left py-3 px-4 text-sm font-bold text-white uppercase tracking-wider w-[200px] sticky left-0 bg-[#005357] z-20">
                         Karyawan
                       </th>
-                      <th className="text-center py-3 px-4 text-sm font-bold text-white uppercase tracking-wider w-[50px] sticky left-[200px] bg-[#005357] z-20 shadow-lg" style={{boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'}}>
+                      <th className="text-center py-3 px-4 text-sm font-bold text-white uppercase tracking-wider w-[50px] sticky left-[200px] bg-[#005357] z-20 border border-gray-300" style={{boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'}}>
                         Shift
                       </th>
                       {dayLabels.map((day, index) => (
@@ -490,7 +490,7 @@ export default function SchedulesPage() {
         </div>
 
         {/* Shift Summary */}
-        <div className="bg-white shadow">
+        <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>

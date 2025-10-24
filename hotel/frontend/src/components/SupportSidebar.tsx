@@ -64,7 +64,7 @@ const SupportSidebar = () => {
 
   return (
     <Tooltip.Provider delayDuration={300}>
-      <div className="w-20 bg-white shadow flex flex-col">
+      <div className="w-20 bg-white border border-gray-200 flex flex-col">
         {/* Header */}
         <div className="p-4">
           <div className="flex items-center justify-center">
@@ -94,7 +94,7 @@ const SupportSidebar = () => {
                       href={item.href}
                       className={`relative flex items-center justify-center w-16 h-14 transition-all duration-200 group ${
                         active
-                          ? 'shadow-sm'
+                          ? 'border border-gray-200'
                           : 'hover:bg-gray-100'
                       }`}
                     >
@@ -116,7 +116,7 @@ const SupportSidebar = () => {
                     <Tooltip.Content
                       side="right"
                       sideOffset={12}
-                      className="bg-gray-900 text-white px-2 py-1 text-sm shadow-lg z-50"
+                      className="bg-gray-900 text-white px-2 py-1 text-sm border border-gray-300 z-50"
                     >
                       {item.name}
                       <Tooltip.Arrow className="fill-gray-900" />
@@ -164,7 +164,7 @@ const SupportSidebar = () => {
                     <Tooltip.Content
                       side="right"
                       sideOffset={12}
-                      className="bg-gray-900 text-white px-2 py-1 text-sm shadow-lg z-50"
+                      className="bg-gray-900 text-white px-2 py-1 text-sm border border-gray-300 z-50"
                     >
                       {item.name}
                       <Tooltip.Arrow className="fill-gray-900" />
@@ -207,7 +207,7 @@ const SupportSidebar = () => {
                     <Tooltip.Content
                       side="right"
                       sideOffset={12}
-                      className="bg-gray-900 text-white px-2 py-1 text-sm shadow-lg z-50"
+                      className="bg-gray-900 text-white px-2 py-1 text-sm border border-gray-300 z-50"
                     >
                       {item.name}
                       <Tooltip.Arrow className="fill-gray-900" />
