@@ -144,18 +144,31 @@ class ReportViewSet(viewsets.ViewSet):
         start_date, end_date = self.get_date_range(period, start_date_str, end_date_str)
         prev_start, prev_end = self.get_previous_period_range(start_date, end_date)
 
-        # Base query for completed orders
+        # Base query for completed orders with non-refunded payments
+        # Exclude orders where ALL payments are REFUNDED
+        from django.db.models import Exists, OuterRef
+
+        # Subquery to check if order has at least one non-refunded payment
+        has_valid_payment = Payment.objects.filter(
+            order_id=OuterRef('pk'),
+            status='COMPLETED'
+        )
+
         orders = Order.objects.filter(
             created_at__date__gte=start_date,
             created_at__date__lte=end_date,
             status='COMPLETED'
-        )
+        ).annotate(
+            has_completed_payment=Exists(has_valid_payment)
+        ).filter(has_completed_payment=True)
 
         prev_orders = Order.objects.filter(
             created_at__date__gte=prev_start,
             created_at__date__lte=prev_end,
             status='COMPLETED'
-        )
+        ).annotate(
+            has_completed_payment=Exists(has_valid_payment)
+        ).filter(has_completed_payment=True)
 
         if branch_id and branch_id != 'all':
             orders = orders.filter(branch_id=branch_id)
@@ -205,11 +218,15 @@ class ReportViewSet(viewsets.ViewSet):
         # Get top product for each day
         daily_breakdown = []
         for day in daily_data:
-            # Find top product for this day
-            top_product = OrderItem.objects.filter(
+            # Find top product for this day - only from orders with valid payments
+            top_product_items = OrderItem.objects.filter(
                 order__created_at__date=day['date'],
                 order__status='COMPLETED'
-            ).values('product__name').annotate(
+            ).annotate(
+                has_completed_payment=Exists(has_valid_payment)
+            ).filter(has_completed_payment=True)
+
+            top_product = top_product_items.values('product__name').annotate(
                 total_qty=Sum('quantity')
             ).order_by('-total_qty').first()
 
@@ -407,12 +424,21 @@ class ReportViewSet(viewsets.ViewSet):
 
         start_date, end_date = self.get_date_range(period, start_date_str, end_date_str)
 
-        # Query order items for completed orders
+        # Query order items for completed orders with valid payments
+        from django.db.models import Exists, OuterRef
+
+        has_valid_payment = Payment.objects.filter(
+            order_id=OuterRef('order_id'),
+            status='COMPLETED'
+        )
+
         order_items = OrderItem.objects.filter(
             order__created_at__date__gte=start_date,
             order__created_at__date__lte=end_date,
             order__status='COMPLETED'
-        )
+        ).annotate(
+            has_completed_payment=Exists(has_valid_payment)
+        ).filter(has_completed_payment=True)
 
         if branch_id and branch_id != 'all':
             order_items = order_items.filter(order__branch_id=branch_id)
@@ -486,18 +512,29 @@ class ReportViewSet(viewsets.ViewSet):
         start_date, end_date = self.get_date_range(period, start_date_str, end_date_str)
         prev_start, prev_end = self.get_previous_period_range(start_date, end_date)
 
-        # Query orders
+        # Query orders - exclude orders with only REFUNDED payments
+        from django.db.models import Exists, OuterRef
+
+        has_valid_payment = Payment.objects.filter(
+            order_id=OuterRef('pk'),
+            status='COMPLETED'
+        )
+
         orders = Order.objects.filter(
             created_at__date__gte=start_date,
             created_at__date__lte=end_date,
             status='COMPLETED'
-        )
+        ).annotate(
+            has_completed_payment=Exists(has_valid_payment)
+        ).filter(has_completed_payment=True)
 
         prev_orders = Order.objects.filter(
             created_at__date__gte=prev_start,
             created_at__date__lte=prev_end,
             status='COMPLETED'
-        )
+        ).annotate(
+            has_completed_payment=Exists(has_valid_payment)
+        ).filter(has_completed_payment=True)
 
         if branch_id and branch_id != 'all':
             orders = orders.filter(branch_id=branch_id)
