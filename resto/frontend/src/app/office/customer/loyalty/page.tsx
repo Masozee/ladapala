@@ -517,14 +517,14 @@ export default function LoyaltyPage() {
 
       {/* Reward Form Sheet */}
       <Sheet open={showRewardForm} onOpenChange={setShowRewardForm}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-0">
+          <SheetHeader className="px-6 pt-6 pb-4 border-b">
             <SheetTitle>Tambah Reward Baru</SheetTitle>
             <SheetDescription>Buat reward baru untuk program loyalitas</SheetDescription>
           </SheetHeader>
 
-          <div className="space-y-4 mt-6 pb-6">
-            <div>
+          <div className="px-6 py-6 space-y-5">
+            <div className="space-y-2">
               <Label htmlFor="reward-name">Nama Reward *</Label>
               <Input
                 id="reward-name"
@@ -534,7 +534,7 @@ export default function LoyaltyPage() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="reward-type">Tipe Reward *</Label>
               <Select value={rewardType} onValueChange={(value) => setRewardType(value as any)}>
                 <SelectTrigger>
@@ -548,7 +548,7 @@ export default function LoyaltyPage() {
               </Select>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="points-cost">Poin yang Diperlukan *</Label>
               <Input
                 id="points-cost"
@@ -559,7 +559,7 @@ export default function LoyaltyPage() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="reward-value">Nilai Reward (opsional)</Label>
               <Input
                 id="reward-value"
@@ -569,7 +569,7 @@ export default function LoyaltyPage() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="description">Deskripsi (opsional)</Label>
               <Textarea
                 id="description"
@@ -580,7 +580,7 @@ export default function LoyaltyPage() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="stock">Stok (opsional, kosongkan jika unlimited)</Label>
               <Input
                 id="stock"
@@ -591,7 +591,7 @@ export default function LoyaltyPage() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="valid-days">Masa Berlaku (hari, opsional)</Label>
               <Input
                 id="valid-days"
@@ -602,23 +602,25 @@ export default function LoyaltyPage() {
               />
             </div>
 
-            <Button onClick={handleCreateReward} className="w-full">
-              Buat Reward
-            </Button>
+            <div className="pt-4 border-t">
+              <Button onClick={handleCreateReward} className="w-full">
+                Buat Reward
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
 
       {/* Tier Benefit Form Sheet */}
       <Sheet open={showTierForm} onOpenChange={setShowTierForm}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-0">
+          <SheetHeader className="px-6 pt-6 pb-4 border-b">
             <SheetTitle>Tambah Tier Benefit</SheetTitle>
             <SheetDescription>Atur benefit untuk tier keanggotaan</SheetDescription>
           </SheetHeader>
 
-          <div className="space-y-4 mt-6 pb-6">
-            <div>
+          <div className="px-6 py-6 space-y-5">
+            <div className="space-y-2">
               <Label htmlFor="tier-name">Tier *</Label>
               <Select value={tierName} onValueChange={(value) => setTierName(value as any)}>
                 <SelectTrigger>
@@ -633,7 +635,7 @@ export default function LoyaltyPage() {
               </Select>
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="min-points">Minimum Poin *</Label>
               <Input
                 id="min-points"
@@ -644,7 +646,7 @@ export default function LoyaltyPage() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="multiplier">Multiplier Poin *</Label>
               <Input
                 id="multiplier"
@@ -656,7 +658,7 @@ export default function LoyaltyPage() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="tier-benefits">Benefits (opsional)</Label>
               <Textarea
                 id="tier-benefits"
@@ -667,9 +669,11 @@ export default function LoyaltyPage() {
               />
             </div>
 
-            <Button onClick={handleCreateTierBenefit} className="w-full">
-              Buat Tier Benefit
-            </Button>
+            <div className="pt-4 border-t">
+              <Button onClick={handleCreateTierBenefit} className="w-full">
+                Buat Tier Benefit
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
