@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api, Reward, MembershipTierBenefit } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 
@@ -516,13 +517,13 @@ export default function LoyaltyPage() {
 
       {/* Reward Form Sheet */}
       <Sheet open={showRewardForm} onOpenChange={setShowRewardForm}>
-        <SheetContent className="w-1/2">
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Tambah Reward Baru</SheetTitle>
             <SheetDescription>Buat reward baru untuk program loyalitas</SheetDescription>
           </SheetHeader>
 
-          <div className="space-y-4 mt-6">
+          <div className="space-y-4 mt-6 pb-6">
             <div>
               <Label htmlFor="reward-name">Nama Reward *</Label>
               <Input
@@ -535,16 +536,16 @@ export default function LoyaltyPage() {
 
             <div>
               <Label htmlFor="reward-type">Tipe Reward *</Label>
-              <select
-                id="reward-type"
-                value={rewardType}
-                onChange={(e) => setRewardType(e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-md"
-              >
-                <option value="DISCOUNT">Diskon</option>
-                <option value="FREE_ITEM">Item Gratis</option>
-                <option value="VOUCHER">Voucher</option>
-              </select>
+              <Select value={rewardType} onValueChange={(value) => setRewardType(value as any)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih tipe reward" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DISCOUNT">Diskon</SelectItem>
+                  <SelectItem value="FREE_ITEM">Item Gratis</SelectItem>
+                  <SelectItem value="VOUCHER">Voucher</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -610,26 +611,26 @@ export default function LoyaltyPage() {
 
       {/* Tier Benefit Form Sheet */}
       <Sheet open={showTierForm} onOpenChange={setShowTierForm}>
-        <SheetContent className="w-1/2">
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Tambah Tier Benefit</SheetTitle>
             <SheetDescription>Atur benefit untuk tier keanggotaan</SheetDescription>
           </SheetHeader>
 
-          <div className="space-y-4 mt-6">
+          <div className="space-y-4 mt-6 pb-6">
             <div>
               <Label htmlFor="tier-name">Tier *</Label>
-              <select
-                id="tier-name"
-                value={tierName}
-                onChange={(e) => setTierName(e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-md"
-              >
-                <option value="BRONZE">Bronze</option>
-                <option value="SILVER">Silver</option>
-                <option value="GOLD">Gold</option>
-                <option value="PLATINUM">Platinum</option>
-              </select>
+              <Select value={tierName} onValueChange={(value) => setTierName(value as any)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih tier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BRONZE">Bronze</SelectItem>
+                  <SelectItem value="SILVER">Silver</SelectItem>
+                  <SelectItem value="GOLD">Gold</SelectItem>
+                  <SelectItem value="PLATINUM">Platinum</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
