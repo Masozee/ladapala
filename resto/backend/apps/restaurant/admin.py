@@ -18,7 +18,7 @@ class RestaurantAdmin(admin.ModelAdmin):
 
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
-    list_display = ['name', 'restaurant', 'phone', 'is_active', 'created_at']
+    list_display = ['id','name', 'restaurant', 'phone', 'is_active', 'created_at']
     list_filter = ['restaurant', 'is_active', 'created_at']
     search_fields = ['name', 'address']
 

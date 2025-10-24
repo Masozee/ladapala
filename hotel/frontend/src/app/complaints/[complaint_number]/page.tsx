@@ -831,7 +831,7 @@ const ComplaintDetailPage = () => {
                     <p className="text-sm text-gray-600 mt-1">Update complaint status</p>
                   </div>
                   <div className="w-8 h-8 bg-gray-600 flex items-center justify-center">
-                    <Shield className="h-4 w-4 text-white" />
+                    <Shield01Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>

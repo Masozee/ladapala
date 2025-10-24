@@ -83,7 +83,7 @@ interface DjangoApiResponse {
 
 const fetchRoomTypes = async (): Promise<RoomType[]> => {
   try {
-    const response = await fetch(buildApiUrl('room-types/'), {
+    const response = await fetch(buildApiUrl('hotel/room-types/'), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

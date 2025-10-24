@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { HugeiconsIcon } from "@hugeicons/react"
 import {
   DollarCircleIcon,
   AnalyticsUpIcon,
@@ -14,11 +13,8 @@ import {
   Download01Icon,
   FilterIcon,
   Analytics01Icon,
-  ArrowUp01Icon,
-  ArrowDown01Icon,
   ShoppingCart01Icon,
-  ViewIcon
-} from "@hugeicons/core-free-icons"
+} from "@/lib/icons"
 import {
   Select,
   SelectContent,
@@ -46,7 +42,7 @@ import { api } from "@/lib/api"
 export default function ReportPage() {
   const router = useRouter()
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month' | 'year'>("week")
-  const [selectedBranch, setSelectedBranch] = useState("5")
+  const [selectedBranch, setSelectedBranch] = useState(process.env.NEXT_PUBLIC_API_BRANCH_ID || "7")
   const [loading, setLoading] = useState(true)
   const [salesData, setSalesData] = useState<any>(null)
   const [expensesData, setExpensesData] = useState<any>(null)
@@ -154,8 +150,8 @@ export default function ReportPage() {
   const avgOrderValue = parseFloat(salesData.summary.avg_order_value || '0')
   const totalExpenses = parseFloat(expensesData.summary.total_expenses || '0')
   const netProfit = totalRevenue - totalExpenses
-  const revenueGrowth = salesData.comparison?.revenue_growth || 0
-  const ordersGrowth = salesData.comparison?.orders_growth || 0
+  const revenueGrowth = salesData.comparison?.growth?.revenue_percent || 0
+  const ordersGrowth = salesData.comparison?.growth?.orders_percent || 0
   const expensesGrowth = expensesData.comparison?.growth_percentage || 0
 
 
@@ -190,23 +186,23 @@ export default function ReportPage() {
             </SelectContent>
           </Select>
           <Button variant="outline" className="rounded">
-            <HugeiconsIcon icon={FilterIcon} size={16} strokeWidth={2} className="mr-2 h-4 w-4" />
+            <FilterIcon className="mr-2 h-4 w-4" />
             Filter
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black">
-                <HugeiconsIcon icon={Download01Icon} size={16} strokeWidth={2} className="mr-2 h-4 w-4" />
+                <Download01Icon className="mr-2 h-4 w-4" />
                 Export
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleExportPDF}>
-                <HugeiconsIcon icon={Download01Icon} size={16} strokeWidth={2} className="mr-2" />
+                <Download01Icon className="mr-2 h-4 w-4" />
                 Export PDF (Laporan Lengkap)
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleExportExcel}>
-                <HugeiconsIcon icon={Download01Icon} size={16} strokeWidth={2} className="mr-2" />
+                <Download01Icon className="mr-2 h-4 w-4" />
                 Export Excel (Data Saja)
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -219,17 +215,16 @@ export default function ReportPage() {
         <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
-            <HugeiconsIcon icon={DollarCircleIcon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
+            <DollarCircleIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">Rp {(totalRevenue / 1000000).toFixed(1)}jt</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <HugeiconsIcon
-                icon={revenueGrowth >= 0 ? AnalyticsUpIcon : AnalyticsDownIcon}
-                size={16}
-                strokeWidth={2}
-                className={`h-3 w-3 ${revenueGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}
-              />
+              {revenueGrowth >= 0 ? (
+                <AnalyticsUpIcon className="h-3 w-3 text-green-500" />
+              ) : (
+                <AnalyticsDownIcon className="h-3 w-3 text-red-500" />
+              )}
               {revenueGrowth >= 0 ? '+' : ''}{revenueGrowth.toFixed(1)}% dari periode lalu
             </p>
           </CardContent>
@@ -237,17 +232,16 @@ export default function ReportPage() {
         <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pesanan</CardTitle>
-            <HugeiconsIcon icon={ShoppingCart01Icon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
+            <ShoppingCart01Icon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalOrders}</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <HugeiconsIcon
-                icon={ordersGrowth >= 0 ? AnalyticsUpIcon : AnalyticsDownIcon}
-                size={16}
-                strokeWidth={2}
-                className={`h-3 w-3 ${ordersGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}
-              />
+              {ordersGrowth >= 0 ? (
+                <AnalyticsUpIcon className="h-3 w-3 text-green-500" />
+              ) : (
+                <AnalyticsDownIcon className="h-3 w-3 text-red-500" />
+              )}
               {ordersGrowth >= 0 ? '+' : ''}{ordersGrowth.toFixed(1)}% dari periode lalu
             </p>
           </CardContent>
@@ -255,7 +249,7 @@ export default function ReportPage() {
         <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Rata-rata Pesanan</CardTitle>
-            <HugeiconsIcon icon={Analytics01Icon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
+            <Analytics01Icon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">Rp {Math.round(avgOrderValue).toLocaleString("id-ID")}</div>
@@ -267,17 +261,16 @@ export default function ReportPage() {
         <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pengeluaran</CardTitle>
-            <HugeiconsIcon icon={AnalyticsDownIcon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
+            <AnalyticsDownIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">Rp {(totalExpenses / 1000000).toFixed(1)}jt</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <HugeiconsIcon
-                icon={expensesGrowth >= 0 ? AnalyticsUpIcon : AnalyticsDownIcon}
-                size={16}
-                strokeWidth={2}
-                className={`h-3 w-3 ${expensesGrowth >= 0 ? 'text-red-500' : 'text-green-500'}`}
-              />
+              {expensesGrowth >= 0 ? (
+                <AnalyticsUpIcon className="h-3 w-3 text-red-500" />
+              ) : (
+                <AnalyticsDownIcon className="h-3 w-3 text-green-500" />
+              )}
               {expensesGrowth >= 0 ? '+' : ''}{expensesGrowth.toFixed(1)}% dari periode lalu
             </p>
           </CardContent>
@@ -285,7 +278,7 @@ export default function ReportPage() {
         <Card className="bg-white rounded-lg border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Laba Bersih</CardTitle>
-            <HugeiconsIcon icon={AnalyticsUpIcon} size={16} strokeWidth={2} className="h-4 w-4 text-muted-foreground" />
+            <AnalyticsUpIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${netProfit > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -532,16 +525,17 @@ export default function ReportPage() {
                 <p className="text-muted-foreground">Penjualan per hari dalam periode</p>
               </div>
                 <div className="space-y-4">
-                  {trendsData.daily_trend && trendsData.daily_trend.length > 0 ? (
-                    trendsData.daily_trend.slice(0, 7).map((day: any, index: number) => {
+                  {trendsData.time_series && trendsData.time_series.length > 0 ? (
+                    trendsData.time_series.slice(0, 7).map((day: any, index: number) => {
                       const revenue = parseFloat(day.revenue || '0')
-                      const growth = parseFloat(day.growth_rate || '0')
+                      const prevRevenue = index > 0 ? parseFloat(trendsData.time_series[index - 1]?.revenue || '0') : 0
+                      const growth = prevRevenue > 0 ? ((revenue - prevRevenue) / prevRevenue * 100) : 0
                       return (
                         <div key={index} className="flex items-center justify-between">
                           <span>{new Date(day.date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
                           <div className="flex items-center gap-2">
                             <span>Rp {(revenue / 1000000).toFixed(1)}jt</span>
-                            {growth !== 0 && (
+                            {growth !== 0 && index > 0 && (
                               <Badge className={`${growth >= 0 ? 'bg-green-500' : 'bg-red-500'} text-white text-xs`}>
                                 {growth >= 0 ? '+' : ''}{growth.toFixed(0)}%
                               </Badge>
@@ -558,28 +552,40 @@ export default function ReportPage() {
 
             <div className="bg-white p-6 rounded-lg">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold">Jam Sibuk</h2>
-                <p className="text-muted-foreground">Distribusi pesanan per jam</p>
+                <h2 className="text-lg font-semibold">Perbandingan Periode</h2>
+                <p className="text-muted-foreground">Periode saat ini vs periode sebelumnya</p>
               </div>
                 <div className="space-y-4">
-                  {trendsData.peak_hours && trendsData.peak_hours.length > 0 ? (
-                    trendsData.peak_hours.slice(0, 5).map((hour: any, index: number) => {
-                      const percentage = parseFloat(hour.percentage || '0')
-                      return (
-                        <div key={index} className="flex items-center justify-between">
-                          <span>{hour.hour}:00 - {hour.hour + 1}:00</span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-32 bg-gray-200 rounded-full h-2">
-                              <div className="bg-[#58ff34] h-2 rounded-full" style={{ width: `${percentage}%` }} />
-                            </div>
-                            <span className="text-sm">{percentage.toFixed(0)}%</span>
-                          </div>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <p className="text-center text-muted-foreground">Tidak ada data jam sibuk</p>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Pendapatan</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">Rp {(trendsData.comparison?.current_period?.revenue / 1000000 || 0).toFixed(1)}jt</span>
+                      <Badge className={`${(trendsData.comparison?.growth?.revenue_percent || 0) >= 0 ? 'bg-green-500' : 'bg-red-500'} text-white text-xs`}>
+                        {(trendsData.comparison?.growth?.revenue_percent || 0) >= 0 ? '+' : ''}{(trendsData.comparison?.growth?.revenue_percent || 0).toFixed(1)}%
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Jumlah Pesanan</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{trendsData.comparison?.current_period?.orders || 0}</span>
+                      <Badge className={`${(trendsData.comparison?.growth?.orders_percent || 0) >= 0 ? 'bg-green-500' : 'bg-red-500'} text-white text-xs`}>
+                        {(trendsData.comparison?.growth?.orders_percent || 0) >= 0 ? '+' : ''}{(trendsData.comparison?.growth?.orders_percent || 0).toFixed(1)}%
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Rata-rata Harian</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">Rp {(trendsData.comparison?.current_period?.avg_daily / 1000000 || 0).toFixed(1)}jt</span>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t">
+                    <div className="text-xs text-muted-foreground">
+                      <p>Periode Sebelumnya:</p>
+                      <p>Rp {(trendsData.comparison?.previous_period?.revenue / 1000000 || 0).toFixed(1)}jt • {trendsData.comparison?.previous_period?.orders || 0} pesanan</p>
+                    </div>
+                  </div>
                 </div>
             </div>
           </div>

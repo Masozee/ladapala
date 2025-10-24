@@ -47,7 +47,7 @@ class Room(models.Model):
     ]
 
     number = models.CharField(max_length=20, unique=True)
-    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE)
+    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, related_name='rooms')
     floor = models.IntegerField(null=True, blank=True)
     status = models.CharField(
         max_length=20,

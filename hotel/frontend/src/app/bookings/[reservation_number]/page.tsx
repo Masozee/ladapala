@@ -322,51 +322,111 @@ const BookingDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [showInvoice, setShowInvoice] = useState(false);
 
+  const transformApiData = (apiData: any): Reservation => {
+    // Parse amenities from string to array
+    const amenities = apiData.room_details?.room_type_details?.amenities
+      ? apiData.room_details.room_type_details.amenities.split(',').map((a: string) => a.trim())
+      : [];
+
+    // Parse preferences and allergies
+    const preferences = apiData.guest_details?.preferences
+      ? apiData.guest_details.preferences.split(',').map((p: string) => p.trim())
+      : [];
+
+    const allergies = apiData.guest_details?.allergies
+      ? apiData.guest_details.allergies.split(',').map((a: string) => a.trim())
+      : [];
+
+    // Use API-provided calculated values
+    const basePrice = parseFloat(apiData.room_details?.base_price || '0');
+    const subtotal = apiData.subtotal || 0;
+    const taxes = apiData.taxes || 0;
+    const grandTotal = apiData.grand_total || 0;
+    const depositAmount = apiData.deposit_amount || 0;
+    const balanceDue = apiData.balance_due || grandTotal;
+
+    return {
+      id: apiData.id,
+      reservation_number: apiData.reservation_number,
+      guest_name: apiData.guest_name,
+      guest_details: {
+        id: apiData.guest_details?.id || 0,
+        full_name: apiData.guest_details?.full_name || '',
+        email: apiData.guest_details?.email || '',
+        phone: apiData.guest_details?.phone || '',
+        nationality: apiData.guest_details?.nationality || '',
+        address: apiData.guest_details?.address || '',
+        id_number: apiData.guest_details?.id_number || '',
+        id_type: apiData.guest_details?.id_type_display || apiData.guest_details?.id_type || '',
+        date_of_birth: apiData.guest_details?.date_of_birth || '',
+        gender: apiData.guest_details?.gender_display || apiData.guest_details?.gender || '',
+        emergency_contact_name: apiData.guest_details?.emergency_contact_name || '',
+        emergency_contact_phone: apiData.guest_details?.emergency_contact_phone || '',
+        vip_status: apiData.guest_details?.is_vip || false,
+        preferences: preferences,
+        allergies: allergies
+      },
+      additional_guests: [],
+      check_in_date: apiData.check_in_date,
+      check_out_date: apiData.check_out_date,
+      nights: apiData.nights,
+      adults: apiData.adults,
+      children: apiData.children,
+      status: apiData.status,
+      status_display: apiData.status_display,
+      booking_source: apiData.booking_source_display || apiData.booking_source,
+      total_rooms: apiData.total_rooms || 1,
+      total_amount: subtotal,
+      created_at: apiData.created_at,
+      rooms: [{
+        id: apiData.room_details?.id || 0,
+        room_number: apiData.room_details?.number || apiData.room_number || '',
+        room_type_name: apiData.room_details?.room_type_name || '',
+        rate: basePrice,
+        total_amount: subtotal,
+        floor: apiData.room_details?.floor || 0,
+        amenities: amenities
+      }],
+      special_requests: apiData.special_requests
+        ? [{
+            id: 1,
+            type: 'Guest Request',
+            description: apiData.special_requests,
+            status: 'pending' as const,
+            priority: 'medium' as const,
+            created_at: apiData.created_at,
+            notes: ''
+          }]
+        : [],
+      payment_details: [],
+      extras: [],
+      transportation: [],
+      can_cancel: apiData.can_cancel !== undefined ? apiData.can_cancel : (apiData.status === 'PENDING' || apiData.status === 'CONFIRMED'),
+      deposit_amount: depositAmount,
+      balance_due: balanceDue,
+      taxes: taxes,
+      discount: 0,
+      booking_notes: apiData.notes || ''
+    };
+  };
+
   useEffect(() => {
     const loadBooking = async () => {
       setLoading(true);
       try {
-        // Try to find reservation by reservation number first
-        const searchResponse = await fetch(buildApiUrl(`reservations/?reservation_number=${params.reservation_number}`));
-        if (searchResponse.ok) {
-          const searchData = await searchResponse.json();
-          if (searchData.results && searchData.results.length > 0) {
-            // Found reservation, now fetch full details using the ID
-            const reservationId = searchData.results[0].id;
-            const detailResponse = await fetch(buildApiUrl(`reservations/${reservationId}/`));
-            if (detailResponse.ok) {
-              const detailData = await detailResponse.json();
-              setBooking(detailData);
-            } else {
-              console.warn('Found reservation but failed to load details, using list data');
-              setBooking(searchData.results[0]);
-            }
-          } else {
-            // No results found by reservation number, try as direct ID for backward compatibility
-            const idResponse = await fetch(buildApiUrl(`reservations/${params.reservation_number}/`));
-            if (idResponse.ok) {
-              const idData = await idResponse.json();
-              setBooking(idData);
-            } else {
-              console.warn('Failed to load booking from API, using mock data');
-              setBooking(MOCK_BOOKING);
-            }
-          }
+        // Fetch reservation directly by ID from URL
+        const response = await fetch(buildApiUrl(`hotel/reservations/${params.reservation_number}/`));
+        if (response.ok) {
+          const data = await response.json();
+          const transformedData = transformApiData(data);
+          setBooking(transformedData);
         } else {
-          // Search endpoint failed, fallback to direct ID approach
-          const idResponse = await fetch(buildApiUrl(`reservations/${params.reservation_number}/`));
-          if (idResponse.ok) {
-            const idData = await idResponse.json();
-            setBooking(idData);
-          } else {
-            console.warn('Failed to load booking from API, using mock data');
-            setBooking(MOCK_BOOKING);
-          }
+          console.warn('Reservation not found');
+          setBooking(null);
         }
       } catch (error) {
         console.error('Error loading booking:', error);
-        // Fallback to mock data if API fails
-        setBooking(MOCK_BOOKING);
+        setBooking(null);
       }
       setLoading(false);
     };
@@ -626,39 +686,37 @@ const BookingDetailPage = () => {
                 </div>
 
                 {/* Preferences & Allergies */}
-                <div className="mt-6 pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Preferences</h4>
-                      <div className="space-y-1">
-                        {booking.guest_details?.preferences && typeof booking.guest_details.preferences === 'object' ? 
-                          Object.entries(booking.guest_details.preferences)
-                            .filter(([key, value]) => {
-                              if (typeof value === 'boolean') return value;
-                              if (typeof value === 'string') return value.trim() !== '';
-                              return !!value;
-                            })
-                            .map(([key, value], index) => (
+                {(booking.guest_details?.preferences && booking.guest_details.preferences.length > 0) ||
+                 (booking.guest_details?.allergies && booking.guest_details.allergies.length > 0) ? (
+                  <div className="mt-6 pt-6 border-t">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {booking.guest_details?.preferences && booking.guest_details.preferences.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-3">Preferences</h4>
+                          <div className="space-y-1">
+                            {booking.guest_details.preferences.map((pref, index) => (
                               <span key={index} className="inline-block bg-blue-100 text-blue-800 px-2 py-1 text-xs mr-2 mb-1">
-                                {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                {typeof value === 'string' && value !== 'true' ? `: ${value.replace(/_/g, ' ')}` : ''}
+                                {pref}
                               </span>
-                            ))
-                          : null}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Allergies</h4>
-                      <div className="space-y-1">
-                        {booking.guest_details?.allergies?.map((allergy, index) => (
-                          <span key={index} className="inline-block bg-red-100 text-red-800 px-2 py-1 text-xs mr-2 mb-1">
-                            ⚠️ {allergy}
-                          </span>
-                        ))}
-                      </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {booking.guest_details?.allergies && booking.guest_details.allergies.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-3">Allergies</h4>
+                          <div className="space-y-1">
+                            {booking.guest_details.allergies.map((allergy, index) => (
+                              <span key={index} className="inline-block bg-red-100 text-red-800 px-2 py-1 text-xs mr-2 mb-1">
+                                ⚠️ {allergy}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
+                ) : null}
               </div>
             </div>
           </div>

@@ -24,8 +24,20 @@ class Guest(models.Model):
     address = models.TextField(null=True, blank=True)
     id_type = models.CharField(max_length=20, choices=ID_TYPE_CHOICES, default='passport')
     id_number = models.CharField(max_length=50, null=True, blank=True)
+
+    # Guest preferences and requirements
+    preferences = models.TextField(null=True, blank=True, help_text='Room preferences, bed type, floor, etc.')
+    allergies = models.TextField(null=True, blank=True, help_text='Food allergies, medical conditions')
+
+    # Emergency contact
+    emergency_contact_name = models.CharField(max_length=100, null=True, blank=True)
+    emergency_contact_phone = models.CharField(max_length=20, null=True, blank=True)
+    emergency_contact_relation = models.CharField(max_length=50, null=True, blank=True)
+
+    # VIP and loyalty
     is_vip = models.BooleanField(default=False)
     loyalty_points = models.IntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

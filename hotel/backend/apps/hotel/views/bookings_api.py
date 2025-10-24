@@ -755,20 +755,37 @@ def room_types_api(request):
         # Add room count and availability for each room type
         room_types_data = []
         for room_type in room_types:
-            # Count total rooms and available rooms for this type
+            # Count total rooms, available rooms, and occupied rooms for this type
             total_rooms = Room.objects.filter(room_type=room_type, is_active=True).count()
             available_rooms = Room.objects.filter(
-                room_type=room_type, 
+                room_type=room_type,
                 is_active=True,
                 status='AVAILABLE'
             ).count()
-            
+            occupied_rooms = Room.objects.filter(
+                room_type=room_type,
+                is_active=True,
+                status='OCCUPIED'
+            ).count()
+
             # Calculate occupancy percentage
             occupancy_percentage = 0
             if total_rooms > 0:
-                occupied_rooms = total_rooms - available_rooms
                 occupancy_percentage = (occupied_rooms / total_rooms) * 100
-            
+
+            # Determine bed configuration based on room name and max occupancy
+            name = room_type.name.lower()
+            if 'family' in name:
+                bed_configuration = '1 King Bed + 2 Twin Beds'
+            elif 'suite' in name and room_type.max_occupancy >= 3:
+                bed_configuration = '1 King Bed + Sofa Bed'
+            elif 'twin' in name or room_type.max_occupancy == 2:
+                bed_configuration = '2 Twin Beds'
+            elif room_type.max_occupancy >= 3:
+                bed_configuration = '1 King Bed + Sofa Bed'
+            else:
+                bed_configuration = '1 King Bed'
+
             room_type_data = {
                 'id': room_type.id,
                 'name': room_type.name,
@@ -780,9 +797,12 @@ def room_types_api(request):
                 'is_active': room_type.is_active,
                 'created_at': room_type.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 'updated_at': room_type.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-                'occupancy_percentage': round(occupancy_percentage, 2),
+                'total_rooms': total_rooms,
                 'available_rooms_count': available_rooms,
-                'total_rooms_count': total_rooms
+                'occupied_rooms_count': occupied_rooms,
+                'occupancy_percentage': round(occupancy_percentage, 2),
+                'bed_configuration': bed_configuration,
+                'images': ['/hotelroom.jpeg']  # TODO: Add actual image handling
             }
             room_types_data.append(room_type_data)
         
@@ -823,20 +843,37 @@ def room_type_detail_api(request, room_type_id):
     try:
         room_type = RoomType.objects.get(id=room_type_id, is_active=True)
         
-        # Count total rooms and available rooms for this type
+        # Count total rooms, available rooms, and occupied rooms for this type
         total_rooms = Room.objects.filter(room_type=room_type, is_active=True).count()
         available_rooms = Room.objects.filter(
-            room_type=room_type, 
+            room_type=room_type,
             is_active=True,
             status='AVAILABLE'
         ).count()
-        
+        occupied_rooms = Room.objects.filter(
+            room_type=room_type,
+            is_active=True,
+            status='OCCUPIED'
+        ).count()
+
         # Calculate occupancy percentage
         occupancy_percentage = 0
         if total_rooms > 0:
-            occupied_rooms = total_rooms - available_rooms
             occupancy_percentage = (occupied_rooms / total_rooms) * 100
-        
+
+        # Determine bed configuration based on room name and max occupancy
+        name = room_type.name.lower()
+        if 'family' in name:
+            bed_configuration = '1 King Bed + 2 Twin Beds'
+        elif 'suite' in name and room_type.max_occupancy >= 3:
+            bed_configuration = '1 King Bed + Sofa Bed'
+        elif 'twin' in name or room_type.max_occupancy == 2:
+            bed_configuration = '2 Twin Beds'
+        elif room_type.max_occupancy >= 3:
+            bed_configuration = '1 King Bed + Sofa Bed'
+        else:
+            bed_configuration = '1 King Bed'
+
         room_type_data = {
             'id': room_type.id,
             'name': room_type.name,
@@ -848,9 +885,12 @@ def room_type_detail_api(request, room_type_id):
             'is_active': room_type.is_active,
             'created_at': room_type.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             'updated_at': room_type.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-            'occupancy_percentage': round(occupancy_percentage, 2),
+            'total_rooms': total_rooms,
             'available_rooms_count': available_rooms,
-            'total_rooms_count': total_rooms
+            'occupied_rooms_count': occupied_rooms,
+            'occupancy_percentage': round(occupancy_percentage, 2),
+            'bed_configuration': bed_configuration,
+            'images': ['/hotelroom.jpeg']  # TODO: Add actual image handling
         }
         
         return Response(room_type_data)

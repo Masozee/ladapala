@@ -38,7 +38,7 @@ class ReportViewSet(viewsets.ViewSet):
 
     Supports period filters: today, week, month, year, custom
     """
-    permission_classes = [IsAuthenticated, IsManagerOrAdmin]
+    permission_classes = [IsAuthenticated]
 
     def get_order_total_sum(self):
         """

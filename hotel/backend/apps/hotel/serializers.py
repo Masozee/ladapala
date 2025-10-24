@@ -8,13 +8,60 @@ from .models import (
 
 class RoomTypeSerializer(serializers.ModelSerializer):
     """Serializer for room types"""
+    total_rooms = serializers.SerializerMethodField()
+    available_rooms_count = serializers.SerializerMethodField()
+    occupied_rooms_count = serializers.SerializerMethodField()
+    occupancy_percentage = serializers.SerializerMethodField()
+    bed_configuration = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
+
     class Meta:
         model = RoomType
         fields = [
-            'id', 'name', 'description', 'base_price', 'max_occupancy', 
-            'size_sqm', 'amenities', 'is_active', 'created_at', 'updated_at'
+            'id', 'name', 'description', 'base_price', 'max_occupancy',
+            'size_sqm', 'amenities', 'is_active', 'created_at', 'updated_at',
+            'total_rooms', 'available_rooms_count', 'occupied_rooms_count',
+            'occupancy_percentage', 'bed_configuration', 'images'
         ]
         read_only_fields = ['created_at', 'updated_at']
+
+    def get_total_rooms(self, obj):
+        """Get total number of rooms for this room type"""
+        return obj.rooms.filter(is_active=True).count()
+
+    def get_available_rooms_count(self, obj):
+        """Get count of available rooms"""
+        return obj.rooms.filter(status='AVAILABLE', is_active=True).count()
+
+    def get_occupied_rooms_count(self, obj):
+        """Get count of occupied rooms"""
+        return obj.rooms.filter(status='OCCUPIED', is_active=True).count()
+
+    def get_occupancy_percentage(self, obj):
+        """Calculate occupancy percentage"""
+        total = self.get_total_rooms(obj)
+        if total == 0:
+            return 0
+        occupied = self.get_occupied_rooms_count(obj)
+        return round((occupied / total) * 100, 2)
+
+    def get_bed_configuration(self, obj):
+        """Determine bed configuration based on room name and max occupancy"""
+        name = obj.name.lower()
+        if 'family' in name:
+            return '1 King Bed + 2 Twin Beds'
+        elif 'suite' in name and obj.max_occupancy >= 3:
+            return '1 King Bed + Sofa Bed'
+        elif 'twin' in name or obj.max_occupancy == 2:
+            return '2 Twin Beds'
+        elif obj.max_occupancy >= 3:
+            return '1 King Bed + Sofa Bed'
+        return '1 King Bed'
+
+    def get_images(self, obj):
+        """Return room images - placeholder for now"""
+        # TODO: Implement actual image handling when ImageField is added to model
+        return ['/hotelroom.jpeg']
 
 
 class RoomSerializer(serializers.ModelSerializer):
@@ -22,12 +69,15 @@ class RoomSerializer(serializers.ModelSerializer):
     room_type_name = serializers.CharField(source='room_type.name', read_only=True)
     room_type_details = RoomTypeSerializer(source='room_type', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+    base_price = serializers.DecimalField(source='room_type.base_price', max_digits=10, decimal_places=2, read_only=True)
+    max_occupancy = serializers.IntegerField(source='room_type.max_occupancy', read_only=True)
+
     class Meta:
         model = Room
         fields = [
             'id', 'number', 'room_type', 'room_type_name', 'room_type_details',
-            'floor', 'status', 'status_display', 'description', 'is_active',
+            'floor', 'status', 'status_display', 'notes', 'is_active',
+            'base_price', 'max_occupancy',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -36,19 +86,20 @@ class RoomSerializer(serializers.ModelSerializer):
 class GuestSerializer(serializers.ModelSerializer):
     """Serializer for guests"""
     full_name = serializers.CharField(read_only=True)
-    age = serializers.IntegerField(read_only=True)
     gender_display = serializers.CharField(source='get_gender_display', read_only=True)
-    
+    id_type_display = serializers.CharField(source='get_id_type_display', read_only=True)
+
     class Meta:
         model = Guest
         fields = [
             'id', 'first_name', 'last_name', 'full_name', 'email', 'phone',
-            'date_of_birth', 'age', 'gender', 'gender_display', 'nationality',
-            'passport_number', 'address', 'emergency_contact_name', 
-            'emergency_contact_phone', 'dietary_restrictions', 'special_requests',
-            'is_vip', 'loyalty_points', 'preferences', 'created_at', 'updated_at'
+            'date_of_birth', 'gender', 'gender_display', 'nationality',
+            'id_type', 'id_type_display', 'id_number', 'address',
+            'preferences', 'allergies',
+            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
+            'is_vip', 'loyalty_points', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'full_name', 'age']
+        read_only_fields = ['created_at', 'updated_at', 'full_name']
 
 
 class ReservationSerializer(serializers.ModelSerializer):
@@ -60,27 +111,80 @@ class ReservationSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     booking_source_display = serializers.CharField(source='get_booking_source_display', read_only=True)
     nights = serializers.IntegerField(read_only=True)
-    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    
+
+    # Computed financial fields
+    subtotal = serializers.SerializerMethodField()
+    taxes = serializers.SerializerMethodField()
+    service_charge = serializers.SerializerMethodField()
+    grand_total = serializers.SerializerMethodField()
+    deposit_amount = serializers.SerializerMethodField()
+    balance_due = serializers.SerializerMethodField()
+
+    # Additional info
+    can_cancel = serializers.SerializerMethodField()
+    total_rooms = serializers.SerializerMethodField()
+
     class Meta:
         model = Reservation
         fields = [
             'id', 'reservation_number', 'guest', 'guest_name', 'guest_details',
             'room', 'room_number', 'room_details', 'check_in_date', 'check_out_date',
-            'nights', 'adults', 'children', 'total_amount', 'status', 'status_display',
+            'nights', 'adults', 'children', 'status', 'status_display',
             'booking_source', 'booking_source_display', 'special_requests', 'notes',
+            'total_amount', 'subtotal', 'taxes', 'service_charge', 'grand_total',
+            'deposit_amount', 'balance_due', 'can_cancel', 'total_rooms',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'reservation_number', 'nights', 'total_amount']
+        read_only_fields = ['created_at', 'updated_at', 'reservation_number', 'nights']
+
+    def get_subtotal(self, obj):
+        """Calculate subtotal (room rate * nights)"""
+        if obj.room and obj.room.room_type:
+            return float(obj.room.room_type.base_price * obj.nights)
+        return float(obj.total_amount) if obj.total_amount else 0.0
+
+    def get_taxes(self, obj):
+        """Calculate taxes (11% VAT)"""
+        subtotal = self.get_subtotal(obj)
+        return round(subtotal * 0.11, 2)
+
+    def get_service_charge(self, obj):
+        """Service charge (currently 0)"""
+        return 0.0
+
+    def get_grand_total(self, obj):
+        """Calculate grand total (subtotal + taxes + service charge)"""
+        subtotal = self.get_subtotal(obj)
+        taxes = self.get_taxes(obj)
+        service_charge = self.get_service_charge(obj)
+        return round(subtotal + taxes + service_charge, 2)
+
+    def get_deposit_amount(self, obj):
+        """Get deposit amount (currently 0, can be enhanced later)"""
+        return 0.0
+
+    def get_balance_due(self, obj):
+        """Calculate balance due"""
+        grand_total = self.get_grand_total(obj)
+        deposit = self.get_deposit_amount(obj)
+        return round(grand_total - deposit, 2)
+
+    def get_can_cancel(self, obj):
+        """Check if reservation can be cancelled"""
+        return obj.status in ['PENDING', 'CONFIRMED']
+
+    def get_total_rooms(self, obj):
+        """Total number of rooms (currently always 1)"""
+        return 1 if obj.room else 0
 
     def validate(self, data):
         """Validate reservation data"""
         check_in = data.get('check_in_date')
         check_out = data.get('check_out_date')
-        
+
         if check_in and check_out and check_out <= check_in:
             raise serializers.ValidationError("Check-out date must be after check-in date")
-        
+
         return data
 
 
@@ -183,10 +287,12 @@ class InventoryItemSerializer(serializers.ModelSerializer):
 class RoomListSerializer(serializers.ModelSerializer):
     room_type_name = serializers.CharField(source='room_type.name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+    base_price = serializers.DecimalField(source='room_type.base_price', max_digits=10, decimal_places=2, read_only=True)
+    max_occupancy = serializers.IntegerField(source='room_type.max_occupancy', read_only=True)
+
     class Meta:
         model = Room
-        fields = ['id', 'number', 'room_type_name', 'floor', 'status', 'status_display']
+        fields = ['id', 'number', 'room_type_name', 'floor', 'status', 'status_display', 'base_price', 'max_occupancy', 'is_active']
 
 
 class GuestListSerializer(serializers.ModelSerializer):

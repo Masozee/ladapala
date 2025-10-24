@@ -45,8 +45,12 @@ interface DjangoRoomType {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  occupancy_percentage: number;
+  total_rooms: number;
   available_rooms_count: number;
+  occupied_rooms_count: number;
+  occupancy_percentage: number;
+  bed_configuration: string;
+  images: string[];
 }
 
 const fetchRoomType = async (id: string): Promise<RoomType | null> => {
@@ -63,7 +67,7 @@ const fetchRoomType = async (id: string): Promise<RoomType | null> => {
     }
     
     const djangoRoom: DjangoRoomType = await response.json();
-    
+
     // Map Django response to frontend format
     return {
       id: djangoRoom.id,
@@ -72,27 +76,16 @@ const fetchRoomType = async (id: string): Promise<RoomType | null> => {
       base_rate: Math.round(parseFloat(djangoRoom.base_price)),
       max_occupancy: djangoRoom.max_occupancy,
       room_size: djangoRoom.size_sqm || 20,
-      bed_configuration: getBedConfiguration(djangoRoom.name, djangoRoom.max_occupancy),
+      bed_configuration: djangoRoom.bed_configuration,
       amenities: parseAmenities(djangoRoom.amenities),
-      images: ['/hotelroom.jpeg'], // Default image
-      room_count: djangoRoom.occupancy_percentage > 0 
-        ? Math.ceil(djangoRoom.available_rooms_count / (1 - djangoRoom.occupancy_percentage / 100)) 
-        : djangoRoom.available_rooms_count + Math.floor(Math.random() * 10) + 5,
+      images: djangoRoom.images,
+      room_count: djangoRoom.total_rooms,
       available_rooms: djangoRoom.available_rooms_count
     };
   } catch (error) {
     console.error('Failed to fetch room type:', error);
     return null;
   }
-};
-
-const getBedConfiguration = (roomName: string, maxOccupancy: number): string => {
-  const name = roomName.toLowerCase();
-  if (name.includes('family')) return '1 King Bed + 2 Twin Beds';
-  if (name.includes('suite') && maxOccupancy >= 3) return '1 King Bed + Sofa Bed';
-  if (name.includes('twin') || maxOccupancy === 2) return '2 Twin Beds';
-  if (maxOccupancy >= 3) return '1 King Bed + Sofa Bed';
-  return '1 King Bed';
 };
 
 const parseAmenities = (amenitiesString: string | null): string[] => {

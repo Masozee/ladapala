@@ -153,11 +153,29 @@ const ComplaintsPage = () => {
   const [filterDateTo, setFilterDateTo] = useState<string>('');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   // API state
   const [complaintsData, setComplaintsData] = useState<ComplaintsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Form modal state
+  const [showComplaintForm, setShowComplaintForm] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+
+  // Form data
+  const [formData, setFormData] = useState({
+    guest_id: '',
+    room_id: '',
+    category: 'OTHER',
+    priority: 'MEDIUM',
+    title: '',
+    description: '',
+    incident_date: new Date().toISOString().split('T')[0]
+  });
 
   // Load complaints data
   useEffect(() => {
@@ -177,6 +195,76 @@ const ComplaintsPage = () => {
 
     loadComplaints();
   }, [router]);
+
+  // Load guests and rooms when form is opened
+  useEffect(() => {
+    if (showComplaintForm) {
+      const loadFormData = async () => {
+        try {
+          // Load guests
+          const guestsResponse = await fetch(buildApiUrl('guests/'));
+          if (guestsResponse.ok) {
+            const guestsData = await guestsResponse.json();
+            setGuests(guestsData.results || []);
+          }
+
+          // Load rooms
+          const roomsResponse = await fetch(buildApiUrl('rooms/'));
+          if (roomsResponse.ok) {
+            const roomsData = await roomsResponse.json();
+            setRooms(roomsData.results || []);
+          }
+        } catch (err) {
+          console.error('Error loading form data:', err);
+        }
+      };
+
+      loadFormData();
+    }
+  }, [showComplaintForm]);
+
+  // Handle form submission
+  const handleSubmitComplaint = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError(null);
+
+    try {
+      const response = await fetch(buildApiUrl('hotel/complaints/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        // Success - reload complaints and close form
+        setShowComplaintForm(false);
+        setFormData({
+          guest_id: '',
+          room_id: '',
+          category: 'OTHER',
+          priority: 'MEDIUM',
+          title: '',
+          description: '',
+          incident_date: new Date().toISOString().split('T')[0]
+        });
+
+        // Reload complaints list
+        const data = await fetchComplaints();
+        setComplaintsData(data);
+      } else {
+        const errorData = await response.json();
+        setFormError(errorData.error || 'Failed to submit complaint');
+      }
+    } catch (err: any) {
+      setFormError('Failed to submit complaint. Please try again.');
+      console.error(err);
+    } finally {
+      setFormLoading(false);
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -288,7 +376,10 @@ const ComplaintsPage = () => {
             <p className="text-gray-600 mt-2">Track and resolve guest complaints efficiently</p>
           </div>
           <div>
-            <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
+            <button
+              onClick={() => setShowComplaintForm(true)}
+              className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors"
+            >
               <Add01Icon className="h-4 w-4" />
               <span>New Complaint</span>
             </button>
@@ -934,6 +1025,186 @@ const ComplaintsPage = () => {
             <Mail01Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No complaints found</h3>
             <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
+          </div>
+        )}
+
+        {/* Complaint Form Modal */}
+        {showComplaintForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">New Complaint</h3>
+                    <p className="text-sm text-gray-600 mt-1">Submit a new guest complaint</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                      <Alert01Icon className="h-4 w-4 text-white" />
+                    </div>
+                    <button
+                      onClick={() => setShowComplaintForm(false)}
+                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <Cancel01Icon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Content - Form */}
+              <form onSubmit={handleSubmitComplaint} className="p-6 bg-gray-50">
+                {formError && (
+                  <div className="mb-4 bg-red-50 border border-red-200 p-4">
+                    <div className="flex items-center space-x-2">
+                      <Alert01Icon className="h-5 w-5 text-red-600" />
+                      <span className="text-red-800">{formError}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {/* Guest Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Guest <span className="text-red-600">*</span>
+                    </label>
+                    <select
+                      required
+                      value={formData.guest_id}
+                      onChange={(e) => setFormData({ ...formData, guest_id: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                    >
+                      <option value="">Select a guest</option>
+                      {guests.map((guest) => (
+                        <option key={guest.id} value={guest.id}>
+                          {guest.full_name} - {guest.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Room Selection (Optional) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Room (Optional)</label>
+                    <select
+                      value={formData.room_id}
+                      onChange={(e) => setFormData({ ...formData, room_id: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                    >
+                      <option value="">No specific room</option>
+                      {rooms.map((room) => (
+                        <option key={room.id} value={room.id}>
+                          Room {room.number} - {room.room_type_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Category and Priority */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Category <span className="text-red-600">*</span>
+                      </label>
+                      <select
+                        required
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                      >
+                        <option value="SERVICE">Service</option>
+                        <option value="ROOM">Room</option>
+                        <option value="FACILITY">Facility</option>
+                        <option value="BILLING">Billing</option>
+                        <option value="FOOD">Food & Beverage</option>
+                        <option value="CLEANLINESS">Cleanliness</option>
+                        <option value="NOISE">Noise</option>
+                        <option value="OTHER">Other</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Priority <span className="text-red-600">*</span>
+                      </label>
+                      <select
+                        required
+                        value={formData.priority}
+                        onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                      >
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="HIGH">High</option>
+                        <option value="URGENT">Urgent</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Incident Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Incident Date</label>
+                    <input
+                      type="date"
+                      value={formData.incident_date}
+                      onChange={(e) => setFormData({ ...formData, incident_date: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                    />
+                  </div>
+
+                  {/* Title */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Title <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Brief summary of the complaint"
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description <span className="text-red-600">*</span>
+                    </label>
+                    <textarea
+                      required
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Detailed description of the complaint..."
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex items-center justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowComplaintForm(false)}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
+                    disabled={formLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-[#005357] text-white text-sm hover:bg-[#004147] disabled:opacity-50"
+                    disabled={formLoading}
+                  >
+                    {formLoading ? 'Submitting...' : 'Submit Complaint'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>

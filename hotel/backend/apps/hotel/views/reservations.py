@@ -18,6 +18,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
     search_fields = ['reservation_number', 'guest__first_name', 'guest__last_name']
     ordering_fields = ['check_in_date', 'check_out_date', 'created_at']
     ordering = ['-check_in_date']
+    lookup_field = 'reservation_number'
 
     def get_serializer_class(self):
         if self.action == 'list':

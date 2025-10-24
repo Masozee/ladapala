@@ -283,20 +283,14 @@ export default function NewReservationPage() {
 
       const reservationPayload = {
         guest: selectedGuest.id,
+        room: selectedRoom.id,
         check_in_date: formData.check_in_date,
         check_out_date: formData.check_out_date,
         adults: formData.adults,
         children: formData.children,
         special_requests: formData.special_requests,
         booking_source: formData.booking_source,
-        notes: formData.notes,
-        room_assignments: [{
-          room_id: selectedRoom.id,
-          rate: selectedRoom.base_price,
-          discount_amount: 0,
-          extra_charges: 0,
-          notes: ''
-        }]
+        notes: formData.notes
       };
 
       const response = await fetch(buildApiUrl('hotel/reservations/'), {

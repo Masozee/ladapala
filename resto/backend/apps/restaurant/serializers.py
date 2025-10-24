@@ -437,17 +437,27 @@ class CashierSessionSerializer(serializers.ModelSerializer):
     branch_name = serializers.CharField(source='branch.name', read_only=True)
     closed_by_name = serializers.CharField(source='closed_by.user.get_full_name', read_only=True)
     duration_hours = serializers.SerializerMethodField()
+    settlement_data = serializers.SerializerMethodField()
 
     class Meta:
         model = CashierSession
         fields = '__all__'
-        read_only_fields = ['opened_at', 'closed_at', 'expected_cash', 'cash_difference', 'settlement_data']
+        read_only_fields = ['opened_at', 'closed_at', 'expected_cash', 'cash_difference']
 
     def get_duration_hours(self, obj):
         if obj.closed_at:
             duration = obj.closed_at - obj.opened_at
             return round(duration.total_seconds() / 3600, 2)
         return None
+
+    def get_settlement_data(self, obj):
+        """Calculate settlement data on the fly for open sessions, or return stored data for closed sessions"""
+        if obj.status == 'CLOSED' and obj.settlement_data:
+            return obj.settlement_data
+
+        # Calculate settlement data for open sessions
+        _, settlement_data = obj.calculate_settlement()
+        return settlement_data
 
 
 class CashierSessionOpenSerializer(serializers.ModelSerializer):

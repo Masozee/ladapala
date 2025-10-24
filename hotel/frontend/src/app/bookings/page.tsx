@@ -818,7 +818,7 @@ const BookingsPage = () => {
         ordering: sortOrder === 'asc' ? sortField : `-${sortField}`
       });
       
-      const response = await fetch(buildApiUrl(`reservations/?${params}`));
+      const response = await fetch(buildApiUrl(`hotel/reservations/?${params}`));
       if (!response.ok) {
         throw new Error('Failed to fetch reservations');
       }

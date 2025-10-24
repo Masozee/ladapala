@@ -167,7 +167,7 @@ interface DjangoReservationResponse {
 // Fetch guest reservations
 const fetchGuestReservations = async (guestId: number): Promise<GuestStay[]> => {
   try {
-    const response = await fetch(buildApiUrl(`reservations/?guest=${guestId}`), {
+    const response = await fetch(buildApiUrl(`hotel/reservations/?guest=${guestId}`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -213,7 +213,7 @@ const mapReservationStatus = (status: string): 'completed' | 'cancelled' | 'no_s
 // API fetch functions
 const fetchGuests = async (): Promise<Guest[]> => {
   try {
-    const response = await fetch(buildApiUrl('guests/'), {
+    const response = await fetch(buildApiUrl('hotel/guests/'), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -623,7 +623,7 @@ const GuestsPage = () => {
     setCreateError(null);
 
     try {
-      const response = await fetch(buildApiUrl('guests/'), {
+      const response = await fetch(buildApiUrl('hotel/guests/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
