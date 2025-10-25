@@ -65,3 +65,19 @@ class Reservation(models.Model):
         if self.room:
             return self.room.get_current_price() * self.nights
         return Decimal('0.00')
+
+    def get_total_paid(self):
+        """Calculate total amount paid for this reservation"""
+        from .payments import Payment
+        total = self.payments.filter(status='COMPLETED').aggregate(
+            total=models.Sum('amount')
+        )['total']
+        return total or Decimal('0.00')
+
+    def is_fully_paid(self):
+        """Check if reservation is fully paid"""
+        expected_total = self.calculate_total_amount()
+        # Add tax (11%)
+        expected_with_tax = expected_total * Decimal('1.11')
+        total_paid = self.get_total_paid()
+        return total_paid >= expected_with_tax

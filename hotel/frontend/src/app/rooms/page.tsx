@@ -70,8 +70,12 @@ interface DjangoRoomType {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  occupancy_percentage: number;
+  total_rooms: number;
   available_rooms_count: number;
+  occupied_rooms_count: number;
+  occupancy_percentage: number;
+  bed_configuration: string;
+  images: string[];
 }
 
 interface DjangoApiResponse {
@@ -81,19 +85,32 @@ interface DjangoApiResponse {
   results: DjangoRoomType[];
 }
 
-const fetchRoomTypes = async (): Promise<RoomType[]> => {
+const fetchRoomTypes = async (checkIn?: string, checkOut?: string): Promise<RoomType[]> => {
   try {
-    const response = await fetch(buildApiUrl('hotel/room-types/'), {
+    // Build URL with date parameters if provided
+    let url = 'hotel/room-types/';
+    const params = new URLSearchParams();
+
+    if (checkIn && checkOut) {
+      params.append('check_in', checkIn);
+      params.append('check_out', checkOut);
+    }
+
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    const response = await fetch(buildApiUrl(url), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data: DjangoApiResponse = await response.json();
     
     // Map Django response to frontend format
@@ -104,18 +121,15 @@ const fetchRoomTypes = async (): Promise<RoomType[]> => {
       base_rate: Math.round(parseFloat(djangoRoom.base_price)),
       max_occupancy: djangoRoom.max_occupancy,
       room_size: djangoRoom.size_sqm || 20,
-      bed_configuration: getBedConfiguration(djangoRoom.name, djangoRoom.max_occupancy),
+      bed_configuration: djangoRoom.bed_configuration || getBedConfiguration(djangoRoom.name, djangoRoom.max_occupancy),
       amenities: parseAmenities(djangoRoom.amenities),
-      images: ['/hotelroom.jpeg'], // Default image
-      room_count: djangoRoom.occupancy_percentage > 0 
-        ? Math.ceil(djangoRoom.available_rooms_count / (1 - djangoRoom.occupancy_percentage / 100)) 
-        : djangoRoom.available_rooms_count + Math.floor(Math.random() * 10) + 5, // Estimate total rooms when occupancy is 0
+      images: djangoRoom.images && djangoRoom.images.length > 0 ? djangoRoom.images : ['/hotelroom.jpeg'],
+      room_count: djangoRoom.total_rooms,
       available_rooms: djangoRoom.available_rooms_count
     }));
   } catch (error) {
     console.error('Failed to fetch room types:', error);
-    // Fallback to mock data if API fails
-    return MOCK_ROOM_TYPES;
+    return [];
   }
 };
 
@@ -138,118 +152,6 @@ const parseAmenities = (amenitiesString: string | null): string[] => {
     .filter(amenity => amenity.length > 0)
     .slice(0, 8); // Limit to 8 amenities for UI consistency
 };
-
-const MOCK_ROOM_TYPES: RoomType[] = [
-  {
-    id: 1,
-    name: 'Standard King',
-    description: 'Comfortable room with modern amenities and city views, perfect for business travelers or couples.',
-    base_rate: 2250000,
-    max_occupancy: 2,
-    room_size: 35,
-    bed_configuration: '1 King Bed',
-    amenities: ['WiFi', 'TV', 'AC', 'Mini Bar', 'Safe', 'Phone', 'Desk'],
-    images: [
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg'
-    ],
-    room_count: 20,
-    available_rooms: 12
-  },
-  {
-    id: 2,
-    name: 'Deluxe King Suite',
-    description: 'Spacious suite with separate living area, premium amenities, and panoramic city views.',
-    base_rate: 3375000,
-    max_occupancy: 3,
-    room_size: 55,
-    bed_configuration: '1 King Bed + Sofa Bed',
-    amenities: ['WiFi', 'TV', 'AC', 'Mini Bar', 'Balcony', 'City View', 'Room Service', 'Safe', 'Bathtub', 'Coffee Machine'],
-    images: [
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg'
-    ],
-    room_count: 15,
-    available_rooms: 8
-  },
-  {
-    id: 3,
-    name: 'Executive Twin',
-    description: 'Perfect for business partners or friends, featuring two comfortable beds and a work area.',
-    base_rate: 2625000,
-    max_occupancy: 2,
-    room_size: 40,
-    bed_configuration: '2 Twin Beds',
-    amenities: ['WiFi', 'TV', 'AC', 'Mini Bar', 'Safe', 'Desk', 'Work Chair', 'Phone'],
-    images: [
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg'
-    ],
-    room_count: 10,
-    available_rooms: 7
-  },
-  {
-    id: 4,
-    name: 'Family Suite',
-    description: 'Spacious accommodation for families with connecting rooms and child-friendly amenities.',
-    base_rate: 4125000,
-    max_occupancy: 4,
-    room_size: 65,
-    bed_configuration: '1 King Bed + 2 Twin Beds',
-    amenities: ['WiFi', 'TV', 'AC', 'Mini Bar', 'Balcony', 'City View', 'Room Service', 'Safe', 'Coffee Machine', 'Baby Crib Available'],
-    images: [
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg'
-    ],
-    room_count: 8,
-    available_rooms: 3
-  },
-  {
-    id: 5,
-    name: 'Presidential Suite',
-    description: 'Luxurious suite with premium furnishings, butler service, and exclusive amenities.',
-    base_rate: 6750000,
-    max_occupancy: 4,
-    room_size: 95,
-    bed_configuration: '1 King Bed + Living Room',
-    amenities: ['WiFi', 'TV', 'AC', 'Mini Bar', 'Balcony', 'Panoramic View', 'Butler Service', 'Safe', 'Jacuzzi', 'Coffee Machine', 'Dining Table', 'Premium Toiletries'],
-    images: [
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg',
-      '/hotelroom.jpeg'
-    ],
-    room_count: 2,
-    available_rooms: 1
-  }
-];
-
-const MOCK_ROOMS: Room[] = [
-  {
-    id: 1,
-    room_number: '1205',
-    room_type_name: 'Deluxe King Suite',
-    room_type_id: 2,
-    floor: 12,
-    status: 'occupied',
-    rate_per_night: 3375000,
-    max_occupancy: 3,
-    bed_type: '1 King Bed + Sofa Bed',
-    room_size: 55,
-    amenities: ['WiFi', 'TV', 'AC', 'Mini Bar', 'Balcony', 'City View', 'Room Service', 'Safe'],
-    images: ['/hotelroom.jpeg'],
-    description: 'Spacious suite with city views',
-    view_type: 'City View',
-    is_smoking: false,
-    last_cleaned: '2024-08-24T10:00:00Z',
-    next_checkout: '2024-08-28T11:00:00Z'
-  }
-];
 
 const RoomsPage = () => {
   const router = useRouter();
@@ -381,13 +283,13 @@ const RoomsPage = () => {
 
   const nights = calculateNights();
 
-  // Fetch room types from API
+  // Fetch room types from API with date filtering
   useEffect(() => {
     const loadRoomTypes = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchRoomTypes();
+        const data = await fetchRoomTypes(checkInDate, checkOutDate);
         setRoomTypes(data);
       } catch (err) {
         setError('Failed to load room types. Please try again.');
@@ -398,7 +300,7 @@ const RoomsPage = () => {
     };
 
     loadRoomTypes();
-  }, []);
+  }, [checkInDate, checkOutDate]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -735,118 +637,76 @@ const RoomsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRoomTypes.map((roomType) => (
             <div key={roomType.id} className="bg-white border border-gray-200">
-              {/* Room Type Header */}
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1">
-                    {[1,2,3,4,5].map(star => (
-                      <SparklesIcon key={star} className="h-4 w-4 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                    <BedIcon className="h-4 w-4 text-white" />
-                  </div>
-                </div>
+              {/* Room Image */}
+              <div className="relative aspect-video bg-gray-200 overflow-hidden">
+                <img
+                  src={roomType.images[0]}
+                  alt={roomType.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
 
-              <div className="p-4 bg-gray-50">
-                {/* Room Image */}
-                <div className="relative aspect-video bg-gray-200 mb-4 overflow-hidden">
-                  <img
-                    src={roomType.images[0]}
-                    alt={roomType.name}
-                    className="w-full h-full object-cover"
-                  />
-                  {roomType.images.length > 1 && (
-                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                      +{roomType.images.length - 1} more
-                    </div>
+              <div className="p-4">
+                {/* Room Name & Info */}
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{roomType.name}</h3>
+                <div className="flex items-center space-x-3 text-xs text-gray-500 mb-3">
+                  <span>{roomType.room_size} sqm</span>
+                  <span>•</span>
+                  <span>{roomType.max_occupancy} guests</span>
+                  <span>•</span>
+                  <span>{roomType.bed_configuration}</span>
+                </div>
+
+                {/* Amenities - Compact */}
+                <div className="flex flex-wrap gap-1 mb-4">
+                  {roomType.amenities.slice(0, 4).map((amenity, index) => (
+                    <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                      {amenity}
+                    </span>
+                  ))}
+                  {roomType.amenities.length > 4 && (
+                    <span className="text-xs text-gray-500 px-2 py-1">
+                      +{roomType.amenities.length - 4} more
+                    </span>
                   )}
                 </div>
 
-                {/* Room Information */}
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{roomType.name}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{roomType.description}</p>
-                  <div className="flex items-center space-x-4 text-xs text-gray-500">
-                    <span>• {roomType.room_size} sqm</span>
-                    <span>• Max {roomType.max_occupancy} guests</span>
-                    <span>• {roomType.bed_configuration}</span>
-                  </div>
-                </div>
-
-                {/* Amenities Grid */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {roomType.amenities.slice(0, 6).map((amenity, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-xs text-gray-600">
-                      <div className="w-5 h-5 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                        {getAmenityIcon(amenity)}
-                      </div>
-                      <span className="truncate">{amenity}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Availability Status */}
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Available Rooms</span>
+                {/* Availability & Pricing */}
+                <div className="border-t pt-3 mb-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-gray-600">Available</span>
                     <span className={`text-sm font-bold ${roomType.available_rooms > 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {roomType.available_rooms} / {roomType.room_count}
                     </span>
                   </div>
-                  
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full ${roomType.available_rooms > 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                      style={{width: `${(roomType.available_rooms / roomType.room_count) * 100}%`}}
-                    ></div>
-                  </div>
 
-                  {roomType.available_rooms <= 3 && roomType.available_rooms > 0 && (
-                    <p className="text-xs text-orange-600 font-medium">Only {roomType.available_rooms} rooms left!</p>
-                  )}
-                </div>
-
-                {/* Pricing */}
-                <div className="bg-white p-4">
                   <div className="text-right">
-                    <div className="text-xs text-gray-500 mb-1">Starting from</div>
-                    <div className="text-2xl font-bold text-[#005357] mb-1">
+                    <div className="text-2xl font-bold text-[#005357]">
                       {formatCurrency(roomType.base_rate)}
                     </div>
-                    <div className="text-xs text-gray-500 mb-3">per night</div>
-                    
-                    <div className="border-t pt-3 mb-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">{nights} nights</span>
-                        <span className="text-gray-900">{formatCurrency(roomType.base_rate * nights)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Taxes & fees</span>
-                        <span className="text-gray-900">{formatCurrency(roomType.base_rate * nights * 0.1)}</span>
-                      </div>
-                      <div className="flex justify-between font-bold text-base pt-2 border-t">
-                        <span>Total</span>
-                        <span className="text-[#005357]">{formatCurrency(roomType.base_rate * nights * 1.1)}</span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <button 
-                        onClick={() => router.push(`/rooms/${roomType.id}`)}
-                        className="text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors"
-                      >
-                        View Details
-                      </button>
-                      <button 
-                        className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors disabled:opacity-50"
-                        disabled={roomType.available_rooms === 0}
-                      >
-                        {roomType.available_rooms === 0 ? 'Sold Out' : 'Book Now'}
-                      </button>
-                    </div>
+                    <div className="text-xs text-gray-500">per night</div>
                   </div>
+                </div>
+
+                {/* Actions */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => router.push(`/rooms/${roomType.id}`)}
+                    className="text-sm bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors"
+                  >
+                    Details
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (roomType.available_rooms > 0) {
+                        router.push(`/bookings/new?room_type=${roomType.id}&room_type_name=${encodeURIComponent(roomType.name)}&check_in=${checkInDate}&check_out=${checkOutDate}&guests=${guests}`);
+                      }
+                    }}
+                    className="text-sm bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors disabled:opacity-50"
+                    disabled={roomType.available_rooms === 0}
+                  >
+                    {roomType.available_rooms === 0 ? 'Sold Out' : 'Book Now'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -920,14 +780,7 @@ const RoomsPage = () => {
                             />
                           </div>
                           <div>
-                            <div className="flex items-center space-x-2 mb-1">
-                              <h4 className="font-bold text-gray-900">{roomType.name}</h4>
-                              <div className="flex items-center space-x-1">
-                                {[1,2,3,4,5].map(star => (
-                                  <SparklesIcon key={star} className="h-3 w-3 text-yellow-400 fill-current" />
-                                ))}
-                              </div>
-                            </div>
+                            <h4 className="font-bold text-gray-900 mb-1">{roomType.name}</h4>
                             <p className="text-xs text-gray-600 max-w-xs">{roomType.description}</p>
                           </div>
                         </div>
@@ -967,27 +820,9 @@ const RoomsPage = () => {
 
                       {/* Availability */}
                       <td className="px-6 py-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700">
-                              {roomType.available_rooms} / {roomType.room_count}
-                            </span>
-                            <span className={`text-xs font-bold px-2 py-1 rounded ${
-                              roomType.available_rooms > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {roomType.available_rooms > 0 ? 'Available' : 'Sold Out'}
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-1.5">
-                            <div 
-                              className={`h-1.5 rounded-full ${roomType.available_rooms > 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                              style={{width: `${(roomType.available_rooms / roomType.room_count) * 100}%`}}
-                            ></div>
-                          </div>
-                          {roomType.available_rooms <= 3 && roomType.available_rooms > 0 && (
-                            <p className="text-xs text-orange-600 font-medium">Only {roomType.available_rooms} left!</p>
-                          )}
-                        </div>
+                        <span className="text-sm font-medium text-gray-700">
+                          {roomType.available_rooms} / {roomType.room_count}
+                        </span>
                       </td>
 
                       {/* Rate */}
@@ -1015,10 +850,10 @@ const RoomsPage = () => {
 
                       {/* Actions */}
                       <td className="px-6 py-4">
-                        <div className="relative">
-                          <button 
+                        <div className="relative flex justify-center">
+                          <button
                             onClick={() => setActiveDropdown(activeDropdown === roomType.id ? null : roomType.id)}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                            className="flex items-center justify-center p-1.5 text-gray-600 hover:text-gray-900 hover:border-gray-400 transition-colors rounded border border-gray-300"
                           >
                             <MoreHorizontalIcon className="h-4 w-4" />
                           </button>
@@ -1038,7 +873,12 @@ const RoomsPage = () => {
                                   <span>View Details</span>
                                 </button>
                                 <button
-                                  onClick={() => setActiveDropdown(null)}
+                                  onClick={() => {
+                                    if (roomType.available_rooms > 0) {
+                                      router.push(`/bookings/new?room_type=${roomType.id}&room_type_name=${encodeURIComponent(roomType.name)}&check_in=${checkInDate}&check_out=${checkOutDate}&guests=${guests}`);
+                                    }
+                                    setActiveDropdown(null);
+                                  }}
                                   disabled={roomType.available_rooms === 0}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
@@ -1047,25 +887,14 @@ const RoomsPage = () => {
                                 </button>
                                 <div className="border-t border-gray-100 my-1"></div>
                                 <button
-                                  onClick={() => setActiveDropdown(null)}
+                                  onClick={() => {
+                                    router.push(`/office/room-types/${roomType.id}/edit`);
+                                    setActiveDropdown(null);
+                                  }}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
                                   <Settings02Icon className="h-4 w-4" />
                                   <span>Edit Room Type</span>
-                                </button>
-                                <button
-                                  onClick={() => setActiveDropdown(null)}
-                                  className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                >
-                                  <UserMultipleIcon className="h-4 w-4" />
-                                  <span>Manage Availability</span>
-                                </button>
-                                <button
-                                  onClick={() => setActiveDropdown(null)}
-                                  className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                >
-                                  <Calendar01Icon className="h-4 w-4" />
-                                  <span>View Calendar</span>
                                 </button>
                               </div>
                             </div>

@@ -5,6 +5,7 @@ from .views import (
     PaymentViewSet, ComplaintViewSet, CheckInViewSet, HolidayViewSet,
     InventoryItemViewSet, hotel_dashboard
 )
+from .views.complaints import ComplaintImageViewSet
 from .views.reports import daily_reports, daily_reports_range, monthly_reports
 
 router = DefaultRouter()
@@ -14,6 +15,7 @@ router.register(r'guests', GuestViewSet, basename='hotel-guests')
 router.register(r'reservations', ReservationViewSet, basename='hotel-reservations')
 router.register(r'payments', PaymentViewSet, basename='hotel-payments')
 router.register(r'complaints', ComplaintViewSet, basename='hotel-complaints')
+router.register(r'complaint-images', ComplaintImageViewSet, basename='hotel-complaint-images')
 router.register(r'checkins', CheckInViewSet, basename='hotel-checkins')
 router.register(r'holidays', HolidayViewSet, basename='hotel-holidays')
 router.register(r'inventory', InventoryItemViewSet, basename='hotel-inventory')

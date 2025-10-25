@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -41,31 +41,82 @@ interface MenuItem {
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const [pendingCount, setPendingCount] = useState<number>(0);
+  const [uncompletedComplaintsCount, setUncompletedComplaintsCount] = useState<number>(0);
+
+  // Fetch pending reservations count
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/hotel/reservations/?status=PENDING`, {
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setPendingCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching pending count:', error);
+      }
+    };
+
+    fetchPendingCount();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchPendingCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch uncompleted complaints count (OPEN + IN_PROGRESS)
+  useEffect(() => {
+    const fetchComplaintsCount = async () => {
+      try {
+        // Fetch OPEN complaints
+        const openResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/hotel/complaints/?status=OPEN`, {
+          credentials: 'include',
+        });
+
+        // Fetch IN_PROGRESS complaints
+        const inProgressResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/hotel/complaints/?status=IN_PROGRESS`, {
+          credentials: 'include',
+        });
+
+        let totalCount = 0;
+
+        if (openResponse.ok) {
+          const openData = await openResponse.json();
+          totalCount += openData.count || 0;
+        }
+
+        if (inProgressResponse.ok) {
+          const inProgressData = await inProgressResponse.json();
+          totalCount += inProgressData.count || 0;
+        }
+
+        setUncompletedComplaintsCount(totalCount);
+      } catch (error) {
+        console.error('Error fetching complaints count:', error);
+      }
+    };
+
+    fetchComplaintsCount();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchComplaintsCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const frontlineActions: MenuItem[] = [
     { name: 'Dashboard', icon: Home01Icon, href: '/' },
-    { name: 'Bookings', icon: Calendar01Icon, href: '/bookings', badge: '12' },
+    { name: 'Bookings', icon: Calendar01Icon, href: '/bookings', badge: pendingCount > 0 ? pendingCount.toString() : undefined },
     { name: 'Room Status', icon: BedIcon, href: '/rooms' },
-    { name: 'Complaints', icon: QuestionIcon, href: '/complaints', badge: '5' },
+    { name: 'Complaints', icon: QuestionIcon, href: '/complaints', badge: uncompletedComplaintsCount > 0 ? uncompletedComplaintsCount.toString() : undefined },
     { name: 'Payments', icon: CreditCardIcon, href: '/payments' },
-    { name: 'Reports', icon: File01Icon, href: '/reports' },
   ];
 
   const bottomActions: MenuItem[] = [
-    { 
-      name: 'Office', 
-      icon: Building03Icon, 
-      submenu: [
-        { name: 'Office Dashboard', icon: Building03Icon, href: '/office' },
-        { name: 'Analytics', icon: ArrowUp01Icon, href: '/office/analytics' },
-        { name: 'Employees', icon: UserSettings01Icon, href: '/office/employees' },
-        { name: 'Financial', icon: CreditCardIcon, href: '/office/financial' },
-        { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse' },
-        { name: 'Schedules', icon: Clock01Icon, href: '/office/schedules' },
-        { name: 'Reports', icon: File01Icon, href: '/office/reports' },
-        { name: 'Administration', icon: Shield01Icon, href: '/office/admin' },
-      ]
-    },
+    { name: 'Office', icon: Building03Icon, href: '/office' },
     { name: 'Calendar', icon: Calendar01Icon, href: '/calendar' },
     { name: 'Settings', icon: Settings02Icon, href: '/settings' },
     { name: 'Profile', icon: UserIcon, href: '/profile' },

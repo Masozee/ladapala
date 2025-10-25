@@ -34,8 +34,7 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  Logout01Icon,
-  Loading03Icon
+  Logout01Icon
 } from '@/lib/icons';
 
 interface Guest {
@@ -71,14 +70,12 @@ interface Reservation {
   guest_name: string;
   room?: number;
   room_number?: string;
-  room_type_name?: string;
   room_details?: RoomDetails;
   check_in_date: string;
   check_out_date: string;
   nights: number;
   adults: number;
   children: number;
-  total_guests?: number;
   status: string;
   status_display: string;
   booking_source: string;
@@ -90,8 +87,6 @@ interface Reservation {
   grand_total?: number;
   deposit_amount?: number;
   balance_due?: number;
-  total_paid?: number;
-  is_fully_paid?: boolean;
   created_at: string;
   special_requests?: string;
   notes?: string;
@@ -113,6 +108,453 @@ interface RoomFilters {
   search?: string;
 }
 
+const MOCK_RESERVATIONS: Reservation[] = [
+  // Current/Recent bookings for calendar demonstration
+  {
+    id: 1,
+    reservation_number: 'RSV001',
+    guest_name: 'John Smith',
+    guest_details: {
+      id: 1,
+      full_name: 'John Smith',
+      email: 'john.smith@email.com',
+      phone: '+62-812-1111-0001',
+      nationality: 'United States'
+    },
+    check_in_date: '2025-08-26',
+    check_out_date: '2025-08-29',
+    nights: 3,
+    adults: 2,
+    children: 0,
+    status: 'CONFIRMED',
+    status_display: 'Confirmed',
+    booking_source: 'DIRECT',
+    total_rooms: 1,
+    total_amount: 6750000,
+    created_at: '2024-08-23T10:30:00Z',
+    rooms: [
+      {
+        id: 1,
+        room_number: '101',
+        room_type_name: 'Standard Room',
+        rate: 2250000,
+        total_amount: 6750000
+      }
+    ],
+    special_requests: 'Late check-in requested',
+    can_cancel: true
+  },
+  {
+    id: 2,
+    reservation_number: 'RSV002',
+    guest_name: 'Maria Rodriguez',
+    guest_details: {
+      id: 2,
+      full_name: 'Maria Rodriguez',
+      email: 'maria.rodriguez@email.com',
+      phone: '+62-812-1111-0002',
+      nationality: 'Spain'
+    },
+    check_in_date: '2025-08-26',
+    check_out_date: '2025-08-30',
+    nights: 4,
+    adults: 2,
+    children: 1,
+    status: 'CHECKED_IN',
+    status_display: 'Checked In',
+    booking_source: 'OTA',
+    total_rooms: 1,
+    total_amount: 9600000,
+    created_at: '2024-08-20T14:15:00Z',
+    rooms: [
+      {
+        id: 2,
+        room_number: '201',
+        room_type_name: 'Deluxe Room',
+        rate: 2400000,
+        total_amount: 9600000
+      }
+    ],
+    special_requests: 'Extra towels requested',
+    can_cancel: false
+  },
+  {
+    id: 3,
+    reservation_number: 'RSV003',
+    guest_name: 'Ahmed Hassan',
+    guest_details: {
+      id: 3,
+      full_name: 'Ahmed Hassan',
+      email: 'ahmed.hassan@email.com',
+      phone: '+62-812-1111-0003',
+      nationality: 'Egypt'
+    },
+    check_in_date: '2025-08-27',
+    check_out_date: '2025-08-31',
+    nights: 4,
+    adults: 1,
+    children: 0,
+    status: 'CONFIRMED',
+    status_display: 'Confirmed',
+    booking_source: 'WEBSITE',
+    total_rooms: 1,
+    total_amount: 12000000,
+    created_at: '2024-08-22T09:15:00Z',
+    rooms: [
+      {
+        id: 3,
+        room_number: '301',
+        room_type_name: 'Junior Suite',
+        rate: 3000000,
+        total_amount: 12000000
+      }
+    ],
+    special_requests: 'Business center access',
+    can_cancel: true
+  },
+  {
+    id: 4,
+    reservation_number: 'RSV004',
+    guest_name: 'Sarah Johnson',
+    guest_details: {
+      id: 4,
+      full_name: 'Sarah Johnson',
+      email: 'sarah.johnson@email.com',
+      phone: '+62-812-1111-0004',
+      nationality: 'Australia'
+    },
+    check_in_date: '2025-08-28',
+    check_out_date: '2025-09-02',
+    nights: 5,
+    adults: 2,
+    children: 2,
+    status: 'PENDING',
+    status_display: 'Pending',
+    booking_source: 'OTA',
+    total_rooms: 1,
+    total_amount: 18000000,
+    created_at: '2024-08-24T16:20:00Z',
+    rooms: [
+      {
+        id: 4,
+        room_number: '401',
+        room_type_name: 'Family Suite',
+        rate: 3600000,
+        total_amount: 18000000
+      }
+    ],
+    special_requests: 'Connecting rooms if available',
+    can_cancel: true
+  },
+  {
+    id: 5,
+    reservation_number: 'RSV005',
+    guest_name: 'Liu Wei',
+    guest_details: {
+      id: 5,
+      full_name: 'Liu Wei',
+      email: 'liu.wei@email.com',
+      phone: '+62-812-1111-0005',
+      nationality: 'China'
+    },
+    check_in_date: '2025-08-29',
+    check_out_date: '2025-09-01',
+    nights: 3,
+    adults: 1,
+    children: 0,
+    status: 'CONFIRMED',
+    status_display: 'Confirmed',
+    booking_source: 'DIRECT',
+    total_rooms: 1,
+    total_amount: 13500000,
+    created_at: '2024-08-21T11:45:00Z',
+    rooms: [
+      {
+        id: 5,
+        room_number: '501',
+        room_type_name: 'Presidential Suite',
+        rate: 4500000,
+        total_amount: 13500000
+      }
+    ],
+    special_requests: 'VIP treatment, champagne welcome',
+    can_cancel: true
+  },
+  {
+    id: 6,
+    reservation_number: 'RSV006',
+    guest_name: 'Emma Wilson',
+    guest_details: {
+      id: 6,
+      full_name: 'Emma Wilson',
+      email: 'emma.wilson@email.com',
+      phone: '+62-812-1111-0006',
+      nationality: 'United Kingdom'
+    },
+    check_in_date: '2025-08-30',
+    check_out_date: '2025-09-03',
+    nights: 4,
+    adults: 2,
+    children: 0,
+    status: 'CONFIRMED',
+    status_display: 'Confirmed',
+    booking_source: 'OTA',
+    total_rooms: 1,
+    total_amount: 9600000,
+    created_at: '2024-08-19T13:30:00Z',
+    rooms: [
+      {
+        id: 6,
+        room_number: '102',
+        room_type_name: 'Standard Room',
+        rate: 2400000,
+        total_amount: 9600000
+      }
+    ],
+    special_requests: 'Honeymoon package',
+    can_cancel: true
+  },
+  {
+    id: 7,
+    reservation_number: 'RSV007',
+    guest_name: 'Pierre Dubois',
+    guest_details: {
+      id: 7,
+      full_name: 'Pierre Dubois',
+      email: 'pierre.dubois@email.com',
+      phone: '+62-812-1111-0007',
+      nationality: 'France'
+    },
+    check_in_date: '2025-08-31',
+    check_out_date: '2025-09-04',
+    nights: 4,
+    adults: 3,
+    children: 1,
+    status: 'CONFIRMED',
+    status_display: 'Confirmed',
+    booking_source: 'DIRECT',
+    total_rooms: 1,
+    total_amount: 14400000,
+    created_at: '2024-08-18T08:15:00Z',
+    rooms: [
+      {
+        id: 7,
+        room_number: '202',
+        room_type_name: 'Deluxe Room',
+        rate: 3600000,
+        total_amount: 14400000
+      }
+    ],
+    special_requests: 'Baby crib needed',
+    can_cancel: true
+  },
+  {
+    id: 8,
+    reservation_number: 'RSV008',
+    guest_name: 'Raj Patel',
+    guest_details: {
+      id: 8,
+      full_name: 'Raj Patel',
+      email: 'raj.patel@email.com',
+      phone: '+62-812-1111-0008',
+      nationality: 'India'
+    },
+    check_in_date: '2025-09-01',
+    check_out_date: '2025-09-05',
+    nights: 4,
+    adults: 2,
+    children: 0,
+    status: 'CONFIRMED',
+    status_display: 'Confirmed',
+    booking_source: 'WEBSITE',
+    total_rooms: 1,
+    total_amount: 12000000,
+    created_at: '2024-08-25T14:22:00Z',
+    rooms: [
+      {
+        id: 8,
+        room_number: '302',
+        room_type_name: 'Executive Suite',
+        rate: 3000000,
+        total_amount: 12000000
+      }
+    ],
+    special_requests: 'Vegetarian meals only',
+    can_cancel: true
+  },
+  {
+    id: 9,
+    reservation_number: 'RSV009',
+    guest_name: 'Anna Kowalski',
+    guest_details: {
+      id: 9,
+      full_name: 'Anna Kowalski',
+      email: 'anna.kowalski@email.com',
+      phone: '+62-812-1111-0009',
+      nationality: 'Poland'
+    },
+    check_in_date: '2025-09-02',
+    check_out_date: '2025-09-06',
+    nights: 4,
+    adults: 1,
+    children: 0,
+    status: 'CHECKED_IN',
+    status_display: 'Checked In',
+    booking_source: 'OTA',
+    total_rooms: 1,
+    total_amount: 9000000,
+    created_at: '2024-08-26T17:10:00Z',
+    rooms: [
+      {
+        id: 9,
+        room_number: '203',
+        room_type_name: 'Deluxe Room',
+        rate: 2250000,
+        total_amount: 9000000
+      }
+    ],
+    special_requests: 'Late checkout requested',
+    can_cancel: false
+  },
+  {
+    id: 10,
+    reservation_number: 'RSV010',
+    guest_name: 'Carlos Silva',
+    guest_details: {
+      id: 10,
+      full_name: 'Carlos Silva',
+      email: 'carlos.silva@email.com',
+      phone: '+62-812-1111-0010',
+      nationality: 'Brazil'
+    },
+    check_in_date: '2025-09-03',
+    check_out_date: '2025-09-07',
+    nights: 4,
+    adults: 4,
+    children: 2,
+    status: 'PENDING',
+    status_display: 'Pending',
+    booking_source: 'DIRECT',
+    total_rooms: 1,
+    total_amount: 21600000,
+    created_at: '2024-08-17T12:05:00Z',
+    rooms: [
+      {
+        id: 10,
+        room_number: '402',
+        room_type_name: 'Family Suite',
+        rate: 5400000,
+        total_amount: 21600000
+      }
+    ],
+    special_requests: 'Large family, need extra beds',
+    can_cancel: true
+  },
+  // Additional bookings to show overlapping dates and different rooms
+  {
+    id: 11,
+    reservation_number: 'RSV011',
+    guest_name: 'Hans Mueller',
+    guest_details: {
+      id: 11,
+      full_name: 'Hans Mueller',
+      email: 'hans.mueller@email.com',
+      phone: '+62-812-1111-0011',
+      nationality: 'Germany'
+    },
+    check_in_date: '2025-08-27',
+    check_out_date: '2025-08-30',
+    nights: 3,
+    adults: 2,
+    children: 0,
+    status: 'CONFIRMED',
+    status_display: 'Confirmed',
+    booking_source: 'DIRECT',
+    total_rooms: 1,
+    total_amount: 9000000,
+    created_at: '2024-08-15T11:20:00Z',
+    rooms: [
+      {
+        id: 11,
+        room_number: '103',
+        room_type_name: 'Standard Room',
+        rate: 3000000,
+        total_amount: 9000000
+      }
+    ],
+    special_requests: 'Early breakfast preferred',
+    can_cancel: true
+  },
+  {
+    id: 12,
+    reservation_number: 'RSV012',
+    guest_name: 'Sofia Andersson',
+    guest_details: {
+      id: 12,
+      full_name: 'Sofia Andersson',
+      email: 'sofia.andersson@email.com',
+      phone: '+62-812-1111-0012',
+      nationality: 'Sweden'
+    },
+    check_in_date: '2025-08-29',
+    check_out_date: '2025-09-02',
+    nights: 4,
+    adults: 2,
+    children: 1,
+    status: 'CONFIRMED',
+    status_display: 'Confirmed',
+    booking_source: 'WEBSITE',
+    total_rooms: 1,
+    total_amount: 16000000,
+    created_at: '2024-08-29T13:40:00Z',
+    rooms: [
+      {
+        id: 12,
+        room_number: '204',
+        room_type_name: 'Deluxe Room',
+        rate: 4000000,
+        total_amount: 16000000
+      }
+    ],
+    special_requests: 'Baby crib needed',
+    can_cancel: true
+  },
+  {
+    id: 13,
+    reservation_number: 'RSV013',
+    guest_name: 'Yuki Tanaka',
+    guest_details: {
+      id: 13,
+      full_name: 'Yuki Tanaka',
+      email: 'yuki.tanaka@email.com',
+      phone: '+62-812-1111-0013',
+      nationality: 'Japan'
+    },
+    check_in_date: '2025-09-01',
+    check_out_date: '2025-09-03',
+    nights: 2,
+    adults: 1,
+    children: 0,
+    status: 'PENDING',
+    status_display: 'Pending',
+    booking_source: 'OTA',
+    total_rooms: 1,
+    total_amount: 6000000,
+    created_at: '2024-08-30T09:25:00Z',
+    rooms: [
+      {
+        id: 13,
+        room_number: '104',
+        room_type_name: 'Standard Room',
+        rate: 3000000,
+        total_amount: 6000000
+      }
+    ],
+    special_requests: 'Quiet room please',
+    can_cancel: true
+  },
+];
+
 interface Room {
   id: number;
   number: string;
@@ -125,6 +567,30 @@ interface Room {
   checkout_time?: string;
   checkin_time?: string;
 }
+
+const MOCK_ROOMS: Room[] = [
+  // Simplified mock rooms - will be replaced by API data
+  { 
+    id: 101, 
+    number: '101', 
+    room_type_name: 'Standard Room', 
+    floor: 1, 
+    status: 'AVAILABLE',
+    status_display: 'Available',
+    is_active: true
+  },
+  { 
+    id: 102, 
+    number: '102', 
+    room_type_name: 'Standard Room', 
+    floor: 1, 
+    status: 'OCCUPIED',
+    status_display: 'Occupied',
+    is_active: true,
+    current_guest: 'John Smith',
+    checkout_time: '11:00 AM'
+  },
+];
 
 const BookingsPage = () => {
   const router = useRouter();
@@ -187,20 +653,10 @@ const BookingsPage = () => {
   });
   const [selectedDateRange, setSelectedDateRange] = useState<{ start: Date; end: Date }>(() => {
     const today = new Date();
-    // Start from beginning of current month
-    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    // End 14 days from today to show upcoming bookings
     const endDate = new Date(today);
-    endDate.setDate(today.getDate() + 14);
-
-    console.log('Initial calendar date range:', {
-      today: today.toISOString().split('T')[0],
-      start: startDate.toISOString().split('T')[0],
-      end: endDate.toISOString().split('T')[0]
-    });
-
+    endDate.setDate(today.getDate() + 11); // 12 days to show more booking data
     return {
-      start: startDate,
+      start: today,
       end: endDate
     };
   });
@@ -333,30 +789,17 @@ const BookingsPage = () => {
   };
 
 
-  const handleNavigateToPayment = async (reservation: Reservation) => {
-    try {
-      // Fetch full reservation details to get financial information
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservation.reservation_number}/`));
-      if (!response.ok) {
-        throw new Error('Failed to fetch reservation details');
-      }
-
-      const fullReservation = await response.json();
-
-      const params = new URLSearchParams({
-        reservationId: fullReservation.id.toString(),
-        guest: fullReservation.guest_name,
-        room: fullReservation.room_number || '',
-        checkIn: fullReservation.check_in_date,
-        checkOut: fullReservation.check_out_date,
-        amount: (fullReservation.grand_total || fullReservation.total_amount || 0).toString()
-      });
-
-      router.push(`/payments?${params.toString()}`);
-    } catch (error) {
-      console.error('Error navigating to payment:', error);
-      alert('Failed to load payment information. Please try again.');
-    }
+  const handleNavigateToPayment = (reservation: Reservation) => {
+    const params = new URLSearchParams({
+      reservationId: reservation.id.toString(),
+      guest: reservation.guest_name,
+      room: reservation.rooms?.[0]?.room_number || '',
+      checkIn: reservation.check_in_date,
+      checkOut: reservation.check_out_date,
+      amount: reservation.total_amount.toString()
+    });
+    
+    router.push(`/payments?${params.toString()}`);
   };
 
   // API service functions
@@ -388,7 +831,8 @@ const BookingsPage = () => {
       return data.results || data; // Handle both paginated and direct array responses
     } catch (error) {
       console.error('Error fetching reservations:', error);
-      return [];
+      // Fallback to mock data if API fails
+      return MOCK_RESERVATIONS;
     }
   };
 
@@ -441,7 +885,8 @@ const BookingsPage = () => {
       return data.results || data; // Handle both paginated and direct array responses
     } catch (error) {
       console.error('Error fetching rooms:', error);
-      return [];
+      // Fallback to mock data if API fails
+      return MOCK_ROOMS;
     }
   };
 
@@ -466,19 +911,19 @@ const BookingsPage = () => {
   };
 
   // Room assignment and reservation actions
-  const confirmReservation = async (reservationNumber: string) => {
+  const confirmReservation = async (reservationId: number) => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/confirm/`), {
+      const response = await fetch(buildApiUrl(`reservations/${reservationId}/confirm/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to confirm reservation');
       }
-
+      
       const data = await response.json();
       return data;
     } catch (error) {
@@ -487,20 +932,20 @@ const BookingsPage = () => {
     }
   };
 
-  const cancelReservation = async (reservationNumber: string, reason: string) => {
+  const cancelReservation = async (reservationId: number, reason: string) => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/cancel/`), {
+      const response = await fetch(buildApiUrl(`reservations/${reservationId}/cancel/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ reason }),
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to cancel reservation');
       }
-
+      
       const data = await response.json();
       return data;
     } catch (error) {
@@ -509,19 +954,19 @@ const BookingsPage = () => {
     }
   };
 
-  const checkInGuest = async (reservationNumber: string) => {
+  const checkInGuest = async (reservationId: number) => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/check_in/`), {
-        method: 'PATCH',
+      const response = await fetch(buildApiUrl(`reservations/${reservationId}/check_in/`), {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to check in guest');
       }
-
+      
       const data = await response.json();
       return data;
     } catch (error) {
@@ -530,19 +975,19 @@ const BookingsPage = () => {
     }
   };
 
-  const checkOutGuest = async (reservationNumber: string) => {
+  const checkOutGuest = async (reservationId: number) => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/check_out/`), {
-        method: 'PATCH',
+      const response = await fetch(buildApiUrl(`reservations/${reservationId}/check_out/`), {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to check out guest');
       }
-
+      
       const data = await response.json();
       return data;
     } catch (error) {
@@ -783,28 +1228,32 @@ const BookingsPage = () => {
   };
 
   useEffect(() => {
-    // Load real API data only
+    // Start with mock data, then load API data
+    setReservations(MOCK_RESERVATIONS);
+    setRooms(MOCK_ROOMS);
+    setLoading(false);
+    
+    // Load API data in the background
     const loadApiData = async () => {
       if (typeof window === 'undefined') return;
-
-      setLoading(true);
+      
       try {
         // Load rooms for calendar view
         await loadRooms(1);
-
+        
         // Load reservations with current filters
         await loadReservations(1);
-
+        
         console.log('API Data loaded');
         console.log('Calendar rooms data loaded for page 1');
       } catch (error) {
         console.error('Error loading API data:', error);
-      } finally {
-        setLoading(false);
+        // Keep mock data on error
       }
     };
 
-    loadApiData();
+    // Load API data after component mounts
+    setTimeout(loadApiData, 100);
   }, []);
 
   // Close dropdown when clicking outside
@@ -851,47 +1300,6 @@ const BookingsPage = () => {
       loadRooms(1);
     }
   }, [roomTypeFilter, roomFloorFilter, roomStatusFilter]);
-
-  // Load reservations for calendar date range
-  const loadCalendarReservations = async () => {
-    try {
-      const startDate = selectedDateRange.start.toISOString().split('T')[0];
-      const endDate = selectedDateRange.end.toISOString().split('T')[0];
-
-      console.log('Loading calendar reservations for date range:', startDate, 'to', endDate);
-
-      const response = await fetch(
-        buildApiUrl(`hotel/reservations/?check_in_date__lte=${endDate}&check_out_date__gte=${startDate}&page_size=1000`)
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Loaded calendar reservations:', data.results?.length || 0);
-        setReservations(data.results || []);
-      }
-    } catch (error) {
-      console.error('Error loading calendar reservations:', error);
-    }
-  };
-
-  // Reload rooms and reservations when switching to calendar view
-  useEffect(() => {
-    if (viewMode === 'calendar' && !loading) {
-      console.log('Switching to calendar view, loading rooms and reservations...');
-      if (rooms.length === 0) {
-        loadRooms(1);
-      }
-      loadCalendarReservations();
-    }
-  }, [viewMode]);
-
-  // Reload reservations when date range changes in calendar view
-  useEffect(() => {
-    if (viewMode === 'calendar' && !loading) {
-      console.log('Date range changed, reloading reservations...');
-      loadCalendarReservations();
-    }
-  }, [selectedDateRange]);
 
   // Generate week dates starting from today
   const getWeekDates = () => {
@@ -950,18 +1358,11 @@ const BookingsPage = () => {
       status: room.status ? room.status.toLowerCase().replace('_', '-') : 'available',
       maintenance_note: room.status === 'MAINTENANCE' ? 'Under maintenance' : null
     }));
-
-    console.log('Calendar rooms data:', {
-      roomsLength: rooms.length,
-      calendarRoomsLength: calendarRooms.length,
-      firstRoom: rooms[0],
-      firstCalendarRoom: calendarRooms[0]
-    });
-
+    
     if (rooms.length > 0 && calendarRooms.length === 0) {
       console.warn('Calendar rooms conversion issue:', { rooms: rooms.slice(0, 2), calendarRooms });
     }
-
+    
     return calendarRooms;
   };
 
@@ -972,11 +1373,12 @@ const BookingsPage = () => {
       const checkIn = new Date(reservation.check_in_date);
       const checkOut = new Date(reservation.check_out_date);
       const currentDate = new Date(dateStr);
-
-      // Check if this reservation is for this room
-      const hasRoom = reservation.room_number === roomNumber ||
-                      reservation.room_details?.number === roomNumber;
-
+      
+      // Handle both API structure (rooms array with room_number) and mock structure
+      const hasRoom = reservation.rooms?.some(room => 
+        room.room_number === roomNumber || room.room_details?.number === roomNumber
+      );
+      
       return hasRoom && currentDate >= checkIn && currentDate < checkOut;
     });
   };
@@ -986,13 +1388,7 @@ const BookingsPage = () => {
     // Filtering is now handled by server-side API calls
     const filteredRooms = getRoomsForCalendar();
     const filteredReservations = reservations;
-
-    console.log('Calendar view data:', {
-      rooms: filteredRooms.length,
-      reservations: filteredReservations.length,
-      sampleReservation: filteredReservations[0]
-    });
-
+    
     return { filteredRooms, filteredReservations };
   };
 
@@ -1055,17 +1451,11 @@ const BookingsPage = () => {
       color: string;
     }> = [];
 
-    const reservationsForRoom = reservations.filter(res =>
-      res.room_number === roomNumber || res.room_details?.number === roomNumber
+    const reservationsForRoom = reservations.filter(res => 
+      res.rooms?.some(room => 
+        room.room_number === roomNumber || room.room_details?.number === roomNumber
+      )
     );
-
-    if (roomNumber === '101' && reservationsForRoom.length > 0) {
-      console.log('Room 101 bookings:', {
-        total: reservationsForRoom.length,
-        first: reservationsForRoom[0],
-        dateRange: dates.length > 0 ? `${dates[0].toISOString().split('T')[0]} to ${dates[dates.length-1]?.toISOString().split('T')[0]}` : 'no dates'
-      });
-    }
 
     reservationsForRoom.forEach(reservation => {
       const checkIn = new Date(reservation.check_in_date);
@@ -1206,12 +1596,9 @@ const BookingsPage = () => {
       } else if (sortField === 'adults') {
         aValue = a.adults;
         bValue = b.adults;
-      } else if (sortField === 'total_guests') {
-        aValue = a.total_guests || (a.adults + a.children);
-        bValue = b.total_guests || (b.adults + b.children);
       } else if (sortField === 'room_number') {
-        aValue = a.room_number || '';
-        bValue = b.room_number || '';
+        aValue = a.rooms?.[0]?.room_number || '';
+        bValue = b.rooms?.[0]?.room_number || '';
       } else if (sortField === 'status') {
         aValue = a.status;
         bValue = b.status;
@@ -1453,46 +1840,29 @@ const BookingsPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
-                {roomsLoading ? (
-                  <tr>
-                    <td colSpan={getCalendarDates().length + 2} className="py-12 text-center text-gray-500">
-                      <div className="flex flex-col items-center space-y-2">
-                        <Loading03Icon className="h-8 w-8 animate-spin text-[#005357]" />
-                        <span>Loading rooms...</span>
+                {getFilteredRoomsAndReservations().filteredRooms.map((room) => (
+                  <tr key={room.number} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-4 px-4 font-medium text-gray-900 w-[152px] sticky left-0 bg-white border-r border-gray-200 z-10">
+                      <div>
+                        <div className="font-bold">Room {room.number}</div>
+                        <div className="text-sm text-gray-600">{room.type}</div>
                       </div>
                     </td>
-                  </tr>
-                ) : getFilteredRoomsAndReservations().filteredRooms.length === 0 ? (
-                  <tr>
-                    <td colSpan={getCalendarDates().length + 2} className="py-12 text-center text-gray-500">
-                      No rooms found
+                    <td className="py-4 px-4 text-center w-[120px] sticky left-[152px] bg-white border-r border-gray-200 z-10" style={{boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'}}>
+                      <div className="flex flex-col items-center space-y-1">
+                        <span className={`px-2 py-1 text-xs font-medium ${getRoomStatusColor(room.status || 'available')}`}>
+                          {getRoomStatusText(room.status || 'available')}
+                        </span>
+                        {room.maintenance_note && (
+                          <div className="text-xs text-gray-500 text-center max-w-[80px] truncate" title={room.maintenance_note}>
+                            {room.maintenance_note}
+                          </div>
+                        )}
+                      </div>
                     </td>
+{renderRoomRow(room, getCalendarDates())}
                   </tr>
-                ) : (
-                  getFilteredRoomsAndReservations().filteredRooms.map((room) => (
-                    <tr key={room.number} className="hover:bg-gray-50 transition-colors">
-                      <td className="py-4 px-4 font-medium text-gray-900 w-[152px] sticky left-0 bg-white border-r border-gray-200 z-10">
-                        <div>
-                          <div className="font-bold">Room {room.number}</div>
-                          <div className="text-sm text-gray-600">{room.type}</div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-center w-[120px] sticky left-[152px] bg-white border-r border-gray-200 z-10" style={{boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'}}>
-                        <div className="flex flex-col items-center space-y-1">
-                          <span className={`px-2 py-1 text-xs font-medium ${getRoomStatusColor(room.status || 'available')}`}>
-                            {getRoomStatusText(room.status || 'available')}
-                          </span>
-                          {room.maintenance_note && (
-                            <div className="text-xs text-gray-500 text-center max-w-[80px] truncate" title={room.maintenance_note}>
-                              {room.maintenance_note}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      {renderRoomRow(room, getCalendarDates())}
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
               </table>
             </div>
@@ -1723,12 +2093,12 @@ const BookingsPage = () => {
                     </button>
                   </th>
                   <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                    <button
+                    <button 
                       className="flex items-center hover:text-gray-200 transition-colors"
-                      onClick={() => handleSort('total_guests')}
+                      onClick={() => handleSort('adults')}
                     >
-                      Total Guests
-                      {getSortIcon('total_guests')}
+                      Guests & Rooms
+                      {getSortIcon('adults')}
                     </button>
                   </th>
                   <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
@@ -1741,7 +2111,16 @@ const BookingsPage = () => {
                     </button>
                   </th>
                   <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                    <button
+                    <button 
+                      className="flex items-center hover:text-gray-200 transition-colors"
+                      onClick={() => handleSort('total_amount')}
+                    >
+                      Amount
+                      {getSortIcon('total_amount')}
+                    </button>
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                    <button 
                       className="flex items-center hover:text-gray-200 transition-colors"
                       onClick={() => handleSort('status')}
                     >
@@ -1749,8 +2128,11 @@ const BookingsPage = () => {
                       {getSortIcon('status')}
                     </button>
                   </th>
-                  <th className="text-center py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                    Actions
+                  <th className="text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                    <div className="flex items-center justify-end">
+                      <span>Actions</span>
+                      <ChevronDownIcon className="h-3 w-3 ml-1 text-white opacity-70" />
+                    </div>
                   </th>
                 </tr>
               </thead>
@@ -1790,52 +2172,57 @@ const BookingsPage = () => {
                         </div>
                       </td>
 
-                      {/* Total Guests */}
+                      {/* Guests & Rooms */}
                       <td className="px-6 py-4">
                         <div>
                           <p className="font-medium text-gray-900">
-                            {reservation.total_guests || (reservation.adults + reservation.children)} guests
+                            {reservation.adults} adults
+                            {reservation.children > 0 && `, ${reservation.children} children`}
                           </p>
-                          <p className="text-sm text-gray-500">
-                            {reservation.adults} adults{reservation.children > 0 && `, ${reservation.children} children`}
-                          </p>
+                          <p className="text-sm text-gray-500">{reservation.total_rooms} room(s)</p>
                         </div>
                       </td>
 
                       {/* Room Details */}
                       <td className="px-6 py-4">
                         <div>
-                          {reservation.room_number ? (
-                            <div>
-                              <p className="font-medium text-gray-900">Room {reservation.room_number}</p>
-                              <p className="text-sm text-gray-500">{reservation.room_type_name || reservation.room_details?.room_type_name || 'N/A'}</p>
+                          {reservation.rooms && reservation.rooms.length > 0 ? (
+                            <div className="space-y-1">
+                              {reservation.rooms.map((room, index) => (
+                                <div key={index}>
+                                  <p className="font-medium text-gray-900">Room {room.room_number}</p>
+                                  <p className="text-sm text-gray-500">{room.room_type_name}</p>
+                                </div>
+                              ))}
                             </div>
                           ) : (
-                            <p className="text-sm text-gray-500">No room assigned</p>
+                            <p className="text-sm text-gray-500">No rooms assigned</p>
                           )}
+                        </div>
+                      </td>
+
+                      {/* Amount */}
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-bold text-base text-gray-900">
+                            {formatCurrency(reservation.total_amount)}
+                          </p>
                         </div>
                       </td>
 
                       {/* Status */}
                       <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1">
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium ${getStatusColor(reservation.status)} w-fit`}>
-                            {reservation.status_display}
-                          </span>
-                          {reservation.is_fully_paid && (
-                            <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded w-fit">
-                              Paid
-                            </span>
-                          )}
-                        </div>
+                        <span className={`inline-flex px-2 py-1 text-xs font-medium ${getStatusColor(reservation.status)}`}>
+                          {reservation.status_display}
+                        </span>
                       </td>
 
                       {/* Actions */}
                       <td className="px-6 py-4">
-                        <div className="relative flex justify-center">
+                        <div className="relative flex justify-end">
                           <button
                             onClick={() => setOpenMenuId(openMenuId === reservation.id ? null : reservation.id)}
-                            className="flex items-center justify-center p-1.5 text-gray-600 hover:text-gray-900 hover:border-gray-400 transition-colors rounded border border-gray-300"
+                            className="flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors rounded"
                             title="More actions"
                           >
                             <MoreHorizontalIcon className="h-4 w-4" />
@@ -1876,7 +2263,7 @@ const BookingsPage = () => {
                                         onClick={async () => {
                                           try {
                                             setLoading(true);
-                                            await checkInGuest(reservation.reservation_number);
+                                            await checkInGuest(reservation.id);
                                             // Refresh data
                                             await loadReservations(currentPage);
                                             setOpenMenuId(null);
@@ -1892,24 +2279,16 @@ const BookingsPage = () => {
                                         <UserCheckIcon className="h-4 w-4" />
                                         <span>Check In</span>
                                       </button>
-                                      {!reservation.is_fully_paid && (
-                                        <button
-                                          onClick={async () => {
-                                            await handleNavigateToPayment(reservation);
-                                            setOpenMenuId(null);
-                                          }}
-                                          className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
-                                        >
-                                          <CreditCardIcon className="h-4 w-4" />
-                                          <span>Process Payment</span>
-                                        </button>
-                                      )}
-                                      {reservation.is_fully_paid && (
-                                        <div className="flex items-center space-x-2 px-4 py-2 text-sm text-green-600 w-full">
-                                          <UserCheckIcon className="h-4 w-4" />
-                                          <span>Paid</span>
-                                        </div>
-                                      )}
+                                      <button
+                                        onClick={() => {
+                                          handleNavigateToPayment(reservation);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
+                                      >
+                                        <CreditCardIcon className="h-4 w-4" />
+                                        <span>Process Payment</span>
+                                      </button>
                                     </>
                                   )}
                                   
@@ -1919,7 +2298,7 @@ const BookingsPage = () => {
                                         onClick={async () => {
                                           try {
                                             setLoading(true);
-                                            await checkOutGuest(reservation.reservation_number);
+                                            await checkOutGuest(reservation.id);
                                             // Refresh data
                                             await loadReservations(currentPage);
                                             setOpenMenuId(null);
@@ -1947,29 +2326,21 @@ const BookingsPage = () => {
                                   
                                   {(reservation.status === 'pending' || reservation.status === 'PENDING' || reservation.status === 'partial_paid' || reservation.status === 'PARTIAL_PAID') && (
                                     <>
-                                      {!reservation.is_fully_paid && (
-                                        <button
-                                          onClick={async () => {
-                                            await handleNavigateToPayment(reservation);
-                                            setOpenMenuId(null);
-                                          }}
-                                          className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
-                                        >
-                                          <CreditCardIcon className="h-4 w-4" />
-                                          <span>Process Payment</span>
-                                        </button>
-                                      )}
-                                      {reservation.is_fully_paid && (
-                                        <div className="flex items-center space-x-2 px-4 py-2 text-sm text-green-600 w-full">
-                                          <UserCheckIcon className="h-4 w-4" />
-                                          <span>Paid</span>
-                                        </div>
-                                      )}
+                                      <button
+                                        onClick={() => {
+                                          handleNavigateToPayment(reservation);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
+                                      >
+                                        <CreditCardIcon className="h-4 w-4" />
+                                        <span>Process Payment</span>
+                                      </button>
                                       <button
                                         onClick={async () => {
                                           try {
                                             setLoading(true);
-                                            const result = await confirmReservation(reservation.reservation_number);
+                                            const result = await confirmReservation(reservation.id);
                                             // Refresh data
                                             await loadReservations(currentPage);
                                             setOpenMenuId(null);
@@ -2008,7 +2379,7 @@ const BookingsPage = () => {
                                           if (reason) {
                                             try {
                                               setLoading(true);
-                                              await cancelReservation(reservation.reservation_number, reason);
+                                              await cancelReservation(reservation.id, reason);
                                               // Refresh data
                                               await loadReservations(currentPage);
                                               setOpenMenuId(null);

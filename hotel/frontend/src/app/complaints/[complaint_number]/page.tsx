@@ -129,7 +129,9 @@ interface Complaint {
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   status: 'SUBMITTED' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'UNDER_REVIEW' | 'RESOLVED' | 'CLOSED';
   source: string;
-  guest: Guest;
+  guest: number;
+  guest_name?: string;
+  guest_details?: Guest;
   room_number?: string;
   incident_date: string;
   assigned_to?: any;
@@ -639,17 +641,17 @@ const ComplaintDetailPage = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-green-200">Guest Name</label>
-                    <p className="text-white font-bold text-lg">{(complaint as any).guest_name || complaint.guest?.full_name || 'N/A'}</p>
+                    <p className="text-white font-bold text-lg">{complaint.guest_name || complaint.guest_details?.full_name || 'N/A'}</p>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 gap-3">
                     <div className="flex items-center space-x-2">
                       <Mail01Icon className="h-4 w-4 text-green-300" />
-                      <span className="text-green-100">{complaint.guest?.email || 'N/A'}</span>
+                      <span className="text-green-100">{complaint.guest_details?.email || 'N/A'}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Call02Icon className="h-4 w-4 text-green-300" />
-                      <span className="text-green-100">{complaint.guest?.phone || 'N/A'}</span>
+                      <span className="text-green-100">{complaint.guest_details?.phone || 'N/A'}</span>
                     </div>
                     {complaint.room_number && (
                       <div className="flex items-center space-x-2">

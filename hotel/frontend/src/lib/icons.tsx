@@ -55,6 +55,7 @@ import {
   CpuIcon as HugeCpu,
   DatabaseIcon as HugeDatabase,
   HardDriveIcon as HugeHardDrive,
+  PrinterIcon as HugePrinter,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 
@@ -119,9 +120,11 @@ export const Activity02Icon = createIconComponent(HugeActivity02);
 export const CpuIcon = createIconComponent(HugeCpu);
 export const DatabaseIcon = createIconComponent(HugeDatabase);
 export const HardDriveIcon = createIconComponent(HugeHardDrive);
+export const PrinterIcon = createIconComponent(HugePrinter);
 
 // Aliases for compatibility
 export const Trash2 = Delete02Icon;
+export const Printer = PrinterIcon;
 export const Monitor = ComputerIcon;
 export const Activity = Activity02Icon;
 export const Cpu = CpuIcon;
@@ -193,7 +196,9 @@ Activity02Icon.displayName = 'Activity02Icon';
 CpuIcon.displayName = 'CpuIcon';
 DatabaseIcon.displayName = 'DatabaseIcon';
 HardDriveIcon.displayName = 'HardDriveIcon';
+PrinterIcon.displayName = 'PrinterIcon';
 Trash2.displayName = 'Trash2';
+Printer.displayName = 'Printer';
 Monitor.displayName = 'Monitor';
 Activity.displayName = 'Activity';
 Cpu.displayName = 'Cpu';

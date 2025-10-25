@@ -19,6 +19,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
     ordering_fields = ['check_in_date', 'check_out_date', 'created_at']
     ordering = ['-check_in_date']
     lookup_field = 'reservation_number'
+    lookup_url_kwarg = 'reservation_number'
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -71,42 +72,60 @@ class ReservationViewSet(viewsets.ModelViewSet):
             'reservations': serializer.data
         })
 
+    @action(detail=True, methods=['post'])
+    def confirm(self, request, reservation_number=None):
+        """Confirm a pending reservation"""
+        reservation = self.get_object()
+
+        if reservation.status != 'PENDING':
+            return Response({'error': 'Only pending reservations can be confirmed'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        reservation.status = 'CONFIRMED'
+        reservation.save(update_fields=['status', 'updated_at'])
+
+        serializer = ReservationSerializer(reservation)
+        return Response({
+            'message': 'Reservation confirmed successfully',
+            'reservation': serializer.data
+        })
+
     @action(detail=True, methods=['patch'])
-    def check_in(self, request, pk=None):
+    def check_in(self, request, reservation_number=None):
         """Check in a guest"""
         reservation = self.get_object()
-        
+
         if reservation.status != 'CONFIRMED':
-            return Response({'error': 'Only confirmed reservations can be checked in'}, 
+            return Response({'error': 'Only confirmed reservations can be checked in'},
                           status=status.HTTP_400_BAD_REQUEST)
-        
+
         reservation.status = 'CHECKED_IN'
         reservation.save(update_fields=['status', 'updated_at'])
-        
+
         # Update room status
         if reservation.room:
             reservation.room.status = 'OCCUPIED'
             reservation.room.save(update_fields=['status', 'updated_at'])
-        
+
         serializer = ReservationSerializer(reservation)
         return Response(serializer.data)
 
     @action(detail=True, methods=['patch'])
-    def check_out(self, request, pk=None):
+    def check_out(self, request, reservation_number=None):
         """Check out a guest"""
         reservation = self.get_object()
-        
+
         if reservation.status != 'CHECKED_IN':
-            return Response({'error': 'Only checked-in reservations can be checked out'}, 
+            return Response({'error': 'Only checked-in reservations can be checked out'},
                           status=status.HTTP_400_BAD_REQUEST)
-        
+
         reservation.status = 'CHECKED_OUT'
         reservation.save(update_fields=['status', 'updated_at'])
-        
+
         # Update room status
         if reservation.room:
             reservation.room.status = 'MAINTENANCE'  # Room needs cleaning after checkout
             reservation.room.save(update_fields=['status', 'updated_at'])
-        
+
         serializer = ReservationSerializer(reservation)
         return Response(serializer.data)

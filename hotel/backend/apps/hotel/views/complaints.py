@@ -5,13 +5,13 @@ from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 
-from ..models import Complaint
-from ..serializers import ComplaintSerializer
+from ..models import Complaint, ComplaintImage
+from ..serializers import ComplaintSerializer, ComplaintImageSerializer
 
 
 class ComplaintViewSet(viewsets.ModelViewSet):
     """ViewSet for managing complaints"""
-    queryset = Complaint.objects.select_related('guest', 'room')
+    queryset = Complaint.objects.select_related('guest', 'room').prefetch_related('images')
     serializer_class = ComplaintSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
@@ -66,3 +66,14 @@ class ComplaintViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         except Complaint.DoesNotExist:
             return Response({'error': 'Complaint not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ComplaintImageViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing complaint images"""
+    queryset = ComplaintImage.objects.all()
+    serializer_class = ComplaintImageSerializer
+    permission_classes = [AllowAny]
+
+    def perform_create(self, serializer):
+        """Save the uploaded image"""
+        serializer.save(uploaded_by=self.request.user if self.request.user.is_authenticated else None)

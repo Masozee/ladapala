@@ -219,8 +219,8 @@ export default function Home() {
               </div>
             </div>
             <div className="p-4 bg-gray-50">
-              <div className="h-48 flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="h-48 w-full flex items-center justify-center">
+                <ResponsiveContainer width="100%" height={192}>
                   <PieChart>
                     <Pie
                       data={demographicData}
@@ -267,8 +267,8 @@ export default function Home() {
             </div>
             <div className="bg-gray-50">
               <div className="p-4">
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="h-48 w-full">
+                  <ResponsiveContainer width="100%" height={192}>
                     <BarChart data={occupationData} barCategoryGap="20%">
                       <XAxis 
                         dataKey="day" 

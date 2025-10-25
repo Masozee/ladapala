@@ -177,11 +177,12 @@ def hotel_dashboard(request):
     )
     
     if recent_reservations.exists():
-        total_revenue = sum(float(res.total_amount) for res in recent_reservations)
+        total_revenue = sum(float(res.total_amount) if res.total_amount else 0 for res in recent_reservations)
         total_room_nights = sum(res.nights for res in recent_reservations)
         adr = total_revenue / total_room_nights if total_room_nights > 0 else 0
     else:
         adr = 0
+        total_revenue = 0
     
     # Revenue per available room (RevPAR)
     days_in_period = 30

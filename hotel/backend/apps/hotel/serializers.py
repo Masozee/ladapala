@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
-    RoomType, Room, Guest, Reservation, Payment, Complaint, 
+    RoomType, Room, Guest, Reservation, Payment, Complaint, ComplaintImage,
     CheckIn, Holiday, InventoryItem, MaintenanceRequest, MaintenanceTechnician
 )
 
@@ -30,7 +30,45 @@ class RoomTypeSerializer(serializers.ModelSerializer):
         return obj.rooms.filter(is_active=True).count()
 
     def get_available_rooms_count(self, obj):
-        """Get count of available rooms"""
+        """Get count of available rooms for a date range if provided"""
+        # Check if date range parameters are provided in the request context
+        request = self.context.get('request')
+        if request:
+            check_in = request.query_params.get('check_in')
+            check_out = request.query_params.get('check_out')
+
+            if check_in and check_out:
+                from datetime import datetime
+                from django.db.models import Q
+
+                try:
+                    check_in_date = datetime.strptime(check_in, '%Y-%m-%d').date()
+                    check_out_date = datetime.strptime(check_out, '%Y-%m-%d').date()
+
+                    # Get all active rooms of this type
+                    all_rooms = obj.rooms.filter(is_active=True)
+                    total_rooms = all_rooms.count()
+
+                    # Find rooms with overlapping reservations in the date range
+                    # A reservation overlaps if:
+                    # - Its check_in is before our check_out AND
+                    # - Its check_out is after our check_in
+                    occupied_room_ids = Reservation.objects.filter(
+                        Q(room__room_type=obj) &
+                        Q(check_in_date__lt=check_out_date) &
+                        Q(check_out_date__gt=check_in_date) &
+                        ~Q(status__in=['CANCELLED', 'NO_SHOW', 'CHECKED_OUT'])
+                    ).values_list('room_id', flat=True).distinct()
+
+                    # Available rooms = total rooms - occupied rooms
+                    available_count = total_rooms - len(set(occupied_room_ids))
+                    return max(0, available_count)
+
+                except (ValueError, TypeError):
+                    # If date parsing fails, fall back to current status
+                    pass
+
+        # Default: return currently available rooms
         return obj.rooms.filter(status='AVAILABLE', is_active=True).count()
 
     def get_occupied_rooms_count(self, obj):
@@ -119,6 +157,8 @@ class ReservationSerializer(serializers.ModelSerializer):
     grand_total = serializers.SerializerMethodField()
     deposit_amount = serializers.SerializerMethodField()
     balance_due = serializers.SerializerMethodField()
+    total_paid = serializers.SerializerMethodField()
+    is_fully_paid = serializers.SerializerMethodField()
 
     # Additional info
     can_cancel = serializers.SerializerMethodField()
@@ -132,8 +172,8 @@ class ReservationSerializer(serializers.ModelSerializer):
             'nights', 'adults', 'children', 'status', 'status_display',
             'booking_source', 'booking_source_display', 'special_requests', 'notes',
             'total_amount', 'subtotal', 'taxes', 'service_charge', 'grand_total',
-            'deposit_amount', 'balance_due', 'can_cancel', 'total_rooms',
-            'created_at', 'updated_at'
+            'deposit_amount', 'balance_due', 'total_paid', 'is_fully_paid',
+            'can_cancel', 'total_rooms', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'reservation_number', 'nights']
 
@@ -166,8 +206,16 @@ class ReservationSerializer(serializers.ModelSerializer):
     def get_balance_due(self, obj):
         """Calculate balance due"""
         grand_total = self.get_grand_total(obj)
-        deposit = self.get_deposit_amount(obj)
-        return round(grand_total - deposit, 2)
+        total_paid = self.get_total_paid(obj)
+        return round(grand_total - total_paid, 2)
+
+    def get_total_paid(self, obj):
+        """Get total amount paid for this reservation"""
+        return float(obj.get_total_paid())
+
+    def get_is_fully_paid(self, obj):
+        """Check if reservation is fully paid"""
+        return obj.is_fully_paid()
 
     def get_can_cancel(self, obj):
         """Check if reservation can be cancelled"""
@@ -204,23 +252,39 @@ class PaymentSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
 
+class ComplaintImageSerializer(serializers.ModelSerializer):
+    """Serializer for complaint images"""
+    class Meta:
+        model = ComplaintImage
+        fields = ['id', 'complaint', 'image', 'caption', 'is_evidence', 'uploaded_by', 'created_at']
+        read_only_fields = ['created_at', 'uploaded_by']
+
+
 class ComplaintSerializer(serializers.ModelSerializer):
     """Serializer for complaints"""
     guest_name = serializers.CharField(source='guest.full_name', read_only=True)
+    guest_details = GuestSerializer(source='guest', read_only=True)
     room_number = serializers.CharField(source='room.number', read_only=True)
     category_display = serializers.CharField(source='get_category_display', read_only=True)
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+    images = ComplaintImageSerializer(many=True, read_only=True)
+    image_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Complaint
         fields = [
             'id', 'complaint_number', 'title', 'description', 'category',
             'category_display', 'priority', 'priority_display', 'status',
-            'status_display', 'guest', 'guest_name', 'room', 'room_number',
-            'incident_date', 'resolution', 'resolved_at', 'created_at', 'updated_at'
+            'status_display', 'guest', 'guest_name', 'guest_details', 'room', 'room_number',
+            'incident_date', 'resolution', 'resolved_at', 'images', 'image_count',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'complaint_number']
+        read_only_fields = ['created_at', 'updated_at', 'complaint_number', 'image_count']
+
+    def get_image_count(self, obj):
+        """Get count of images for this complaint"""
+        return obj.images.count()
 
 
 class CheckInSerializer(serializers.ModelSerializer):
@@ -306,15 +370,29 @@ class GuestListSerializer(serializers.ModelSerializer):
 class ReservationListSerializer(serializers.ModelSerializer):
     guest_name = serializers.CharField(source='guest.full_name', read_only=True)
     room_number = serializers.CharField(source='room.number', read_only=True)
+    room_type_name = serializers.CharField(source='room.room_type.name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    booking_source_display = serializers.CharField(source='get_booking_source_display', read_only=True)
     nights = serializers.IntegerField(read_only=True)
-    
+    total_guests = serializers.SerializerMethodField()
+    is_fully_paid = serializers.SerializerMethodField()
+
     class Meta:
         model = Reservation
         fields = [
-            'id', 'reservation_number', 'guest_name', 'room_number',
-            'check_in_date', 'check_out_date', 'nights', 'status', 'status_display'
+            'id', 'reservation_number', 'guest_name', 'room_number', 'room_type_name',
+            'check_in_date', 'check_out_date', 'nights', 'adults', 'children',
+            'total_guests', 'status', 'status_display', 'booking_source',
+            'booking_source_display', 'is_fully_paid', 'created_at'
         ]
+
+    def get_total_guests(self, obj):
+        """Calculate total number of guests (adults + children)"""
+        return obj.adults + obj.children
+
+    def get_is_fully_paid(self, obj):
+        """Check if reservation is fully paid"""
+        return obj.is_fully_paid()
 
 
 class HolidayListSerializer(serializers.ModelSerializer):

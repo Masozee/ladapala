@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from .guests import Guest
 from .reservations import Reservation
 from .rooms import Room
@@ -58,3 +59,18 @@ class Complaint(models.Model):
             random_num = random.randint(100, 999)
             self.complaint_number = f'CMP{timestamp}{random_num}'
         super().save(*args, **kwargs)
+
+
+class ComplaintImage(models.Model):
+    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='complaints/%Y/%m/%d/')
+    caption = models.CharField(max_length=200, null=True, blank=True)
+    is_evidence = models.BooleanField(default=False)
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Image for {self.complaint.complaint_number}'

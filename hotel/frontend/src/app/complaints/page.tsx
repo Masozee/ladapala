@@ -177,6 +177,10 @@ const ComplaintsPage = () => {
     incident_date: new Date().toISOString().split('T')[0]
   });
 
+  // Image upload states
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
   // Load complaints data
   useEffect(() => {
     const loadComplaints = async () => {
@@ -223,6 +227,28 @@ const ComplaintsPage = () => {
     }
   }, [showComplaintForm]);
 
+  // Handle image selection
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Limit to 5 images
+    const newImages = [...selectedImages, ...files].slice(0, 5);
+    setSelectedImages(newImages);
+
+    // Create preview URLs
+    const newPreviews = newImages.map(file => URL.createObjectURL(file));
+    setImagePreviews(newPreviews);
+  };
+
+  // Remove image
+  const handleRemoveImage = (index: number) => {
+    const newImages = selectedImages.filter((_, i) => i !== index);
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    setSelectedImages(newImages);
+    setImagePreviews(newPreviews);
+  };
+
   // Handle form submission
   const handleSubmitComplaint = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,6 +256,7 @@ const ComplaintsPage = () => {
     setFormError(null);
 
     try {
+      // First, create the complaint
       const response = await fetch(buildApiUrl('hotel/complaints/'), {
         method: 'POST',
         headers: {
@@ -238,26 +265,45 @@ const ComplaintsPage = () => {
         body: JSON.stringify(formData)
       });
 
-      if (response.ok) {
-        // Success - reload complaints and close form
-        setShowComplaintForm(false);
-        setFormData({
-          guest_id: '',
-          room_id: '',
-          category: 'OTHER',
-          priority: 'MEDIUM',
-          title: '',
-          description: '',
-          incident_date: new Date().toISOString().split('T')[0]
-        });
-
-        // Reload complaints list
-        const data = await fetchComplaints();
-        setComplaintsData(data);
-      } else {
+      if (!response.ok) {
         const errorData = await response.json();
         setFormError(errorData.error || 'Failed to submit complaint');
+        return;
       }
+
+      const newComplaint = await response.json();
+
+      // Then, upload images if any
+      if (selectedImages.length > 0) {
+        for (const image of selectedImages) {
+          const imageFormData = new FormData();
+          imageFormData.append('image', image);
+          imageFormData.append('complaint', newComplaint.id.toString());
+
+          await fetch(buildApiUrl('hotel/complaint-images/'), {
+            method: 'POST',
+            body: imageFormData
+          });
+        }
+      }
+
+      // Success - reload complaints and close form
+      setShowComplaintForm(false);
+      setFormData({
+        guest_id: '',
+        room_id: '',
+        category: 'OTHER',
+        priority: 'MEDIUM',
+        title: '',
+        description: '',
+        incident_date: new Date().toISOString().split('T')[0]
+      });
+      setSelectedImages([]);
+      setImagePreviews([]);
+
+      // Reload complaints list
+      const data = await fetchComplaints();
+      setComplaintsData(data);
     } catch (err: any) {
       setFormError('Failed to submit complaint. Please try again.');
       console.error(err);
@@ -1182,6 +1228,55 @@ const ComplaintsPage = () => {
                       rows={4}
                       className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
                     />
+                  </div>
+
+                  {/* Image Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Evidence Images (Optional)
+                    </label>
+                    <div className="space-y-3">
+                      {/* File Input */}
+                      <div className="flex items-center space-x-3">
+                        <label className="cursor-pointer flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 transition-colors">
+                          <Add01Icon className="h-4 w-4" />
+                          <span>Add Images</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImageSelect}
+                            className="hidden"
+                            disabled={selectedImages.length >= 5}
+                          />
+                        </label>
+                        <span className="text-xs text-gray-500">
+                          {selectedImages.length}/5 images selected
+                        </span>
+                      </div>
+
+                      {/* Image Previews */}
+                      {imagePreviews.length > 0 && (
+                        <div className="grid grid-cols-5 gap-2">
+                          {imagePreviews.map((preview, index) => (
+                            <div key={index} className="relative aspect-square bg-gray-100">
+                              <img
+                                src={preview}
+                                alt={`Preview ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(index)}
+                                className="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition-colors"
+                              >
+                                <Cancel01Icon className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
