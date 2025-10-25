@@ -187,11 +187,14 @@ const BookingsPage = () => {
   });
   const [selectedDateRange, setSelectedDateRange] = useState<{ start: Date; end: Date }>(() => {
     const today = new Date();
-    // Start from beginning of current month
-    const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    // Start from today (to avoid timezone issues with month calculation)
+    const startDate = new Date(today);
+    startDate.setHours(0, 0, 0, 0);
+
     // End 14 days from today to show upcoming bookings
     const endDate = new Date(today);
     endDate.setDate(today.getDate() + 14);
+    endDate.setHours(0, 0, 0, 0);
 
     console.log('Initial calendar date range:', {
       today: today.toISOString().split('T')[0],

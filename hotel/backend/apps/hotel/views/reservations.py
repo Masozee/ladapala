@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, DateFilter
 from django.utils import timezone
 from datetime import timedelta
 
@@ -9,12 +9,26 @@ from ..models import Reservation
 from ..serializers import ReservationSerializer, ReservationListSerializer
 
 
+class ReservationFilter(FilterSet):
+    """Custom filter for reservations with date range support"""
+    check_in_date = DateFilter(field_name='check_in_date', lookup_expr='exact')
+    check_in_date__gte = DateFilter(field_name='check_in_date', lookup_expr='gte')
+    check_in_date__lte = DateFilter(field_name='check_in_date', lookup_expr='lte')
+    check_out_date = DateFilter(field_name='check_out_date', lookup_expr='exact')
+    check_out_date__gte = DateFilter(field_name='check_out_date', lookup_expr='gte')
+    check_out_date__lte = DateFilter(field_name='check_out_date', lookup_expr='lte')
+
+    class Meta:
+        model = Reservation
+        fields = ['status', 'booking_source', 'guest', 'room', 'check_in_date', 'check_out_date']
+
+
 class ReservationViewSet(viewsets.ModelViewSet):
     """ViewSet for managing reservations"""
     queryset = Reservation.objects.select_related('guest', 'room', 'room__room_type')
     serializer_class = ReservationSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['status', 'booking_source', 'guest', 'room']
+    filterset_class = ReservationFilter
     search_fields = ['reservation_number', 'guest__first_name', 'guest__last_name']
     ordering_fields = ['check_in_date', 'check_out_date', 'created_at']
     ordering = ['-check_in_date']

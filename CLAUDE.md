@@ -35,6 +35,15 @@ hotel/
 - Each domain has its own database, user system, and models
 - Do NOT mix hotel and restaurant code between domains
 
+**CRITICAL: No Dummy/Mock Data Policy**
+- **NEVER use dummy data, mock data, or sample data** in frontend components
+- **ALL data MUST come from the backend API** via proper API calls
+- No hardcoded arrays of fake data (e.g., `const mockReservations = [...]`)
+- No placeholder data (e.g., `const sampleGuests = [...]`)
+- Always use `useState` with empty initial values and populate via API fetch
+- Use loading states while fetching real data from the backend
+- If you need test data, create proper seed scripts in Django management commands
+
 ## Development Commands
 
 ### Quick Start - Running Servers
