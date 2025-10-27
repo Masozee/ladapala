@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import OfficeLayout from '@/components/AppLayout';
+import OfficeLayout from '@/components/OfficeLayout';
 import { buildApiUrl } from '@/lib/config';
 import {
   BedIcon,
