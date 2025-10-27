@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,7 +11,7 @@ class GuestViewSet(viewsets.ModelViewSet):
     """ViewSet for managing guests"""
     queryset = Guest.objects.all()
     serializer_class = GuestSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_vip', 'nationality', 'gender']
     search_fields = ['first_name', 'last_name', 'email', 'phone']
     ordering_fields = ['first_name', 'last_name', 'created_at']

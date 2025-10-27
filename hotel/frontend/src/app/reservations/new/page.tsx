@@ -161,20 +161,14 @@ export default function NewReservationPage() {
     try {
       setLoading(true);
       const url = buildApiUrl(`hotel/guests/?search=${encodeURIComponent(query)}`);
-      console.log('Searching guests at:', url);
 
       const response = await fetch(url);
-      console.log('Search response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Search results:', data);
         const results = data.results || data;
         setSearchResults(Array.isArray(results) ? results : []);
       } else {
-        console.error('Search failed with status:', response.status);
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
         setSearchResults([]);
       }
     } catch (error) {
@@ -478,6 +472,7 @@ export default function NewReservationPage() {
 
                       {searchResults.length > 0 && (
                         <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                          <div className="text-xs text-gray-500 mb-2 px-2">{searchResults.length} customer{searchResults.length > 1 ? 's' : ''} found</div>
                           {searchResults.map((guest) => (
                             <div
                               key={guest.id}
