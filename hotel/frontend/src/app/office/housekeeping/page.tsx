@@ -345,50 +345,46 @@ const HousekeepingPage = () => {
             </div>
           )}
 
-          {/* Filters */}
-          <div className="bg-white border border-gray-200 p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Search */}
-              <div className="relative">
-                <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by room number or task ID..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
-                />
-              </div>
+          {/* Filters - Compact and Right Aligned */}
+          <div className="flex justify-end items-center gap-3">
+            {/* Status Filter */}
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm w-48"
+            >
+              <option value="">All Statuses</option>
+              <option value="DIRTY">Needs Cleaning</option>
+              <option value="CLEANING">In Progress</option>
+              <option value="INSPECTING">Inspection</option>
+              <option value="CLEAN">Clean</option>
+              <option value="MAINTENANCE">Maintenance</option>
+            </select>
 
-              {/* Status Filter */}
-              <div>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
-                >
-                  <option value="">All Statuses</option>
-                  <option value="DIRTY">Needs Cleaning</option>
-                  <option value="CLEANING">In Progress</option>
-                  <option value="INSPECTING">Inspection</option>
-                  <option value="CLEAN">Clean</option>
-                  <option value="MAINTENANCE">Maintenance</option>
-                </select>
-              </div>
-
-              {/* Clear Filters */}
-              <div className="flex justify-end">
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setFilterStatus('');
-                  }}
-                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                >
-                  Clear Filters
-                </button>
-              </div>
+            {/* Search */}
+            <div className="relative w-64">
+              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search room or task..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+              />
             </div>
+
+            {/* Clear Filters */}
+            {(searchTerm || filterStatus) && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterStatus('');
+                }}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 hover:bg-gray-50 transition-colors"
+              >
+                Clear
+              </button>
+            )}
           </div>
 
           {/* Tasks Table */}
