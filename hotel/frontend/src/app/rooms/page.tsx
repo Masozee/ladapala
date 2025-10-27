@@ -21,7 +21,8 @@ import {
   ListViewIcon,
   MoreHorizontalIcon,
   FilterIcon,
-  Settings02Icon
+  Settings02Icon,
+  Add01Icon
 } from '@/lib/icons';
 
 interface Room {
@@ -210,11 +211,121 @@ const RoomsPage = () => {
   const [bedType, setBedType] = useState('');
   const [floorPreference, setFloorPreference] = useState('');
 
+  // Form states
+  const [showAddRoomTypeForm, setShowAddRoomTypeForm] = useState(false);
+  const [showAddRoomForm, setShowAddRoomForm] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [newRoomType, setNewRoomType] = useState({
+    name: '',
+    description: '',
+    base_price: '',
+    max_occupancy: 2,
+    size_sqm: '',
+    amenities: ''
+  });
+  const [newRoom, setNewRoom] = useState({
+    number: '',
+    room_type: '',
+    floor: '',
+    status: 'AVAILABLE',
+    notes: ''
+  });
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
     }).format(amount);
+  };
+
+  // Handle add room type
+  const handleAddRoomType = async () => {
+    try {
+      setFormLoading(true);
+      const response = await fetch(buildApiUrl('hotel/room-types/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: newRoomType.name,
+          description: newRoomType.description,
+          base_price: newRoomType.base_price,
+          max_occupancy: newRoomType.max_occupancy,
+          size_sqm: newRoomType.size_sqm ? parseInt(newRoomType.size_sqm) : null,
+          amenities: newRoomType.amenities
+        }),
+      });
+
+      if (response.ok) {
+        alert('Room category created successfully!');
+        setShowAddRoomTypeForm(false);
+        setNewRoomType({
+          name: '',
+          description: '',
+          base_price: '',
+          max_occupancy: 2,
+          size_sqm: '',
+          amenities: ''
+        });
+        // Refresh room types
+        const data = await fetchRoomTypes(checkInDate, checkOutDate);
+        setRoomTypes(data);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to create room category: ${JSON.stringify(errorData)}`);
+      }
+    } catch (error) {
+      console.error('Error creating room category:', error);
+      alert('Failed to create room category. Please try again.');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  // Handle add room
+  const handleAddRoom = async () => {
+    try {
+      setFormLoading(true);
+      const response = await fetch(buildApiUrl('hotel/rooms/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          number: newRoom.number,
+          room_type: parseInt(newRoom.room_type),
+          floor: parseInt(newRoom.floor),
+          status: newRoom.status,
+          notes: newRoom.notes || null
+        }),
+      });
+
+      if (response.ok) {
+        alert('Room created successfully!');
+        setShowAddRoomForm(false);
+        setNewRoom({
+          number: '',
+          room_type: '',
+          floor: '',
+          status: 'AVAILABLE',
+          notes: ''
+        });
+        // Refresh rooms
+        const data = await fetchRooms();
+        setRooms(data);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to create room: ${JSON.stringify(errorData)}`);
+      }
+    } catch (error) {
+      console.error('Error creating room:', error);
+      alert('Failed to create room. Please try again.');
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -430,10 +541,24 @@ const RoomsPage = () => {
             <p className="text-gray-600 mt-2">Manage room types, availability, and individual room statuses</p>
           </div>
           <div className="flex items-center space-x-2">
-            <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
-              <Settings02Icon className="h-4 w-4" />
-              <span>Room Settings</span>
-            </button>
+            {activeTab === 'types' && (
+              <button
+                onClick={() => setShowAddRoomTypeForm(true)}
+                className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors"
+              >
+                <Add01Icon className="h-4 w-4" />
+                <span>Add Room Category</span>
+              </button>
+            )}
+            {activeTab === 'rooms' && (
+              <button
+                onClick={() => setShowAddRoomForm(true)}
+                className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors"
+              >
+                <Add01Icon className="h-4 w-4" />
+                <span>Add New Room</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1381,6 +1506,273 @@ const RoomsPage = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Add Room Type Modal */}
+        {showAddRoomTypeForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="p-6 border-b border-gray-200 bg-[#005357]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Add New Room Category</h2>
+                    <p className="text-sm text-gray-200 mt-1">Create a new room type</p>
+                  </div>
+                  <button
+                    onClick={() => setShowAddRoomTypeForm(false)}
+                    className="p-2 text-white hover:text-gray-200"
+                  >
+                    <Cancel01Icon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <div className="space-y-4">
+                  {/* Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Room Category Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={newRoomType.name}
+                      onChange={(e) => setNewRoomType({ ...newRoomType, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                      placeholder="e.g., Deluxe Suite"
+                      required
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      value={newRoomType.description}
+                      onChange={(e) => setNewRoomType({ ...newRoomType, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                      rows={3}
+                      placeholder="Describe the room category..."
+                    />
+                  </div>
+
+                  {/* Base Price */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Base Price (IDR/night) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={newRoomType.base_price}
+                      onChange={(e) => setNewRoomType({ ...newRoomType, base_price: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                      placeholder="1000000"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Max Occupancy */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Max Occupancy <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={newRoomType.max_occupancy}
+                        onChange={(e) => setNewRoomType({ ...newRoomType, max_occupancy: parseInt(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                      >
+                        {[1,2,3,4,5,6].map(num => (
+                          <option key={num} value={num}>{num} Guest{num > 1 ? 's' : ''}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Room Size */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Room Size (sqm)
+                      </label>
+                      <input
+                        type="number"
+                        value={newRoomType.size_sqm}
+                        onChange={(e) => setNewRoomType({ ...newRoomType, size_sqm: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                        placeholder="45"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Amenities */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Amenities (comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      value={newRoomType.amenities}
+                      onChange={(e) => setNewRoomType({ ...newRoomType, amenities: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                      placeholder="WiFi, TV, AC, Mini Bar"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Separate amenities with commas</p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-4 mt-6 pt-6 border-t">
+                  <button
+                    onClick={() => setShowAddRoomTypeForm(false)}
+                    className="px-6 py-3 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
+                    disabled={formLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddRoomType}
+                    disabled={formLoading || !newRoomType.name || !newRoomType.base_price}
+                    className="px-6 py-3 bg-[#005357] text-white font-medium hover:bg-[#004147] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {formLoading ? 'Creating...' : 'Create Room Category'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Room Modal */}
+        {showAddRoomForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="p-6 border-b border-gray-200 bg-[#005357]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Add New Room</h2>
+                    <p className="text-sm text-gray-200 mt-1">Create a new room entry</p>
+                  </div>
+                  <button
+                    onClick={() => setShowAddRoomForm(false)}
+                    className="p-2 text-white hover:text-gray-200"
+                  >
+                    <Cancel01Icon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Room Number */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Room Number <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={newRoom.number}
+                        onChange={(e) => setNewRoom({ ...newRoom, number: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                        placeholder="101"
+                        required
+                      />
+                    </div>
+
+                    {/* Floor */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Floor <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={newRoom.floor}
+                        onChange={(e) => setNewRoom({ ...newRoom, floor: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                        placeholder="1"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Room Type */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Room Category <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={newRoom.room_type}
+                      onChange={(e) => setNewRoom({ ...newRoom, room_type: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                      required
+                    >
+                      <option value="">Select a room category...</option>
+                      {roomTypes.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.name} - {formatCurrency(type.base_rate)}/night
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      value={newRoom.status}
+                      onChange={(e) => setNewRoom({ ...newRoom, status: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                    >
+                      <option value="AVAILABLE">Available</option>
+                      <option value="OCCUPIED">Occupied</option>
+                      <option value="MAINTENANCE">Maintenance</option>
+                      <option value="OUT_OF_ORDER">Out of Order</option>
+                      <option value="RESERVED">Reserved</option>
+                    </select>
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Notes
+                    </label>
+                    <textarea
+                      value={newRoom.notes}
+                      onChange={(e) => setNewRoom({ ...newRoom, notes: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                      rows={3}
+                      placeholder="Any additional notes about this room..."
+                    />
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-4 mt-6 pt-6 border-t">
+                  <button
+                    onClick={() => setShowAddRoomForm(false)}
+                    className="px-6 py-3 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
+                    disabled={formLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddRoom}
+                    disabled={formLoading || !newRoom.number || !newRoom.room_type || !newRoom.floor}
+                    className="px-6 py-3 bg-[#005357] text-white font-medium hover:bg-[#004147] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {formLoading ? 'Creating...' : 'Create Room'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         </div>
