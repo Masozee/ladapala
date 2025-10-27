@@ -1,12 +1,20 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, DateFilter
 from django.utils import timezone
 from datetime import timedelta
 
 from ..models import Reservation
 from ..serializers import ReservationSerializer, ReservationListSerializer
+
+
+class LargeResultsSetPagination(PageNumberPagination):
+    """Pagination class that allows larger page sizes for calendar view"""
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 5000
 
 
 class ReservationFilter(FilterSet):
@@ -27,13 +35,26 @@ class ReservationViewSet(viewsets.ModelViewSet):
     """ViewSet for managing reservations"""
     queryset = Reservation.objects.select_related('guest', 'room', 'room__room_type')
     serializer_class = ReservationSerializer
+    pagination_class = LargeResultsSetPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = ReservationFilter
     search_fields = ['reservation_number', 'guest__first_name', 'guest__last_name']
     ordering_fields = ['check_in_date', 'check_out_date', 'created_at']
-    ordering = ['-check_in_date']
+    ordering = ['check_in_date']  # Closest dates first
     lookup_field = 'reservation_number'
     lookup_url_kwarg = 'reservation_number'
+
+    def get_queryset(self):
+        """Override to filter from today onwards by default"""
+        queryset = super().get_queryset()
+
+        # Only apply date filter for list action (not for detail, check_in, etc.)
+        if self.action == 'list':
+            today = timezone.now().date()
+            # Show reservations from today onwards
+            queryset = queryset.filter(check_in_date__gte=today)
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -112,6 +133,17 @@ class ReservationViewSet(viewsets.ModelViewSet):
         if reservation.status != 'CONFIRMED':
             return Response({'error': 'Only confirmed reservations can be checked in'},
                           status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate check-in date
+        today = timezone.now().date()
+        check_in_date = reservation.check_in_date
+
+        if today < check_in_date:
+            return Response({
+                'error': f'Cannot check in before scheduled date. Check-in date is {check_in_date.strftime("%d %b %Y")}. Today is {today.strftime("%d %b %Y")}.',
+                'check_in_date': check_in_date,
+                'today': today
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         reservation.status = 'CHECKED_IN'
         reservation.save(update_fields=['status', 'updated_at'])

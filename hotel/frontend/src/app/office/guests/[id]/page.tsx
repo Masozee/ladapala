@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import AppLayout from '@/components/AppLayout';
+import OfficeLayout from '@/components/OfficeLayout';
 import { buildApiUrl } from '@/lib/config';
 import {
   Search02Icon,
@@ -27,7 +27,8 @@ import {
   Shield01Icon,
   File01Icon,
   Settings02Icon,
-  MoreHorizontalIcon
+  MoreHorizontalIcon,
+  Alert01Icon
 } from '@/lib/icons';
 
 interface GuestRewards {
@@ -290,12 +291,12 @@ const GuestDetailPage = () => {
 
   const getTierIcon = (tier: string) => {
     switch (tier) {
-      case 'Bronze': return <Award className="h-4 w-4" />;
+      case 'Bronze': return <SparklesIcon className="h-4 w-4" />;
       case 'Silver': return <SparklesIcon className="h-4 w-4" />;
       case 'Gold': return <SparklesIcon className="h-4 w-4" />;
       case 'Platinum': return <SparklesIcon className="h-4 w-4" />;
       case 'Diamond': return <SparklesIcon className="h-4 w-4" />;
-      default: return <Award className="h-4 w-4" />;
+      default: return <SparklesIcon className="h-4 w-4" />;
     }
   };
 
@@ -320,14 +321,14 @@ const GuestDetailPage = () => {
 
   if (!guest) {
     return (
-      <AppLayout>
+      <OfficeLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <UserIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Loading guest profile...</h3>
           </div>
         </div>
-      </AppLayout>
+      </OfficeLayout>
     );
   }
 
@@ -338,7 +339,7 @@ const GuestDetailPage = () => {
   ];
 
   return (
-    <AppLayout breadcrumb={breadcrumb}>
+    <OfficeLayout>
       <div className="space-y-6">
         {/* Header with Navigation */}
         <div className="space-y-4">
@@ -701,64 +702,64 @@ const GuestDetailPage = () => {
             </div>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full border-collapse">
               <thead className="bg-[#005357]">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                  <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                     Reservation
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                  <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                     Dates
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                  <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                     Room
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                  <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                     Amount
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                  <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                     Points
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                  <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                     Rating
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                  <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody>
                 {guest.recent_stays.map((stay) => (
                   <tr key={stay.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
+                    <td className="border border-gray-200 px-6 py-4">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{stay.reservation_number}</div>
                         <div className="text-xs text-gray-500">{stay.nights} night{stay.nights > 1 ? 's' : ''}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="border border-gray-200 px-6 py-4">
                       <div>
                         <div className="text-sm text-gray-900">{formatDate(stay.check_in_date)}</div>
                         <div className="text-xs text-gray-500">to {formatDate(stay.check_out_date)}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="border border-gray-200 px-6 py-4">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{stay.room_type}</div>
                         <div className="text-xs text-gray-500">Room {stay.room_number}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="border border-gray-200 px-6 py-4">
                       <div className="text-sm font-medium text-gray-900">
                         {formatCurrency(stay.total_amount)}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="border border-gray-200 px-6 py-4">
                       <div className="text-sm text-gray-900">
                         {stay.points_earned.toLocaleString()} pts
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="border border-gray-200 px-6 py-4">
                       {stay.rating ? (
                         <div className="flex items-center space-x-1">
                           <SparklesIcon className="h-4 w-4 text-yellow-400 fill-current" />
@@ -768,7 +769,7 @@ const GuestDetailPage = () => {
                         <span className="text-xs text-gray-500">No rating</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="border border-gray-200 px-6 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(stay.status)}`}>
                         {stay.status.replace('_', ' ')}
                       </span>
@@ -901,7 +902,7 @@ const GuestDetailPage = () => {
           </div>
         )}
       </div>
-    </AppLayout>
+    </OfficeLayout>
   );
 };
 

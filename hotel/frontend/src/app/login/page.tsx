@@ -99,7 +99,7 @@ const LoginPage = () => {
           <div>
             <div className="flex items-center space-x-3 mb-8">
               <div className="w-12 h-12 bg-gray-50 flex items-center justify-center p-1">
-                <ViewIcon
+                <Image
                   src="/logo.png"
                   alt="Kapulaga Hotel Logo"
                   width={40}

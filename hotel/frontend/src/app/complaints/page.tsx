@@ -143,7 +143,6 @@ const fetchComplaints = async (): Promise<ComplaintsResponse> => {
 const ComplaintsPage = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -433,70 +432,37 @@ const ComplaintsPage = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-          <div className="bg-white border border-gray-200 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.in_progress}</div>
-                <div className="text-sm text-gray-600">In Progress</div>
+                <div className="text-3xl font-bold text-gray-900">{stats.in_progress}</div>
+                <div className="text-sm text-gray-600 mt-1">In Progress</div>
               </div>
-              <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <Clock01Icon className="h-4 w-4 text-white" />
+              <div className="w-12 h-12 bg-[#005357] flex items-center justify-center">
+                <Clock01Icon className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
-          <div className="bg-white border border-gray-200 p-4">
+          <div className="bg-white border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.completed}</div>
-                <div className="text-sm text-gray-600">Completed</div>
+                <div className="text-3xl font-bold text-gray-900">{stats.urgent}</div>
+                <div className="text-sm text-gray-600 mt-1">Urgent</div>
               </div>
-              <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <UserCheckIcon className="h-4 w-4 text-white" />
+              <div className="w-12 h-12 bg-red-600 flex items-center justify-center">
+                <Alert01Icon className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
-          <div className="bg-white border border-gray-200 p-4">
+          <div className="bg-white border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.escalated}</div>
-                <div className="text-sm text-gray-600">Escalated</div>
+                <div className="text-3xl font-bold text-gray-900">{stats.overdue}</div>
+                <div className="text-sm text-gray-600 mt-1">Overdue</div>
               </div>
-              <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                <SparklesIcon className="h-4 w-4 text-white" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.urgent}</div>
-                <div className="text-sm text-gray-600">Urgent</div>
-              </div>
-              <div className="w-8 h-8 bg-red-600 flex items-center justify-center">
-                <Alert01Icon className="h-4 w-4 text-white" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.high_priority}</div>
-                <div className="text-sm text-gray-600">High Priority</div>
-              </div>
-              <div className="w-8 h-8 bg-orange-600 flex items-center justify-center">
-                <AlertCircleIcon className="h-4 w-4 text-white" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.overdue}</div>
-                <div className="text-sm text-gray-600">Overdue</div>
-              </div>
-              <div className="w-8 h-8 bg-red-800 flex items-center justify-center">
-                <CancelCircleIcon className="h-4 w-4 text-white" />
+              <div className="w-12 h-12 bg-red-800 flex items-center justify-center">
+                <CancelCircleIcon className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
@@ -525,32 +491,6 @@ const ComplaintsPage = () => {
               <FilterIcon className="h-4 w-4" />
               <span>Advanced Filter</span>
             </button>
-            
-            {/* View Mode Toggle */}
-            <div className="flex border border-gray-300 h-full">
-              <button
-                onClick={() => setViewMode('card')}
-                className={`flex items-center justify-center space-x-2 px-4 text-sm transition-colors h-full ${
-                  viewMode === 'card' 
-                    ? 'bg-[#005357] text-white' 
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <ViewIcon className="h-4 w-4" />
-                <span>Cards</span>
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`flex items-center justify-center space-x-2 px-4 text-sm transition-colors border-l border-gray-300 h-full ${
-                  viewMode === 'table' 
-                    ? 'bg-[#005357] text-white' 
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <ListViewIcon className="h-4 w-4" />
-                <span>Table</span>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -583,128 +523,6 @@ const ComplaintsPage = () => {
 
         {/* Complaints Display */}
         {!loading && !error && (
-          <>
-            {viewMode === 'card' ? (
-              /* Card View */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredComplaints.map((complaint) => (
-                  <div key={complaint.id} className="bg-white border border-gray-200">
-                    {/* Card Header */}
-                    <div className="p-6 border-b border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900">{complaint.complaint_number}</h3>
-                          <p className="text-sm text-gray-600 mt-1">{complaint.title}</p>
-                        </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                          {getCategoryIcon(complaint.category.name)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Card Content */}
-                    <div className="p-4 bg-gray-50">
-                      {/* Guest Info */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-900">{complaint.guest.full_name}</span>
-                          <div className="flex items-center space-x-1">
-                            <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(complaint.status)}`}>
-                              {complaint.status.replace('_', ' ')}
-                            </span>
-                            <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(complaint.priority)}`}>
-                              {complaint.priority}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-600 space-y-1">
-                          <div>{complaint.guest.email}</div>
-                          {complaint.room_number && <div>Room {complaint.room_number}</div>}
-                        </div>
-                      </div>
-
-                      {/* Category & Department */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            {getCategoryIcon(complaint.category.name, "h-4 w-4 text-gray-600")}
-                            <span className="text-sm font-medium text-gray-700">{complaint.category.name}</span>
-                          </div>
-                          <span className="text-xs text-gray-500">{complaint.assigned_department?.name || 'Unassigned'}</span>
-                        </div>
-                      </div>
-
-                      {/* Description */}
-                      <div className="mb-4">
-                        <p className="text-sm text-gray-700 line-clamp-3">
-                          {complaint.description}
-                        </p>
-                      </div>
-
-                      {/* Response Info */}
-                      <div className="mb-4 text-xs text-gray-600">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex items-center space-x-1">
-                              <Mail01Icon className="h-3 w-3" />
-                              <span>{complaint.response_count} response{complaint.response_count !== 1 ? 's' : ''}</span>
-                            </div>
-                            {complaint.image_count > 0 && (
-                              <div className="flex items-center space-x-1">
-                                <ViewIcon className="h-3 w-3" />
-                                <span>{complaint.image_count} image{complaint.image_count !== 1 ? 's' : ''}</span>
-                              </div>
-                            )}
-                          </div>
-                          <span>{formatDateTime(complaint.created_at)}</span>
-                        </div>
-                        {complaint.assigned_department && (
-                          <div className="flex items-center space-x-2 mt-1">
-                            <UserCheckIcon className="h-3 w-3" />
-                            <span>Assigned: {complaint.assigned_department.name}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Follow-up Notice */}
-                      {complaint.follow_up_required && (
-                        <div className="mb-4 p-2 bg-orange-50 border border-orange-200 text-xs text-orange-800">
-                          <div className="flex items-center space-x-1">
-                            <Clock01Icon className="h-3 w-3" />
-                            <span>Follow-up required</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Escalated Notice */}
-                      {complaint.is_escalated && (
-                        <div className="mb-4 p-2 bg-red-50 border border-red-200 text-xs text-red-800">
-                          <div className="flex items-center space-x-1">
-                            <SparklesIcon className="h-3 w-3" />
-                            <span>Escalated complaint</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Actions */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <Link 
-                          href={`/complaints/${complaint.complaint_number}`}
-                          className="text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors text-center"
-                        >
-                          <EyeIcon className="h-3 w-3 inline mr-1" />
-                          View Details
-                        </Link>
-                        <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors">
-                          <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
-                          Update
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-        ) : (
           /* Table View */
           <div className="bg-white border border-gray-200">
             <div className="p-6 border-b border-gray-200">
@@ -719,40 +537,40 @@ const ComplaintsPage = () => {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full border-collapse">
                 <thead className="bg-[#005357]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">
                       Complaint
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">
                       Guest
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">
                       Category
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">
                       Priority
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">
                       Assigned To
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">
                       Created
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="bg-white">
                   {filteredComplaints.map((complaint) => (
                     <tr key={complaint.id} className="hover:bg-gray-50">
                       {/* Complaint Info */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border border-gray-200">
                         <div>
                           <Link href={`/complaints/${complaint.complaint_number}`} className="font-bold text-[#005357] hover:text-[#004147] hover:underline">
                             {complaint.complaint_number}
@@ -763,7 +581,7 @@ const ComplaintsPage = () => {
                       </td>
 
                       {/* Guest Info */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border border-gray-200">
                         <div className="text-sm">
                           <div className="font-medium text-gray-900">{(complaint as any).guest_name || complaint.guest?.full_name || 'Guest'}</div>
                           <div className="text-gray-600 text-xs">{complaint.guest?.email || ''}</div>
@@ -774,7 +592,7 @@ const ComplaintsPage = () => {
                       </td>
 
                       {/* Category */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border border-gray-200">
                         <div className="flex items-center space-x-2">
                           {getCategoryIcon((complaint as any).category_display || complaint.category?.name || complaint.category, "h-4 w-4 text-gray-600")}
                           <span className="text-sm text-gray-700">{(complaint as any).category_display || complaint.category?.name || complaint.category}</span>
@@ -783,7 +601,7 @@ const ComplaintsPage = () => {
                       </td>
 
                       {/* Status */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border border-gray-200">
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getStatusColor(complaint.status)}`}>
                           {complaint.status.replace('_', ' ')}
                         </span>
@@ -810,7 +628,7 @@ const ComplaintsPage = () => {
                       </td>
 
                       {/* Priority */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border border-gray-200">
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getPriorityColor(complaint.priority)}`}>
                           {complaint.priority}
                         </span>
@@ -829,21 +647,21 @@ const ComplaintsPage = () => {
                       </td>
 
                       {/* Assigned To */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border border-gray-200">
                         <div className="text-sm text-gray-900">
                           {complaint.assigned_department?.name || complaint.assigned_to?.full_name || 'Unassigned'}
                         </div>
                       </td>
 
                       {/* Created */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border border-gray-200">
                         <div className="text-sm text-gray-900">
                           {formatDateTime(complaint.created_at)}
                         </div>
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border border-gray-200">
                         <div className="relative" ref={openDropdown === complaint.id ? dropdownRef : null}>
                           <button
                             onClick={() => setOpenDropdown(openDropdown === complaint.id ? null : complaint.id)}
@@ -893,8 +711,6 @@ const ComplaintsPage = () => {
               </table>
             </div>
           </div>
-            )}
-          </>
         )}
 
         {/* Advanced Filter Modal */}

@@ -41,7 +41,7 @@ class Reservation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['check_in_date']  # Closest dates first
 
     def __str__(self):
         return f'Reservation {self.reservation_number} - {self.guest.full_name}'
@@ -66,6 +66,22 @@ class Reservation(models.Model):
             return self.room.get_current_price() * self.nights
         return Decimal('0.00')
 
+    def get_additional_charges_total(self):
+        """Calculate total additional charges for this reservation"""
+        total = self.additional_charges.aggregate(
+            total=models.Sum(models.F('amount') * models.F('quantity'))
+        )['total']
+        return total or Decimal('0.00')
+
+    def get_grand_total(self):
+        """Calculate grand total including room, tax, and additional charges"""
+        room_total = self.calculate_total_amount()
+        # Add tax (11%)
+        subtotal_with_tax = room_total * Decimal('1.11')
+        # Add additional charges
+        additional_charges = self.get_additional_charges_total()
+        return subtotal_with_tax + additional_charges
+
     def get_total_paid(self):
         """Calculate total amount paid for this reservation"""
         from .payments import Payment
@@ -75,9 +91,7 @@ class Reservation(models.Model):
         return total or Decimal('0.00')
 
     def is_fully_paid(self):
-        """Check if reservation is fully paid"""
-        expected_total = self.calculate_total_amount()
-        # Add tax (11%)
-        expected_with_tax = expected_total * Decimal('1.11')
+        """Check if reservation is fully paid including additional charges"""
+        expected_total = self.get_grand_total()
         total_paid = self.get_total_paid()
-        return total_paid >= expected_with_tax
+        return total_paid >= expected_total

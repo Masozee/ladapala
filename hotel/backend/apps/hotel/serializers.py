@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
-    RoomType, Room, Guest, Reservation, Payment, Complaint, ComplaintImage,
-    CheckIn, Holiday, InventoryItem, MaintenanceRequest, MaintenanceTechnician
+    RoomType, Room, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
+    CheckIn, Holiday, InventoryItem, MaintenanceRequest, MaintenanceTechnician,
+    HousekeepingTask, AmenityUsage
 )
 
 
@@ -154,6 +155,8 @@ class ReservationSerializer(serializers.ModelSerializer):
     subtotal = serializers.SerializerMethodField()
     taxes = serializers.SerializerMethodField()
     service_charge = serializers.SerializerMethodField()
+    additional_charges_total = serializers.SerializerMethodField()
+    additional_charges = serializers.SerializerMethodField()
     grand_total = serializers.SerializerMethodField()
     deposit_amount = serializers.SerializerMethodField()
     balance_due = serializers.SerializerMethodField()
@@ -171,7 +174,8 @@ class ReservationSerializer(serializers.ModelSerializer):
             'room', 'room_number', 'room_details', 'check_in_date', 'check_out_date',
             'nights', 'adults', 'children', 'status', 'status_display',
             'booking_source', 'booking_source_display', 'special_requests', 'notes',
-            'total_amount', 'subtotal', 'taxes', 'service_charge', 'grand_total',
+            'total_amount', 'subtotal', 'taxes', 'service_charge',
+            'additional_charges_total', 'additional_charges', 'grand_total',
             'deposit_amount', 'balance_due', 'total_paid', 'is_fully_paid',
             'can_cancel', 'total_rooms', 'created_at', 'updated_at'
         ]
@@ -192,12 +196,22 @@ class ReservationSerializer(serializers.ModelSerializer):
         """Service charge (currently 0)"""
         return 0.0
 
+    def get_additional_charges_total(self, obj):
+        """Calculate total additional charges"""
+        return float(obj.get_additional_charges_total())
+
+    def get_additional_charges(self, obj):
+        """Get all additional charges for this reservation"""
+        charges = obj.additional_charges.all()
+        return AdditionalChargeSerializer(charges, many=True).data
+
     def get_grand_total(self, obj):
-        """Calculate grand total (subtotal + taxes + service charge)"""
+        """Calculate grand total (subtotal + taxes + service charge + additional charges)"""
         subtotal = self.get_subtotal(obj)
         taxes = self.get_taxes(obj)
         service_charge = self.get_service_charge(obj)
-        return round(subtotal + taxes + service_charge, 2)
+        additional_charges = self.get_additional_charges_total(obj)
+        return round(subtotal + taxes + service_charge + additional_charges, 2)
 
     def get_deposit_amount(self, obj):
         """Get deposit amount (currently 0, can be enhanced later)"""
@@ -236,16 +250,39 @@ class ReservationSerializer(serializers.ModelSerializer):
         return data
 
 
+class AdditionalChargeSerializer(serializers.ModelSerializer):
+    """Serializer for additional charges"""
+    reservation_number = serializers.CharField(source='reservation.reservation_number', read_only=True)
+    charge_type_display = serializers.CharField(source='get_charge_type_display', read_only=True)
+    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    charged_by_name = serializers.CharField(source='charged_by.get_full_name', read_only=True, allow_null=True)
+
+    class Meta:
+        model = AdditionalCharge
+        fields = [
+            'id', 'reservation', 'reservation_number', 'charge_type', 'charge_type_display',
+            'description', 'amount', 'quantity', 'total_amount', 'is_paid',
+            'charged_at', 'charged_by', 'charged_by_name', 'notes',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['charged_at', 'created_at', 'updated_at', 'total_amount']
+
+
 class PaymentSerializer(serializers.ModelSerializer):
     """Serializer for payments"""
     reservation_number = serializers.CharField(source='reservation.reservation_number', read_only=True)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+    guest_name = serializers.CharField(source='reservation.guest.full_name', read_only=True)
+    room_number = serializers.CharField(source='reservation.room.number', read_only=True)
+    check_in_date = serializers.DateField(source='reservation.check_in_date', read_only=True)
+    check_out_date = serializers.DateField(source='reservation.check_out_date', read_only=True)
+
     class Meta:
         model = Payment
         fields = [
-            'id', 'reservation', 'reservation_number', 'amount', 'payment_method',
+            'id', 'reservation', 'reservation_number', 'guest_name', 'room_number',
+            'check_in_date', 'check_out_date', 'amount', 'payment_method',
             'payment_method_display', 'status', 'status_display', 'payment_date',
             'transaction_id', 'notes', 'created_at', 'updated_at'
         ]
@@ -435,7 +472,7 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
     guest_name = serializers.CharField(source='guest.full_name', read_only=True)
     resolution_time_hours = serializers.ReadOnlyField()
     efficiency_score = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = MaintenanceRequest
         fields = [
@@ -449,3 +486,52 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'request_number']
+
+
+class AmenityUsageSerializer(serializers.ModelSerializer):
+    """Serializer for amenity usage records"""
+    inventory_item_name = serializers.CharField(source='inventory_item.name', read_only=True)
+    inventory_item_category = serializers.CharField(source='inventory_item.category', read_only=True)
+    unit_price = serializers.DecimalField(source='inventory_item.unit_price', max_digits=10, decimal_places=2, read_only=True)
+    total_cost = serializers.ReadOnlyField()
+    recorded_by_name = serializers.CharField(source='recorded_by.get_full_name', read_only=True, allow_null=True)
+
+    class Meta:
+        model = AmenityUsage
+        fields = [
+            'id', 'housekeeping_task', 'inventory_item', 'inventory_item_name',
+            'inventory_item_category', 'quantity_used', 'unit_price', 'total_cost',
+            'notes', 'recorded_by', 'recorded_by_name', 'recorded_at', 'stock_deducted'
+        ]
+        read_only_fields = ['recorded_at', 'stock_deducted', 'total_cost']
+
+
+class HousekeepingTaskSerializer(serializers.ModelSerializer):
+    """Serializer for housekeeping tasks"""
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    priority_display = serializers.CharField(source='get_priority_display', read_only=True)
+    task_type_display = serializers.CharField(source='get_task_type_display', read_only=True)
+    room_number = serializers.CharField(source='room.number', read_only=True)
+    room_type = serializers.CharField(source='room.room_type.name', read_only=True)
+    floor = serializers.IntegerField(source='room.floor', read_only=True)
+    assigned_to_name = serializers.CharField(source='assigned_to.get_full_name', read_only=True, allow_null=True)
+    inspector_name = serializers.CharField(source='inspector.get_full_name', read_only=True, allow_null=True)
+    duration_minutes = serializers.ReadOnlyField()
+    time_until_deadline = serializers.ReadOnlyField()
+    is_overdue = serializers.ReadOnlyField()
+    amenity_usages = AmenityUsageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = HousekeepingTask
+        fields = [
+            'id', 'task_number', 'room', 'room_number', 'room_type', 'floor',
+            'task_type', 'task_type_display', 'status', 'status_display',
+            'priority', 'priority_display', 'assigned_to', 'assigned_to_name',
+            'inspector', 'inspector_name', 'scheduled_date', 'estimated_duration_minutes',
+            'actual_start_time', 'completion_time', 'estimated_completion',
+            'guest_checkout', 'next_guest_checkin', 'notes', 'guest_requests',
+            'maintenance_issues', 'inspection_passed', 'inspection_notes',
+            'inspection_time', 'duration_minutes', 'time_until_deadline',
+            'is_overdue', 'amenity_usages', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'task_number', 'duration_minutes', 'time_until_deadline', 'is_overdue']

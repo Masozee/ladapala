@@ -1153,7 +1153,7 @@ const BookingDetailPage = () => {
                   <div>
                     <h3 className="font-bold text-gray-900 mb-4">Services & Charges:</h3>
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-gray-300">
+                      <table className="w-full border-collapse">
                         <thead>
                           <tr className="bg-gray-50">
                             <th className="border border-gray-300 p-3 text-left font-medium text-gray-900">Description</th>
@@ -1165,7 +1165,7 @@ const BookingDetailPage = () => {
                         <tbody>
                           {(booking.rooms || []).map((room) => (
                             <tr key={room.id}>
-                              <td className="border border-gray-300 p-3">
+                              <td className="border border-gray-200 p-3">
                                 <div>
                                   <p className="font-medium">{room.room_type_name} - Room {room.room_number}</p>
                                   <p className="text-sm text-gray-600">
@@ -1173,20 +1173,20 @@ const BookingDetailPage = () => {
                                   </p>
                                 </div>
                               </td>
-                              <td className="border border-gray-300 p-3 text-center">{booking.nights}</td>
-                              <td className="border border-gray-300 p-3 text-right">{formatCurrency(room.rate)}</td>
-                              <td className="border border-gray-300 p-3 text-right">{formatCurrency(room.rate * booking.nights)}</td>
+                              <td className="border border-gray-200 p-3 text-center">{booking.nights}</td>
+                              <td className="border border-gray-200 p-3 text-right">{formatCurrency(room.rate)}</td>
+                              <td className="border border-gray-200 p-3 text-right">{formatCurrency(room.rate * booking.nights)}</td>
                             </tr>
                           ))}
                           
                           {/* Transportation */}
-                          {booking.transportation && booking.transportation.length > 0 && 
+                          {booking.transportation && booking.transportation.length > 0 &&
                             booking.transportation.map((transport, index) => (
                               <tr key={index}>
-                                <td className="border border-gray-300 p-3">{transport.type}</td>
-                                <td className="border border-gray-300 p-3 text-center">1</td>
-                                <td className="border border-gray-300 p-3 text-right">{formatCurrency(transport.cost)}</td>
-                                <td className="border border-gray-300 p-3 text-right">{formatCurrency(transport.cost)}</td>
+                                <td className="border border-gray-200 p-3">{transport.type}</td>
+                                <td className="border border-gray-200 p-3 text-center">1</td>
+                                <td className="border border-gray-200 p-3 text-right">{formatCurrency(transport.cost)}</td>
+                                <td className="border border-gray-200 p-3 text-right">{formatCurrency(transport.cost)}</td>
                               </tr>
                             ))
                           }
@@ -1195,30 +1195,30 @@ const BookingDetailPage = () => {
                           {booking.extras && booking.extras.length > 0 && (
                             booking.extras.map((extra, index) => (
                               <tr key={index}>
-                                <td className="border border-gray-300 p-3">{extra.name}</td>
-                                <td className="border border-gray-300 p-3 text-center">{extra.quantity}</td>
-                                <td className="border border-gray-300 p-3 text-right">{formatCurrency(extra.unit_price)}</td>
-                                <td className="border border-gray-300 p-3 text-right">{formatCurrency(extra.total_price)}</td>
+                                <td className="border border-gray-200 p-3">{extra.name}</td>
+                                <td className="border border-gray-200 p-3 text-center">{extra.quantity}</td>
+                                <td className="border border-gray-200 p-3 text-right">{formatCurrency(extra.unit_price)}</td>
+                                <td className="border border-gray-200 p-3 text-right">{formatCurrency(extra.total_price)}</td>
                               </tr>
                             ))
                           )}
 
                           {/* Subtotal */}
                           <tr>
-                            <td colSpan={3} className="border border-gray-300 p-3 text-right font-medium">Subtotal:</td>
-                            <td className="border border-gray-300 p-3 text-right font-medium">{formatCurrency(booking.total_amount)}</td>
+                            <td colSpan={3} className="border border-gray-200 p-3 text-right font-medium">Subtotal:</td>
+                            <td className="border border-gray-200 p-3 text-right font-medium">{formatCurrency(booking.total_amount)}</td>
                           </tr>
-                          
+
                           {/* Taxes */}
                           <tr>
-                            <td colSpan={3} className="border border-gray-300 p-3 text-right">PPN/VAT (11%):</td>
-                            <td className="border border-gray-300 p-3 text-right">{formatCurrency(booking.taxes || 0)}</td>
+                            <td colSpan={3} className="border border-gray-200 p-3 text-right">PPN/VAT (11%):</td>
+                            <td className="border border-gray-200 p-3 text-right">{formatCurrency(booking.taxes || 0)}</td>
                           </tr>
-                          
+
                           {/* Total */}
                           <tr className="bg-gray-50">
-                            <td colSpan={3} className="border border-gray-300 p-3 text-right font-bold text-lg">Grand Total:</td>
-                            <td className="border border-gray-300 p-3 text-right font-bold text-lg text-[#005357]">{formatCurrency((booking as any).grand_total || (booking.total_amount + (booking.taxes || 0)))}</td>
+                            <td colSpan={3} className="border border-gray-200 p-3 text-right font-bold text-lg">Grand Total:</td>
+                            <td className="border border-gray-200 p-3 text-right font-bold text-lg text-[#005357]">{formatCurrency((booking as any).grand_total || (booking.total_amount + (booking.taxes || 0)))}</td>
                           </tr>
                         </tbody>
                       </table>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
 import {
   PieChartIcon,
@@ -12,7 +12,6 @@ import {
   CreditCardIcon,
   ChevronDownIcon,
   FilterIcon,
-  ChevronDown,
   Building03Icon,
   Clock01Icon,
   Location01Icon,
@@ -22,95 +21,112 @@ import {
   Mail01Icon
 } from '@/lib/icons';
 
+// TypeScript interfaces for API responses
+interface ReportSummary {
+  totalBookings: number;
+  occupancyRate: number;
+  averageRevenue: number;
+  guestSatisfaction: number;
+  checkIns: number;
+  checkOuts: number;
+  pendingReservations: number;
+}
+
+interface AvailableReport {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  lastGenerated: string | null;
+  status: string;
+}
+
 export default function ReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('thisMonth');
   const [selectedReportType, setSelectedReportType] = useState('all');
+  const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
+  const [availableReports, setAvailableReports] = useState<AvailableReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Sample reports data
-  const reportSummary = {
-    totalBookings: 156,
-    occupancyRate: 78.5,
-    averageRevenue: 85600000,
-    guestSatisfaction: 4.7,
-    checkIns: 42,
-    checkOuts: 38,
-    pendingReservations: 23
-  };
+  const API_BASE_URL = process.env.NEXT_PUBLIC_HOTEL_API_URL || 'http://localhost:8000/api/hotel';
 
-  const availableReports = [
-    {
-      id: 'occupancy',
-      title: 'Laporan Okupansi',
-      description: 'Tingkat okupansi kamar harian, bulanan dan tahunan',
-      icon: BedIcon,
-      category: 'operations',
-      lastGenerated: '2024-08-28',
-      status: 'ready'
-    },
-    {
-      id: 'revenue',
-      title: 'Laporan Pendapatan',
-      description: 'Analisis pendapatan dari kamar, F&B, dan layanan tambahan',
-      icon: CreditCardIcon,
-      category: 'financial',
-      lastGenerated: '2024-08-28',
-      status: 'ready'
-    },
-    {
-      id: 'guest-analytics',
-      title: 'Analisis Tamu',
-      description: 'Demografi tamu, preferensi, dan pola booking',
-      icon: UserMultipleIcon,
-      category: 'guest',
-      lastGenerated: '2024-08-27',
-      status: 'ready'
-    },
-    {
-      id: 'staff-performance',
-      title: 'Performa Karyawan',
-      description: 'Evaluasi kinerja dan produktivitas karyawan',
-      icon: Location01Icon,
-      category: 'hr',
-      lastGenerated: '2024-08-26',
-      status: 'generating'
-    },
-    {
-      id: 'satisfaction',
-      title: 'Survei Kepuasan',
-      description: 'Rating dan review tamu, analisis feedback',
-      icon: SparklesIcon,
-      category: 'guest',
-      lastGenerated: '2024-08-25',
-      status: 'ready'
-    },
-    {
-      id: 'maintenance',
-      title: 'Laporan Maintenance',
-      description: 'Status pemeliharaan fasilitas dan equipment',
-      icon: PieChartIcon,
-      category: 'operations',
-      lastGenerated: '2024-08-28',
-      status: 'ready'
-    },
-    {
-      id: 'inventory',
-      title: 'Laporan Inventaris',
-      description: 'Stock amenities, supplies, dan kebutuhan operasional',
-      icon: Building03Icon,
-      category: 'operations',
-      lastGenerated: '2024-08-27',
-      status: 'ready'
-    },
-    {
-      id: 'tax',
-      title: 'Laporan Pajak',
-      description: 'Pajak hotel, PPN, dan kewajiban perpajakan',
-      icon: File01Icon,
-      category: 'financial',
-      lastGenerated: '2024-08-20',
-      status: 'outdated'
+  // Fetch report summary and available reports
+  useEffect(() => {
+    const fetchReportsData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Fetch summary
+        const summaryResponse = await fetch(
+          `${API_BASE_URL}/reports/summary/?period=${selectedPeriod}`,
+          {
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (!summaryResponse.ok) {
+          throw new Error('Gagal memuat ringkasan laporan');
+        }
+
+        const summaryData = await summaryResponse.json();
+        // Map snake_case to camelCase
+        setReportSummary({
+          totalBookings: summaryData.total_bookings,
+          occupancyRate: summaryData.occupancy_rate,
+          averageRevenue: summaryData.average_revenue,
+          guestSatisfaction: summaryData.guest_satisfaction,
+          checkIns: summaryData.check_ins,
+          checkOuts: summaryData.check_outs,
+          pendingReservations: summaryData.pending_reservations
+        });
+
+        // Fetch available reports
+        const reportsResponse = await fetch(
+          `${API_BASE_URL}/reports/available/`,
+          {
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (!reportsResponse.ok) {
+          throw new Error('Gagal memuat daftar laporan');
+        }
+
+        const reportsData = await reportsResponse.json();
+        setAvailableReports(reportsData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+        console.error('Error fetching reports data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReportsData();
+  }, [selectedPeriod, API_BASE_URL]);
+
+  // Icon mapping for report types
+  const getReportIcon = (reportId: string) => {
+    switch (reportId) {
+      case 'occupancy': return BedIcon;
+      case 'revenue': return CreditCardIcon;
+      case 'guest-analytics': return UserMultipleIcon;
+      case 'staff-performance': return Location01Icon;
+      case 'satisfaction': return SparklesIcon;
+      case 'maintenance': return PieChartIcon;
+      case 'inventory': return Building03Icon;
+      case 'tax': return File01Icon;
+      default: return File01Icon;
     }
-  ];
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -161,6 +177,49 @@ export default function ReportsPage() {
     return report.category === selectedReportType;
   });
 
+  // Loading state
+  if (loading) {
+    return (
+      <OfficeLayout>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Laporan & Analitik</h1>
+            <p className="text-gray-600 mt-2">Dashboard laporan komprehensif untuk analisis performa hotel</p>
+          </div>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-[#005357] border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p className="text-gray-600 mt-4">Memuat data laporan...</p>
+            </div>
+          </div>
+        </div>
+      </OfficeLayout>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <OfficeLayout>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Laporan & Analitik</h1>
+            <p className="text-gray-600 mt-2">Dashboard laporan komprehensif untuk analisis performa hotel</p>
+          </div>
+          <div className="bg-red-50 border border-red-200 p-6 text-center">
+            <p className="text-red-800 font-medium">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 bg-red-600 text-white px-4 py-2 text-sm font-medium hover:bg-red-700 transition-colors"
+            >
+              Muat Ulang
+            </button>
+          </div>
+        </div>
+      </OfficeLayout>
+    );
+  }
+
   return (
     <OfficeLayout>
       <div className="space-y-6">
@@ -171,89 +230,91 @@ export default function ReportsPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Total Booking</h3>
-                  <p className="text-sm text-gray-600 mt-1">Bulan ini</p>
+        {reportSummary && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Total Booking</h3>
+                    <p className="text-sm text-gray-600 mt-1">Bulan ini</p>
+                  </div>
+                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                    <Calendar01Icon className="h-4 w-4 text-white" />
+                  </div>
                 </div>
-                <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <Calendar01Icon className="h-4 w-4 text-white" />
+              </div>
+              <div className="p-4 bg-gray-50">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-[#005357]">{reportSummary.totalBookings}</div>
+                  <div className="text-sm text-gray-600">reservasi</div>
                 </div>
               </div>
             </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357]">{reportSummary.totalBookings}</div>
-                <div className="text-sm text-gray-600">reservasi</div>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Tingkat Okupansi</h3>
-                  <p className="text-sm text-gray-600 mt-1">Rata-rata bulan ini</p>
+            <div className="bg-white border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Tingkat Okupansi</h3>
+                    <p className="text-sm text-gray-600 mt-1">Rata-rata bulan ini</p>
+                  </div>
+                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                    <PackageIcon className="h-4 w-4 text-white" />
+                  </div>
                 </div>
-                <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <PackageIcon className="h-4 w-4 text-white" />
+              </div>
+              <div className="p-4 bg-gray-50">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-[#005357]">{reportSummary.occupancyRate}%</div>
+                  <div className="text-sm text-gray-600">okupansi</div>
                 </div>
               </div>
             </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357]">{reportSummary.occupancyRate}%</div>
-                <div className="text-sm text-gray-600">okupansi</div>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Rata-rata Pendapatan</h3>
-                  <p className="text-sm text-gray-600 mt-1">Per hari</p>
+            <div className="bg-white border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Rata-rata Pendapatan</h3>
+                    <p className="text-sm text-gray-600 mt-1">Per hari</p>
+                  </div>
+                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                    <CreditCardIcon className="h-4 w-4 text-white" />
+                  </div>
                 </div>
-                <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <CreditCardIcon className="h-4 w-4 text-white" />
+              </div>
+              <div className="p-4 bg-gray-50">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-[#005357]">
+                    {formatCurrency(reportSummary.averageRevenue)}
+                  </div>
+                  <div className="text-sm text-gray-600">per hari</div>
                 </div>
               </div>
             </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#005357]">
-                  {formatCurrency(reportSummary.averageRevenue)}
-                </div>
-                <div className="text-sm text-gray-600">per hari</div>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Kepuasan Tamu</h3>
-                  <p className="text-sm text-gray-600 mt-1">Rating rata-rata</p>
-                </div>
-                <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                  <SparklesIcon className="h-4 w-4 text-white" />
+            <div className="bg-white border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Kepuasan Tamu</h3>
+                    <p className="text-sm text-gray-600 mt-1">Rating rata-rata</p>
+                  </div>
+                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                    <SparklesIcon className="h-4 w-4 text-white" />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357]">{reportSummary.guestSatisfaction}/5</div>
-                <div className="text-sm text-gray-600">bintang</div>
+              <div className="p-4 bg-gray-50">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-[#005357]">{reportSummary.guestSatisfaction}/5</div>
+                  <div className="text-sm text-gray-600">bintang</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Main Report Section */}
         <div className="bg-white border border-gray-200">
@@ -304,57 +365,68 @@ export default function ReportsPage() {
 
             {/* Reports Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredReports.map((report) => (
-                <div key={report.id} className="bg-white border border-gray-200">
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">{report.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{report.description}</p>
+              {filteredReports.length > 0 ? (
+                filteredReports.map((report) => {
+                  const ReportIcon = getReportIcon(report.id);
+                  return (
+                    <div key={report.id} className="bg-white border border-gray-200">
+                      <div className="p-6 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900">{report.title}</h3>
+                            <p className="text-sm text-gray-600 mt-1">{report.description}</p>
+                          </div>
+                          <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                            <ReportIcon className="h-4 w-4 text-white" />
+                          </div>
+                        </div>
                       </div>
-                      <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
-                        <report.icon className="h-4 w-4 text-white" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 bg-gray-50">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Kategori:</span>
-                        <span className="text-sm font-medium bg-gray-100 px-2 py-1 text-gray-800">
-                          {getCategoryLabel(report.category)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Update Terakhir:</span>
-                        <span className="text-sm text-gray-800">{formatDate(report.lastGenerated)}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Status:</span>
-                        <span className={`text-xs px-2 py-1 font-medium ${getStatusColor(report.status)}`}>
-                          {getStatusLabel(report.status)}
-                        </span>
-                      </div>
-                    </div>
 
-                    <div className="mt-4 flex space-x-2">
-                      <button 
-                        className="flex-1 bg-[#005357] text-white px-3 py-2 text-sm font-medium hover:bg-[#004347] transition-colors disabled:opacity-50"
-                        disabled={report.status === 'generating'}
-                      >
-                        Generate
-                      </button>
-                      <button 
-                        className="px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                        disabled={report.status !== 'ready'}
-                      >
-                        <ChevronDownIcon className="h-4 w-4" />
-                      </button>
+                      <div className="p-4 bg-gray-50">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Kategori:</span>
+                            <span className="text-sm font-medium bg-gray-100 px-2 py-1 text-gray-800">
+                              {getCategoryLabel(report.category)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Update Terakhir:</span>
+                            <span className="text-sm text-gray-800">
+                              {report.lastGenerated ? formatDate(report.lastGenerated) : 'Belum pernah'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Status:</span>
+                            <span className={`text-xs px-2 py-1 font-medium ${getStatusColor(report.status)}`}>
+                              {getStatusLabel(report.status)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex space-x-2">
+                          <button
+                            className="flex-1 bg-[#005357] text-white px-3 py-2 text-sm font-medium hover:bg-[#004347] transition-colors disabled:opacity-50"
+                            disabled={report.status === 'generating'}
+                          >
+                            Generate
+                          </button>
+                          <button
+                            className="px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            disabled={report.status !== 'ready'}
+                          >
+                            <ChevronDownIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  );
+                })
+              ) : (
+                <div className="col-span-full text-center py-12 text-gray-600">
+                  Tidak ada laporan tersedia untuk kategori ini
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

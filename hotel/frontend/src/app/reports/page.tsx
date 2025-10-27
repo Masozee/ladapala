@@ -202,7 +202,7 @@ const ReportsPage = () => {
       case 'elevator': return <Building03Icon className="h-4 w-4" />;
       case 'it/network': return <SparklesIcon className="h-4 w-4" />;
       case 'general': return <Wrench01Icon className="h-4 w-4" />;
-      case 'security': return <Shield className="h-4 w-4" />;
+      case 'security': return <Shield01Icon className="h-4 w-4" />;
       default: return <Settings02Icon className="h-4 w-4" />;
     }
   };
@@ -638,7 +638,7 @@ const ReportsPage = () => {
                         </div>
                         <div className="text-right">
                           <div className="flex items-center space-x-1">
-                            <Award className="h-4 w-4 text-yellow-500" />
+                            <SparklesIcon className="h-4 w-4 text-yellow-500" />
                             <span className="font-bold text-[#005357]">{tech.efficiency_score}%</span>
                           </div>
                           <div className="text-sm text-gray-600">★ {tech.customer_satisfaction}/5</div>

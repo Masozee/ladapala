@@ -283,8 +283,8 @@ class Command(BaseCommand):
                 check_in = current_date
                 check_out = check_in + timedelta(days=stay_duration)
 
-                # Skip if check_out is in the future
-                if check_out > today:
+                # Skip if check_out is in the future, unless it's today (for realistic "today's transactions")
+                if check_out > today and current_date < today:
                     continue
 
                 # Check if room is available for this date range
@@ -317,7 +317,8 @@ class Command(BaseCommand):
                 tax = subtotal * Decimal('0.11')  # 11% tax
                 total_amount = subtotal + tax
 
-                # Historical reservations are all checked out
+                # Historical reservations: CHECKED_OUT if in past, CHECKED_IN if today
+                reservation_status = 'CHECKED_IN' if check_in == today else 'CHECKED_OUT'
                 reservation = Reservation.objects.create(
                     reservation_number=reservation_number,
                     guest=guest,
@@ -326,7 +327,7 @@ class Command(BaseCommand):
                     check_out_date=check_out,
                     adults=adults,
                     children=children,
-                    status='CHECKED_OUT',
+                    status=reservation_status,
                     booking_source=booking_source,
                     total_amount=total_amount,
                 )
@@ -349,11 +350,13 @@ class Command(BaseCommand):
                 # Create payment(s)
                 # 80% pay in full, 20% split payments
                 if random.random() < 0.8:
-                    # Single payment
+                    # Single payment on check-in day
                     payment_method = weighted_choice(payment_methods)
-                    payment_date = timezone.make_aware(
-                        datetime.combine(check_in, datetime.min.time().replace(hour=15, minute=random.randint(0, 59)))
+                    payment_datetime = datetime(
+                        check_in.year, check_in.month, check_in.day,
+                        15, random.randint(0, 59), 0
                     )
+                    payment_date = timezone.make_aware(payment_datetime)
 
                     Payment.objects.create(
                         reservation=reservation,
@@ -368,12 +371,14 @@ class Command(BaseCommand):
                     deposit = total_amount * Decimal('0.5')
                     balance = total_amount - deposit
 
-                    # First payment (deposit)
+                    # First payment (deposit) - 1-14 days before check-in
+                    deposit_date = check_in - timedelta(days=random.randint(1, 14))
                     payment_method_1 = weighted_choice(payment_methods)
-                    payment_date_1 = timezone.make_aware(
-                        datetime.combine(check_in - timedelta(days=random.randint(1, 14)),
-                                       datetime.min.time().replace(hour=random.randint(9, 17), minute=random.randint(0, 59)))
+                    payment_datetime_1 = datetime(
+                        deposit_date.year, deposit_date.month, deposit_date.day,
+                        random.randint(9, 17), random.randint(0, 59), 0
                     )
+                    payment_date_1 = timezone.make_aware(payment_datetime_1)
 
                     Payment.objects.create(
                         reservation=reservation,
@@ -384,11 +389,13 @@ class Command(BaseCommand):
                         notes=f'Deposit payment for {guest.full_name} - Room {room.number}',
                     )
 
-                    # Second payment (balance)
+                    # Second payment (balance) - on check-out day
                     payment_method_2 = weighted_choice(payment_methods)
-                    payment_date_2 = timezone.make_aware(
-                        datetime.combine(check_out, datetime.min.time().replace(hour=11, minute=random.randint(0, 59)))
+                    payment_datetime_2 = datetime(
+                        check_out.year, check_out.month, check_out.day,
+                        11, random.randint(0, 59), 0
                     )
+                    payment_date_2 = timezone.make_aware(payment_datetime_2)
 
                     Payment.objects.create(
                         reservation=reservation,
@@ -496,7 +503,14 @@ class Command(BaseCommand):
                 if has_partial_payment:
                     deposit = total_amount * Decimal('0.3')  # 30% deposit
                     payment_method = weighted_choice(payment_methods)
-                    payment_date = timezone.now() - timedelta(days=random.randint(1, 7))
+
+                    # Payment made randomly in the past 7-21 days (spread across time)
+                    days_ago = random.randint(7, 21)
+                    payment_date_raw = today - timedelta(days=days_ago)
+                    payment_date = timezone.make_aware(
+                        datetime.combine(payment_date_raw,
+                                       datetime.min.time().replace(hour=random.randint(9, 17), minute=random.randint(0, 59)))
+                    )
 
                     Payment.objects.create(
                         reservation=reservation,

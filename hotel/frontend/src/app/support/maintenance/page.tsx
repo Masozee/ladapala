@@ -784,39 +784,39 @@ const MaintenancePage = () => {
         ) : (
           /* Table View */
           <div className="overflow-x-auto">
-            <table className="w-full bg-white border border-gray-200">
+            <table className="w-full border-collapse bg-white border border-gray-200">
               <thead className="bg-[#005357]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                       Request
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                       Category
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                       Assigned To
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                       Timeline
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                       Cost
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y-2 divide-gray-200">
+                <tbody className="bg-white">
                   {filteredRequests.map((request) => {
                     const timeDeadline = request.estimated_completion ? getTimeUntilDeadline(request.estimated_completion) : null;
                     return (
                       <tr key={request.id} className="hover:bg-gray-50">
                         {/* Request Info */}
-                        <td className="px-6 py-4">
+                        <td className="border border-gray-200 px-6 py-4">
                           <div>
                             <div className="font-bold text-gray-900">{request.ticket_number}</div>
                             <div className="text-sm text-gray-900 font-medium">{request.title}</div>
@@ -826,7 +826,7 @@ const MaintenancePage = () => {
                         </td>
 
                         {/* Category */}
-                        <td className="px-6 py-4">
+                        <td className="border border-gray-200 px-6 py-4">
                           <div className="flex items-center space-x-2">
                             {getCategoryIcon(request.category)}
                             <span className="text-sm text-gray-700">{getCategoryName(request.category)}</span>
@@ -834,7 +834,7 @@ const MaintenancePage = () => {
                         </td>
 
                         {/* Status */}
-                        <td className="px-6 py-4">
+                        <td className="border border-gray-200 px-6 py-4">
                           <div className="space-y-1">
                             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
                               {request.status.replace('_', ' ')}
@@ -846,7 +846,7 @@ const MaintenancePage = () => {
                         </td>
 
                         {/* Assigned To */}
-                        <td className="px-6 py-4">
+                        <td className="border border-gray-200 px-6 py-4">
                           <div className="text-sm">
                             {request.assigned_to ? (
                               <div className="text-gray-900 font-medium">{request.assigned_to}</div>
@@ -857,7 +857,7 @@ const MaintenancePage = () => {
                         </td>
 
                         {/* Timeline */}
-                        <td className="px-6 py-4">
+                        <td className="border border-gray-200 px-6 py-4">
                           <div className="space-y-1 text-xs">
                             <div className="text-gray-600">
                               Created: {formatDateTime(request.created_at)}
@@ -876,7 +876,7 @@ const MaintenancePage = () => {
                         </td>
 
                         {/* Cost */}
-                        <td className="px-6 py-4">
+                        <td className="border border-gray-200 px-6 py-4">
                           <div className="text-right">
                             <div className="text-sm font-bold text-[#005357]">
                               {request.estimated_cost ? formatCurrency(request.estimated_cost) : 'TBD'}
@@ -890,7 +890,7 @@ const MaintenancePage = () => {
                         </td>
 
                         {/* Actions */}
-                        <td className="px-6 py-4">
+                        <td className="border border-gray-200 px-6 py-4">
                           <div className="flex space-x-2">
                             <Link 
                               href={`/maintenance/${request.id}`}

@@ -23,7 +23,8 @@ import {
   Notification02Icon,
   File01Icon,
   ChevronDownIcon,
-  Loading03Icon
+  Loading03Icon,
+  Alert01Icon
 } from '@/lib/icons';
 
 export default function EmergencyPage() {
@@ -310,9 +311,9 @@ export default function EmergencyPage() {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'fire': return <SparklesIcon className="h-4 w-4" />;
-      case 'medical': return <Activity className="h-4 w-4" />;
+      case 'medical': return <UserCheckIcon className="h-4 w-4" />;
       case 'power': return <SparklesIcon className="h-4 w-4" />;
-      case 'security': return <Shield className="h-4 w-4" />;
+      case 'security': return <Shield01Icon className="h-4 w-4" />;
       case 'flood': return <PackageIcon className="h-4 w-4" />;
       default: return <Alert01Icon className="h-4 w-4" />;
     }

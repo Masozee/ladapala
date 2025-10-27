@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AppLayout, { HeaderActions } from '@/components/AppLayout';
+import OfficeLayout from '@/components/OfficeLayout';
 import { buildApiUrl } from '@/lib/config';
 import {
   Search02Icon,
@@ -27,7 +27,9 @@ import {
   PackageIcon,
   Clock01Icon,
   UserCheckIcon,
-  Cancel01Icon
+  Cancel01Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@/lib/icons';
 
 // Django API interfaces
@@ -211,19 +213,20 @@ const mapReservationStatus = (status: string): 'completed' | 'cancelled' | 'no_s
 };
 
 // API fetch functions
-const fetchGuests = async (): Promise<Guest[]> => {
+const fetchGuests = async (page: number = 1, limit: number = 20): Promise<{ guests: Guest[], count: number }> => {
   try {
-    const response = await fetch(buildApiUrl('hotel/guests/'), {
+    const offset = (page - 1) * limit;
+    const response = await fetch(buildApiUrl(`hotel/guests/?limit=${limit}&offset=${offset}`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data: DjangoApiResponse = await response.json();
     
     // Fetch reservations for each guest and calculate statistics
@@ -285,8 +288,11 @@ const fetchGuests = async (): Promise<Guest[]> => {
         };
       })
     );
-    
-    return guestsWithStats;
+
+    return {
+      guests: guestsWithStats,
+      count: data.count
+    };
   } catch (error) {
     console.error('Failed to fetch guests:', error);
     // Re-throw error so it can be handled in the component
@@ -522,6 +528,12 @@ const GuestsPage = () => {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize] = useState(20); // Show 20 guests per page
+  const totalPages = Math.ceil(totalCount / pageSize);
   
   // New Guest Modal states
   const [showNewGuestModal, setShowNewGuestModal] = useState(false);
@@ -640,7 +652,7 @@ const GuestsPage = () => {
       
       // Refresh guests list
       const updatedGuests = await fetchGuests();
-      setGuests(updatedGuests);
+      setGuests(updatedGuests.guests);
       
       // Reset form and close modal
       setNewGuest({
@@ -705,20 +717,22 @@ const GuestsPage = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchGuests();
-        setGuests(data);
+        const data = await fetchGuests(currentPage, pageSize);
+        setGuests(data.guests);
+        setTotalCount(data.count);
       } catch (err) {
         setError('Failed to load guests. Using offline data.');
         console.error('Error loading guests:', err);
         // Fallback to mock data on error
         setGuests(MOCK_GUESTS);
+        setTotalCount(MOCK_GUESTS.length);
       } finally {
         setLoading(false);
       }
     };
 
     loadGuests();
-  }, []);
+  }, [currentPage, pageSize]);
 
   const filteredGuests = guests.filter(guest => {
     if (searchTerm && !guest.full_name.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -774,15 +788,12 @@ const GuestsPage = () => {
   }, [activeDropdown]);
 
   return (
-    <AppLayout>
+    <OfficeLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Guest Database</h1>
-            <p className="text-gray-600 mt-2">Manage guest profiles, loyalty rewards, and stay history</p>
-          </div>
-          <HeaderActions />
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Guest Database</h1>
+          <p className="text-gray-600 mt-2">Manage guest profiles, loyalty rewards, and stay history</p>
         </div>
 
         {/* Filter Button & View Switcher */}
@@ -1204,37 +1215,37 @@ const GuestsPage = () => {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full border-collapse">
                 <thead className="bg-[#005357]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                       Guest
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                       Contact
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                       Rewards
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                       Stay Clock01Icon
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                       Spending
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                       Last Stay
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">
+                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {filteredGuests.map((guest) => (
                     <tr key={guest.id} className="hover:bg-gray-50">
                       {/* Guest Info */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                             <UserIcon className="h-5 w-5 text-gray-600" />
@@ -1257,7 +1268,7 @@ const GuestsPage = () => {
                       </td>
 
                       {/* Contact */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div className="text-sm space-y-1">
                           <div className="text-gray-900">{guest.email}</div>
                           <div className="text-gray-600 text-xs">{guest.phone}</div>
@@ -1265,7 +1276,7 @@ const GuestsPage = () => {
                       </td>
 
                       {/* Rewards */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         {guest.rewards ? (
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
@@ -1275,7 +1286,7 @@ const GuestsPage = () => {
                               </span>
                             </div>
                             <div className="text-xs text-gray-600">
-                              {guest.rewards.points_balance.toLocaleString()} pts
+                              {(guest.rewards.points_balance || 0).toLocaleString()} pts
                             </div>
                           </div>
                         ) : (
@@ -1284,7 +1295,7 @@ const GuestsPage = () => {
                       </td>
 
                       {/* Stay History */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div className="text-sm space-y-1">
                           <div className="flex items-center space-x-4">
                             <div className="text-center">
@@ -1304,24 +1315,24 @@ const GuestsPage = () => {
                       </td>
 
                       {/* Spending */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div className="text-right">
                           <div className="text-sm font-bold text-[#005357]">
-                            {formatCurrency(guest.total_spent)}
+                            {formatCurrency(guest.total_spent || 0)}
                           </div>
                           <div className="text-xs text-gray-600">total spent</div>
                         </div>
                       </td>
 
                       {/* Last Stay */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div className="text-sm text-gray-900">
                           {formatDate(guest.last_stay)}
                         </div>
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div className="relative">
                           <button 
                             onClick={() => setActiveDropdown(activeDropdown === guest.id ? null : guest.id)}
@@ -1386,6 +1397,73 @@ const GuestsPage = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="bg-white border-t border-gray-200 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{((currentPage - 1) * pageSize) + 1}</span> to{' '}
+                    <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> of{' '}
+                    <span className="font-medium">{totalCount}</span> guests
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-2 border border-gray-300 text-sm font-medium ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ChevronLeftIcon className="h-4 w-4" />
+                    </button>
+
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`px-3 py-2 border text-sm font-medium ${
+                              currentPage === pageNum
+                                ? 'bg-[#005357] text-white border-[#005357]'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-2 border border-gray-300 text-sm font-medium ${
+                        currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ChevronRightIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : null}
 
@@ -1630,7 +1708,7 @@ const GuestsPage = () => {
           </div>
         )}
       </div>
-    </AppLayout>
+    </OfficeLayout>
   );
 };
 

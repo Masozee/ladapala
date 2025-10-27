@@ -143,7 +143,7 @@ export default function FrontlinePage() {
 
           <div className="bg-white rounded-lg border border-gray-200 border p-6">
             <div className="flex items-center space-x-3 mb-4">
-              <Hotel className="h-6 w-6 text-purple-500" />
+              <HotelIcon className="h-6 w-6 text-purple-500" />
               <h2 className="text-lg font-semibold text-gray-900">Operations</h2>
             </div>
             <div className="space-y-3">

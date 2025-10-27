@@ -52,14 +52,12 @@ import {
   CancelCircleIcon,
   PackageIcon,
   ChevronLeftIcon,
-  Calculator,
-  Hash,
   Clock01Icon,
   UserCheckIcon,
   Delete02Icon,
-  Printer,
   MoreHorizontalIcon,
-  Search02Icon
+  Search02Icon,
+  PrinterIcon
 } from '@/lib/icons';
 
 interface LineItem {
@@ -82,6 +80,10 @@ interface Transaction {
   id: number;
   reservation: number;
   reservation_number: string;
+  guest_name: string;
+  room_number: string;
+  check_in_date: string;
+  check_out_date: string;
   amount: string;
   payment_method: string;
   payment_method_display: string;
@@ -111,15 +113,15 @@ const PaymentsPage = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [cashReceived, setCashReceived] = useState(0);
+  const [cardNumber, setCardNumber] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'completed' | 'failed'>('idle');
   const [showReceipt, setShowReceipt] = useState(false);
   const [isAlreadyPaid, setIsAlreadyPaid] = useState(false);
-  
+
   const paymentMethods: PaymentMethod[] = [
     { id: 'cash', name: 'Cash', icon: CreditCardIcon, enabled: true },
-    { id: 'credit_card', name: 'Credit Card', icon: CreditCardIcon, enabled: true },
-    { id: 'debit_card', name: 'Debit Card', icon: CreditCardIcon, enabled: true },
-    { id: 'bank_transfer', name: 'Bank Transfer', icon: File01Icon, enabled: true },
+    { id: 'debit_credit', name: 'Debit/Credit Card', icon: CreditCardIcon, enabled: true },
+    { id: 'qris', name: 'QRIS', icon: PackageIcon, enabled: true },
   ];
 
   const serviceCategories = [
@@ -257,12 +259,20 @@ const PaymentsPage = () => {
 
     try {
       // Prepare payment data
+      let notes = `Payment for ${guestName} - Room ${roomNumber}`;
+      if (selectedPaymentMethod === 'debit_credit' && cardNumber) {
+        // Mask card number, show only last 4 digits
+        const maskedCard = `****-****-****-${cardNumber.slice(-4)}`;
+        notes += ` | Card: ${maskedCard}`;
+      }
+
       const paymentData = {
         reservation: reservationId,
         amount: totalAmount,
         payment_method: selectedPaymentMethod.toUpperCase().replace(' ', '_'),
         status: 'COMPLETED',
-        notes: `Payment for ${guestName} - Room ${roomNumber}`,
+        payment_date: new Date().toISOString(),
+        notes: notes,
       };
 
       // Create payment record in backend
@@ -430,7 +440,7 @@ const PaymentsPage = () => {
                   onClick={handlePrintReceipt}
                   className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                 >
-                  <Printer className="h-4 w-4" />
+                  <PrinterIcon className="h-4 w-4" />
                   <span>Print Receipt</span>
                 </button>
               )}
@@ -657,6 +667,51 @@ const PaymentsPage = () => {
                     </div>
                   )}
 
+                  {/* Debit/Credit Card Input */}
+                  {selectedPaymentMethod === 'debit_credit' && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Card Number *
+                        </label>
+                        <input
+                          type="text"
+                          value={cardNumber}
+                          onChange={(e) => {
+                            // Only allow numbers and limit to 16 digits
+                            const value = e.target.value.replace(/\D/g, '').slice(0, 16);
+                            setCardNumber(value);
+                          }}
+                          className="w-full px-3 py-2 bg-gray-50 focus:ring-2 focus:ring-[#005357] focus:outline-none"
+                          placeholder="Enter card number (16 digits)"
+                          maxLength={16}
+                        />
+                        {cardNumber.length > 0 && cardNumber.length < 16 && (
+                          <p className="text-xs text-red-600 mt-1">
+                            Card number must be 16 digits ({cardNumber.length}/16)
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* QRIS Payment Info */}
+                  {selectedPaymentMethod === 'qris' && (
+                    <div className="space-y-3">
+                      <div className="p-4 bg-blue-50 border border-blue-200 text-center">
+                        <div className="w-48 h-48 mx-auto bg-white border-2 border-gray-300 flex items-center justify-center mb-3">
+                          <div className="text-gray-400 text-sm">QR Code</div>
+                        </div>
+                        <p className="text-sm text-blue-700 font-medium">
+                          Scan QR code with your mobile banking app
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Amount: {formatCurrency(totalAmount)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Already Paid Alert */}
                   {isAlreadyPaid && (
                     <div className="p-4 bg-green-50 border border-green-200 text-green-700 text-sm">
@@ -668,7 +723,13 @@ const PaymentsPage = () => {
                   {/* Payment Button */}
                   <button
                     onClick={handlePayment}
-                    disabled={!selectedPaymentMethod || paymentStatus === 'processing' || paymentStatus === 'completed' || isAlreadyPaid}
+                    disabled={
+                      !selectedPaymentMethod ||
+                      paymentStatus === 'processing' ||
+                      paymentStatus === 'completed' ||
+                      isAlreadyPaid ||
+                      (selectedPaymentMethod === 'debit_credit' && cardNumber.length !== 16)
+                    }
                     className="w-full flex items-center justify-center px-6 py-4 bg-[#005357] text-white font-bold hover:bg-[#004449] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isAlreadyPaid ? (
@@ -736,45 +797,48 @@ const PaymentsPage = () => {
                 ) : transactions.length === 0 ? (
                   <div className="p-8 text-center text-gray-500">No transactions found</div>
                 ) : (
-                  <table className="w-full">
+                  <table className="w-full border-collapse">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reservation</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guests</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reservation</th>
+                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guest</th>
+                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Room</th>
+                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-in</th>
+                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
+                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th className="border border-gray-300 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody>
                       {transactions
                         .filter(transaction => {
                           if (!searchQuery) return true;
                           const search = searchQuery.toLowerCase();
                           return (
                             transaction.reservation_number.toLowerCase().includes(search) ||
+                            transaction.guest_name?.toLowerCase().includes(search) ||
                             transaction.notes.toLowerCase().includes(search) ||
                             transaction.payment_method_display.toLowerCase().includes(search)
                           );
                         })
                         .map((transaction) => {
-                          // Extract guest name from notes (format: "Payment for [Guest Name] - Room [Number]")
-                          const guestMatch = transaction.notes.match(/Payment for (.+?) - Room/);
-                          const guestName = guestMatch ? guestMatch[1] : '-';
-
                           return (
                         <tr key={transaction.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 text-sm text-gray-900">
+                          <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">
                             {transaction.reservation_number}
                             <div className="text-xs text-gray-500">
                               {new Date(transaction.payment_date).toLocaleDateString('id-ID')} {new Date(transaction.payment_date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-900">{guestName}</td>
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{formatCurrency(parseFloat(transaction.amount))}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{transaction.payment_method_display}</td>
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{transaction.guest_name || '-'}</td>
+                          <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{transaction.room_number || '-'}</td>
+                          <td className="border border-gray-200 px-6 py-4 text-sm text-gray-600">
+                            {transaction.check_in_date ? new Date(transaction.check_in_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}
+                          </td>
+                          <td className="border border-gray-200 px-6 py-4 text-sm font-medium text-gray-900">{formatCurrency(parseFloat(transaction.amount))}</td>
+                          <td className="border border-gray-200 px-6 py-4 text-sm text-gray-600">{transaction.payment_method_display}</td>
+                          <td className="border border-gray-200 px-6 py-4">
                             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
                               transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
                               transaction.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
@@ -783,7 +847,7 @@ const PaymentsPage = () => {
                               {transaction.status_display}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right text-sm">
+                          <td className="border border-gray-200 px-6 py-4 text-right text-sm">
                             <div className="relative flex justify-center">
                               <button
                                 onClick={() => setOpenTransactionMenu(openTransactionMenu === transaction.id ? null : transaction.id)}
@@ -801,7 +865,7 @@ const PaymentsPage = () => {
                                     }}
                                     className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
                                   >
-                                    <Printer className="h-4 w-4" />
+                                    <PrinterIcon className="h-4 w-4" />
                                     <span>Reprint Receipt</span>
                                   </button>
                                   {transaction.status === 'COMPLETED' && (

@@ -254,7 +254,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
                   <p className="text-sm text-gray-100 mt-1">Statistik kinerja</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Award className="h-4 w-4 text-[#005357]" />
+                  <SparklesIcon className="h-4 w-4 text-[#005357]" />
                 </div>
               </div>
             </div>
@@ -275,7 +275,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
                   <div className="text-sm text-gray-600">Skor Performa</div>
                   <div className="flex justify-center mt-2">
                     {[...Array(5)].map((_, i) => (
-                      <Award key={i} className={`h-4 w-4 ${
+                      <SparklesIcon key={i} className={`h-4 w-4 ${
                         i < Math.floor(employee.performanceScore) ? 'text-yellow-400 fill-current' : 'text-gray-300'
                       }`} />
                     ))}
@@ -349,27 +349,27 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
           </div>
           <div className="p-6 bg-gray-50">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full border-collapse">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jam Masuk</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jam Keluar</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
+                    <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                    <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jam Masuk</th>
+                    <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jam Keluar</th>
+                    <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white">
                   {attendanceData.map((record, index) => (
                     <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 text-sm text-gray-900">
+                      <td className="border border-gray-200 px-4 py-4 text-sm text-gray-900">
                         {new Date(record.date).toLocaleDateString('id-ID', { 
                           weekday: 'long', 
                           day: 'numeric', 
                           month: 'long' 
                         })}
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="border border-gray-200 px-4 py-4">
                         <div className="flex items-center space-x-2">
                           {record.status === 'present' ? (
                             <UserCheckIcon className="h-4 w-4 text-green-600" />
@@ -385,13 +385,13 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
+                      <td className="border border-gray-200 px-4 py-4 text-sm text-gray-900">
                         {record.checkIn || '-'}
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
+                      <td className="border border-gray-200 px-4 py-4 text-sm text-gray-900">
                         {record.checkOut || '-'}
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="border border-gray-200 px-4 py-4">
                         <span className={`px-2 py-1 text-xs font-medium ${getShiftColor(record.shift)}`}>
                           {record.shift === 'morning' ? 'P' : 
                            record.shift === 'afternoon' ? 'S' : 

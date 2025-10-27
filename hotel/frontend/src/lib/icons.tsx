@@ -16,6 +16,7 @@ import {
   UserSettings01Icon as HugeUserSettings01,
   Time01Icon as HugeTime01,
   ArrowUp01Icon as HugeArrowUp01,
+  ArrowDown01Icon as HugeArrowDown01,
   QuestionIcon as HugeQuestion,
   Wrench01Icon as HugeWrench01,
   Shield01Icon as HugeShield01,
@@ -81,6 +82,7 @@ export const PackageIcon = createIconComponent(HugePackage);
 export const UserSettings01Icon = createIconComponent(HugeUserSettings01);
 export const Time01Icon = createIconComponent(HugeTime01);
 export const ArrowUp01Icon = createIconComponent(HugeArrowUp01);
+export const ArrowDown01Icon = createIconComponent(HugeArrowDown01);
 export const QuestionIcon = createIconComponent(HugeQuestion);
 export const Wrench01Icon = createIconComponent(HugeWrench01);
 export const Shield01Icon = createIconComponent(HugeShield01);
@@ -137,6 +139,9 @@ export const ChevronDownIcon = createIconComponent(HugeArrowUp01); // Rotate in 
 export const ChevronLeftIcon = createIconComponent(HugeArrowRight01); // Rotate in CSS if needed
 export const ChevronRightIcon = createIconComponent(HugeArrowRight01);
 
+// TrendingUpIcon using ArrowUp as alternative (trending icons not in free package)
+export const TrendingUpIcon = ArrowUp01Icon;
+
 // Set display names for debugging
 Building03Icon.displayName = 'Building03Icon';
 UserMultiple02Icon.displayName = 'UserMultiple02Icon';
@@ -153,6 +158,7 @@ PackageIcon.displayName = 'PackageIcon';
 UserSettings01Icon.displayName = 'UserSettings01Icon';
 Time01Icon.displayName = 'Time01Icon';
 ArrowUp01Icon.displayName = 'ArrowUp01Icon';
+ArrowDown01Icon.displayName = 'ArrowDown01Icon';
 QuestionIcon.displayName = 'QuestionIcon';
 Wrench01Icon.displayName = 'Wrench01Icon';
 Shield01Icon.displayName = 'Shield01Icon';

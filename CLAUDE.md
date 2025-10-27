@@ -44,6 +44,14 @@ hotel/
 - Use loading states while fetching real data from the backend
 - If you need test data, create proper seed scripts in Django management commands
 
+**CRITICAL: Backend Port Configuration**
+- **DO NOT change backend API ports in the code** - servers are run manually by the user
+- Both restaurant and hotel backends run on **port 8000** (user manages which one runs)
+- The documentation shows separate ports (resto: 8000, hotel: 8001) for reference only
+- All API calls should use `http://localhost:8000/api/` regardless of which backend is running
+- If code works on port 8001, it will work on port 8000 - the port number doesn't matter
+- Never modify existing port configurations unless explicitly requested by the user
+
 ## Development Commands
 
 ### Quick Start - Running Servers

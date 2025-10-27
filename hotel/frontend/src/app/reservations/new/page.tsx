@@ -12,7 +12,6 @@ import {
   Location01Icon,
   Call02Icon,
   Mail01Icon,
-  IdCard,
   ChevronLeftIcon,
   UserCheckIcon,
   Clock01Icon,

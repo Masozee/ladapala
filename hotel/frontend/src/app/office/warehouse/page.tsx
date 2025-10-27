@@ -1,602 +1,568 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   PackageIcon,
   AlertCircleIcon,
-  ArrowUp01Icon,
   Search02Icon,
   Add01Icon,
   PencilEdit02Icon,
-  CancelCircleIcon,
   EyeIcon,
   MoreHorizontalIcon,
-  PieChartIcon,
   Alert01Icon,
-  Delete02Icon
+  ArrowUp01Icon,
+  ArrowDown01Icon,
+  UserCheckIcon,
+  FilterIcon,
+  Cancel01Icon
 } from '@/lib/icons';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
+
+interface InventoryItem {
+  id: number;
+  name: string;
+  category: string;
+  current_stock: number;
+  minimum_stock: number;
+  maximum_stock: number | null;
+  unit_of_measurement: string;
+  last_restocked: string | null;
+  is_low_stock: boolean;
+  stock_status: string;
+  unit_price: string;
+  supplier: string | null;
+}
+
+type SortField = 'name' | 'current_stock' | 'status';
+type SortDirection = 'asc' | 'desc';
 
 export default function WarehousePage() {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  // Sample amenities data
-  const amenitiesStock = [
-    {
-      id: 1,
-      name: 'Handuk Mandi',
-      category: 'Linen',
-      currentStock: 150,
-      minStock: 50,
-      maxStock: 300,
-      unit: 'pcs',
-      lastUpdated: '2024-01-15',
-      status: 'good'
-    },
-    {
-      id: 2,
-      name: 'Sabun Batang',
-      category: 'Toiletries',
-      currentStock: 25,
-      minStock: 30,
-      maxStock: 200,
-      unit: 'pcs',
-      lastUpdated: '2024-01-14',
-      status: 'low'
-    },
-    {
-      id: 3,
-      name: 'Shampoo Kemasan Kecil',
-      category: 'Toiletries',
-      currentStock: 89,
-      minStock: 40,
-      maxStock: 180,
-      unit: 'btl',
-      lastUpdated: '2024-01-15',
-      status: 'good'
-    },
-    {
-      id: 4,
-      name: 'Seprai Putih',
-      category: 'Linen',
-      currentStock: 12,
-      minStock: 25,
-      maxStock: 100,
-      unit: 'set',
-      lastUpdated: '2024-01-13',
-      status: 'critical'
-    },
-    {
-      id: 5,
-      name: 'Tissue Kotak',
-      category: 'Amenities',
-      currentStock: 76,
-      minStock: 30,
-      maxStock: 150,
-      unit: 'kotak',
-      lastUpdated: '2024-01-15',
-      status: 'good'
-    },
-    {
-      id: 6,
-      name: 'Sikat Gigi',
-      category: 'Toiletries',
-      currentStock: 18,
-      minStock: 20,
-      maxStock: 100,
-      unit: 'pcs',
-      lastUpdated: '2024-01-14',
-      status: 'low'
-    }
-  ];
+  const [searchQuery, setSearchQuery] = useState('');
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  // Chart data for warehouse analytics
-  const stockLevelData = [
-    { category: 'Linen', good: 3, low: 1, critical: 1 },
-    { category: 'Toiletries', good: 1, low: 2, critical: 0 },
-    { category: 'Amenities', good: 1, low: 0, critical: 0 }
-  ];
-
-  const categoryDistribution = [
-    { name: 'Linen', value: 2, color: '#005357' },
-    { name: 'Toiletries', value: 3, color: '#2baf6a' },
-    { name: 'Amenities', value: 1, color: '#60a5fa' }
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'critical': return 'text-red-600 bg-red-50';
-      case 'low': return 'text-yellow-600 bg-yellow-50';
-      case 'good': return 'text-green-600 bg-green-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'critical': return 'Kritis';
-      case 'low': return 'Rendah';
-      case 'good': return 'Baik';
-      default: return 'Normal';
-    }
-  };
-
-  const categories = ['Semua', 'Linen', 'Toiletries', 'Amenities'];
-
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    fetchInventory();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = () => {
       if (openMenuId !== null) {
         setOpenMenuId(null);
       }
     };
 
-    if (openMenuId !== null) {
-      document.addEventListener('click', handleClickOutside);
-    }
-
+    document.addEventListener('click', handleClickOutside);
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [openMenuId]);
 
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(buildApiUrl('hotel/inventory/'), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch inventory');
+      }
+
+      const data = await response.json();
+      setItems(data.results || data);
+    } catch (err) {
+      console.error('Error fetching inventory:', err);
+      setError('Gagal memuat data inventaris');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStockStatusColor = (item: InventoryItem) => {
+    if (item.current_stock === 0) {
+      return 'bg-red-100 text-red-800';
+    } else if (item.is_low_stock) {
+      return 'bg-yellow-100 text-yellow-800';
+    } else if (item.maximum_stock && item.current_stock >= item.maximum_stock) {
+      return 'bg-blue-100 text-blue-800';
+    }
+    return 'bg-green-100 text-green-800';
+  };
+
+  const getStockStatusLabel = (item: InventoryItem) => {
+    if (item.current_stock === 0) {
+      return 'Habis';
+    } else if (item.is_low_stock) {
+      return 'Stok Rendah';
+    } else if (item.maximum_stock && item.current_stock >= item.maximum_stock) {
+      return 'Stok Penuh';
+    }
+    return 'Normal';
+  };
+
+  const getStockStatusIcon = (item: InventoryItem) => {
+    if (item.current_stock === 0) {
+      return AlertCircleIcon;
+    } else if (item.is_low_stock) {
+      return Alert01Icon;
+    } else if (item.maximum_stock && item.current_stock >= item.maximum_stock) {
+      return PackageIcon;
+    }
+    return UserCheckIcon;
+  };
+
+  const getStockPercentage = (item: InventoryItem): number => {
+    if (!item.maximum_stock) return 100;
+    return (item.current_stock / item.maximum_stock) * 100;
+  };
+
+  const getProgressBarColor = (percentage: number): string => {
+    if (percentage <= 30) return 'bg-red-500';
+    if (percentage <= 70) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const getRowHighlight = (item: InventoryItem): string => {
+    if (item.current_stock === 0) return 'bg-red-50';
+    if (item.is_low_stock) return 'bg-yellow-50';
+    return '';
+  };
+
+  const formatCurrency = (value: string | number): string => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(numValue);
+  };
+
+  const calculateStockValue = (item: InventoryItem): number => {
+    const unitPrice = typeof item.unit_price === 'string' ? parseFloat(item.unit_price) : item.unit_price;
+    return item.current_stock * unitPrice;
+  };
+
+  const getStatusSeverity = (item: InventoryItem): number => {
+    if (item.current_stock === 0) return 3;
+    if (item.is_low_stock) return 2;
+    if (item.maximum_stock && item.current_stock >= item.maximum_stock) return 1;
+    return 0;
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' ? ArrowUp01Icon : ArrowDown01Icon;
+  };
+
+  const filteredItems = items.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                 item.category.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
+
+    let matchesStatus = true;
+    if (statusFilter === 'Normal') {
+      matchesStatus = !item.is_low_stock && item.current_stock > 0;
+    } else if (statusFilter === 'Low Stock') {
+      matchesStatus = item.is_low_stock && item.current_stock > 0;
+    } else if (statusFilter === 'Out of Stock') {
+      matchesStatus = item.current_stock === 0;
+    }
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    if (!sortField) return 0;
+
+    let comparison = 0;
+    if (sortField === 'name') {
+      comparison = a.name.localeCompare(b.name);
+    } else if (sortField === 'current_stock') {
+      comparison = a.current_stock - b.current_stock;
+    } else if (sortField === 'status') {
+      comparison = getStatusSeverity(b) - getStatusSeverity(a);
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  const activeFilters = [];
+  if (categoryFilter !== 'All') activeFilters.push({ type: 'category', value: categoryFilter });
+  if (statusFilter !== 'All') activeFilters.push({ type: 'status', value: statusFilter });
+
+  const removeFilter = (type: string) => {
+    if (type === 'category') setCategoryFilter('All');
+    if (type === 'status') setStatusFilter('All');
+  };
+
+  const lowStockCount = items.filter(item => item.is_low_stock && item.current_stock > 0).length;
+  const criticalStockCount = items.filter(item => item.current_stock === 0).length;
+  const normalStockCount = items.length - lowStockCount - criticalStockCount;
+
   return (
     <OfficeLayout>
-      <div className="space-y-6">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#005357] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Total Item</h3>
-                  <p className="text-sm text-gray-100 mt-1">Total jenis barang</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <PackageIcon className="h-4 w-4 text-[#005357]" />
-                </div>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Warehouse Management</h1>
+        <p className="text-gray-600 mt-2">Manajemen stok barang dan inventaris hotel</p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Items</p>
+                <p className="text-3xl font-bold text-[#005357] mt-2">{items.length}</p>
               </div>
-            </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357] mb-2">{amenitiesStock.length}</div>
-                <div className="text-sm text-gray-600">jenis item</div>
-              </div>
+              <PackageIcon className="h-8 w-8 text-[#005357]" />
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#005357] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Stok Kritis</h3>
-                  <p className="text-sm text-gray-100 mt-1">Butuh segera diisi</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Alert01Icon className="h-4 w-4 text-red-500" />
-                </div>
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Stok Normal</p>
+                <p className="text-3xl font-bold text-green-600 mt-2">
+                  {normalStockCount}
+                </p>
               </div>
-            </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-red-500 mb-2">
-                  {amenitiesStock.filter(item => item.status === 'critical').length}
-                </div>
-                <div className="text-sm text-gray-600">item kritis</div>
-              </div>
+              <PackageIcon className="h-8 w-8 text-green-600" />
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#005357] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Stok Rendah</h3>
-                  <p className="text-sm text-gray-100 mt-1">Perlu diperhatikan</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <ArrowUp01Icon className="h-4 w-4 text-yellow-500" />
-                </div>
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Stok Rendah</p>
+                <p className="text-3xl font-bold text-yellow-600 mt-2">{lowStockCount}</p>
               </div>
-            </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-500 mb-2">
-                  {amenitiesStock.filter(item => item.status === 'low').length}
-                </div>
-                <div className="text-sm text-gray-600">item rendah</div>
-              </div>
+              <Alert01Icon className="h-8 w-8 text-yellow-600" />
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#005357] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Stok Baik</h3>
-                  <p className="text-sm text-gray-100 mt-1">Kondisi normal</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <ArrowUp01Icon className="h-4 w-4 text-green-500" />
-                </div>
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Kritis/Habis</p>
+                <p className="text-3xl font-bold text-red-600 mt-2">{criticalStockCount}</p>
               </div>
-            </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-500 mb-2">
-                  {amenitiesStock.filter(item => item.status === 'good').length}
-                </div>
-                <div className="text-sm text-gray-600">item baik</div>
-              </div>
+              <AlertCircleIcon className="h-8 w-8 text-red-600" />
             </div>
           </div>
+      </div>
+
+      {/* Search and Filters Row - Outside table */}
+      <div className="mb-4 flex items-center justify-end gap-3">
+        {/* Search */}
+        <div className="relative w-64">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search02Icon className="h-4 w-4 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Cari item..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-full"
+          />
         </div>
 
-        {/* Analytics Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Stock Level by Category Chart */}
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#005357] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Level Stok per Kategori</h3>
-                  <p className="text-sm text-gray-100 mt-1">Distribusi status stok berdasarkan kategori</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <PieChartIcon className="h-4 w-4 text-[#005357]" />
-                </div>
-              </div>
-            </div>
-            <div className="p-4 bg-gray-50">
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stockLevelData} barCategoryGap="20%">
-                    <XAxis 
-                      dataKey="category" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 12, fill: '#6B7280' }}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 12, fill: '#6B7280' }}
-                    />
-                    <Bar 
-                      dataKey="good" 
-                      fill="#10B981" 
-                      radius={[2, 2, 0, 0]}
-                      name="Baik"
-                    />
-                    <Bar 
-                      dataKey="low" 
-                      fill="#F59E0B" 
-                      radius={[2, 2, 0, 0]}
-                      name="Rendah"
-                    />
-                    <Bar 
-                      dataKey="critical" 
-                      fill="#EF4444" 
-                      radius={[2, 2, 0, 0]}
-                      name="Kritis"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex items-center justify-center mt-4">
-                <div className="flex items-center space-x-6 text-xs">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-green-500"></div>
-                    <span className="text-gray-600">Stok Baik</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-yellow-500"></div>
-                    <span className="text-gray-600">Stok Rendah</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-red-500"></div>
-                    <span className="text-gray-600">Stok Kritis</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Category Filter */}
+        <div className="relative w-48">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FilterIcon className="h-4 w-4 text-gray-400" />
           </div>
-
-          {/* Category Distribution Chart */}
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#005357] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Distribusi Kategori</h3>
-                  <p className="text-sm text-gray-100 mt-1">Pembagian item berdasarkan kategori</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <PieChartIcon className="h-4 w-4 text-[#005357]" />
-                </div>
-              </div>
-            </div>
-            <div className="p-4 bg-gray-50">
-              <div className="h-64 flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPieChart>
-                    <Pie
-                      data={categoryDistribution}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {categoryDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-4 space-y-2">
-                {categoryDistribution.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3" style={{ backgroundColor: item.color }}></div>
-                      <span className="text-gray-700">{item.name}</span>
-                    </div>
-                    <span className="text-gray-900 font-medium">{item.value} item</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-full appearance-none bg-white"
+          >
+            <option value="All">Kategori</option>
+            <option value="Guest Amenities">Guest Amenities</option>
+            <option value="Food & Beverage">F&B</option>
+            <option value="Cleaning Supplies">Cleaning</option>
+            <option value="Room Supplies">Room</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Office Supplies">Office</option>
+            <option value="Other">Other</option>
+          </select>
         </div>
 
-        {/* Inventory Management */}
+        {/* Status Filter */}
+        <div className="relative w-40">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FilterIcon className="h-4 w-4 text-gray-400" />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-full appearance-none bg-white"
+          >
+            <option value="All">Status</option>
+            <option value="Normal">Normal</option>
+            <option value="Low Stock">Rendah</option>
+            <option value="Out of Stock">Habis</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Active Filters Pills */}
+      {activeFilters.length > 0 && (
+        <div className="mb-4 flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-gray-600">Filter Aktif:</span>
+          {activeFilters.map((filter, index) => (
+            <div
+              key={index}
+              className="inline-flex items-center gap-1 bg-[#005357] text-white px-3 py-1 text-sm rounded-full"
+            >
+              <span>{filter.value}</span>
+              <button
+                onClick={() => removeFilter(filter.type)}
+                className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+              >
+                <Cancel01Icon className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="bg-white border border-gray-200 text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#005357]"></div>
+          <p className="text-gray-600 mt-4">Memuat data inventaris...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
+      {/* Inventory Table */}
+      {!loading && !error && (
         <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-white">Inventaris Amenitas</h3>
-                <p className="text-sm text-gray-100 mt-1">Monitoring stok barang amenitas hotel</p>
+                <h3 className="text-xl font-bold text-white">Daftar Inventaris</h3>
+                <p className="text-sm text-gray-100 mt-1">Manajemen stok barang hotel</p>
               </div>
-              <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <PackageIcon className="h-4 w-4 text-[#005357]" />
-              </div>
-            </div>
-          </div>
-          <div className="p-6 bg-gray-50">
-            <div className="flex items-center justify-between mb-6">
-              <button className="bg-[#005357] text-white px-4 py-2 flex items-center space-x-2 hover:bg-[#004147] transition-colors">
+              <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
                 <Add01Icon className="h-4 w-4" />
-                <span className="text-sm">Tambah Item</span>
+                <span>Tambah Item</span>
               </button>
             </div>
+          </div>
 
-            {/* Filters */}
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">Kategori:</span>
-                  <select className="px-3 py-1 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]">
-                    {categories.map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">Status:</span>
-                  <select className="px-3 py-1 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]">
-                    <option value="semua">Semua</option>
-                    <option value="critical">Kritis</option>
-                    <option value="low">Rendah</option>
-                    <option value="good">Baik</option>
-                  </select>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search02Icon className="h-4 w-4 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Cari nama item..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-64"
-                />
-              </div>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead className="bg-[#005357]">
+                <tr>
+                  <th
+                    onClick={() => handleSort('name')}
+                    className="border border-gray-300 text-left py-3 px-4 text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-[#006a6f] transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>Nama Item</span>
+                      {sortField === 'name' && getSortIcon('name') && (
+                        React.createElement(getSortIcon('name')!, { className: 'h-3 w-3' })
+                      )}
+                    </div>
+                  </th>
+                  <th className="border border-gray-300 text-left py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
+                    Kategori
+                  </th>
+                  <th
+                    onClick={() => handleSort('current_stock')}
+                    className="border border-gray-300 text-center py-3 px-4 text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-[#006a6f] transition-colors"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span>Stok</span>
+                      {sortField === 'current_stock' && getSortIcon('current_stock') && (
+                        React.createElement(getSortIcon('current_stock')!, { className: 'h-3 w-3' })
+                      )}
+                    </div>
+                  </th>
+                  <th className="border border-gray-300 text-center py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
+                    Min/Max
+                  </th>
+                  <th
+                    onClick={() => handleSort('status')}
+                    className="border border-gray-300 text-center py-3 px-4 text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-[#006a6f] transition-colors"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span>Status</span>
+                      {sortField === 'status' && getSortIcon('status') && (
+                        React.createElement(getSortIcon('status')!, { className: 'h-3 w-3' })
+                      )}
+                    </div>
+                  </th>
+                  <th className="border border-gray-300 text-right py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
+                    Harga
+                  </th>
+                  <th className="border border-gray-300 text-right py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
+                    Nilai Stok
+                  </th>
+                  <th className="border border-gray-300 text-left py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
+                    Terakhir Restock
+                  </th>
+                  <th className="border border-gray-300 text-center py-3 px-4 text-xs font-bold text-white uppercase tracking-wider w-[70px]">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {sortedItems.map((item) => {
+                  const StatusIcon = getStockStatusIcon(item);
+                  const stockPercentage = getStockPercentage(item);
+                  const progressColor = getProgressBarColor(stockPercentage);
+                  const rowHighlight = getRowHighlight(item);
 
-            {/* Inventory Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-[#005357]">
-                  <tr>
-                    <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                      Nama Item & Kategori
-                    </th>
-                    <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                      Stok Saat Ini
-                    </th>
-                    <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                      Batas Stok (Min/Max)
-                    </th>
-                    <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                      Status & Kondisi
-                    </th>
-                    <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                      Terakhir Update
-                    </th>
-                    <th className="text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                      Aksi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {amenitiesStock.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                      {/* Nama Item & Kategori */}
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="font-semibold text-gray-900">{item.name}</div>
-                          <div className="flex items-center mt-1">
-                            <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 font-medium">
-                              {item.category}
-                            </span>
-                          </div>
-                        </div>
+                  return (
+                    <tr key={item.id} className={`hover:bg-gray-100 transition-colors ${rowHighlight}`}>
+                      <td className="border border-gray-200 px-4 py-3">
+                        <div className="font-medium text-gray-900 text-sm">{item.name}</div>
+                        {item.supplier && (
+                          <div className="text-xs text-gray-500 mt-0.5">Supplier: {item.supplier}</div>
+                        )}
                       </td>
-
-                      {/* Stok Saat Ini */}
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="font-bold text-base text-gray-900">
-                            {item.currentStock} {item.unit}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            Unit: {item.unit}
-                          </div>
-                        </div>
+                      <td className="border border-gray-200 px-4 py-3">
+                        <span className="text-sm text-gray-600">{item.category}</span>
                       </td>
-
-                      {/* Batas Stok */}
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="text-sm text-gray-900">
-                            <span className="text-red-600 font-medium">Min: {item.minStock}</span>
+                      <td className="border border-gray-200 px-4 py-3">
+                        <div className="space-y-2">
+                          <div className="font-semibold text-gray-900 text-sm text-center">
+                            {item.current_stock} {item.unit_of_measurement}
                           </div>
-                          <div className="text-sm text-gray-900">
-                            <span className="text-green-600 font-medium">Max: {item.maxStock}</span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Status & Kondisi */}
-                      <td className="px-6 py-4">
-                        <div>
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium ${getStatusColor(item.status)}`}>
-                            {getStatusText(item.status)}
-                          </span>
-                          {item.status === 'critical' && (
-                            <div className="text-xs text-red-600 mt-1 font-medium">
-                              Perlu segera diisi ulang!
-                            </div>
-                          )}
-                          {item.status === 'low' && (
-                            <div className="text-xs text-yellow-600 mt-1 font-medium">
-                              Stok menipis
+                          {/* Progress Bar */}
+                          {item.maximum_stock && (
+                            <div className="w-full">
+                              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                <div
+                                  className={`h-full ${progressColor} transition-all duration-300`}
+                                  style={{ width: `${Math.min(stockPercentage, 100)}%` }}
+                                ></div>
+                              </div>
+                              <div className="text-xs text-gray-500 text-center mt-1">
+                                {stockPercentage.toFixed(0)}%
+                              </div>
                             </div>
                           )}
                         </div>
                       </td>
-
-                      {/* Terakhir Update */}
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="font-medium text-gray-900">{item.lastUpdated}</div>
-                          <div className="text-sm text-gray-500">
-                            {new Date(item.lastUpdated).toLocaleDateString('id-ID', { 
-                              weekday: 'short'
-                            })}
-                          </div>
+                      <td className="border border-gray-200 px-4 py-3 text-center">
+                        <div className="text-sm text-gray-600">
+                          {item.minimum_stock} / {item.maximum_stock || '∞'}
                         </div>
                       </td>
-
-                      {/* Aksi */}
-                      <td className="px-6 py-4">
-                        <div className="relative flex justify-end">
+                      <td className="border border-gray-200 px-4 py-3 text-center">
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded ${getStockStatusColor(item)}`}>
+                          <StatusIcon className="h-3.5 w-3.5" />
+                          {getStockStatusLabel(item)}
+                        </span>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3 text-right">
+                        <span className="text-sm font-medium text-gray-900">
+                          {formatCurrency(item.unit_price)}
+                        </span>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3 text-right">
+                        <span className="text-sm font-semibold text-[#005357]">
+                          {formatCurrency(calculateStockValue(item))}
+                        </span>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3">
+                        <span className="text-sm text-gray-600">
+                          {item.last_restocked
+                            ? new Date(item.last_restocked).toLocaleDateString('id-ID', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              })
+                            : 'Belum pernah'}
+                        </span>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3">
+                        <div className="flex items-center justify-center relative">
                           <button
-                            onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
-                            className="flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors rounded"
-                            title="More actions"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuId(openMenuId === item.id ? null : item.id);
+                            }}
+                            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors rounded border border-gray-300"
                           >
                             <MoreHorizontalIcon className="h-4 w-4" />
                           </button>
-                          
+
                           {openMenuId === item.id && (
-                            <>
-                              {/* Backdrop */}
-                              <div 
-                                className="fixed inset-0 z-10" 
-                                onClick={() => setOpenMenuId(null)}
-                              ></div>
-                              
-                              {/* Dropdown Menu */}
-                              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded border border-gray-300 z-20">
-                                <div className="py-1">
-                                  <button
-                                    onClick={() => {
-                                      console.log('View item:', item.name);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
-                                  >
-                                    <EyeIcon className="h-4 w-4" />
-                                    <span>Lihat Detail</span>
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      console.log('Edit item:', item.name);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
-                                  >
-                                    <PencilEdit02Icon className="h-4 w-4" />
-                                    <span>Edit Item</span>
-                                  </button>
-                                  
-                                  <div className="border-t border-gray-100 my-1"></div>
-                                  
-                                  {/* Stock Actions */}
-                                  <button
-                                    onClick={() => {
-                                      console.log('Add stock for:', item.name);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="flex items-center space-x-2 px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors w-full text-left"
-                                  >
-                                    <Add01Icon className="h-4 w-4" />
-                                    <span>Tambah Stok</span>
-                                  </button>
-                                  
-                                  {item.status === 'critical' && (
-                                    <button
-                                      onClick={() => {
-                                        console.log('Urgent restock for:', item.name);
-                                        setOpenMenuId(null);
-                                      }}
-                                      className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
-                                    >
-                                      <Alert01Icon className="h-4 w-4" />
-                                      <span>Restok Mendesak</span>
-                                    </button>
-                                  )}
-                                  
-                                  <div className="border-t border-gray-100 my-1"></div>
-                                  
-                                  <button
-                                    onClick={() => {
-                                      if (confirm(`Apakah Anda yakin ingin menghapus ${item.name}?`)) {
-                                        console.log('Delete item:', item.name);
-                                      }
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
-                                  >
-                                    <Delete02Icon className="h-4 w-4" />
-                                    <span>Hapus Item</span>
-                                  </button>
-                                </div>
-                              </div>
-                            </>
+                            <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 shadow-lg z-10 rounded">
+                              <button
+                                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors first:rounded-t last:rounded-b"
+                              >
+                                <EyeIcon className="h-4 w-4 mr-2 text-gray-400" />
+                                Lihat Detail
+                              </button>
+                              <button
+                                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                <PencilEdit02Icon className="h-4 w-4 mr-2 text-gray-400" />
+                                Update Stok
+                              </button>
+                              <button
+                                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors last:rounded-b"
+                              >
+                                <PencilEdit02Icon className="h-4 w-4 mr-2 text-gray-400" />
+                                Edit Item
+                              </button>
+                            </div>
                           )}
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
+                  );
+                })}
+              </tbody>
               </table>
             </div>
-          </div>
+
+          {/* No Results */}
+          {sortedItems.length === 0 && (
+            <div className="text-center py-12 bg-gray-50">
+              <PackageIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada item ditemukan</h3>
+              <p className="text-gray-600">Coba ubah kata kunci pencarian atau filter Anda.</p>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </OfficeLayout>
   );
 }

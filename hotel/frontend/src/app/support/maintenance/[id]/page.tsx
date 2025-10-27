@@ -628,7 +628,7 @@ const MaintenanceDetailPage = () => {
         )}
 
         {/* Tab Navigation */}
-        <div className="border-b border-gray-200">
+        <div className="">
           <nav className="-mb-px flex space-x-8">
             {[
               { id: 'details', name: 'Details', icon: File01Icon },
@@ -865,21 +865,21 @@ const MaintenanceDetailPage = () => {
                 </div>
                 <div className="p-4 bg-gray-50">
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full border-collapse">
                       <thead className="bg-gray-100">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Cost</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Installed</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part</th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Cost</th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Installed</th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="">
                         {request.parts_used.map((part) => (
                           <tr key={part.id} className="bg-white">
-                            <td className="px-4 py-4">
+                            <td className="border border-gray-200 px-4 py-4">
                               <div>
                                 <div className="font-medium text-gray-900">{part.part_name}</div>
                                 {part.warranty_period && (
@@ -890,11 +890,11 @@ const MaintenanceDetailPage = () => {
                                 )}
                               </div>
                             </td>
-                            <td className="px-4 py-4 text-sm text-gray-900">{part.quantity_used}</td>
-                            <td className="px-4 py-4 text-sm text-gray-900">{formatCurrency(part.unit_cost)}</td>
-                            <td className="px-4 py-4 text-sm text-gray-900">{part.supplier}</td>
-                            <td className="px-4 py-4 text-sm text-gray-900">{formatDateTime(part.installation_date)}</td>
-                            <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                            <td className="border border-gray-200 px-4 py-4 text-sm text-gray-900">{part.quantity_used}</td>
+                            <td className="border border-gray-200 px-4 py-4 text-sm text-gray-900">{formatCurrency(part.unit_cost)}</td>
+                            <td className="border border-gray-200 px-4 py-4 text-sm text-gray-900">{part.supplier}</td>
+                            <td className="border border-gray-200 px-4 py-4 text-sm text-gray-900">{formatDateTime(part.installation_date)}</td>
+                            <td className="border border-gray-200 px-4 py-4 text-sm font-medium text-gray-900">
                               {formatCurrency(part.unit_cost * part.quantity_used)}
                             </td>
                           </tr>

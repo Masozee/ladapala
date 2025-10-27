@@ -133,7 +133,7 @@ export default function CustomersPage() {
         <div className="bg-white rounded-lg border border-gray-200">
           {loading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#005357] mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 -2 border-[#005357] mx-auto"></div>
               <p className="mt-2 text-gray-500">Loading customers...</p>
             </div>
           ) : customers.length === 0 ? (
@@ -145,37 +145,37 @@ export default function CustomersPage() {
           ) : (
             <div className="overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full border-collapse">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Customer
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Contact
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Location
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Member Since
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="border border-gray-300 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white">
                     {customers.map((customer) => (
                       <tr
                         key={customer.id}
                         className="hover:bg-gray-50 cursor-pointer"
                         onClick={() => router.push(`/customers/${customer.id}`)}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="border border-gray-200 px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
                               customer.is_vip ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'
@@ -203,7 +203,7 @@ export default function CustomersPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="border border-gray-200 px-6 py-4 whitespace-nowrap">
                           <div className="space-y-1">
                             <div className="flex items-center text-sm text-gray-900">
                               <Mail01Icon className="h-3 w-3 mr-2 text-gray-400" />
@@ -215,7 +215,7 @@ export default function CustomersPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="border border-gray-200 px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
                             {customer.nationality || 'Not specified'}
                           </div>
@@ -226,7 +226,7 @@ export default function CustomersPage() {
                             </div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="border border-gray-200 px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center text-sm text-gray-500">
                             <Calendar01Icon className="h-3 w-3 mr-2 text-gray-400" />
                             {formatDate(customer.created_at)}
@@ -237,7 +237,7 @@ export default function CustomersPage() {
                             </div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="border border-gray-200 px-6 py-4 whitespace-nowrap">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             Active
                           </span>
@@ -247,7 +247,7 @@ export default function CustomersPage() {
                             </div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="border border-gray-200 px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex items-center justify-end space-x-2">
                             <button
                               onClick={(e) => {

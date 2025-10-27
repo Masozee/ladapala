@@ -18,7 +18,8 @@ import {
   BedIcon,
   Call02Icon,
   Mail01Icon,
-  AlertCircleIcon
+  AlertCircleIcon,
+  Alert01Icon
 } from '@/lib/icons';
 
 export default function AmenitiesPage() {
@@ -298,7 +299,7 @@ export default function AmenitiesPage() {
 
   const getCategoryIcon = (category: string) => {
     const cat = amenityCategories.find(c => c.id === category);
-    return cat ? cat.icon : Package;
+    return cat ? cat.icon : PackageIcon;
   };
 
   const getCategoryColor = (category: string) => {

@@ -1,8 +1,16 @@
 from django.db import models
-from .reservations import Reservation
 
 
-class Payment(models.Model):
+class Expense(models.Model):
+    CATEGORY_CHOICES = [
+        ('SALARY', 'Gaji Karyawan'),
+        ('UTILITIES', 'Utilitas'),
+        ('MAINTENANCE', 'Maintenance'),
+        ('MARKETING', 'Marketing'),
+        ('SUPPLIES', 'Supplies'),
+        ('OTHER', 'Lainnya'),
+    ]
+
     PAYMENT_METHOD_CHOICES = [
         ('CASH', 'Cash'),
         ('CREDIT_CARD', 'Credit Card'),
@@ -13,24 +21,24 @@ class Payment(models.Model):
 
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
-        ('COMPLETED', 'Completed'),
-        ('FAILED', 'Failed'),
+        ('PAID', 'Paid'),
         ('CANCELLED', 'Cancelled'),
-        ('REFUNDED', 'Refunded'),
     ]
 
-    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name='payments')
+    description = models.CharField(max_length=255)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     transaction_id = models.CharField(max_length=100, null=True, blank=True)
-    payment_date = models.DateTimeField()  # Removed auto_now_add to allow manual date setting
+    expense_date = models.DateTimeField()
+    reference = models.CharField(max_length=100, null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-payment_date']
+        ordering = ['-expense_date']
 
     def __str__(self):
-        return f'Payment {self.id} - {self.reservation.reservation_number}'
+        return f'{self.get_category_display()} - {self.description}'

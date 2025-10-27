@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   CreditCardIcon,
   ArrowUp01Icon,
@@ -14,8 +15,7 @@ import {
   PencilEdit02Icon,
   ChevronDownIcon,
   Calendar01Icon,
-  ChevronDown,
-  ChevronUp,
+  ChevronUpIcon,
   AlertCircleIcon,
   UserCheckIcon,
   Clock01Icon,
@@ -23,113 +23,138 @@ import {
   PieChartIcon
 } from '@/lib/icons';
 
+// Type definitions
+interface RevenueData {
+  total: number;
+  thisMonth: number;
+  lastMonth: number;
+  growth: number;
+  dailyAverage: number;
+}
+
+interface ExpenseCategory {
+  name: string;
+  amount: number;
+  percentage: number;
+}
+
+interface ExpenseData {
+  total: number;
+  categories: ExpenseCategory[];
+}
+
+interface ProfitData {
+  total: number;
+  margin: number;
+}
+
+interface Transaction {
+  id: string;
+  date: string;
+  time: string;
+  description: string;
+  guest: string | null;
+  type: 'revenue' | 'expense';
+  category: string;
+  amount: number;
+  paymentMethod: string;
+  status: string;
+  reference: string;
+}
+
+interface FinancialOverview {
+  revenue: RevenueData;
+  expenses: ExpenseData;
+  profit: ProfitData;
+}
+
+interface TransactionsResponse {
+  transactions: Transaction[];
+  count: number;
+}
+
 export default function FinancialPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('thisMonth');
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('all');
 
-  // Sample financial data
-  const revenueData = {
-    total: 2450680000, // IDR
-    thisMonth: 2450680000,
-    lastMonth: 2180500000,
-    growth: 12.4,
-    dailyAverage: 81689333
-  };
+  // State for API data
+  const [revenueData, setRevenueData] = useState<RevenueData | null>(null);
+  const [expenseData, setExpenseData] = useState<ExpenseData | null>(null);
+  const [profitData, setProfitData] = useState<ProfitData | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  const expenseData = {
-    total: 1654320000, // IDR
-    categories: [
-      { name: 'Gaji Karyawan', amount: 750000000, percentage: 45.3 },
-      { name: 'Utilitas', amount: 320000000, percentage: 19.3 },
-      { name: 'Maintenance', amount: 184320000, percentage: 11.1 },
-      { name: 'Marketing', amount: 165000000, percentage: 10.0 },
-      { name: 'Supplies', amount: 135000000, percentage: 8.2 },
-      { name: 'Lainnya', amount: 100000000, percentage: 6.1 }
-    ]
-  };
+  // Loading and error states
+  const [loadingOverview, setLoadingOverview] = useState(true);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [errorOverview, setErrorOverview] = useState<string | null>(null);
+  const [errorTransactions, setErrorTransactions] = useState<string | null>(null);
 
-  const transactions = [
-    {
-      id: 'TRX001',
-      date: '2024-08-28',
-      time: '14:30',
-      description: 'Room Payment - Suite 501',
-      guest: 'Liu Wei',
-      type: 'revenue',
-      category: 'Kamar',
-      amount: 4500000,
-      paymentMethod: 'Credit Card',
-      status: 'completed',
-      reference: 'RSV005'
-    },
-    {
-      id: 'TRX002',
-      date: '2024-08-28',
-      time: '13:15',
-      description: 'F&B Service - Restaurant',
-      guest: 'Maria Santos',
-      type: 'revenue',
-      category: 'F&B',
-      amount: 850000,
-      paymentMethod: 'Cash',
-      status: 'completed',
-      reference: 'FB-2024-0828-001'
-    },
-    {
-      id: 'TRX003',
-      date: '2024-08-28',
-      time: '10:00',
-      description: 'Electricity Bill - August',
-      guest: null,
-      type: 'expense',
-      category: 'Utilitas',
-      amount: 15500000,
-      paymentMethod: 'Bank Transfer',
-      status: 'completed',
-      reference: 'UTIL-2024-08'
-    },
-    {
-      id: 'TRX004',
-      date: '2024-08-28',
-      time: '09:45',
-      description: 'Room Payment - Deluxe 201',
-      guest: 'Ahmed Hassan',
-      type: 'revenue',
-      category: 'Kamar',
-      amount: 2400000,
-      paymentMethod: 'Bank Transfer',
-      status: 'pending',
-      reference: 'RSV003'
-    },
-    {
-      id: 'TRX005',
-      date: '2024-08-27',
-      time: '16:20',
-      description: 'Staff Salary - July',
-      guest: null,
-      type: 'expense',
-      category: 'Gaji',
-      amount: 125000000,
-      paymentMethod: 'Bank Transfer',
-      status: 'completed',
-      reference: 'PAYROLL-2024-07'
-    },
-    {
-      id: 'TRX006',
-      date: '2024-08-27',
-      time: '14:10',
-      description: 'Laundry Service',
-      guest: 'Emma Wilson',
-      type: 'revenue',
-      category: 'Layanan',
-      amount: 150000,
-      paymentMethod: 'Credit Card',
-      status: 'completed',
-      reference: 'SRV-2024-0827-003'
-    }
-  ];
+  // Fetch financial overview data
+  useEffect(() => {
+    const fetchOverview = async () => {
+      setLoadingOverview(true);
+      setErrorOverview(null);
+
+      try {
+        const url = buildApiUrl(`hotel/financial/overview/?period=${selectedPeriod}`);
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch financial overview');
+        }
+
+        const data: FinancialOverview = await response.json();
+        setRevenueData(data.revenue);
+        setExpenseData(data.expenses);
+        setProfitData(data.profit);
+      } catch (error) {
+        console.error('Error fetching overview:', error);
+        setErrorOverview('Gagal memuat data ringkasan keuangan');
+      } finally {
+        setLoadingOverview(false);
+      }
+    };
+
+    fetchOverview();
+  }, [selectedPeriod]);
+
+  // Fetch transactions data
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      setLoadingTransactions(true);
+      setErrorTransactions(null);
+
+      try {
+        const params = new URLSearchParams({
+          period: selectedPeriod,
+          status: selectedPaymentStatus,
+        });
+
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
+
+        const url = buildApiUrl(`hotel/financial/transactions/?${params.toString()}`);
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch transactions');
+        }
+
+        const data: TransactionsResponse = await response.json();
+        setTransactions(data.transactions);
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+        setErrorTransactions('Gagal memuat data transaksi');
+      } finally {
+        setLoadingTransactions(false);
+      }
+    };
+
+    fetchTransactions();
+  }, [selectedPeriod, selectedPaymentStatus, searchQuery]);
 
   const invoices = [
     {
@@ -213,17 +238,10 @@ export default function FinancialPage() {
   };
 
   const getTypeIcon = (type: string) => {
-    return type === 'revenue' ? 
-      <ArrowUp01Icon className="h-4 w-4 text-green-600" /> : 
+    return type === 'revenue' ?
+      <ArrowUp01Icon className="h-4 w-4 text-green-600" /> :
       <ArrowUp01Icon className="h-4 w-4 text-red-600" />;
   };
-
-  const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (transaction.guest && transaction.guest.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = selectedPaymentStatus === 'all' || transaction.status === selectedPaymentStatus;
-    return matchesSearch && matchesStatus;
-  });
 
   const TabButton = ({ tabId, label, icon: Icon }: { tabId: string; label: string; icon: any }) => (
     <button
@@ -271,9 +289,29 @@ export default function FinancialPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-6 bg-gray-50">
+                {/* Loading State */}
+                {loadingOverview && (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#005357]"></div>
+                    <p className="mt-4 text-gray-600">Memuat data keuangan...</p>
+                  </div>
+                )}
+
+                {/* Error State */}
+                {errorOverview && !loadingOverview && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 mb-6">
+                    <div className="flex items-center">
+                      <AlertCircleIcon className="h-5 w-5 mr-2" />
+                      <span>{errorOverview}</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Summary Cards */}
+                {!loadingOverview && !errorOverview && revenueData && expenseData && profitData && (
+                <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="bg-white border border-gray-200">
                     <div className="p-6 bg-[#005357] text-white">
@@ -339,10 +377,10 @@ export default function FinancialPage() {
                     <div className="p-4 bg-gray-50">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-[#005357] mb-2">
-                          {formatCurrency(revenueData.total - expenseData.total)}
+                          {formatCurrency(profitData.total)}
                         </div>
                         <div className="text-sm text-gray-600">
-                          {((revenueData.total - expenseData.total) / revenueData.total * 100).toFixed(1)}% margin
+                          {profitData.margin.toFixed(1)}% margin
                         </div>
                       </div>
                     </div>
@@ -453,6 +491,8 @@ export default function FinancialPage() {
                     </div>
                   </div>
                 </div>
+                </div>
+                )}
               </div>
             </div>
           )}
@@ -477,7 +517,7 @@ export default function FinancialPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-6 bg-gray-50">
                 {/* Filters */}
                 <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
@@ -521,35 +561,61 @@ export default function FinancialPage() {
                   </button>
                 </div>
 
+                {/* Loading State */}
+                {loadingTransactions && (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#005357]"></div>
+                    <p className="mt-4 text-gray-600">Memuat data transaksi...</p>
+                  </div>
+                )}
+
+                {/* Error State */}
+                {errorTransactions && !loadingTransactions && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 mb-6">
+                    <div className="flex items-center">
+                      <AlertCircleIcon className="h-5 w-5 mr-2" />
+                      <span>{errorTransactions}</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Transactions Table */}
+                {!loadingTransactions && !errorTransactions && (
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full border-collapse">
                     <thead className="bg-[#005357]">
                       <tr>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Transaksi
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Tipe & Kategori
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Jumlah
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Metode & Status
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Referensi
                         </th>
-                        <th className="text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Aksi
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
-                      {filteredTransactions.map((transaction) => (
+                    <tbody className="bg-white">
+                      {transactions.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="border border-gray-200 px-6 py-12 text-center text-gray-500">
+                            Tidak ada transaksi ditemukan
+                          </td>
+                        </tr>
+                      ) : (
+                      transactions.map((transaction) => (
                         <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div>
                               <div className="font-semibold text-gray-900">{transaction.description}</div>
                               <div className="text-sm text-gray-600">
@@ -561,7 +627,7 @@ export default function FinancialPage() {
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center space-x-2">
                               {getTypeIcon(transaction.type)}
                               <div>
@@ -573,13 +639,13 @@ export default function FinancialPage() {
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className={`font-bold text-lg ${getTypeColor(transaction.type)}`}>
                               {transaction.type === 'revenue' ? '+' : '-'}{formatCurrency(transaction.amount)}
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div>
                               <div className="text-sm font-medium text-gray-900">{transaction.paymentMethod}</div>
                               <span className={`inline-flex px-2 py-1 text-xs font-medium ${getStatusColor(transaction.status)}`}>
@@ -588,7 +654,7 @@ export default function FinancialPage() {
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="text-sm">
                               <div className="font-mono text-gray-900">{transaction.id}</div>
                               {transaction.reference && (
@@ -597,7 +663,7 @@ export default function FinancialPage() {
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center justify-end space-x-2">
                               <button 
                                 className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
@@ -605,7 +671,7 @@ export default function FinancialPage() {
                               >
                                 <EyeIcon className="h-4 w-4" />
                               </button>
-                              <button 
+                              <button
                                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded"
                                 title="Download Receipt"
                               >
@@ -614,10 +680,12 @@ export default function FinancialPage() {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      ))
+                      )}
                     </tbody>
                   </table>
                 </div>
+                )}
               </div>
             </div>
           )}
@@ -691,30 +759,30 @@ export default function FinancialPage() {
 
                 {/* Invoices Table */}
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full border-collapse">
                     <thead className="bg-[#005357]">
                       <tr>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Faktur
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Tamu & Reservasi
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Jumlah
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Status & Jatuh Tempo
                         </th>
-                        <th className="text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Aksi
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
+                    <tbody className="bg-white">
                       {invoices.map((invoice) => (
                         <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div>
                               <div className="font-semibold text-gray-900">{invoice.id}</div>
                               <div className="text-sm text-gray-600">
@@ -723,20 +791,20 @@ export default function FinancialPage() {
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div>
                               <div className="font-medium text-gray-900">{invoice.guest}</div>
                               <div className="text-sm text-gray-600">{invoice.reservation}</div>
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="font-bold text-lg text-gray-900">
                               {formatCurrency(invoice.amount)}
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div>
                               <span className={`inline-flex px-2 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
                                 {getStatusLabel(invoice.status)}
@@ -747,7 +815,7 @@ export default function FinancialPage() {
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center justify-end space-x-2">
                               <button 
                                 className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
@@ -797,7 +865,7 @@ export default function FinancialPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* Revenue Report */}
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-lg font-bold text-gray-900">Laporan Pendapatan</h3>
@@ -828,7 +896,7 @@ export default function FinancialPage() {
 
                   {/* Expense Report */}
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-lg font-bold text-gray-900">Laporan Pengeluaran</h3>
@@ -859,7 +927,7 @@ export default function FinancialPage() {
 
                   {/* Tax Report */}
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-lg font-bold text-gray-900">Laporan Pajak</h3>

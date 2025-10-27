@@ -29,7 +29,9 @@ import {
   ArrowUp01Icon,
   ChevronDownIcon,
   EyeIcon,
-  Cancel01Icon
+  Cancel01Icon,
+  Alert01Icon,
+  Delete02Icon
 } from '@/lib/icons';
 
 interface ComplaintCategory {
@@ -168,7 +170,7 @@ const ComplaintDetailPage = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [imageUploadSuccess, setImageUploadSuccess] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<File01Icon | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imageCaption, setImageCaption] = useState('');
   const [isEvidence, setIsEvidence] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -484,9 +486,9 @@ const ComplaintDetailPage = () => {
       id: 'created',
       type: 'complaint_created',
       title: 'Complaint Submitted',
-      description: `Guest ${complaint.guest?.full_name || 'Unknown'} submitted a complaint about "${complaint.title}"`,
+      description: `Guest ${complaint.guest_details?.full_name || complaint.guest_name || 'Unknown'} submitted a complaint about "${complaint.title}"`,
       timestamp: complaint.created_at,
-      user: complaint.guest?.full_name || 'Unknown',
+      user: complaint.guest_details?.full_name || complaint.guest_name || 'Unknown',
       user_role: 'Guest',
       icon: AlertCircleIcon,
       color: 'bg-red-100 text-red-800'

@@ -25,7 +25,8 @@ import {
   AlertCircleIcon,
   Alert01Icon,
   Cancel01Icon,
-  SparklesIcon
+  SparklesIcon,
+  Delete02Icon
 } from '@/lib/icons';
 import * as Dialog from '@radix-ui/react-dialog';
 

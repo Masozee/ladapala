@@ -263,7 +263,7 @@ export default function AdminPage() {
                 {/* System Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">Total Pengguna</h3>
@@ -283,7 +283,7 @@ export default function AdminPage() {
                   </div>
 
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">System Uptime</h3>
@@ -303,7 +303,7 @@ export default function AdminPage() {
                   </div>
 
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">Server Load</h3>
@@ -323,7 +323,7 @@ export default function AdminPage() {
                   </div>
 
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">Security Alerts</h3>
@@ -346,7 +346,7 @@ export default function AdminPage() {
                 {/* System Health */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">Status Sistem</h3>
@@ -392,7 +392,7 @@ export default function AdminPage() {
                   </div>
 
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">Resource Usage</h3>
@@ -505,30 +505,30 @@ export default function AdminPage() {
 
                 {/* Users Table */}
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full border-collapse">
                     <thead className="bg-[#005357]">
                       <tr>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Pengguna
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Role & Departemen
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Status & Login Terakhir
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Permissions
                         </th>
-                        <th className="text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Aksi
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
+                    <tbody className="bg-white">
                       {filteredUsers.map((user) => (
                         <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center">
                               <div className="w-10 h-10 bg-[#005357] flex items-center justify-center text-white font-bold">
                                 {user.name.split(' ').map(n => n[0]).join('')}
@@ -540,7 +540,7 @@ export default function AdminPage() {
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div>
                               <span className={`inline-flex px-2 py-1 text-xs font-medium ${getRoleColor(user.role)}`}>
                                 {getRoleLabel(user.role)}
@@ -549,7 +549,7 @@ export default function AdminPage() {
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div>
                               <span className={`inline-flex px-2 py-1 text-xs font-medium ${getStatusColor(user.status)}`}>
                                 {getStatusLabel(user.status)}
@@ -558,13 +558,13 @@ export default function AdminPage() {
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="text-sm text-gray-600">
                               {user.permissions.join(', ')}
                             </div>
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center justify-end space-x-2">
                               <button 
                                 className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
@@ -614,7 +614,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* System Maintenance */}
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">System Maintenance</h3>
@@ -649,7 +649,7 @@ export default function AdminPage() {
 
                   {/* Backup & Recovery */}
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">Backup & Recovery</h3>
@@ -684,7 +684,7 @@ export default function AdminPage() {
 
                   {/* System Configuration */}
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">System Config</h3>
@@ -740,7 +740,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Security Alerts */}
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">Security Alerts</h3>
@@ -773,7 +773,7 @@ export default function AdminPage() {
 
                   {/* Security Settings */}
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
+                    <div className="p-6 ">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900">Security Settings</h3>
@@ -834,44 +834,44 @@ export default function AdminPage() {
               <div className="p-6 bg-gray-50">
                 {/* Logs Table */}
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full border-collapse">
                     <thead className="bg-[#005357]">
                       <tr>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Timestamp
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Level
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Category
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Message
                         </th>
-                        <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           UserIcon
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
+                    <tbody className="bg-white">
                       {systemLogs.map((log) => (
                         <tr key={log.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="text-sm text-gray-900 font-mono">{log.timestamp}</div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <span className={`inline-flex px-2 py-1 text-xs font-medium ${getLogLevelColor(log.level)}`}>
                               {log.level.toUpperCase()}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="text-sm text-gray-900">{log.category}</div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="text-sm text-gray-900">{log.message}</div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="border border-gray-200 px-6 py-4">
                             <div className="text-sm text-gray-900">{log.user}</div>
                           </td>
                         </tr>

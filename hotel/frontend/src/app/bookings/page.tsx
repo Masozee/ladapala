@@ -143,8 +143,8 @@ const BookingsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [checkInDateFilter, setCheckInDateFilter] = useState('');
   const [checkOutDateFilter, setCheckOutDateFilter] = useState('');
-  const [sortField, setSortField] = useState<string>('created_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortField, setSortField] = useState<string>('check_in_date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showAddReservation, setShowAddReservation] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -457,7 +457,7 @@ const BookingsPage = () => {
         ...(roomFloorFilter && { floor: roomFloorFilter }),
         ...(roomStatusFilter && { status: roomStatusFilter }),
       };
-      
+
       const roomsData = await fetchRooms(page, filters);
       setRooms(roomsData);
       setRoomsCurrentPage(page);
@@ -465,6 +465,27 @@ const BookingsPage = () => {
       console.error('Error loading rooms:', error);
     } finally {
       setRoomsLoading(false);
+    }
+  };
+
+  // Load all reservations for calendar view (no date filtering)
+  const loadCalendarReservations = async () => {
+    try {
+      console.log('Loading all calendar reservations...');
+
+      // Load all reservations without date filtering
+      // This ensures calendar can show bookings across all date ranges as users navigate
+      const response = await fetch(
+        buildApiUrl(`hotel/reservations/?page_size=2000`)
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Loaded calendar reservations:', data.results?.length || 0);
+        setReservations(data.results || []);
+      }
+    } catch (error) {
+      console.error('Error loading calendar reservations:', error);
     }
   };
 
@@ -522,7 +543,8 @@ const BookingsPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to check in guest');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to check in guest');
       }
 
       const data = await response.json();
@@ -795,11 +817,13 @@ const BookingsPage = () => {
         // Load rooms for calendar view
         await loadRooms(1);
 
-        // Load reservations with current filters
+        // Load reservations with current filters for list view
         await loadReservations(1);
 
-        console.log('API Data loaded');
-        console.log('Calendar rooms data loaded for page 1');
+        // Also load calendar reservations on initial load
+        await loadCalendarReservations();
+
+        console.log('API Data loaded (list + calendar)');
       } catch (error) {
         console.error('Error loading API data:', error);
       } finally {
@@ -855,31 +879,10 @@ const BookingsPage = () => {
     }
   }, [roomTypeFilter, roomFloorFilter, roomStatusFilter]);
 
-  // Load reservations for calendar date range
-  const loadCalendarReservations = async () => {
-    try {
-      const startDate = selectedDateRange.start.toISOString().split('T')[0];
-      const endDate = selectedDateRange.end.toISOString().split('T')[0];
-
-      console.log('Loading calendar reservations for date range:', startDate, 'to', endDate);
-
-      const response = await fetch(
-        buildApiUrl(`hotel/reservations/?check_in_date__lte=${endDate}&check_out_date__gte=${startDate}&page_size=1000`)
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Loaded calendar reservations:', data.results?.length || 0);
-        setReservations(data.results || []);
-      }
-    } catch (error) {
-      console.error('Error loading calendar reservations:', error);
-    }
-  };
-
   // Reload rooms and reservations when switching to calendar view
   useEffect(() => {
-    if (viewMode === 'calendar' && !loading) {
+    console.log('useEffect triggered - viewMode:', viewMode, 'rooms.length:', rooms.length);
+    if (viewMode === 'calendar') {
       console.log('Switching to calendar view, loading rooms and reservations...');
       if (rooms.length === 0) {
         loadRooms(1);
@@ -887,14 +890,6 @@ const BookingsPage = () => {
       loadCalendarReservations();
     }
   }, [viewMode]);
-
-  // Reload reservations when date range changes in calendar view
-  useEffect(() => {
-    if (viewMode === 'calendar' && !loading) {
-      console.log('Date range changed, reloading reservations...');
-      loadCalendarReservations();
-    }
-  }, [selectedDateRange]);
 
   // Generate week dates starting from today
   const getWeekDates = () => {
@@ -1071,18 +1066,39 @@ const BookingsPage = () => {
     }
 
     reservationsForRoom.forEach(reservation => {
+      // Normalize dates to midnight for proper comparison
       const checkIn = new Date(reservation.check_in_date);
+      checkIn.setHours(0, 0, 0, 0);
       const checkOut = new Date(reservation.check_out_date);
-      
+      checkOut.setHours(0, 0, 0, 0);
+
       let startIndex = -1;
       let endIndex = -1;
-      
+
       dates.forEach((date, index) => {
-        if (date >= checkIn && date < checkOut) {
+        // Normalize calendar date to midnight for comparison
+        const normalizedDate = new Date(date);
+        normalizedDate.setHours(0, 0, 0, 0);
+
+        if (normalizedDate >= checkIn && normalizedDate < checkOut) {
           if (startIndex === -1) startIndex = index;
           endIndex = index;
         }
       });
+
+      // Debug log for Room 101
+      if (roomNumber === '101' && (startIndex !== -1 || endIndex !== -1)) {
+        console.log('Room 101 booking period found:', {
+          reservation: reservation.reservation_number,
+          guest: reservation.guest_name,
+          checkIn: reservation.check_in_date,
+          checkOut: reservation.check_out_date,
+          startIndex,
+          endIndex,
+          dateRangeStart: dates[0]?.toISOString().split('T')[0],
+          dateRangeEnd: dates[dates.length-1]?.toISOString().split('T')[0]
+        });
+      }
       
       if (startIndex !== -1 && endIndex !== -1) {
         periods.push({
@@ -1123,9 +1139,13 @@ const BookingsPage = () => {
               colSpan={spanLength}
               className={`py-2 px-1 text-center text-xs border-l border-gray-100 relative ${isToday ? 'bg-blue-50' : ''}`}
             >
-              <div 
-                className={`${color} text-white px-2 py-3 text-xs font-medium border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity relative`}
-                title={`${reservation.guest_name} (${reservation.reservation_number})\n${reservation.adults} adults${reservation.children > 0 ? `, ${reservation.children} children` : ''}\n${formatDate(reservation.check_in_date)} - ${formatDate(reservation.check_out_date)}\n${formatCurrency(reservation.total_amount)}`}
+              <div
+                className={`${color} text-white px-2 py-3 text-xs font-medium cursor-pointer hover:opacity-90 transition-opacity relative ${
+                  (reservation.status === 'checked_in' || reservation.status === 'CHECKED_IN') && !reservation.is_fully_paid
+                    ? 'border-2 border-orange-500 shadow-lg'
+                    : 'border border-gray-200'
+                }`}
+                title={`${reservation.guest_name} (${reservation.reservation_number})\n${reservation.adults} adults${reservation.children > 0 ? `, ${reservation.children} children` : ''}\n${formatDate(reservation.check_in_date)} - ${formatDate(reservation.check_out_date)}\n${formatCurrency(reservation.total_amount)}\n${reservation.is_fully_paid ? 'PAID' : 'UNPAID'}${(reservation.status === 'checked_in' || reservation.status === 'CHECKED_IN') && !reservation.is_fully_paid ? '\n⚠️ PAYMENT REQUIRED' : ''}`}
               >
                 <div className="font-semibold truncate">
                   {reservation.guest_name}
@@ -1133,8 +1153,19 @@ const BookingsPage = () => {
                 <div className="text-xs opacity-90 mt-1">
                   {reservation.nights}N • {reservation.adults}A{reservation.children > 0 ? `+${reservation.children}C` : ''}
                 </div>
-                <div className={`absolute top-1 right-1 px-1 py-0.5 text-xs ${getStatusColor(reservation.status)} bg-opacity-80`}>
-                  {reservation.status_display}
+                <div className="absolute top-1 right-1 flex flex-col gap-0.5 items-end">
+                  <div className={`px-1 py-0.5 text-xs ${getStatusColor(reservation.status)} bg-opacity-80`}>
+                    {reservation.status_display}
+                  </div>
+                  {reservation.is_fully_paid ? (
+                    <div className="px-1 py-0.5 text-xs bg-green-100 text-green-800 bg-opacity-80">
+                      Paid
+                    </div>
+                  ) : (
+                    <div className="px-1 py-0.5 text-xs bg-orange-100 text-orange-800 bg-opacity-80">
+                      Unpaid
+                    </div>
+                  )}
                 </div>
               </div>
             </td>
@@ -1280,7 +1311,10 @@ const BookingsPage = () => {
             <span>List View</span>
           </button>
           <button
-            onClick={() => setViewMode('calendar')}
+            onClick={() => {
+              console.log('Calendar View button clicked, switching to calendar mode');
+              setViewMode('calendar');
+            }}
             className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${
               viewMode === 'calendar'
                 ? 'bg-[#005357] text-white'
@@ -1435,18 +1469,15 @@ const BookingsPage = () => {
           
           
           <div className="overflow-x-auto">
-            <div style={{ minWidth: `${272 + (getCalendarDates().length * 100)}px` }}>
-              <table className="w-full">
+            <div style={{ minWidth: `${280 + (getCalendarDates().length * 100)}px` }}>
+              <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-[#005357]">
-                  <th className="text-left py-3 px-4 text-sm font-bold text-white uppercase tracking-wider w-[152px] sticky left-0 bg-[#005357] z-20">
-                    Room
-                  </th>
-                  <th className="text-center py-3 px-4 text-sm font-bold text-white uppercase tracking-wider w-[120px] sticky left-[152px] bg-[#005357] z-20 border border-gray-300" style={{boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'}}>
-                    Status
+                  <th className="border border-gray-300 text-left py-3 px-4 text-sm font-bold text-white uppercase tracking-wider sticky left-0 bg-[#005357] z-20" style={{width: '280px', boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'}}>
+                    Room / Status
                   </th>
                   {getCalendarDates().map((date) => (
-                    <th key={date.toISOString()} className="text-center py-3 px-2 text-xs font-bold text-white uppercase tracking-wider min-w-[100px]">
+                    <th key={date.toISOString()} className="border border-gray-300 text-center py-3 px-2 text-xs font-bold text-white uppercase tracking-wider min-w-[100px]">
                       <div>
                         <div>{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
                         <div>{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
@@ -1455,10 +1486,10 @@ const BookingsPage = () => {
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
+              <tbody className="bg-white">
                 {roomsLoading ? (
                   <tr>
-                    <td colSpan={getCalendarDates().length + 2} className="py-12 text-center text-gray-500">
+                    <td colSpan={getCalendarDates().length + 1} className="border border-gray-200 py-12 text-center text-gray-500">
                       <div className="flex flex-col items-center space-y-2">
                         <Loading03Icon className="h-8 w-8 animate-spin text-[#005357]" />
                         <span>Loading rooms...</span>
@@ -1467,29 +1498,30 @@ const BookingsPage = () => {
                   </tr>
                 ) : getFilteredRoomsAndReservations().filteredRooms.length === 0 ? (
                   <tr>
-                    <td colSpan={getCalendarDates().length + 2} className="py-12 text-center text-gray-500">
+                    <td colSpan={getCalendarDates().length + 1} className="border border-gray-200 py-12 text-center text-gray-500">
                       No rooms found
                     </td>
                   </tr>
                 ) : (
                   getFilteredRoomsAndReservations().filteredRooms.map((room) => (
                     <tr key={room.number} className="hover:bg-gray-50 transition-colors">
-                      <td className="py-4 px-4 font-medium text-gray-900 w-[152px] sticky left-0 bg-white border-r border-gray-200 z-10">
-                        <div>
-                          <div className="font-bold">Room {room.number}</div>
-                          <div className="text-sm text-gray-600">{room.type}</div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-center w-[120px] sticky left-[152px] bg-white border-r border-gray-200 z-10" style={{boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'}}>
-                        <div className="flex flex-col items-center space-y-1">
-                          <span className={`px-2 py-1 text-xs font-medium ${getRoomStatusColor(room.status || 'available')}`}>
-                            {getRoomStatusText(room.status || 'available')}
-                          </span>
-                          {room.maintenance_note && (
-                            <div className="text-xs text-gray-500 text-center max-w-[80px] truncate" title={room.maintenance_note}>
-                              {room.maintenance_note}
-                            </div>
-                          )}
+                      <td className="border border-gray-200 py-3 px-4 font-medium text-gray-900 sticky left-0 bg-white z-10" style={{width: '280px', boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'}}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-shrink-0">
+                            <div className="font-bold whitespace-nowrap">Room {room.number}</div>
+                            <div className="text-sm text-gray-600 whitespace-nowrap">{room.type}</div>
+                          </div>
+                          <div className="h-full w-px bg-gray-300 mx-2"></div>
+                          <div className="flex flex-col items-end space-y-1 flex-shrink-0">
+                            <span className={`px-2 py-1 text-xs font-medium whitespace-nowrap ${getRoomStatusColor(room.status || 'available')}`}>
+                              {getRoomStatusText(room.status || 'available')}
+                            </span>
+                            {room.maintenance_note && (
+                              <div className="text-xs text-gray-500 text-right max-w-[80px] truncate" title={room.maintenance_note}>
+                                {room.maintenance_note}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                       {renderRoomRow(room, getCalendarDates())}
@@ -1704,10 +1736,10 @@ const BookingsPage = () => {
           
           {/* Advanced Table */}
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full border-collapse">
               <thead className="bg-[#005357]">
                 <tr>
-                  <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                  <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                     <button 
                       className="flex items-center hover:text-gray-200 transition-colors"
                       onClick={() => handleSort('guest_name')}
@@ -1716,8 +1748,8 @@ const BookingsPage = () => {
                       {getSortIcon('guest_name')}
                     </button>
                   </th>
-                  <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                    <button 
+                  <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                    <button
                       className="flex items-center hover:text-gray-200 transition-colors"
                       onClick={() => handleSort('check_in_date')}
                     >
@@ -1725,7 +1757,7 @@ const BookingsPage = () => {
                       {getSortIcon('check_in_date')}
                     </button>
                   </th>
-                  <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                  <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                     <button
                       className="flex items-center hover:text-gray-200 transition-colors"
                       onClick={() => handleSort('total_guests')}
@@ -1734,8 +1766,8 @@ const BookingsPage = () => {
                       {getSortIcon('total_guests')}
                     </button>
                   </th>
-                  <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                    <button 
+                  <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                    <button
                       className="flex items-center hover:text-gray-200 transition-colors"
                       onClick={() => handleSort('room_number')}
                     >
@@ -1743,7 +1775,7 @@ const BookingsPage = () => {
                       {getSortIcon('room_number')}
                     </button>
                   </th>
-                  <th className="text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                  <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                     <button
                       className="flex items-center hover:text-gray-200 transition-colors"
                       onClick={() => handleSort('status')}
@@ -1752,24 +1784,31 @@ const BookingsPage = () => {
                       {getSortIcon('status')}
                     </button>
                   </th>
-                  <th className="text-center py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                  <th className="border border-gray-300 text-center py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
+              <tbody className="bg-white">
                 {reservations.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
+                    <td colSpan={7} className="border border-gray-200 px-6 py-12 text-center">
                       <Calendar01Icon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-500">No reservations found</p>
                     </td>
                   </tr>
                 ) : (
                   reservations.map((reservation) => (
-                    <tr key={reservation.id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={reservation.id}
+                      className={`hover:bg-gray-50 transition-colors ${
+                        (reservation.status === 'checked_in' || reservation.status === 'CHECKED_IN') && !reservation.is_fully_paid
+                          ? 'bg-orange-50 border-l-4 border-l-orange-500'
+                          : ''
+                      }`}
+                    >
                       {/* Guest & Reservation */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div>
                           <Link
                             href={`/bookings/${reservation.reservation_number}`}
@@ -1785,7 +1824,7 @@ const BookingsPage = () => {
                       </td>
 
                       {/* Dates & Duration */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div>
                           <p className="font-medium text-gray-900">{formatDate(reservation.check_in_date)}</p>
                           <p className="text-sm text-gray-500">to {formatDate(reservation.check_out_date)}</p>
@@ -1794,7 +1833,7 @@ const BookingsPage = () => {
                       </td>
 
                       {/* Total Guests */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div>
                           <p className="font-medium text-gray-900">
                             {reservation.total_guests || (reservation.adults + reservation.children)} guests
@@ -1806,7 +1845,7 @@ const BookingsPage = () => {
                       </td>
 
                       {/* Room Details */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div>
                           {reservation.room_number ? (
                             <div>
@@ -1820,21 +1859,25 @@ const BookingsPage = () => {
                       </td>
 
                       {/* Status */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div className="flex flex-col gap-1">
                           <span className={`inline-flex px-2 py-1 text-xs font-medium ${getStatusColor(reservation.status)} w-fit`}>
                             {reservation.status_display}
                           </span>
-                          {reservation.is_fully_paid && (
+                          {reservation.is_fully_paid ? (
                             <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded w-fit">
                               Paid
+                            </span>
+                          ) : (
+                            <span className="inline-flex px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded w-fit">
+                              Unpaid
                             </span>
                           )}
                         </div>
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-4">
+                      <td className="border border-gray-200 px-6 py-4">
                         <div className="relative flex justify-center">
                           <button
                             onClick={() => setOpenMenuId(openMenuId === reservation.id ? null : reservation.id)}
@@ -1884,8 +1927,8 @@ const BookingsPage = () => {
                                             await loadReservations(currentPage);
                                             setOpenMenuId(null);
                                             alert('Guest checked in successfully!');
-                                          } catch (error) {
-                                            alert('Failed to check in guest. Please try again.');
+                                          } catch (error: any) {
+                                            alert(error.message || 'Failed to check in guest. Please try again.');
                                           } finally {
                                             setLoading(false);
                                           }
@@ -1922,6 +1965,25 @@ const BookingsPage = () => {
                                         onClick={async () => {
                                           try {
                                             setLoading(true);
+
+                                            // Check payment status before allowing checkout
+                                            if (!reservation.is_fully_paid) {
+                                              const confirmCheckout = window.confirm(
+                                                'This reservation has not been fully paid. Would you like to process payment first?'
+                                              );
+
+                                              if (confirmCheckout) {
+                                                setLoading(false);
+                                                setOpenMenuId(null);
+                                                await handleNavigateToPayment(reservation);
+                                                return;
+                                              } else {
+                                                setLoading(false);
+                                                setOpenMenuId(null);
+                                                return;
+                                              }
+                                            }
+
                                             await checkOutGuest(reservation.reservation_number);
                                             // Refresh data
                                             await loadReservations(currentPage);
@@ -1939,11 +2001,18 @@ const BookingsPage = () => {
                                         <span>Check Out</span>
                                       </button>
                                       <button
-                                        onClick={() => setOpenMenuId(null)}
-                                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
+                                        onClick={async () => {
+                                          await handleNavigateToPayment(reservation);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className={`flex items-center space-x-2 px-4 py-2 text-sm transition-colors w-full text-left ${
+                                          !reservation.is_fully_paid
+                                            ? 'text-orange-600 hover:bg-orange-50 font-semibold'
+                                            : 'text-gray-700 hover:bg-gray-100'
+                                        }`}
                                       >
                                         <CreditCardIcon className="h-4 w-4" />
-                                        <span>Process Additional Charges</span>
+                                        <span>{reservation.is_fully_paid ? 'View Bill / Additional Charges' : 'Settle Bill (Unpaid)'}</span>
                                       </button>
                                     </>
                                   )}

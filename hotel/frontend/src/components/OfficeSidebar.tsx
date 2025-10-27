@@ -17,7 +17,6 @@ import {
   ArrowUp01Icon,
   Home,
   UserIcon,
-  PieChartIcon,
   Calendar01Icon,
   Shield01Icon,
   ChevronLeftIcon,
@@ -40,12 +39,10 @@ const OfficeSidebar = () => {
   ];
 
   const officeActions: MenuItem[] = [
-    { name: 'Analytics', icon: PieChartIcon, href: '/office/analytics' },
-    { name: 'Guest Database', icon: UserMultipleIcon, href: '/guests' },
+    { name: 'Guest Database', icon: UserMultipleIcon, href: '/office/guests' },
     { name: 'Employees', icon: UserSettings01Icon, href: '/office/employees' },
     { name: 'Financial', icon: CreditCardIcon, href: '/office/financial' },
     { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse' },
-    { name: 'Schedules', icon: Calendar01Icon, href: '/office/schedules' },
     { name: 'Reports', icon: File01Icon, href: '/office/reports' },
     { name: 'Administration', icon: Shield01Icon, href: '/office/admin' },
   ];
