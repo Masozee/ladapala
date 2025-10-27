@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import * as Separator from '@radix-ui/react-separator';
 import * as Tooltip from '@radix-ui/react-tooltip';
+import { buildApiUrl } from '@/lib/config';
 import {
   Wrench01Icon,
   BedIcon,
@@ -27,20 +28,56 @@ interface MenuItem {
   name: string;
   icon: React.ComponentType<{ className?: string }>;
   href: string;
-  badge?: string;
+  badge?: string | number;
 }
 
 const SupportSidebar = () => {
   const pathname = usePathname();
+  const [housekeepingCount, setHousekeepingCount] = useState<number>(0);
+
+  useEffect(() => {
+    // Fetch unfinished housekeeping tasks count
+    // Unfinished = all tasks except CLEAN status
+    const fetchHousekeepingCount = async () => {
+      try {
+        // Fetch all tasks and count those that are not CLEAN
+        const response = await fetch(
+          buildApiUrl('hotel/housekeeping-tasks/?page_size=1000'),
+          {
+            credentials: 'include', // Include session cookie for authentication
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const results = data.results || [];
+          // Count tasks that are not CLEAN (unfinished)
+          const unfinishedCount = results.filter(
+            (task: any) => task.status !== 'CLEAN'
+          ).length;
+          setHousekeepingCount(unfinishedCount);
+        } else {
+          console.error('Failed to fetch housekeeping count:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching housekeeping count:', error);
+      }
+    };
+
+    fetchHousekeepingCount();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchHousekeepingCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const mainNavItems: MenuItem[] = [
     { name: 'Support Dashboard', icon: HeadphonesIcon, href: '/support' },
   ];
 
   const supportActions: MenuItem[] = [
-    { name: 'Maintenance', icon: Wrench01Icon, href: '/support/maintenance', badge: '3' },
-    { name: 'Housekeeping', icon: BedIcon, href: '/support/housekeeping', badge: '7' },
-    { name: 'Amenities Request', icon: PackageIcon, href: '/support/amenities', badge: '2' },
+    { name: 'Maintenance', icon: Wrench01Icon, href: '/support/maintenance' },
+    { name: 'Housekeeping', icon: BedIcon, href: '/support/housekeeping', badge: housekeepingCount > 0 ? housekeepingCount : undefined },
+    { name: 'Amenities Request', icon: PackageIcon, href: '/support/amenities' },
     { name: 'Work Orders', icon: UserCheckIcon, href: '/support/workorders' },
     { name: 'Emergency', icon: AlertCircleIcon, href: '/support/emergency' },
     { name: 'Reports', icon: File01Icon, href: '/support/reports' },

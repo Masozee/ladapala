@@ -175,6 +175,26 @@ interface IndividualRoom {
   max_occupancy: number;
   is_active: boolean;
   notes?: string;
+  current_guest?: {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    check_in_date: string;
+    check_out_date: string;
+  } | null;
+  current_staff?: {
+    id: number;
+    name: string;
+    role: string;
+    task_type: string;
+    task_type_display: string;
+    task_status: string;
+    task_status_display: string;
+    task_number: string;
+    started_at: string;
+    priority: string;
+  } | null;
 }
 
 const RoomsPage = () => {
@@ -1344,6 +1364,9 @@ const RoomsPage = () => {
                           Status
                         </th>
                         <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
+                          Current Guest / Staff
+                        </th>
+                        <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                           Notes
                         </th>
                         <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
@@ -1376,6 +1399,47 @@ const RoomsPage = () => {
                             <span className={`inline-flex px-3 py-1 text-xs font-medium rounded ${getStatusColor(room.status.toLowerCase())}`}>
                               {room.status_display}
                             </span>
+                          </td>
+                          <td className="border border-gray-200 px-6 py-4">
+                            {room.current_guest ? (
+                              <div className="text-sm">
+                                <div className="flex items-center gap-2 text-gray-900 font-medium">
+                                  <UserCheckIcon className="h-4 w-4 text-blue-600" />
+                                  {room.current_guest.name}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {room.current_guest.phone}
+                                </div>
+                                <div className="text-xs text-gray-400 mt-0.5">
+                                  Until {new Date(room.current_guest.check_out_date).toLocaleDateString('id-ID')}
+                                </div>
+                              </div>
+                            ) : room.current_staff ? (
+                              <div className="text-sm">
+                                <div className="flex items-center gap-2 text-gray-900 font-medium">
+                                  <Settings02Icon className="h-4 w-4 text-orange-600" />
+                                  {room.current_staff.name}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {room.current_staff.task_type_display}
+                                  {room.current_staff.task_status && (
+                                    <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${
+                                      room.current_staff.task_status === 'CLEANING' ? 'bg-blue-100 text-blue-700' :
+                                      room.current_staff.task_status === 'INSPECTING' ? 'bg-purple-100 text-purple-700' :
+                                      room.current_staff.task_status === 'MAINTENANCE' ? 'bg-orange-100 text-orange-700' :
+                                      'bg-gray-100 text-gray-700'
+                                    }`}>
+                                      {room.current_staff.task_status_display}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-400 mt-0.5">
+                                  {room.current_staff.task_number}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-gray-400">-</span>
+                            )}
                           </td>
                           <td className="border border-gray-200 px-6 py-4">
                             <span className="text-sm text-gray-600">{room.notes || '-'}</span>

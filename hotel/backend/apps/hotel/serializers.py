@@ -391,9 +391,66 @@ class RoomListSerializer(serializers.ModelSerializer):
     base_price = serializers.DecimalField(source='room_type.base_price', max_digits=10, decimal_places=2, read_only=True)
     max_occupancy = serializers.IntegerField(source='room_type.max_occupancy', read_only=True)
 
+    # Current guest if occupied
+    current_guest = serializers.SerializerMethodField()
+
+    # Current staff working on room
+    current_staff = serializers.SerializerMethodField()
+
     class Meta:
         model = Room
-        fields = ['id', 'number', 'room_type_name', 'floor', 'status', 'status_display', 'base_price', 'max_occupancy', 'is_active']
+        fields = ['id', 'number', 'room_type_name', 'floor', 'status', 'status_display',
+                  'base_price', 'max_occupancy', 'is_active', 'current_guest', 'current_staff']
+
+    def get_current_guest(self, obj):
+        """Get current guest if room is occupied"""
+        from .models import Reservation
+
+        # Get active reservation (CHECKED_IN)
+        reservation = Reservation.objects.filter(
+            room=obj,
+            status='CHECKED_IN'
+        ).select_related('guest').first()
+
+        if reservation and reservation.guest:
+            return {
+                'id': reservation.guest.id,
+                'name': reservation.guest.full_name,
+                'email': reservation.guest.email,
+                'phone': reservation.guest.phone,
+                'check_in_date': reservation.check_in_date,
+                'check_out_date': reservation.check_out_date,
+            }
+        return None
+
+    def get_current_staff(self, obj):
+        """Get current staff working on room (housekeeping or maintenance)"""
+        from .models import HousekeepingTask
+        from apps.user.models import User
+
+        # Get active housekeeping task (not CLEAN)
+        # DIRTY = assigned but not started, CLEANING = in progress, INSPECTING = being inspected, MAINTENANCE = maintenance work
+        task = HousekeepingTask.objects.filter(
+            room=obj,
+            status__in=['DIRTY', 'CLEANING', 'INSPECTING', 'MAINTENANCE']
+        ).select_related('assigned_to').order_by('-created_at').first()
+
+        if task and task.assigned_to:
+            staff = task.assigned_to
+            return {
+                'id': staff.id,
+                'name': staff.get_full_name() or staff.email,
+                'role': staff.staff.role if hasattr(staff, 'staff') else None,
+                'task_type': task.task_type,
+                'task_type_display': task.get_task_type_display(),
+                'task_status': task.status,
+                'task_status_display': task.get_status_display(),
+                'task_number': task.task_number,
+                'started_at': task.actual_start_time,
+                'priority': task.priority,
+            }
+
+        return None
 
 
 class GuestListSerializer(serializers.ModelSerializer):

@@ -7,14 +7,19 @@ export const API_CONFIG = {
 
 // Helper function to build API URLs
 export const buildApiUrl = (endpoint: string): string => {
+  // If it's already a full URL, return as-is (for pagination URLs from API)
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    return endpoint;
+  }
+
   // Remove leading slash if present
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-  
+
   // If it's a hotel-specific endpoint, use hotel API URL
   if (cleanEndpoint.startsWith('hotel/')) {
     return `${API_CONFIG.BASE_URL}/${cleanEndpoint}`;
   }
-  
+
   // For other endpoints, use base API URL
   return `${API_CONFIG.BASE_URL}/${cleanEndpoint}`;
 };

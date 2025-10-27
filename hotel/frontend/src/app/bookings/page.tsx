@@ -121,9 +121,26 @@ interface Room {
   status: 'AVAILABLE' | 'OCCUPIED' | 'OUT_OF_ORDER' | 'CLEANING' | 'MAINTENANCE' | 'BLOCKED';
   status_display: string;
   is_active: boolean;
-  current_guest?: string;
-  checkout_time?: string;
-  checkin_time?: string;
+  current_guest?: {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    check_in_date: string;
+    check_out_date: string;
+  } | null;
+  current_staff?: {
+    id: number;
+    name: string;
+    role: string;
+    task_type: string;
+    task_type_display: string;
+    task_status: string;
+    task_status_display: string;
+    task_number: string;
+    started_at: string;
+    priority: string;
+  } | null;
 }
 
 const BookingsPage = () => {
@@ -428,7 +445,7 @@ const BookingsPage = () => {
         ordering: 'number' // Order rooms by room number
       });
       
-      const response = await fetch(buildApiUrl(`rooms/?${params}`));
+      const response = await fetch(buildApiUrl(`hotel/rooms/?${params}`));
       if (!response.ok) {
         throw new Error('Failed to fetch rooms');
       }
@@ -970,7 +987,8 @@ const BookingsPage = () => {
 
   const getReservationForRoomAndDate = (roomNumber: string, date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    
+    const today = new Date().toISOString().split('T')[0];
+
     return reservations.find(reservation => {
       const checkIn = new Date(reservation.check_in_date);
       const checkOut = new Date(reservation.check_out_date);
@@ -980,7 +998,13 @@ const BookingsPage = () => {
       const hasRoom = reservation.room_number === roomNumber ||
                       reservation.room_details?.number === roomNumber;
 
-      return hasRoom && currentDate >= checkIn && currentDate < checkOut;
+      // For current date, only show CHECKED_IN reservations (actively occupying the room)
+      // For future dates, show CONFIRMED reservations (upcoming bookings)
+      const isValidStatus = dateStr === today
+        ? reservation.status === 'CHECKED_IN'
+        : (reservation.status === 'CHECKED_IN' || reservation.status === 'CONFIRMED');
+
+      return hasRoom && currentDate >= checkIn && currentDate < checkOut && isValidStatus;
     });
   };
 

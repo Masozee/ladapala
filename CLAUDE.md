@@ -20,7 +20,7 @@ Hotel property management system with booking management, room tracking, guest s
 
 ```
 hotel/
-├── backend/       # Django REST API (Port 8001)
+├── backend/       # Django REST API (Port 8000) if resto not running
 └── frontend/      # Next.js App (Port 3000)
 ```
 
