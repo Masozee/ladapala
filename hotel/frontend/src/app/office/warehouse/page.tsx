@@ -236,9 +236,9 @@ export default function WarehousePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Items</p>
-                <p className="text-3xl font-bold text-[#005357] mt-2">{items.length}</p>
+                <p className="text-3xl font-bold text-[#4E61D3] mt-2">{items.length}</p>
               </div>
-              <PackageIcon className="h-8 w-8 text-[#005357]" />
+              <PackageIcon className="h-8 w-8 text-[#4E61D3]" />
             </div>
           </div>
 
@@ -287,7 +287,7 @@ export default function WarehousePage() {
             placeholder="Cari item..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-full"
+            className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-full"
           />
         </div>
 
@@ -299,7 +299,7 @@ export default function WarehousePage() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-full appearance-none bg-white"
+            className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-full appearance-none bg-white"
           >
             <option value="All">Kategori</option>
             <option value="Guest Amenities">Guest Amenities</option>
@@ -320,7 +320,7 @@ export default function WarehousePage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-full appearance-none bg-white"
+            className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-full appearance-none bg-white"
           >
             <option value="All">Status</option>
             <option value="Normal">Normal</option>
@@ -337,7 +337,7 @@ export default function WarehousePage() {
           {activeFilters.map((filter, index) => (
             <div
               key={index}
-              className="inline-flex items-center gap-1 bg-[#005357] text-white px-3 py-1 text-sm rounded-full"
+              className="inline-flex items-center gap-1 bg-[#4E61D3] text-white px-3 py-1 text-sm rounded-full"
             >
               <span>{filter.value}</span>
               <button
@@ -354,7 +354,7 @@ export default function WarehousePage() {
       {/* Loading State */}
       {loading && (
         <div className="bg-white border border-gray-200 text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#005357]"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E61D3]"></div>
           <p className="text-gray-600 mt-4">Memuat data inventaris...</p>
         </div>
       )}
@@ -369,13 +369,13 @@ export default function WarehousePage() {
       {/* Inventory Table */}
       {!loading && !error && (
         <div className="bg-white border border-gray-200">
-          <div className="p-6 bg-[#005357] text-white">
+          <div className="p-6 bg-[#4E61D3] text-white">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white">Daftar Inventaris</h3>
                 <p className="text-sm text-gray-100 mt-1">Manajemen stok barang hotel</p>
               </div>
-              <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
+              <button className="bg-white text-[#4E61D3] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
                 <Add01Icon className="h-4 w-4" />
                 <span>Tambah Item</span>
               </button>
@@ -384,7 +384,7 @@ export default function WarehousePage() {
 
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
-              <thead className="bg-[#005357]">
+              <thead className="bg-[#4E61D3]">
                 <tr>
                   <th
                     onClick={() => handleSort('name')}
@@ -495,7 +495,7 @@ export default function WarehousePage() {
                         </span>
                       </td>
                       <td className="border border-gray-200 px-4 py-3 text-right">
-                        <span className="text-sm font-semibold text-[#005357]">
+                        <span className="text-sm font-semibold text-[#4E61D3]">
                           {formatCurrency(calculateStockValue(item))}
                         </span>
                       </td>

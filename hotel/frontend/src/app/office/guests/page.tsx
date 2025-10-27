@@ -801,7 +801,7 @@ const GuestsPage = () => {
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setShowAdvancedFilter(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-[#4E61D3] text-white text-sm font-medium hover:bg-[#3D4EA8] transition-colors"
             >
               <Settings02Icon className="h-4 w-4" />
               <span>Advanced Filter</span>
@@ -827,7 +827,7 @@ const GuestsPage = () => {
                 onClick={() => setViewMode('card')}
                 className={`flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
                   viewMode === 'card' 
-                    ? 'bg-[#005357] text-white' 
+                    ? 'bg-[#4E61D3] text-white' 
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -838,7 +838,7 @@ const GuestsPage = () => {
                 onClick={() => setViewMode('table')}
                 className={`flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
                   viewMode === 'table' 
-                    ? 'bg-[#005357] text-white' 
+                    ? 'bg-[#4E61D3] text-white' 
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -860,7 +860,7 @@ const GuestsPage = () => {
                     <h2 className="text-xl font-bold text-gray-900">Advanced Filter</h2>
                     <p className="text-sm text-gray-600 mt-1">Find guests with specific criteria</p>
                   </div>
-                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                     <FilterIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
@@ -883,7 +883,7 @@ const GuestsPage = () => {
                             placeholder="Name, email, or phone..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                            className="w-full pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                           />
                         </div>
                       </div>
@@ -896,7 +896,7 @@ const GuestsPage = () => {
                           placeholder="Filter by country..."
                           value={filterCountry}
                           onChange={(e) => setFilterCountry(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                         />
                       </div>
 
@@ -906,7 +906,7 @@ const GuestsPage = () => {
                         <select
                           value={filterVIP === null ? 'all' : filterVIP.toString()}
                           onChange={(e) => setFilterVIP(e.target.value === 'all' ? null : e.target.value === 'true')}
-                          className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm appearance-none"
+                          className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm appearance-none"
                         >
                           <option value="all">All Guests</option>
                           <option value="true">VIP Only</option>
@@ -920,7 +920,7 @@ const GuestsPage = () => {
                         <select
                           value={filterTier}
                           onChange={(e) => setFilterTier(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm appearance-none"
+                          className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm appearance-none"
                         >
                           <option value="all">All Tiers</option>
                           <option value="Bronze">Bronze</option>
@@ -946,14 +946,14 @@ const GuestsPage = () => {
                             placeholder="Min spending"
                             value={minSpent}
                             onChange={(e) => setMinSpent(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                            className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                           />
                           <input
                             type="number"
                             placeholder="Max spending"
                             value={maxSpent}
                             onChange={(e) => setMaxSpent(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                            className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                           />
                         </div>
                       </div>
@@ -966,7 +966,7 @@ const GuestsPage = () => {
                           placeholder="Min stays"
                           value={minStays}
                           onChange={(e) => setMinStays(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                         />
                       </div>
 
@@ -978,13 +978,13 @@ const GuestsPage = () => {
                             type="date"
                             value={lastStayFrom}
                             onChange={(e) => setLastStayFrom(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                            className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                           />
                           <input
                             type="date"
                             value={lastStayTo}
                             onChange={(e) => setLastStayTo(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                            className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                           />
                         </div>
                       </div>
@@ -995,7 +995,7 @@ const GuestsPage = () => {
                         <select
                           value={hasAllergies === null ? 'all' : hasAllergies.toString()}
                           onChange={(e) => setHasAllergies(e.target.value === 'all' ? null : e.target.value === 'true')}
-                          className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm appearance-none"
+                          className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm appearance-none"
                         >
                           <option value="all">All Guests</option>
                           <option value="true">Has Allergies</option>
@@ -1023,7 +1023,7 @@ const GuestsPage = () => {
                     </button>
                     <button 
                       onClick={() => setShowAdvancedFilter(false)}
-                      className="px-6 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors"
+                      className="px-6 py-2 bg-[#4E61D3] text-white text-sm font-medium hover:bg-[#3D4EA8] transition-colors"
                     >
                       Apply Filters ({filteredGuests.length} guests)
                     </button>
@@ -1037,7 +1037,7 @@ const GuestsPage = () => {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005357] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4E61D3] mx-auto mb-4"></div>
             <p className="text-gray-600">Loading guests...</p>
           </div>
         )}
@@ -1082,7 +1082,7 @@ const GuestsPage = () => {
                       <div className="flex items-center space-x-3 mb-2">
                         <button 
                           onClick={() => router.push(`/guests/${guest.id}`)}
-                          className="text-xl font-bold text-gray-900 hover:text-[#005357] transition-colors text-left"
+                          className="text-xl font-bold text-gray-900 hover:text-[#4E61D3] transition-colors text-left"
                         >
                           {guest.full_name}
                         </button>
@@ -1108,7 +1108,7 @@ const GuestsPage = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                    <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                       <UserIcon className="h-4 w-4 text-white" />
                     </div>
                   </div>
@@ -1128,7 +1128,7 @@ const GuestsPage = () => {
                         </div>
                         <button 
                           onClick={() => router.push(`/guests/${guest.id}`)}
-                          className="text-xs bg-[#005357] text-white px-2 py-1 rounded hover:bg-[#004147]"
+                          className="text-xs bg-[#4E61D3] text-white px-2 py-1 rounded hover:bg-[#3D4EA8]"
                         >
                           View Points
                         </button>
@@ -1142,11 +1142,11 @@ const GuestsPage = () => {
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="text-center">
-                      <div className="text-lg font-bold text-[#005357]">{guest.total_stays || 0}</div>
+                      <div className="text-lg font-bold text-[#4E61D3]">{guest.total_stays || 0}</div>
                       <div className="text-xs text-gray-600">Stays</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-bold text-[#005357]">{guest.total_nights || 0}</div>
+                      <div className="text-lg font-bold text-[#4E61D3]">{guest.total_nights || 0}</div>
                       <div className="text-xs text-gray-600">Nights</div>
                     </div>
                   </div>
@@ -1178,7 +1178,7 @@ const GuestsPage = () => {
                       <EyeIcon className="h-3 w-3 inline mr-1" />
                       View Profile
                     </button>
-                    <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors">
+                    <button className="text-xs bg-[#4E61D3] text-white px-3 py-2 hover:bg-[#3D4EA8] transition-colors">
                       <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
                       PencilEdit02Icon
                     </button>
@@ -1205,10 +1205,10 @@ const GuestsPage = () => {
                       placeholder="Search guests..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-64 pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                      className="w-64 pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                     />
                   </div>
-                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                     <UserMultipleIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
@@ -1216,7 +1216,7 @@ const GuestsPage = () => {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
-                <thead className="bg-[#005357]">
+                <thead className="bg-[#4E61D3]">
                   <tr>
                     <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                       Guest
@@ -1254,7 +1254,7 @@ const GuestsPage = () => {
                             <div className="flex items-center space-x-2">
                               <button 
                                 onClick={() => router.push(`/guests/${guest.id}`)}
-                                className="font-bold text-gray-900 hover:text-[#005357] transition-colors text-left"
+                                className="font-bold text-gray-900 hover:text-[#4E61D3] transition-colors text-left"
                               >
                                 {guest.full_name}
                               </button>
@@ -1299,11 +1299,11 @@ const GuestsPage = () => {
                         <div className="text-sm space-y-1">
                           <div className="flex items-center space-x-4">
                             <div className="text-center">
-                              <div className="font-bold text-[#005357]">{guest.total_stays || 0}</div>
+                              <div className="font-bold text-[#4E61D3]">{guest.total_stays || 0}</div>
                               <div className="text-xs text-gray-600">stays</div>
                             </div>
                             <div className="text-center">
-                              <div className="font-bold text-[#005357]">{guest.total_nights || 0}</div>
+                              <div className="font-bold text-[#4E61D3]">{guest.total_nights || 0}</div>
                               <div className="text-xs text-gray-600">nights</div>
                             </div>
                           </div>
@@ -1317,7 +1317,7 @@ const GuestsPage = () => {
                       {/* Spending */}
                       <td className="border border-gray-200 px-6 py-4">
                         <div className="text-right">
-                          <div className="text-sm font-bold text-[#005357]">
+                          <div className="text-sm font-bold text-[#4E61D3]">
                             {formatCurrency(guest.total_spent || 0)}
                           </div>
                           <div className="text-xs text-gray-600">total spent</div>
@@ -1439,7 +1439,7 @@ const GuestsPage = () => {
                             onClick={() => setCurrentPage(pageNum)}
                             className={`px-3 py-2 border text-sm font-medium ${
                               currentPage === pageNum
-                                ? 'bg-[#005357] text-white border-[#005357]'
+                                ? 'bg-[#4E61D3] text-white border-[#4E61D3]'
                                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                             }`}
                           >
@@ -1487,7 +1487,7 @@ const GuestsPage = () => {
                     <h2 className="text-xl font-bold text-gray-900">Add New Guest</h2>
                     <p className="text-sm text-gray-600 mt-1">Create a new guest profile</p>
                   </div>
-                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                     <UserIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
@@ -1517,7 +1517,7 @@ const GuestsPage = () => {
                         required
                         value={newGuest.first_name}
                         onChange={(e) => handleFormChange('first_name', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                         placeholder="Enter first name"
                       />
                     </div>
@@ -1529,7 +1529,7 @@ const GuestsPage = () => {
                         required
                         value={newGuest.last_name}
                         onChange={(e) => handleFormChange('last_name', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                         placeholder="Enter last name"
                       />
                     </div>
@@ -1541,7 +1541,7 @@ const GuestsPage = () => {
                         required
                         value={newGuest.email}
                         onChange={(e) => handleFormChange('email', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                         placeholder="Enter email address"
                       />
                     </div>
@@ -1552,7 +1552,7 @@ const GuestsPage = () => {
                         type="tel"
                         value={newGuest.phone}
                         onChange={(e) => handleFormChange('phone', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                         placeholder="+62-xxx-xxx-xxxx"
                       />
                     </div>
@@ -1563,7 +1563,7 @@ const GuestsPage = () => {
                         type="date"
                         value={newGuest.date_of_birth}
                         onChange={(e) => handleFormChange('date_of_birth', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                       />
                     </div>
 
@@ -1572,7 +1572,7 @@ const GuestsPage = () => {
                       <select
                         value={newGuest.gender}
                         onChange={(e) => handleFormChange('gender', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                       >
                         <option value="">Select gender</option>
                         <option value="M">Male</option>
@@ -1592,7 +1592,7 @@ const GuestsPage = () => {
                         type="text"
                         value={newGuest.nationality}
                         onChange={(e) => handleFormChange('nationality', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                         placeholder="e.g., Indonesia"
                       />
                     </div>
@@ -1603,7 +1603,7 @@ const GuestsPage = () => {
                         value={newGuest.address}
                         onChange={(e) => handleFormChange('address', e.target.value)}
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm resize-none"
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm resize-none"
                         placeholder="Enter full address"
                       />
                     </div>
@@ -1615,7 +1615,7 @@ const GuestsPage = () => {
                           type="text"
                           value={newGuest.postal_code}
                           onChange={(e) => handleFormChange('postal_code', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                           placeholder="12345"
                         />
                       </div>
@@ -1625,7 +1625,7 @@ const GuestsPage = () => {
                           type="text"
                           value={newGuest.city}
                           onChange={(e) => handleFormChange('city', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                           placeholder="City name"
                         />
                       </div>
@@ -1637,7 +1637,7 @@ const GuestsPage = () => {
                         type="text"
                         value={newGuest.country}
                         onChange={(e) => handleFormChange('country', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
                         placeholder="Country name"
                       />
                     </div>
@@ -1648,7 +1648,7 @@ const GuestsPage = () => {
                           type="checkbox"
                           checked={newGuest.is_vip}
                           onChange={(e) => handleFormChange('is_vip', e.target.checked)}
-                          className="w-4 h-4 text-[#005357] border-gray-300 rounded focus:ring-[#005357]"
+                          className="w-4 h-4 text-[#4E61D3] border-gray-300 rounded focus:ring-[#4E61D3]"
                         />
                         <span className="text-sm font-medium text-gray-700">VIP Guest</span>
                         <SparklesIcon className="h-4 w-4 text-yellow-400" />
@@ -1664,7 +1664,7 @@ const GuestsPage = () => {
                     value={newGuest.notes}
                     onChange={(e) => handleFormChange('notes', e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm resize-none"
                     placeholder="Add any additional notes about the guest..."
                   />
                 </div>
@@ -1686,7 +1686,7 @@ const GuestsPage = () => {
                     </button>
                     <button 
                       type="submit"
-                      className="px-6 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors flex items-center space-x-2"
+                      className="px-6 py-2 bg-[#4E61D3] text-white text-sm font-medium hover:bg-[#3D4EA8] transition-colors flex items-center space-x-2"
                       disabled={isCreatingGuest}
                     >
                       {isCreatingGuest ? (

@@ -322,7 +322,7 @@ const HousekeepingPage = () => {
             </div>
             <button
               onClick={() => router.push('/office/housekeeping/new')}
-              className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors"
+              className="flex items-center space-x-2 bg-[#4E61D3] text-white px-4 py-2 text-sm font-medium hover:bg-[#3D4EA8] transition-colors"
             >
               <Add01Icon className="h-4 w-4" />
               <span>Create Task</span>
@@ -400,7 +400,7 @@ const HousekeepingPage = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm w-48"
+              className="px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm w-48"
             >
               <option value="">All Statuses</option>
               <option value="DIRTY">Needs Cleaning</option>
@@ -418,7 +418,7 @@ const HousekeepingPage = () => {
                 placeholder="Search room or task..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
               />
             </div>
 
@@ -439,7 +439,7 @@ const HousekeepingPage = () => {
           {/* Tasks Table */}
           {loading ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005357] mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4E61D3] mx-auto mb-4"></div>
               <p className="text-gray-600">Loading tasks...</p>
             </div>
           ) : (
@@ -450,7 +450,7 @@ const HousekeepingPage = () => {
 
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
-                  <thead className="bg-[#005357]">
+                  <thead className="bg-[#4E61D3]">
                     <tr>
                       <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                         Task #
@@ -587,7 +587,7 @@ const HousekeepingPage = () => {
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
               <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Modal Header */}
-                <div className="p-6 border-b border-gray-200 bg-[#005357]">
+                <div className="p-6 border-b border-gray-200 bg-[#4E61D3]">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-xl font-bold text-white">{selectedTask.task_number}</h2>

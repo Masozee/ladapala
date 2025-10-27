@@ -144,7 +144,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
           <div className="flex items-center space-x-3">
             <button 
               onClick={() => setIsEditing(!isEditing)}
-              className="bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors flex items-center space-x-2"
+              className="bg-[#4E61D3] text-white px-4 py-2 text-sm font-medium hover:bg-[#3D4EA8] transition-colors flex items-center space-x-2"
             >
               <PencilEdit02Icon className="h-4 w-4" />
               <span>{isEditing ? 'Batal' : 'Edit'}</span>
@@ -156,14 +156,14 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Personal Information */}
           <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#005357] text-white">
+            <div className="p-6 bg-[#4E61D3] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Informasi Pribadi</h3>
                   <p className="text-sm text-gray-100 mt-1">Data personal karyawan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <UserIcon className="h-4 w-4 text-[#005357]" />
+                  <UserIcon className="h-4 w-4 text-[#4E61D3]" />
                 </div>
               </div>
             </div>
@@ -204,14 +204,14 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
 
           {/* Work Information */}
           <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#005357] text-white">
+            <div className="p-6 bg-[#4E61D3] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Informasi Kerja</h3>
                   <p className="text-sm text-gray-100 mt-1">Detail pekerjaan dan shift</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#4E61D3]" />
                 </div>
               </div>
             </div>
@@ -247,31 +247,31 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
 
           {/* Performance Stats */}
           <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#005357] text-white">
+            <div className="p-6 bg-[#4E61D3] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Performa</h3>
                   <p className="text-sm text-gray-100 mt-1">Statistik kinerja</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <SparklesIcon className="h-4 w-4 text-[#005357]" />
+                  <SparklesIcon className="h-4 w-4 text-[#4E61D3]" />
                 </div>
               </div>
             </div>
             <div className="p-6 bg-gray-50">
               <div className="space-y-4">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-[#005357]">{employee.attendanceRate}%</div>
+                  <div className="text-3xl font-bold text-[#4E61D3]">{employee.attendanceRate}%</div>
                   <div className="text-sm text-gray-600">Tingkat Kehadiran</div>
                   <div className="w-full bg-gray-200 h-2 mt-2">
                     <div 
-                      className="bg-[#005357] h-2" 
+                      className="bg-[#4E61D3] h-2" 
                       style={{ width: `${employee.attendanceRate}%` }}
                     ></div>
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-[#005357]">{employee.performanceScore}/5</div>
+                  <div className="text-3xl font-bold text-[#4E61D3]">{employee.performanceScore}/5</div>
                   <div className="text-sm text-gray-600">Skor Performa</div>
                   <div className="flex justify-center mt-2">
                     {[...Array(5)].map((_, i) => (
@@ -288,14 +288,14 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
 
         {/* Weekly Schedule */}
         <div className="bg-white border border-gray-200">
-          <div className="p-6 bg-[#005357] text-white">
+          <div className="p-6 bg-[#4E61D3] text-white">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white">Jadwal Kerja Mingguan</h3>
                 <p className="text-sm text-gray-100 mt-1">Pengaturan shift kerja</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <Calendar01Icon className="h-4 w-4 text-[#005357]" />
+                <Calendar01Icon className="h-4 w-4 text-[#4E61D3]" />
               </div>
             </div>
           </div>
@@ -325,7 +325,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
 
         {/* Attendance History */}
         <div className="bg-white border border-gray-200">
-          <div className="p-6 bg-[#005357] text-white">
+          <div className="p-6 bg-[#4E61D3] text-white">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white">Riwayat Kehadiran</h3>
@@ -335,14 +335,14 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="px-3 py-1 text-[#005357] text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-white"
+                  className="px-3 py-1 text-[#4E61D3] text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-white"
                 >
                   <option value="2024-01">Januari 2024</option>
                   <option value="2023-12">Desember 2023</option>
                   <option value="2023-11">November 2023</option>
                 </select>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <PieChartIcon className="h-4 w-4 text-[#005357]" />
+                  <PieChartIcon className="h-4 w-4 text-[#4E61D3]" />
                 </div>
               </div>
             </div>

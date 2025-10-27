@@ -188,7 +188,7 @@ export default function ReportsPage() {
           </div>
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <div className="w-16 h-16 border-4 border-[#005357] border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <div className="w-16 h-16 border-4 border-[#4E61D3] border-t-transparent rounded-full animate-spin mx-auto"></div>
               <p className="text-gray-600 mt-4">Memuat data laporan...</p>
             </div>
           </div>
@@ -239,14 +239,14 @@ export default function ReportsPage() {
                     <h3 className="text-xl font-bold text-gray-900">Total Booking</h3>
                     <p className="text-sm text-gray-600 mt-1">Bulan ini</p>
                   </div>
-                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                     <Calendar01Icon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
               <div className="p-4 bg-gray-50">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-[#005357]">{reportSummary.totalBookings}</div>
+                  <div className="text-3xl font-bold text-[#4E61D3]">{reportSummary.totalBookings}</div>
                   <div className="text-sm text-gray-600">reservasi</div>
                 </div>
               </div>
@@ -259,14 +259,14 @@ export default function ReportsPage() {
                     <h3 className="text-xl font-bold text-gray-900">Tingkat Okupansi</h3>
                     <p className="text-sm text-gray-600 mt-1">Rata-rata bulan ini</p>
                   </div>
-                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                     <PackageIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
               <div className="p-4 bg-gray-50">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-[#005357]">{reportSummary.occupancyRate}%</div>
+                  <div className="text-3xl font-bold text-[#4E61D3]">{reportSummary.occupancyRate}%</div>
                   <div className="text-sm text-gray-600">okupansi</div>
                 </div>
               </div>
@@ -279,14 +279,14 @@ export default function ReportsPage() {
                     <h3 className="text-xl font-bold text-gray-900">Rata-rata Pendapatan</h3>
                     <p className="text-sm text-gray-600 mt-1">Per hari</p>
                   </div>
-                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                     <CreditCardIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
               <div className="p-4 bg-gray-50">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-[#005357]">
+                  <div className="text-2xl font-bold text-[#4E61D3]">
                     {formatCurrency(reportSummary.averageRevenue)}
                   </div>
                   <div className="text-sm text-gray-600">per hari</div>
@@ -301,14 +301,14 @@ export default function ReportsPage() {
                     <h3 className="text-xl font-bold text-gray-900">Kepuasan Tamu</h3>
                     <p className="text-sm text-gray-600 mt-1">Rating rata-rata</p>
                   </div>
-                  <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                     <SparklesIcon className="h-4 w-4 text-white" />
                   </div>
                 </div>
               </div>
               <div className="p-4 bg-gray-50">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-[#005357]">{reportSummary.guestSatisfaction}/5</div>
+                  <div className="text-3xl font-bold text-[#4E61D3]">{reportSummary.guestSatisfaction}/5</div>
                   <div className="text-sm text-gray-600">bintang</div>
                 </div>
               </div>
@@ -324,7 +324,7 @@ export default function ReportsPage() {
                 <h3 className="text-xl font-bold text-gray-900">Laporan Tersedia</h3>
                 <p className="text-sm text-gray-600 mt-1">Generate dan download berbagai jenis laporan analitik</p>
               </div>
-              <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                 <PieChartIcon className="h-4 w-4 text-white" />
               </div>
             </div>
@@ -337,7 +337,7 @@ export default function ReportsPage() {
                 <select 
                   value={selectedPeriod}
                   onChange={(e) => setSelectedPeriod(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                  className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                 >
                   <option value="thisMonth">Bulan Ini</option>
                   <option value="lastMonth">Bulan Lalu</option>
@@ -348,7 +348,7 @@ export default function ReportsPage() {
                 <select 
                   value={selectedReportType}
                   onChange={(e) => setSelectedReportType(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                  className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                 >
                   <option value="all">Semua Kategori</option>
                   <option value="financial">Keuangan</option>
@@ -357,7 +357,7 @@ export default function ReportsPage() {
                   <option value="hr">SDM</option>
                 </select>
               </div>
-              <button className="bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004347] transition-colors flex items-center space-x-2">
+              <button className="bg-[#4E61D3] text-white px-4 py-2 text-sm font-medium hover:bg-[#3D4EA8] transition-colors flex items-center space-x-2">
                 <ChevronDownIcon className="h-4 w-4" />
                 <span>Bulk Export</span>
               </button>
@@ -376,7 +376,7 @@ export default function ReportsPage() {
                             <h3 className="text-xl font-bold text-gray-900">{report.title}</h3>
                             <p className="text-sm text-gray-600 mt-1">{report.description}</p>
                           </div>
-                          <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                          <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                             <ReportIcon className="h-4 w-4 text-white" />
                           </div>
                         </div>
@@ -406,7 +406,7 @@ export default function ReportsPage() {
 
                         <div className="mt-4 flex space-x-2">
                           <button
-                            className="flex-1 bg-[#005357] text-white px-3 py-2 text-sm font-medium hover:bg-[#004347] transition-colors disabled:opacity-50"
+                            className="flex-1 bg-[#4E61D3] text-white px-3 py-2 text-sm font-medium hover:bg-[#3D4EA8] transition-colors disabled:opacity-50"
                             disabled={report.status === 'generating'}
                           >
                             Generate
@@ -439,7 +439,7 @@ export default function ReportsPage() {
                 <h3 className="text-xl font-bold text-gray-900">Aksi Cepat</h3>
                 <p className="text-sm text-gray-600 mt-1">Shortcut untuk tugas reporting yang sering dilakukan</p>
               </div>
-              <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                 <ArrowUp01Icon className="h-4 w-4 text-white" />
               </div>
             </div>

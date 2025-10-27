@@ -129,7 +129,7 @@ export default function OfficePage() {
       <OfficeLayout>
         <div className="flex items-center justify-center h-64">
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 border-2 border-[#005357] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-6 h-6 border-2 border-[#4E61D3] border-t-transparent rounded-full animate-spin"></div>
             <span className="text-gray-600">Loading analytics...</span>
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function OfficePage() {
         </div>
 
         {/* Today's Overview */}
-        <div className="bg-gradient-to-r from-[#005357] to-[#007a7f] border border-gray-200 p-6 text-white">
+        <div className="bg-gradient-to-r from-[#4E61D3] to-[#007a7f] border border-gray-200 p-6 text-white">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-2xl font-bold">Today's Overview</h2>
@@ -262,7 +262,7 @@ export default function OfficePage() {
                 <h3 className="text-xl font-bold text-gray-900">Daily Revenue (Last 7 Days)</h3>
                 <p className="text-sm text-gray-600 mt-1">Revenue and transaction trends</p>
               </div>
-              <TrendingUpIcon className="h-6 w-6 text-[#005357]" />
+              <TrendingUpIcon className="h-6 w-6 text-[#4E61D3]" />
             </div>
           </div>
           <div className="p-6">
@@ -380,7 +380,7 @@ export default function OfficePage() {
 
                                   {/* Bar */}
                                   <div
-                                    className="w-full bg-gradient-to-t from-[#005357] to-[#007a7f] rounded-t transition-all duration-500 hover:opacity-80"
+                                    className="w-full bg-gradient-to-t from-[#4E61D3] to-[#007a7f] rounded-t transition-all duration-500 hover:opacity-80"
                                     style={{ height: `${barHeight}px` }}
                                   ></div>
                                 </div>
@@ -416,7 +416,7 @@ export default function OfficePage() {
                   <h3 className="text-lg font-bold text-gray-900">Occupancy Rate</h3>
                   <p className="text-xs text-gray-600 mt-1">Last 7 Days</p>
                 </div>
-                <BedIcon className="h-5 w-5 text-[#005357]" />
+                <BedIcon className="h-5 w-5 text-[#4E61D3]" />
               </div>
             </div>
             <div className="p-6">
@@ -537,7 +537,7 @@ export default function OfficePage() {
 
                                 {/* Bar */}
                                 <div
-                                  className="w-full bg-[#005357] rounded-t transition-all duration-500 hover:opacity-80"
+                                  className="w-full bg-[#4E61D3] rounded-t transition-all duration-500 hover:opacity-80"
                                   style={{ height: `${barHeight}px` }}
                                 ></div>
                               </div>
@@ -646,7 +646,7 @@ export default function OfficePage() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
-              <thead className="bg-[#005357]">
+              <thead className="bg-[#4E61D3]">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-bold text-white border border-gray-300">Room Type</th>
                   <th className="px-6 py-4 text-left text-sm font-bold text-white border border-gray-300">Bookings</th>
@@ -659,7 +659,7 @@ export default function OfficePage() {
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900 border border-gray-200">{room.room_type}</td>
                     <td className="px-6 py-4 text-sm text-gray-900 border border-gray-200">{room.bookings}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-[#005357] border border-gray-200">{formatCurrency(room.revenue)}</td>
+                    <td className="px-6 py-4 text-sm font-bold text-[#4E61D3] border border-gray-200">{formatCurrency(room.revenue)}</td>
                     <td className="px-6 py-4 text-sm text-gray-600 border border-gray-200">{room.avg_nights} nights</td>
                   </tr>
                 ))}

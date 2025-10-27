@@ -216,7 +216,7 @@ export default function AdminPage() {
       onClick={() => setActiveTab(tabId)}
       className={`flex items-center space-x-2 px-6 py-3 text-sm font-medium transition-colors ${
         activeTab === tabId
-          ? 'bg-[#005357] text-white'
+          ? 'bg-[#4E61D3] text-white'
           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
       }`}
     >
@@ -247,14 +247,14 @@ export default function AdminPage() {
           {/* Dashboard Tab */}
           {activeTab === 'dashboard' && (
             <div>
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#4E61D3] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Dashboard Admin</h3>
                     <p className="text-sm text-gray-100 mt-1">Monitoring sistem dan statistik pengguna</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Monitor className="h-4 w-4 text-[#005357]" />
+                    <Monitor className="h-4 w-4 text-[#4E61D3]" />
                   </div>
                 </div>
               </div>
@@ -269,14 +269,14 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">Total Pengguna</h3>
                           <p className="text-sm text-gray-600 mt-1">Terdaftar aktif</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <UserMultipleIcon className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>
                     <div className="p-4 bg-gray-50">
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-[#005357]">{systemStats.totalUsers}</div>
+                        <div className="text-3xl font-bold text-[#4E61D3]">{systemStats.totalUsers}</div>
                         <div className="text-sm text-gray-600">{systemStats.activeUsers} aktif</div>
                       </div>
                     </div>
@@ -289,7 +289,7 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">System Uptime</h3>
                           <p className="text-sm text-gray-600 mt-1">Ketersediaan sistem</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <Activity className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -309,14 +309,14 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">Server Load</h3>
                           <p className="text-sm text-gray-600 mt-1">Beban CPU rata-rata</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <Cpu className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </div>
                     <div className="p-4 bg-gray-50">
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-[#005357]">{systemStats.serverLoad}%</div>
+                        <div className="text-3xl font-bold text-[#4E61D3]">{systemStats.serverLoad}%</div>
                         <div className="text-sm text-gray-600">CPU usage</div>
                       </div>
                     </div>
@@ -329,7 +329,7 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">Security Alerts</h3>
                           <p className="text-sm text-gray-600 mt-1">Peringatan keamanan</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <Alert01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -352,7 +352,7 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">Status Sistem</h3>
                           <p className="text-sm text-gray-600 mt-1">Monitoring komponen utama</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <Server className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -398,7 +398,7 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">Resource Usage</h3>
                           <p className="text-sm text-gray-600 mt-1">Penggunaan sistem real-time</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <HardDrive className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -412,7 +412,7 @@ export default function AdminPage() {
                           </div>
                           <div className="w-full bg-gray-200 h-2">
                             <div 
-                              className="bg-[#005357] h-2" 
+                              className="bg-[#4E61D3] h-2" 
                               style={{ width: `${systemStats.diskUsage}%` }}
                             ></div>
                           </div>
@@ -452,19 +452,19 @@ export default function AdminPage() {
           {/* Users Tab */}
           {activeTab === 'users' && (
             <div>
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#4E61D3] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Manajemen Pengguna</h3>
                     <p className="text-sm text-gray-100 mt-1">Kelola akses dan permissions pengguna sistem</p>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
+                    <button className="bg-white text-[#4E61D3] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
                       <Add01Icon className="h-4 w-4" />
                       <span>Tambah Pengguna</span>
                     </button>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
+                      <UserMultipleIcon className="h-4 w-4 text-[#4E61D3]" />
                     </div>
                   </div>
                 </div>
@@ -483,13 +483,13 @@ export default function AdminPage() {
                         placeholder="Cari pengguna..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-64"
+                        className="pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-64"
                       />
                     </div>
                     <select 
                       value={selectedUserRole}
                       onChange={(e) => setSelectedUserRole(e.target.value)}
-                      className="px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                      className="px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                     >
                       <option value="all">Semua Role</option>
                       <option value="admin">Admin</option>
@@ -506,7 +506,7 @@ export default function AdminPage() {
                 {/* Users Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
-                    <thead className="bg-[#005357]">
+                    <thead className="bg-[#4E61D3]">
                       <tr>
                         <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Pengguna
@@ -530,7 +530,7 @@ export default function AdminPage() {
                         <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                           <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center">
-                              <div className="w-10 h-10 bg-[#005357] flex items-center justify-center text-white font-bold">
+                              <div className="w-10 h-10 bg-[#4E61D3] flex items-center justify-center text-white font-bold">
                                 {user.name.split(' ').map(n => n[0]).join('')}
                               </div>
                               <div className="ml-4">
@@ -567,7 +567,7 @@ export default function AdminPage() {
                           <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center justify-end space-x-2">
                               <button 
-                                className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
+                                className="p-2 text-gray-400 hover:text-[#4E61D3] hover:bg-gray-100 transition-colors rounded"
                                 title="Lihat Detail"
                               >
                                 <EyeIcon className="h-4 w-4" />
@@ -598,14 +598,14 @@ export default function AdminPage() {
           {/* System Tab */}
           {activeTab === 'system' && (
             <div>
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#4E61D3] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Pengaturan Sistem</h3>
                     <p className="text-sm text-gray-100 mt-1">Konfigurasi dan maintenance sistem</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Server className="h-4 w-4 text-[#005357]" />
+                    <Server className="h-4 w-4 text-[#4E61D3]" />
                   </div>
                 </div>
               </div>
@@ -620,7 +620,7 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">System Maintenance</h3>
                           <p className="text-sm text-gray-600 mt-1">Tools pemeliharaan sistem</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <Settings02Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -655,7 +655,7 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">Backup & Recovery</h3>
                           <p className="text-sm text-gray-600 mt-1">Manajemen data backup</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <HardDrive className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -690,7 +690,7 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">System Config</h3>
                           <p className="text-sm text-gray-600 mt-1">Konfigurasi sistem global</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <Location01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -724,14 +724,14 @@ export default function AdminPage() {
           {/* Security Tab */}
           {activeTab === 'security' && (
             <div>
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#4E61D3] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Keamanan Sistem</h3>
                     <p className="text-sm text-gray-100 mt-1">Monitoring dan pengaturan keamanan</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Shield01Icon className="h-4 w-4 text-[#005357]" />
+                    <Shield01Icon className="h-4 w-4 text-[#4E61D3]" />
                   </div>
                 </div>
               </div>
@@ -746,7 +746,7 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">Security Alerts</h3>
                           <p className="text-sm text-gray-600 mt-1">Peringatan keamanan terkini</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <Alert01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -779,7 +779,7 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-gray-900">Security Settings</h3>
                           <p className="text-sm text-gray-600 mt-1">Konfigurasi keamanan sistem</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <Shield01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -819,14 +819,14 @@ export default function AdminPage() {
           {/* Logs Tab */}
           {activeTab === 'logs' && (
             <div>
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#4E61D3] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Log Aktivitas</h3>
                     <p className="text-sm text-gray-100 mt-1">Riwayat aktivitas sistem dan pengguna</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Activity className="h-4 w-4 text-[#005357]" />
+                    <Activity className="h-4 w-4 text-[#4E61D3]" />
                   </div>
                 </div>
               </div>
@@ -835,7 +835,7 @@ export default function AdminPage() {
                 {/* Logs Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
-                    <thead className="bg-[#005357]">
+                    <thead className="bg-[#4E61D3]">
                       <tr>
                         <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Timestamp

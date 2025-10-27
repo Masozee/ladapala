@@ -280,14 +280,14 @@ export default function EmployeesPage() {
       <div className="space-y-6">
         {/* Header with Tabs */}
         <div className="bg-white border border-gray-200">
-          <div className="p-6 bg-[#005357] text-white">
+          <div className="p-6 bg-[#4E61D3] text-white">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-white">Manajemen Karyawan & Jadwal</h1>
                 <p className="text-sm text-gray-100 mt-1">Data karyawan dan jadwal kerja</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
+                <UserMultipleIcon className="h-4 w-4 text-[#4E61D3]" />
               </div>
             </div>
           </div>
@@ -299,7 +299,7 @@ export default function EmployeesPage() {
                 onClick={() => setActiveTab('employees')}
                 className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'employees'
-                    ? 'border-[#005357] text-[#005357] bg-gray-50'
+                    ? 'border-[#4E61D3] text-[#4E61D3] bg-gray-50'
                     : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
                 }`}
               >
@@ -312,7 +312,7 @@ export default function EmployeesPage() {
                 onClick={() => setActiveTab('schedules')}
                 className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'schedules'
-                    ? 'border-[#005357] text-[#005357] bg-gray-50'
+                    ? 'border-[#4E61D3] text-[#4E61D3] bg-gray-50'
                     : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
                 }`}
               >
@@ -331,40 +331,40 @@ export default function EmployeesPage() {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#4E61D3] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Total Karyawan</h3>
                       <p className="text-sm text-gray-100 mt-1">Staf operasional</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
+                      <UserMultipleIcon className="h-4 w-4 text-[#4E61D3]" />
                     </div>
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-[#005357] mb-2">{employees.length}</div>
+                    <div className="text-3xl font-bold text-[#4E61D3] mb-2">{employees.length}</div>
                     <div className="text-sm text-gray-600">karyawan</div>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#4E61D3] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Sedang Bertugas</h3>
                       <p className="text-sm text-gray-100 mt-1">Hari ini</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <UserCheckIcon className="h-4 w-4 text-[#005357]" />
+                      <UserCheckIcon className="h-4 w-4 text-[#4E61D3]" />
                     </div>
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-[#005357] mb-2">
+                    <div className="text-3xl font-bold text-[#4E61D3] mb-2">
                       {employees.filter(emp => emp.status === 'active').length}
                     </div>
                     <div className="text-sm text-gray-600">sedang bekerja</div>
@@ -373,14 +373,14 @@ export default function EmployeesPage() {
               </div>
 
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#4E61D3] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Sedang Cuti</h3>
                       <p className="text-sm text-gray-100 mt-1">Tidak hadir</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <Cancel01Icon className="h-4 w-4 text-[#005357]" />
+                      <Cancel01Icon className="h-4 w-4 text-[#4E61D3]" />
                     </div>
                   </div>
                 </div>
@@ -395,20 +395,20 @@ export default function EmployeesPage() {
               </div>
 
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#4E61D3] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Kehadiran Rata-rata</h3>
                       <p className="text-sm text-gray-100 mt-1">Bulan ini</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <SparklesIcon className="h-4 w-4 text-[#005357]" />
+                      <SparklesIcon className="h-4 w-4 text-[#4E61D3]" />
                     </div>
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-[#005357] mb-2">
+                    <div className="text-3xl font-bold text-[#4E61D3] mb-2">
                       {Math.round(employees.reduce((acc, emp) => acc + emp.attendanceRate, 0) / employees.length)}%
                     </div>
                     <div className="text-sm text-gray-600">kehadiran</div>
@@ -419,13 +419,13 @@ export default function EmployeesPage() {
 
             {/* Employees List */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#4E61D3] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Daftar Karyawan</h3>
                     <p className="text-sm text-gray-100 mt-1">Manajemen data karyawan</p>
                   </div>
-                  <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
+                  <button className="bg-white text-[#4E61D3] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
                     <Add01Icon className="h-4 w-4" />
                     <span>Tambah Karyawan</span>
                   </button>
@@ -445,13 +445,13 @@ export default function EmployeesPage() {
                         placeholder="Cari karyawan..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-64"
+                        className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-64"
                       />
                     </div>
                     <select
                       value={selectedDepartment}
                       onChange={(e) => setSelectedDepartment(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                     >
                       {departments.map(dept => (
                         <option key={dept} value={dept}>{getDepartmentLabel(dept)}</option>
@@ -460,7 +460,7 @@ export default function EmployeesPage() {
                     <select
                       value={selectedShift}
                       onChange={(e) => setSelectedShift(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                     >
                       {shifts.map(shift => (
                         <option key={shift} value={shift}>{getShiftFilterLabel(shift)}</option>
@@ -472,7 +472,7 @@ export default function EmployeesPage() {
                 {/* Employee Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
-                    <thead className="bg-[#005357]">
+                    <thead className="bg-[#4E61D3]">
                       <tr>
                         <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Karyawan
@@ -629,7 +629,7 @@ export default function EmployeesPage() {
                   {selectedWeek !== 0 && (
                     <button
                       onClick={() => setSelectedWeek(0)}
-                      className="px-3 py-1 text-sm bg-[#005357] text-white hover:bg-[#004147] transition-colors"
+                      className="px-3 py-1 text-sm bg-[#4E61D3] text-white hover:bg-[#3D4EA8] transition-colors"
                     >
                       Kembali ke Minggu Ini
                     </button>
@@ -648,13 +648,13 @@ export default function EmployeesPage() {
                         placeholder="Cari karyawan..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-64"
+                        className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-64"
                       />
                     </div>
                     <select
                       value={selectedDepartment}
                       onChange={(e) => setSelectedDepartment(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                     >
                       {departments.map(dept => (
                         <option key={dept} value={dept}>{getDepartmentLabel(dept)}</option>
@@ -663,7 +663,7 @@ export default function EmployeesPage() {
                     <select
                       value={selectedShift}
                       onChange={(e) => setSelectedShift(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                     >
                       {shifts.map(shift => (
                         <option key={shift} value={shift}>{getShiftFilterLabel(shift)}</option>
@@ -700,7 +700,7 @@ export default function EmployeesPage() {
                   <div style={{ minWidth: `${250 + (7 * 120)}px` }}>
                     <table className="w-full border-collapse">
                       <thead>
-                        <tr className="bg-[#005357]">
+                        <tr className="bg-[#4E61D3]">
                           <th className="border border-gray-300 text-left py-3 px-4 text-sm font-bold text-white uppercase tracking-wider w-[200px]">
                             Karyawan
                           </th>
@@ -727,7 +727,7 @@ export default function EmployeesPage() {
                           <tr key={employee.id} className="hover:bg-gray-50 transition-colors">
                             <td className="py-4 px-4 font-medium text-gray-900 w-[200px] border-r border-gray-200">
                               <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-[#005357] flex items-center justify-center text-white font-bold">
+                                <div className="w-10 h-10 bg-[#4E61D3] flex items-center justify-center text-white font-bold">
                                   {employee.name.charAt(0)}
                                 </div>
                                 <div>
@@ -780,7 +780,7 @@ export default function EmployeesPage() {
                               <div className="flex items-center justify-center space-x-1">
                                 <Link
                                   href={`/office/employees/${employee.id}`}
-                                  className="p-1 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
+                                  className="p-1 text-gray-400 hover:text-[#4E61D3] hover:bg-gray-100 transition-colors rounded"
                                   title="Lihat Karyawan"
                                 >
                                   <EyeIcon className="h-4 w-4" />

@@ -248,7 +248,7 @@ export default function FinancialPage() {
       onClick={() => setActiveTab(tabId)}
       className={`flex items-center space-x-2 px-6 py-3 text-sm font-medium transition-colors ${
         activeTab === tabId
-          ? 'bg-[#005357] text-white'
+          ? 'bg-[#4E61D3] text-white'
           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
       }`}
     >
@@ -278,14 +278,14 @@ export default function FinancialPage() {
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div>
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#4E61D3] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Ringkasan Keuangan</h3>
                     <p className="text-sm text-gray-100 mt-1">Gambaran umum performa keuangan bulan ini</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <PieChartIcon className="h-4 w-4 text-[#005357]" />
+                    <PieChartIcon className="h-4 w-4 text-[#4E61D3]" />
                   </div>
                 </div>
               </div>
@@ -294,7 +294,7 @@ export default function FinancialPage() {
                 {/* Loading State */}
                 {loadingOverview && (
                   <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#005357]"></div>
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E61D3]"></div>
                     <p className="mt-4 text-gray-600">Memuat data keuangan...</p>
                   </div>
                 )}
@@ -314,20 +314,20 @@ export default function FinancialPage() {
                 <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 bg-[#005357] text-white">
+                    <div className="p-6 bg-[#4E61D3] text-white">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-white">Total Pendapatan</h3>
                           <p className="text-sm text-gray-100 mt-1">Bulan ini</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <CreditCardIcon className="h-4 w-4 text-[#005357]" />
+                          <CreditCardIcon className="h-4 w-4 text-[#4E61D3]" />
                         </div>
                       </div>
                     </div>
                     <div className="p-4 bg-gray-50">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-[#005357] mb-2">
+                        <div className="text-2xl font-bold text-[#4E61D3] mb-2">
                           {formatCurrency(revenueData.total)}
                         </div>
                         <div className="text-sm text-gray-600">
@@ -341,14 +341,14 @@ export default function FinancialPage() {
                   </div>
 
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 bg-[#005357] text-white">
+                    <div className="p-6 bg-[#4E61D3] text-white">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-white">Total Pengeluaran</h3>
                           <p className="text-sm text-gray-100 mt-1">Bulan ini</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
+                          <ArrowUp01Icon className="h-4 w-4 text-[#4E61D3]" />
                         </div>
                       </div>
                     </div>
@@ -363,20 +363,20 @@ export default function FinancialPage() {
                   </div>
 
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 bg-[#005357] text-white">
+                    <div className="p-6 bg-[#4E61D3] text-white">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-white">Laba Bersih</h3>
                           <p className="text-sm text-gray-100 mt-1">Margin keuntungan</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
+                          <ArrowUp01Icon className="h-4 w-4 text-[#4E61D3]" />
                         </div>
                       </div>
                     </div>
                     <div className="p-4 bg-gray-50">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-[#005357] mb-2">
+                        <div className="text-2xl font-bold text-[#4E61D3] mb-2">
                           {formatCurrency(profitData.total)}
                         </div>
                         <div className="text-sm text-gray-600">
@@ -387,20 +387,20 @@ export default function FinancialPage() {
                   </div>
 
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 bg-[#005357] text-white">
+                    <div className="p-6 bg-[#4E61D3] text-white">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-white">Rata-rata Harian</h3>
                           <p className="text-sm text-gray-100 mt-1">Pendapatan per hari</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <Calendar01Icon className="h-4 w-4 text-[#005357]" />
+                          <Calendar01Icon className="h-4 w-4 text-[#4E61D3]" />
                         </div>
                       </div>
                     </div>
                     <div className="p-4 bg-gray-50">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-[#005357] mb-2">
+                        <div className="text-2xl font-bold text-[#4E61D3] mb-2">
                           {formatCurrency(revenueData.dailyAverage)}
                         </div>
                         <div className="text-sm text-gray-600">per hari</div>
@@ -412,14 +412,14 @@ export default function FinancialPage() {
                 {/* Expense Breakdown */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 bg-[#005357] text-white">
+                    <div className="p-6 bg-[#4E61D3] text-white">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-white">Breakdown Pengeluaran</h3>
                           <p className="text-sm text-gray-100 mt-1">Kategori pengeluaran bulan ini</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <PieChartIcon className="h-4 w-4 text-[#005357]" />
+                          <PieChartIcon className="h-4 w-4 text-[#4E61D3]" />
                         </div>
                       </div>
                     </div>
@@ -434,7 +434,7 @@ export default function FinancialPage() {
                               </div>
                               <div className="w-full bg-gray-200 h-2">
                                 <div 
-                                  className="bg-[#005357] h-2" 
+                                  className="bg-[#4E61D3] h-2" 
                                   style={{ width: `${category.percentage}%` }}
                                 ></div>
                               </div>
@@ -449,14 +449,14 @@ export default function FinancialPage() {
                   </div>
 
                   <div className="bg-white border border-gray-200">
-                    <div className="p-6 bg-[#005357] text-white">
+                    <div className="p-6 bg-[#4E61D3] text-white">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-white">Aksi Cepat</h3>
                           <p className="text-sm text-gray-100 mt-1">Fitur manajemen keuangan</p>
                         </div>
                         <div className="w-8 h-8 bg-white flex items-center justify-center">
-                          <CreditCardIcon className="h-4 w-4 text-[#005357]" />
+                          <CreditCardIcon className="h-4 w-4 text-[#4E61D3]" />
                         </div>
                       </div>
                     </div>
@@ -500,19 +500,19 @@ export default function FinancialPage() {
           {/* Transactions Tab */}
           {activeTab === 'transactions' && (
             <div>
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#4E61D3] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Riwayat Transaksi</h3>
                     <p className="text-sm text-gray-100 mt-1">Semua transaksi pendapatan dan pengeluaran</p>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
+                    <button className="bg-white text-[#4E61D3] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
                       <Add01Icon className="h-4 w-4" />
                       <span>Tambah Transaksi</span>
                     </button>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <File01Icon className="h-4 w-4 text-[#005357]" />
+                      <File01Icon className="h-4 w-4 text-[#4E61D3]" />
                     </div>
                   </div>
                 </div>
@@ -531,13 +531,13 @@ export default function FinancialPage() {
                         placeholder="Cari transaksi..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-64"
+                        className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-64"
                       />
                     </div>
                     <select 
                       value={selectedPaymentStatus}
                       onChange={(e) => setSelectedPaymentStatus(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                     >
                       <option value="all">Semua Status</option>
                       <option value="completed">Selesai</option>
@@ -547,7 +547,7 @@ export default function FinancialPage() {
                     <select 
                       value={selectedPeriod}
                       onChange={(e) => setSelectedPeriod(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                     >
                       <option value="thisMonth">Bulan Ini</option>
                       <option value="lastMonth">Bulan Lalu</option>
@@ -564,7 +564,7 @@ export default function FinancialPage() {
                 {/* Loading State */}
                 {loadingTransactions && (
                   <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#005357]"></div>
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E61D3]"></div>
                     <p className="mt-4 text-gray-600">Memuat data transaksi...</p>
                   </div>
                 )}
@@ -583,7 +583,7 @@ export default function FinancialPage() {
                 {!loadingTransactions && !errorTransactions && (
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
-                    <thead className="bg-[#005357]">
+                    <thead className="bg-[#4E61D3]">
                       <tr>
                         <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Transaksi
@@ -666,7 +666,7 @@ export default function FinancialPage() {
                           <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center justify-end space-x-2">
                               <button 
-                                className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
+                                className="p-2 text-gray-400 hover:text-[#4E61D3] hover:bg-gray-100 transition-colors rounded"
                                 title="Lihat Detail"
                               >
                                 <EyeIcon className="h-4 w-4" />
@@ -693,19 +693,19 @@ export default function FinancialPage() {
           {/* Invoices Tab */}
           {activeTab === 'invoices' && (
             <div>
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#4E61D3] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Manajemen Faktur</h3>
                     <p className="text-sm text-gray-100 mt-1">Kelola faktur dan tagihan tamu</p>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
+                    <button className="bg-white text-[#4E61D3] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
                       <Add01Icon className="h-4 w-4" />
                       <span>Buat Faktur</span>
                     </button>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <File01Icon className="h-4 w-4 text-[#005357]" />
+                      <File01Icon className="h-4 w-4 text-[#4E61D3]" />
                     </div>
                   </div>
                 </div>
@@ -760,7 +760,7 @@ export default function FinancialPage() {
                 {/* Invoices Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
-                    <thead className="bg-[#005357]">
+                    <thead className="bg-[#4E61D3]">
                       <tr>
                         <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
                           Faktur
@@ -818,7 +818,7 @@ export default function FinancialPage() {
                           <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center justify-end space-x-2">
                               <button 
-                                className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded"
+                                className="p-2 text-gray-400 hover:text-[#4E61D3] hover:bg-gray-100 transition-colors rounded"
                                 title="Lihat Faktur"
                               >
                                 <EyeIcon className="h-4 w-4" />
@@ -849,14 +849,14 @@ export default function FinancialPage() {
           {/* Reports Tab */}
           {activeTab === 'reports' && (
             <div>
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#4E61D3] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Laporan Keuangan</h3>
                     <p className="text-sm text-gray-100 mt-1">Generate dan export laporan keuangan</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
+                    <ArrowUp01Icon className="h-4 w-4 text-[#4E61D3]" />
                   </div>
                 </div>
               </div>
@@ -871,7 +871,7 @@ export default function FinancialPage() {
                           <h3 className="text-lg font-bold text-gray-900">Laporan Pendapatan</h3>
                           <p className="text-sm text-gray-600 mt-1">Analisis pendapatan harian, bulanan, tahunan</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <ArrowUp01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -902,7 +902,7 @@ export default function FinancialPage() {
                           <h3 className="text-lg font-bold text-gray-900">Laporan Pengeluaran</h3>
                           <p className="text-sm text-gray-600 mt-1">Tracking dan analisis pengeluaran</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <ArrowUp01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -933,7 +933,7 @@ export default function FinancialPage() {
                           <h3 className="text-lg font-bold text-gray-900">Laporan Pajak</h3>
                           <p className="text-sm text-gray-600 mt-1">Laporan siap untuk perpajakan</p>
                         </div>
-                        <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                           <File01Icon className="h-4 w-4 text-white" />
                         </div>
                       </div>

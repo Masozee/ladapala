@@ -111,7 +111,7 @@ export default function EditRoomTypePage() {
       <AppLayout>
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005357] mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4E61D3] mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading...</p>
           </div>
         </div>
@@ -156,7 +156,7 @@ export default function EditRoomTypePage() {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                 placeholder="e.g., Deluxe Room, Suite"
               />
             </div>
@@ -172,7 +172,7 @@ export default function EditRoomTypePage() {
                 rows={4}
                 value={formData.description || ''}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                 placeholder="Describe the room type..."
               />
             </div>
@@ -193,7 +193,7 @@ export default function EditRoomTypePage() {
                   step="1000"
                   value={formData.base_price}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                   placeholder="500000"
                 />
               </div>
@@ -211,7 +211,7 @@ export default function EditRoomTypePage() {
                   min="1"
                   value={formData.max_occupancy}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                   placeholder="2"
                 />
               </div>
@@ -229,7 +229,7 @@ export default function EditRoomTypePage() {
                   step="0.1"
                   value={formData.size_sqm || ''}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                   placeholder="25"
                 />
               </div>
@@ -246,7 +246,7 @@ export default function EditRoomTypePage() {
                 rows={3}
                 value={formData.amenities || ''}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                 placeholder="WiFi, TV, AC, Mini Bar (comma separated)"
               />
               <p className="text-xs text-gray-500 mt-1">Separate amenities with commas</p>
@@ -260,7 +260,7 @@ export default function EditRoomTypePage() {
                   name="is_active"
                   checked={formData.is_active}
                   onChange={handleChange}
-                  className="rounded border-gray-300 text-[#005357] focus:ring-[#005357]"
+                  className="rounded border-gray-300 text-[#4E61D3] focus:ring-[#4E61D3]"
                 />
                 <span className="text-sm font-medium text-gray-700">Active (available for booking)</span>
               </label>
@@ -280,7 +280,7 @@ export default function EditRoomTypePage() {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 bg-[#005357] text-white hover:bg-[#004147] transition-colors disabled:opacity-50 flex items-center"
+              className="px-6 py-2 bg-[#4E61D3] text-white hover:bg-[#3D4EA8] transition-colors disabled:opacity-50 flex items-center"
             >
               <UserCheckIcon className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save Changes'}

@@ -403,7 +403,7 @@ const GuestDetailPage = () => {
                   <PencilEdit02Icon className="h-4 w-4" />
                   <span>Edit Profile</span>
                 </button>
-                <button className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white hover:bg-[#004147] transition-colors">
+                <button className="flex items-center space-x-2 px-4 py-2 bg-[#4E61D3] text-white hover:bg-[#3D4EA8] transition-colors">
                   <Add01Icon className="h-4 w-4" />
                   <span>New Reservation</span>
                 </button>
@@ -415,15 +415,15 @@ const GuestDetailPage = () => {
           <div className="p-4 bg-gray-50">
             <div className="grid grid-cols-4 gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-[#005357]">{guest.total_stays}</div>
+                <div className="text-2xl font-bold text-[#4E61D3]">{guest.total_stays}</div>
                 <div className="text-sm text-gray-600">Total Stays</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-[#005357]">{guest.total_nights}</div>
+                <div className="text-2xl font-bold text-[#4E61D3]">{guest.total_nights}</div>
                 <div className="text-sm text-gray-600">Total Nights</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-[#005357]">{formatCurrency(guest.total_spent)}</div>
+                <div className="text-lg font-bold text-[#4E61D3]">{formatCurrency(guest.total_spent)}</div>
                 <div className="text-sm text-gray-600">Total Spent</div>
               </div>
               <div className="text-center">
@@ -443,7 +443,7 @@ const GuestDetailPage = () => {
           <div className="space-y-6">
             {/* Contact Information */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357]">
+              <div className="p-6 bg-[#4E61D3]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Contact Information</h3>
@@ -501,7 +501,7 @@ const GuestDetailPage = () => {
 
             {/* Preferences & Allergies */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357]">
+              <div className="p-6 bg-[#4E61D3]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Preferences & Allergies</h3>
@@ -557,7 +557,7 @@ const GuestDetailPage = () => {
             {/* Rewards Program */}
             {guest.rewards && (
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357]">
+                <div className="p-6 bg-[#4E61D3]">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Loyalty Rewards</h3>
@@ -583,7 +583,7 @@ const GuestDetailPage = () => {
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center bg-white p-4 rounded">
-                        <div className="text-2xl font-bold text-[#005357]">{guest.rewards.points_balance.toLocaleString()}</div>
+                        <div className="text-2xl font-bold text-[#4E61D3]">{guest.rewards.points_balance.toLocaleString()}</div>
                         <div className="text-xs text-gray-600">Available Points</div>
                       </div>
                       <div className="text-center bg-white p-4 rounded">
@@ -599,7 +599,7 @@ const GuestDetailPage = () => {
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-[#005357] h-2 rounded-full"
+                          className="bg-[#4E61D3] h-2 rounded-full"
                           style={{width: `${Math.min((guest.rewards.points_balance / (guest.rewards.points_balance + guest.rewards.next_tier_required)) * 100, 100)}%`}}
                         ></div>
                       </div>
@@ -619,7 +619,7 @@ const GuestDetailPage = () => {
 
                     <button 
                       onClick={() => setShowRewardsDetail(true)}
-                      className="w-full text-sm bg-[#005357] text-white px-4 py-2 hover:bg-[#004147] transition-colors"
+                      className="w-full text-sm bg-[#4E61D3] text-white px-4 py-2 hover:bg-[#3D4EA8] transition-colors"
                     >
                       View Full Rewards Details
                     </button>
@@ -630,7 +630,7 @@ const GuestDetailPage = () => {
 
             {/* Guest Notes */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357]">
+              <div className="p-6 bg-[#4E61D3]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Staff Notes</h3>
@@ -675,7 +675,7 @@ const GuestDetailPage = () => {
                     value={editedNotes}
                     onChange={(e) => setEditedNotes(e.target.value)}
                     rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm resize-none"
                     placeholder="Add notes about this guest..."
                   />
                 ) : (
@@ -690,7 +690,7 @@ const GuestDetailPage = () => {
 
         {/* Stay History Section - Full Width Below */}
         <div className="bg-white border border-gray-200">
-          <div className="p-6 bg-[#005357]">
+          <div className="p-6 bg-[#4E61D3]">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white">Stay History</h3>
@@ -703,7 +703,7 @@ const GuestDetailPage = () => {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
-              <thead className="bg-[#005357]">
+              <thead className="bg-[#4E61D3]">
                 <tr>
                   <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                     Reservation
@@ -780,7 +780,7 @@ const GuestDetailPage = () => {
             </table>
           </div>
           <div className="p-4 bg-gray-50">
-            <button className="text-sm text-[#005357] hover:bg-[#005357] hover:text-white px-4 py-2 border border-[#005357] transition-colors">
+            <button className="text-sm text-[#4E61D3] hover:bg-[#4E61D3] hover:text-white px-4 py-2 border border-[#4E61D3] transition-colors">
               View Complete History ({guest.total_stays} total stays)
             </button>
           </div>
@@ -795,7 +795,7 @@ const GuestDetailPage = () => {
                   <h3 className="text-xl font-bold text-gray-900">Guest Reviews & Feedback</h3>
                   <p className="text-sm text-gray-600 mt-1">Reviews from recent stays</p>
                 </div>
-                <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
                   <SparklesIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
@@ -832,7 +832,7 @@ const GuestDetailPage = () => {
         {showRewardsDetail && guest.rewards && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 bg-[#005357] flex items-center justify-between">
+              <div className="p-6 bg-[#4E61D3] flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-white">Loyalty Rewards Details</h2>
                   <p className="text-sm text-gray-200 mt-1">{guest.full_name}</p>
@@ -860,7 +860,7 @@ const GuestDetailPage = () => {
                 {/* Points Overview */}
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   <div className="text-center bg-gray-50 p-4 rounded">
-                    <div className="text-2xl font-bold text-[#005357]">{guest.rewards.points_balance.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-[#4E61D3]">{guest.rewards.points_balance.toLocaleString()}</div>
                     <div className="text-sm text-gray-600">Available Points</div>
                   </div>
                   <div className="text-center bg-gray-50 p-4 rounded">
@@ -893,7 +893,7 @@ const GuestDetailPage = () => {
                   >
                     Close
                   </button>
-                  <button className="px-6 py-3 bg-[#005357] text-white font-medium hover:bg-[#004147] transition-colors">
+                  <button className="px-6 py-3 bg-[#4E61D3] text-white font-medium hover:bg-[#3D4EA8] transition-colors">
                     Redeem Points
                   </button>
                 </div>
