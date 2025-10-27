@@ -250,14 +250,18 @@ def create_housekeeping_task_on_checkout(reservation):
         room=reservation.room,
         status__in=['CONFIRMED', 'PENDING'],
         check_in_date__gte=timezone.now().date()
-    ).order_by('check_in_date', 'check_in_time')
+    ).order_by('check_in_date')
 
     if upcoming_reservations.exists():
         next_reservation = upcoming_reservations.first()
 
         # Check how soon next guest arrives
+        # Assume standard check-in time of 14:00 (2 PM) if no time field exists
         check_in_datetime = timezone.make_aware(
-            timezone.datetime.combine(next_reservation.check_in_date, next_reservation.check_in_time)
+            timezone.datetime.combine(
+                next_reservation.check_in_date,
+                timezone.datetime.min.time().replace(hour=14, minute=0)
+            )
         )
 
         hours_until_checkin = (check_in_datetime - timezone.now()).total_seconds() / 3600
