@@ -158,7 +158,9 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'])
     def check_out(self, request, reservation_number=None):
-        """Check out a guest"""
+        """Check out a guest and create housekeeping task"""
+        from apps.hotel.utils.staff_assignment import create_housekeeping_task_on_checkout
+
         reservation = self.get_object()
 
         if reservation.status != 'CHECKED_IN':
@@ -172,6 +174,17 @@ class ReservationViewSet(viewsets.ModelViewSet):
         if reservation.room:
             reservation.room.status = 'MAINTENANCE'  # Room needs cleaning after checkout
             reservation.room.save(update_fields=['status', 'updated_at'])
+
+            # Auto-create housekeeping task with smart staff assignment
+            housekeeping_task = create_housekeeping_task_on_checkout(reservation)
+
+            if housekeeping_task:
+                # Log successful task creation
+                print(f'Housekeeping task {housekeeping_task.task_number} created for room {reservation.room.number}')
+                if housekeeping_task.assigned_to:
+                    print(f'  Assigned to: {housekeeping_task.assigned_to.full_name}')
+            else:
+                print(f'Warning: Failed to create housekeeping task for room {reservation.room.number}')
 
         serializer = ReservationSerializer(reservation)
         return Response(serializer.data)

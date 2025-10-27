@@ -248,10 +248,17 @@ class Attendance(models.Model):
         if not self.clock_in:
             return False
 
+        from django.utils import timezone as tz
         scheduled_start = datetime.combine(
             self.shift.shift_date,
             self.shift.start_time
         )
+        # Make scheduled_start timezone-aware if clock_in is timezone-aware
+        if tz.is_aware(self.clock_in) and tz.is_naive(scheduled_start):
+            scheduled_start = tz.make_aware(scheduled_start)
+        elif tz.is_naive(self.clock_in) and tz.is_aware(scheduled_start):
+            scheduled_start = tz.make_naive(scheduled_start)
+
         return self.clock_in > scheduled_start
 
     def is_early_departure(self):
