@@ -160,13 +160,26 @@ export default function NewReservationPage() {
 
     try {
       setLoading(true);
-      const response = await fetch(buildApiUrl(`hotel/guests/?search=${encodeURIComponent(query)}`));
+      const url = buildApiUrl(`hotel/guests/?search=${encodeURIComponent(query)}`);
+      console.log('Searching guests at:', url);
+
+      const response = await fetch(url);
+      console.log('Search response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
-        setSearchResults(data.results || data);
+        console.log('Search results:', data);
+        const results = data.results || data;
+        setSearchResults(Array.isArray(results) ? results : []);
+      } else {
+        console.error('Search failed with status:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        setSearchResults([]);
       }
     } catch (error) {
       console.error('Error searching customers:', error);
+      setSearchResults([]);
     } finally {
       setLoading(false);
     }
@@ -453,6 +466,13 @@ export default function NewReservationPage() {
                         <div className="text-center py-4">
                           <Clock01Icon className="h-4 w-4 animate-spin mx-auto mb-2" />
                           <p className="text-sm text-gray-500">Searching...</p>
+                        </div>
+                      )}
+
+                      {!loading && searchQuery && searchResults.length === 0 && (
+                        <div className="mt-2 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm">
+                          <p>No customers found matching "{searchQuery}"</p>
+                          <p className="text-xs mt-1">Try a different search term or create a new customer below</p>
                         </div>
                       )}
 
