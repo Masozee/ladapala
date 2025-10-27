@@ -72,6 +72,8 @@ const HousekeepingPage = () => {
       setLoading(true);
       const params = new URLSearchParams();
       if (filterStatus) params.append('status', filterStatus);
+      // Order by latest first (most recent created_at)
+      params.append('ordering', '-created_at');
 
       const url = buildApiUrl(`hotel/housekeeping-tasks/?${params.toString()}`);
       const response = await fetch(url, { credentials: 'include' });
