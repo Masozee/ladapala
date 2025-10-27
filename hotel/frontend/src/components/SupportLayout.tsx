@@ -187,7 +187,9 @@ const SupportLayout = ({ children, breadcrumb }: SupportLayoutProps) => {
           {/* Main Content */}
           <main className="flex-1 overflow-auto">
             <div className="p-6">
-              {children}
+              <div className="container mx-auto max-w-7xl">
+                {children}
+              </div>
             </div>
           </main>
         </div>
