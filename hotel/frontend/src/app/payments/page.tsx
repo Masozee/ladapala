@@ -266,10 +266,17 @@ const PaymentsPage = () => {
         notes += ` | Card: ${maskedCard}`;
       }
 
+      // Map frontend payment methods to backend values
+      const paymentMethodMap: { [key: string]: string } = {
+        'cash': 'CASH',
+        'debit_credit': 'CREDIT_CARD',
+        'qris': 'DIGITAL_WALLET'
+      };
+
       const paymentData = {
         reservation: reservationId,
         amount: totalAmount,
-        payment_method: selectedPaymentMethod.toUpperCase().replace(' ', '_'),
+        payment_method: paymentMethodMap[selectedPaymentMethod] || 'CASH',
         status: 'COMPLETED',
         payment_date: new Date().toISOString(),
         notes: notes,
@@ -720,6 +727,23 @@ const PaymentsPage = () => {
                     </div>
                   )}
 
+                  {/* Validation Messages */}
+                  {!isAlreadyPaid && selectedPaymentMethod === 'cash' && cashReceived <= 0 && (
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm">
+                      ⚠ Please enter the cash amount received
+                    </div>
+                  )}
+                  {!isAlreadyPaid && selectedPaymentMethod === 'debit_credit' && cardNumber.length < 16 && (
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm">
+                      ⚠ Please enter a valid 16-digit card number
+                    </div>
+                  )}
+                  {!isAlreadyPaid && selectedPaymentMethod === 'qris' && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 text-sm">
+                      ✓ Ready to process QRIS payment
+                    </div>
+                  )}
+
                   {/* Payment Button */}
                   <button
                     onClick={handlePayment}
@@ -728,6 +752,7 @@ const PaymentsPage = () => {
                       paymentStatus === 'processing' ||
                       paymentStatus === 'completed' ||
                       isAlreadyPaid ||
+                      (selectedPaymentMethod === 'cash' && cashReceived <= 0) ||
                       (selectedPaymentMethod === 'debit_credit' && cardNumber.length !== 16)
                     }
                     className="w-full flex items-center justify-center px-6 py-4 bg-[#005357] text-white font-bold hover:bg-[#004449] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
