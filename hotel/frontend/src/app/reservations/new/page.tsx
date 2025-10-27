@@ -166,8 +166,9 @@ export default function NewReservationPage() {
 
       if (response.ok) {
         const data = await response.json();
-        const results = data.results || data;
-        setSearchResults(Array.isArray(results) ? results : []);
+        // Handle both paginated and non-paginated responses
+        const results = Array.isArray(data) ? data : (data.results || []);
+        setSearchResults(results);
       } else {
         setSearchResults([]);
       }

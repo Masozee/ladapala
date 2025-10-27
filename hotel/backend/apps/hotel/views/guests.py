@@ -11,6 +11,7 @@ class GuestViewSet(viewsets.ModelViewSet):
     """ViewSet for managing guests"""
     queryset = Guest.objects.all()
     serializer_class = GuestSerializer
+    pagination_class = None  # Disable pagination for guest search
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_vip', 'nationality', 'gender']
     search_fields = ['first_name', 'last_name', 'email', 'phone']
