@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect, csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from .serializers import (
@@ -23,7 +23,7 @@ class LoginView(APIView):
         """Get CSRF token for login form"""
         return Response({'detail': 'CSRF cookie set'})
 
-    @method_decorator(csrf_protect)
+    @method_decorator(csrf_exempt)
     def post(self, request, *args, **kwargs):
         """Login with email and password using session authentication"""
         email = request.data.get('email')

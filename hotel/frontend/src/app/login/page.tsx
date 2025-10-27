@@ -17,7 +17,7 @@ import { buildApiUrl } from '@/lib/config';
 const LoginPage = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
     rememberMe: false
   });
@@ -39,13 +39,14 @@ const LoginPage = () => {
     setError(null);
     
     try {
-      const response = await fetch(buildApiUrl('auth/login/'), {
+      const response = await fetch(buildApiUrl('user/login/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
-          username: formData.username,
+          email: formData.email,
           password: formData.password
         }),
       });
@@ -63,8 +64,8 @@ const LoginPage = () => {
         localStorage.setItem('authEmployee', JSON.stringify(data.employee));
       }
 
-      // Redirect to complaints page
-      router.push('/complaints');
+      // Redirect to dashboard
+      router.push('/');
     } catch (err) {
       setError('Login failed. Please check your credentials.');
       console.error('Login error:', err);
@@ -129,24 +130,24 @@ const LoginPage = () => {
                 </div>
               )}
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                  Username
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email Address
                 </label>
                 <div className="mt-1 relative">
                   <input
-                    id="username"
-                    name="username"
-                    type="text"
-                    autoComplete="username"
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
                     required
-                    value={formData.username}
+                    value={formData.email}
                     onChange={handleInputChange}
                     className="appearance-none block w-full pl-14 pr-3 py-3 border border-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357]"
-                    placeholder="Enter your username"
+                    placeholder="Enter your email"
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <div className="w-8 h-8 bg-gray-100 flex items-center justify-center">
-                      <UserIcon className="h-4 w-4 text-gray-600" />
+                      <Mail01Icon className="h-4 w-4 text-gray-600" />
                     </div>
                   </div>
                 </div>
@@ -242,7 +243,10 @@ const LoginPage = () => {
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200">
               <h4 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</h4>
               <div className="space-y-1 text-xs text-blue-800">
-                <div><strong>Admin:</strong> admin / admin123</div>
+                <div><strong>Admin:</strong> admin@kapulaga.hotel / password123</div>
+                <div><strong>Manager:</strong> manager@kapulaga.hotel / password123</div>
+                <div><strong>Front Desk:</strong> frontdesk@kapulaga.hotel / password123</div>
+                <div><strong>Housekeeping:</strong> housekeeping@kapulaga.hotel / password123</div>
               </div>
             </div>
           </div>
