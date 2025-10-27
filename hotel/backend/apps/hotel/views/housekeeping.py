@@ -203,8 +203,7 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
             'assigned_to__last_name'
         ).annotate(
             active_tasks=Count('id', filter=Q(status__in=['CLEANING', 'INSPECTING'])),
-            completed_tasks=Count('id', filter=Q(status='CLEAN')),
-            avg_duration=Avg('duration_minutes', filter=Q(completion_time__isnull=False))
+            completed_tasks=Count('id', filter=Q(status='CLEAN'))
         )
 
         # Overdue tasks
