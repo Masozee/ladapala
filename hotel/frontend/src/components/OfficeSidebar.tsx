@@ -93,17 +93,11 @@ const OfficeSidebar = () => {
                       href={item.href}
                       className={`relative flex items-center justify-center w-16 h-14 transition-all duration-200 group ${
                         active
-                          ? ''
-                          : 'hover:bg-[#5B6FE0]'
+                          ? 'bg-white/10'
+                          : 'hover:bg-white/10'
                       }`}
                     >
-                      <div className={`w-10 h-10 flex items-center justify-center transition-transform group-hover:scale-110 ${
-                        active ? 'bg-white' : 'bg-white/20'
-                      }`}>
-                        <Icon className={`h-6 w-6 ${
-                          active ? 'text-[#4E61D3]' : 'text-white'
-                        }`} />
-                      </div>
+                      <Icon className={`h-6 w-6 text-white transition-transform group-hover:scale-110`} />
                       {item.badge && (
                         <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs flex items-center justify-center">
                           {item.badge}
@@ -141,17 +135,11 @@ const OfficeSidebar = () => {
                       href={item.href}
                       className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
                         active
-                          ? ''
-                          : 'hover:bg-[#5B6FE0]'
+                          ? 'bg-white/10'
+                          : 'hover:bg-white/10'
                       }`}
                     >
-                      <div className={`w-8 h-8 flex items-center justify-center transition-transform group-hover:scale-110 ${
-                        active ? 'bg-white' : 'bg-white/20'
-                      }`}>
-                        <Icon className={`h-5 w-5 ${
-                          active ? 'text-[#4E61D3]' : 'text-white'
-                        }`} />
-                      </div>
+                      <Icon className={`h-5 w-5 text-white transition-transform group-hover:scale-110`} />
                       {item.badge && (
                         <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center">
                           {item.badge}
@@ -177,6 +165,7 @@ const OfficeSidebar = () => {
 
         {/* Bottom Actions */}
         <div className="p-2">
+          <Separator.Root className="mb-4 mx-0 bg-white/20 h-px" />
           <div className="space-y-1">
             {bottomActions.map((item) => {
               const Icon = item.icon;
@@ -189,17 +178,11 @@ const OfficeSidebar = () => {
                       href={item.href}
                       className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
                         active
-                          ? ''
-                          : 'hover:bg-[#5B6FE0]'
+                          ? 'bg-white/10'
+                          : 'hover:bg-white/10'
                       }`}
                     >
-                      <div className={`w-8 h-8 flex items-center justify-center transition-transform group-hover:scale-110 ${
-                        active ? 'bg-white' : 'bg-white/20'
-                      }`}>
-                        <Icon className={`h-5 w-5 ${
-                          active ? 'text-[#4E61D3]' : 'text-white'
-                        }`} />
-                      </div>
+                      <Icon className={`h-5 w-5 text-white transition-transform group-hover:scale-110`} />
                     </Link>
                   </Tooltip.Trigger>
                   <Tooltip.Portal>
