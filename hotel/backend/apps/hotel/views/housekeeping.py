@@ -21,7 +21,7 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status', 'priority', 'task_type', 'assigned_to', 'scheduled_date']
     search_fields = ['task_number', 'room__number', 'notes']
     ordering_fields = ['scheduled_date', 'priority', 'created_at', 'estimated_completion']
-    ordering = ['-scheduled_date', '-priority']
+    ordering = ['-created_at']  # Latest tasks first
 
     def get_queryset(self):
         """Filter tasks based on query parameters"""
