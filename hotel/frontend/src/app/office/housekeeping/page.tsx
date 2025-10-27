@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AppLayout from '@/components/AppLayout';
+import OfficeLayout from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
 import {
   BedIcon,
@@ -262,7 +262,7 @@ const HousekeepingPage = () => {
   ];
 
   return (
-    <AppLayout breadcrumb={breadcrumb}>
+    <OfficeLayout breadcrumb={breadcrumb}>
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="space-y-6">
           {/* Header */}
@@ -660,7 +660,7 @@ const HousekeepingPage = () => {
           )}
         </div>
       </div>
-    </AppLayout>
+    </OfficeLayout>
   );
 };
 
