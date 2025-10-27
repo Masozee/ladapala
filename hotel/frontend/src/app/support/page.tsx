@@ -244,74 +244,74 @@ export default function SupportDashboard() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Active Maintenance</h3>
                   <p className="text-sm text-gray-100 mt-1">Sedang dikerjakan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Wrench01Icon className="h-4 w-4 text-[#005357]" />
+                  <Wrench01Icon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50">
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357]">{supportStats.activeMaintenance}</div>
+                <div className="text-3xl font-bold text-[#F87B1B]">{supportStats.activeMaintenance}</div>
                 <div className="text-sm text-gray-600">tugas aktif</div>
               </div>
             </div>
           </div>
 
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Housekeeping</h3>
                   <p className="text-sm text-gray-100 mt-1">Tugas pending</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <BedIcon className="h-4 w-4 text-[#005357]" />
+                  <BedIcon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50">
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357]">{supportStats.pendingHousekeeping}</div>
+                <div className="text-3xl font-bold text-[#F87B1B]">{supportStats.pendingHousekeeping}</div>
                 <div className="text-sm text-gray-600">tugas menunggu</div>
               </div>
             </div>
           </div>
 
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Amenities Request</h3>
                   <p className="text-sm text-gray-100 mt-1">Permintaan baru</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <PackageIcon className="h-4 w-4 text-[#005357]" />
+                  <PackageIcon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50">
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357]">{supportStats.amenitiesRequests}</div>
+                <div className="text-3xl font-bold text-[#F87B1B]">{supportStats.amenitiesRequests}</div>
                 <div className="text-sm text-gray-600">permintaan</div>
               </div>
             </div>
           </div>
 
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Completed Today</h3>
                   <p className="text-sm text-gray-100 mt-1">Selesai hari ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
@@ -328,19 +328,19 @@ export default function SupportDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Requests */}
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Recent Requests</h3>
                   <p className="text-sm text-gray-100 mt-1">Permintaan terbaru dari semua departemen</p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button className="bg-[#005357] text-white px-3 py-2 text-sm font-medium hover:bg-[#004347] transition-colors flex items-center space-x-2">
+                  <button className="bg-[#F87B1B] text-white px-3 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors flex items-center space-x-2">
                     <Add01Icon className="h-4 w-4" />
                     <span>New Request</span>
                   </button>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Mail01Icon className="h-4 w-4 text-[#005357]" />
+                    <Mail01Icon className="h-4 w-4 text-[#F87B1B]" />
                   </div>
                 </div>
               </div>
@@ -382,7 +382,7 @@ export default function SupportDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-1 ml-4">
-                        <button className="p-1 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded">
+                        <button className="p-1 text-gray-400 hover:text-[#F87B1B] hover:bg-gray-100 transition-colors rounded">
                           <EyeIcon className="h-4 w-4" />
                         </button>
                         <button className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
@@ -398,14 +398,14 @@ export default function SupportDashboard() {
 
           {/* Team Status */}
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Team Status</h3>
                   <p className="text-sm text-gray-100 mt-1">Status real-time tim support</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
+                  <UserMultipleIcon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
@@ -416,7 +416,7 @@ export default function SupportDashboard() {
                   <div key={member.id} className="bg-white p-4 border border-gray-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-[#005357] flex items-center justify-center text-white font-bold">
+                        <div className="w-10 h-10 bg-[#F87B1B] flex items-center justify-center text-white font-bold">
                           {member.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
@@ -458,7 +458,7 @@ export default function SupportDashboard() {
                 <p className="text-sm text-gray-100 mt-1">Aksi cepat untuk tugas support umum</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
+                <ArrowUp01Icon className="h-4 w-4 text-[#F87B1B]" />
               </div>
             </div>
           </div>

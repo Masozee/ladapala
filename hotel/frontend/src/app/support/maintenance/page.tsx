@@ -487,11 +487,11 @@ const MaintenancePage = () => {
             <p className="text-gray-600 mt-2">Track and manage all maintenance requests and technical issues</p>
           </div>
           <div className="flex items-center space-x-2">
-            <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
+            <button className="flex items-center space-x-2 bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors">
               <PieChartIcon className="h-4 w-4" />
               <span>Reports</span>
             </button>
-            <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
+            <button className="flex items-center space-x-2 bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors">
               <Add01Icon className="h-4 w-4" />
               <span>New Request</span>
             </button>
@@ -503,43 +503,43 @@ const MaintenancePage = () => {
           {/* First Column - 6 cards in 2 rows */}
           <div className="col-span-9">
             <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.open}</h3>
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Open</p>
                     </div>
-                    <div className="w-8 h-8 bg-[#005357] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <AlertCircleIcon className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                    <div className="w-8 h-8 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
+                      <AlertCircleIcon className="h-4 w-4 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50"></div>
               </div>
-              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.assigned}</h3>
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Assigned</p>
                     </div>
-                    <div className="w-8 h-8 bg-[#005357] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <UserIcon className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                    <div className="w-8 h-8 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
+                      <UserIcon className="h-4 w-4 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50"></div>
               </div>
-              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.in_progress}</h3>
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">In Progress</p>
                     </div>
-                    <div className="w-8 h-8 bg-[#005357] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <Wrench01Icon className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                    <div className="w-8 h-8 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
+                      <Wrench01Icon className="h-4 w-4 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
@@ -547,35 +547,35 @@ const MaintenancePage = () => {
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.on_hold}</h3>
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">On Hold</p>
                     </div>
-                    <div className="w-8 h-8 bg-[#005357] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <Clock01Icon className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                    <div className="w-8 h-8 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
+                      <Clock01Icon className="h-4 w-4 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50"></div>
               </div>
-              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.completed}</h3>
                       <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Completed</p>
                     </div>
-                    <div className="w-8 h-8 bg-[#005357] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <UserCheckIcon className="h-4 w-4 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                    <div className="w-8 h-8 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
+                      <UserCheckIcon className="h-4 w-4 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
                     </div>
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50"></div>
               </div>
-              <div className="bg-white border border-gray-200 hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -594,11 +594,11 @@ const MaintenancePage = () => {
           
           {/* Second Column - Total card */}
           <div className="col-span-3">
-            <div className="bg-white border border-gray-200 h-full hover:bg-[#005357] hover:text-white transition-colors duration-200 cursor-pointer group">
+            <div className="bg-white border border-gray-200 h-full hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
               <div className="p-6 h-full flex flex-col justify-center">
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-[#005357] group-hover:bg-white flex items-center justify-center mx-auto mb-4 rounded-full transition-colors duration-200">
-                    <Wrench01Icon className="h-6 w-6 text-white group-hover:text-[#005357] transition-colors duration-200" />
+                  <div className="w-12 h-12 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center mx-auto mb-4 rounded-full transition-colors duration-200">
+                    <Wrench01Icon className="h-6 w-6 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
                   </div>
                   <h3 className="text-3xl font-bold text-gray-900 group-hover:text-white mb-2">{stats.total}</h3>
                   <p className="text-sm text-gray-600 group-hover:text-gray-200">Total Requests</p>
@@ -612,7 +612,7 @@ const MaintenancePage = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
-              className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-[#F87B1B] text-white text-sm font-medium hover:bg-[#E66A0A] transition-colors"
             >
               <Settings02Icon className="h-4 w-4" />
               <span>Advanced Filter</span>
@@ -626,7 +626,7 @@ const MaintenancePage = () => {
                 placeholder="Search tickets, titles, location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64 pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                className="w-64 pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
               />
             </div>
           </div>
@@ -639,7 +639,7 @@ const MaintenancePage = () => {
                 onClick={() => setViewMode('card')}
                 className={`flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
                   viewMode === 'card' 
-                    ? 'bg-[#005357] text-white' 
+                    ? 'bg-[#F87B1B] text-white' 
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -650,7 +650,7 @@ const MaintenancePage = () => {
                 onClick={() => setViewMode('table')}
                 className={`flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
                   viewMode === 'table' 
-                    ? 'bg-[#005357] text-white' 
+                    ? 'bg-[#F87B1B] text-white' 
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -675,7 +675,7 @@ const MaintenancePage = () => {
               return (
                 <div key={request.id} className="bg-white border border-gray-200 flex flex-col h-full">
                   {/* Request Card Header */}
-                  <div className="p-6 bg-[#005357] text-white">
+                  <div className="p-6 bg-[#F87B1B] text-white">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-bold text-white">{request.ticket_number}</h3>
@@ -695,13 +695,13 @@ const MaintenancePage = () => {
                     {/* Key Info */}
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div className="text-center">
-                        <div className="text-lg font-bold text-[#005357]">
+                        <div className="text-lg font-bold text-[#F87B1B]">
                           {request.estimated_cost ? formatCurrency(request.estimated_cost) : 'TBD'}
                         </div>
                         <div className="text-xs text-gray-600">Est. Cost</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-[#005357]">
+                        <div className="text-lg font-bold text-[#F87B1B]">
                           {request.labor_hours ? `${request.labor_hours}h` : 'TBD'}
                         </div>
                         <div className="text-xs text-gray-600">Est. Time</div>
@@ -772,7 +772,7 @@ const MaintenancePage = () => {
                         <EyeIcon className="h-3 w-3 inline mr-1" />
                         View Details
                       </Link>
-                      <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors">
+                      <button className="text-xs bg-[#F87B1B] text-white px-3 py-2 hover:bg-[#E66A0A] transition-colors">
                         <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
                         Update
                       </button>
@@ -786,7 +786,7 @@ const MaintenancePage = () => {
           /* Table View */
           <div className="overflow-x-auto">
             <table className="w-full border-collapse bg-white border border-gray-200">
-              <thead className="bg-[#005357]">
+              <thead className="bg-[#F87B1B]">
                   <tr>
                     <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                       Request
@@ -879,7 +879,7 @@ const MaintenancePage = () => {
                         {/* Cost */}
                         <td className="border border-gray-200 px-6 py-4">
                           <div className="text-right">
-                            <div className="text-sm font-bold text-[#005357]">
+                            <div className="text-sm font-bold text-[#F87B1B]">
                               {request.estimated_cost ? formatCurrency(request.estimated_cost) : 'TBD'}
                             </div>
                             {request.actual_cost && (
@@ -900,7 +900,7 @@ const MaintenancePage = () => {
                               <EyeIcon className="h-3 w-3 inline mr-1" />
                               View
                             </Link>
-                            <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors rounded">
+                            <button className="text-xs bg-[#F87B1B] text-white px-3 py-2 hover:bg-[#E66A0A] transition-colors rounded">
                               <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
                               Update
                             </button>
@@ -922,7 +922,7 @@ const MaintenancePage = () => {
                 <h3 className="text-xl font-bold text-gray-900">Technician Status</h3>
                 <p className="text-sm text-gray-600 mt-1">Current availability and workload</p>
               </div>
-              <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#F87B1B] flex items-center justify-center">
                 <UserMultipleIcon className="h-4 w-4 text-white" />
               </div>
             </div>

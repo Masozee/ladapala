@@ -378,14 +378,14 @@ export default function EmergencyPage() {
       onClick={() => setActiveTab(tabId)}
       className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${
         activeTab === tabId
-          ? 'bg-[#005357] text-white'
+          ? 'bg-[#F87B1B] text-white'
           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
       }`}
     >
       <span>{label}</span>
       {count !== undefined && (
         <span className={`px-2 py-0.5 text-xs rounded-full ${
-          activeTab === tabId ? 'bg-white text-[#005357]' : 'bg-gray-200 text-gray-600'
+          activeTab === tabId ? 'bg-white text-[#F87B1B]' : 'bg-gray-200 text-gray-600'
         }`}>
           {count}
         </span>
@@ -421,20 +421,20 @@ export default function EmergencyPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Active Alerts</h3>
                   <p className="text-sm text-gray-100 mt-1">Darurat aktif</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <AlertCircleIcon className="h-4 w-4 text-[#005357]" />
+                  <AlertCircleIcon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50">
               <div className="text-center">
-                <div className={`text-3xl font-bold ${emergencyStats.activeAlerts > 0 ? 'text-red-600' : 'text-[#005357]'}`}>
+                <div className={`text-3xl font-bold ${emergencyStats.activeAlerts > 0 ? 'text-red-600' : 'text-[#F87B1B]'}`}>
                   {emergencyStats.activeAlerts}
                 </div>
                 <div className="text-sm text-gray-600">alert aktif</div>
@@ -443,14 +443,14 @@ export default function EmergencyPage() {
           </div>
 
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Resolved Today</h3>
                   <p className="text-sm text-gray-100 mt-1">Diselesaikan hari ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
@@ -463,40 +463,40 @@ export default function EmergencyPage() {
           </div>
 
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Avg Response Time</h3>
                   <p className="text-sm text-gray-100 mt-1">Rata-rata respons</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50">
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357]">{emergencyStats.averageResponseTime}</div>
+                <div className="text-3xl font-bold text-[#F87B1B]">{emergencyStats.averageResponseTime}</div>
                 <div className="text-sm text-gray-600">menit</div>
               </div>
             </div>
           </div>
 
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">This Month</h3>
                   <p className="text-sm text-gray-100 mt-1">Total bulan ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Calendar01Icon className="h-4 w-4 text-[#005357]" />
+                  <Calendar01Icon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50">
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357]">{emergencyStats.totalThisMonth}</div>
+                <div className="text-3xl font-bold text-[#F87B1B]">{emergencyStats.totalThisMonth}</div>
                 <div className="text-sm text-gray-600">insiden</div>
               </div>
             </div>
@@ -505,7 +505,7 @@ export default function EmergencyPage() {
 
         {/* Main Content */}
         <div className="bg-white border border-gray-200">
-          <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+          <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white">Emergency Incidents</h3>
@@ -517,7 +517,7 @@ export default function EmergencyPage() {
                   <span>Report Emergency</span>
                 </button>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Alert01Icon className="h-4 w-4 text-[#005357]" />
+                  <Alert01Icon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
@@ -544,13 +544,13 @@ export default function EmergencyPage() {
                     placeholder="Cari emergency incident..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-64"
+                    className="pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F87B1B] focus:border-[#F87B1B] w-64"
                   />
                 </div>
                 <select 
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                  className="px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                 >
                   <option value="all">Semua Tipe</option>
                   <option value="fire">Kebakaran</option>
@@ -654,7 +654,7 @@ export default function EmergencyPage() {
                           {incident.actions.map((action, index) => (
                             <div key={index} className="flex items-center space-x-3 text-sm">
                               <span className="text-gray-500 font-mono text-xs w-12">{action.time}</span>
-                              <div className="w-2 h-2 bg-[#005357] rounded-full"></div>
+                              <div className="w-2 h-2 bg-[#F87B1B] rounded-full"></div>
                               <span className="text-gray-900">{action.action}</span>
                               <span className="text-gray-500 text-xs">by {action.by}</span>
                             </div>
@@ -673,7 +673,7 @@ export default function EmergencyPage() {
                     </div>
 
                     <div className="flex items-center space-x-2 ml-4">
-                      <button className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded">
+                      <button className="p-2 text-gray-400 hover:text-[#F87B1B] hover:bg-gray-100 transition-colors rounded">
                         <EyeIcon className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
@@ -694,14 +694,14 @@ export default function EmergencyPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Emergency Contacts */}
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Emergency Contacts</h3>
                   <p className="text-sm text-gray-100 mt-1">Kontak darurat penting</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Call02Icon className="h-4 w-4 text-[#005357]" />
+                  <Call02Icon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
@@ -724,7 +724,7 @@ export default function EmergencyPage() {
                       </span>
                       <a
                         href={`tel:${contact.phone}`}
-                        className="bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004347] transition-colors"
+                        className="bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors"
                       >
                         {contact.phone}
                       </a>
@@ -737,14 +737,14 @@ export default function EmergencyPage() {
 
           {/* Emergency Team */}
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Emergency Response Team</h3>
                   <p className="text-sm text-gray-100 mt-1">Tim respons darurat internal</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <UserMultipleIcon className="h-4 w-4 text-[#005357]" />
+                  <UserMultipleIcon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
@@ -754,7 +754,7 @@ export default function EmergencyPage() {
                 {emergencyTeam.map((member) => (
                   <div key={member.id} className="bg-white p-4 border border-gray-200">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-12 h-12 bg-[#005357] flex items-center justify-center text-white font-bold">
+                      <div className="w-12 h-12 bg-[#F87B1B] flex items-center justify-center text-white font-bold">
                         {member.name.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div className="flex-1">
@@ -784,7 +784,7 @@ export default function EmergencyPage() {
                     <div className="flex items-center space-x-2 mt-3">
                       <a
                         href={`tel:${member.phone}`}
-                        className="flex-1 bg-[#005357] text-white px-3 py-2 text-sm font-medium hover:bg-[#004347] transition-colors text-center"
+                        className="flex-1 bg-[#F87B1B] text-white px-3 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors text-center"
                       >
                         Call {member.phone}
                       </a>

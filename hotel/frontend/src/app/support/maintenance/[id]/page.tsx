@@ -393,7 +393,7 @@ const MaintenanceDetailPage = () => {
 
         {/* Request Overview */}
         <div className="bg-white border border-gray-200">
-          <div className="p-6 bg-[#005357] text-white">
+          <div className="p-6 bg-[#F87B1B] text-white">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white">MNT-2024-001</h3>
@@ -425,7 +425,7 @@ const MaintenanceDetailPage = () => {
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-600">Category:</span>
                     <div className="flex items-center space-x-1">
-                      <div className="text-[#005357]">{getCategoryIcon(request.category)}</div>
+                      <div className="text-[#F87B1B]">{getCategoryIcon(request.category)}</div>
                       <span className="text-sm text-gray-900">{getCategoryName(request.category)}</span>
                     </div>
                   </div>
@@ -494,7 +494,7 @@ const MaintenanceDetailPage = () => {
                 <h3 className="font-semibold text-gray-900 mb-3">Cost Summary</h3>
                 <div className="space-y-2">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-[#005357]">
+                    <div className="text-2xl font-bold text-[#F87B1B]">
                       {request.cost_breakdown ? formatCurrency(request.cost_breakdown.total_cost) : formatCurrency(request.estimated_cost || 0)}
                     </div>
                     <div className="text-xs text-gray-600">{request.actual_cost ? 'Actual Cost' : 'Estimated Cost'}</div>
@@ -514,7 +514,7 @@ const MaintenanceDetailPage = () => {
               <button className="bg-white/10 text-white px-4 py-2 text-sm font-medium rounded hover:bg-white/20 transition-colors">
                 View Details
               </button>
-              <button className="bg-white text-[#005357] px-4 py-2 text-sm font-medium rounded hover:bg-gray-100 transition-colors">
+              <button className="bg-white text-[#F87B1B] px-4 py-2 text-sm font-medium rounded hover:bg-gray-100 transition-colors">
                 Update
               </button>
             </div>
@@ -526,14 +526,14 @@ const MaintenanceDetailPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Technician Info */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#F87B1B] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Assigned Technician</h3>
                     <p className="text-sm text-gray-100 mt-1">Current technician working on this request</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Shield01Icon className="h-4 w-4 text-[#005357]" />
+                    <Shield01Icon className="h-4 w-4 text-[#F87B1B]" />
                   </div>
                 </div>
               </div>
@@ -575,20 +575,20 @@ const MaintenanceDetailPage = () => {
 
             {/* Work Timer */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357] text-white">
+              <div className="p-6 bg-[#F87B1B] text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Work Timer</h3>
                     <p className="text-sm text-gray-100 mt-1">Track active work time on this request</p>
                   </div>
                   <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Clock01Icon className="h-4 w-4 text-[#005357]" />
+                    <Clock01Icon className="h-4 w-4 text-[#F87B1B]" />
                   </div>
                 </div>
               </div>
               <div className="p-4 bg-gray-50">
                 <div className="text-center mb-4">
-                  <div className="text-3xl font-mono font-bold text-[#005357] mb-2">
+                  <div className="text-3xl font-mono font-bold text-[#F87B1B] mb-2">
                     {formatTimer(workTimer.elapsed)}
                   </div>
                   <p className="text-sm text-gray-600">Active work time</p>
@@ -639,7 +639,7 @@ const MaintenanceDetailPage = () => {
                 onClick={() => setActiveTab(tab.id as 'details' | 'work-log' | 'parts' | 'costs')}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-[#005357] text-[#005357]'
+                    ? 'border-[#F87B1B] text-[#F87B1B]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -656,14 +656,14 @@ const MaintenanceDetailPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Problem Description */}
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#F87B1B] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Problem Description</h3>
                       <p className="text-sm text-gray-100 mt-1">Detailed description of the reported issue</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <File01Icon className="h-4 w-4 text-[#005357]" />
+                      <File01Icon className="h-4 w-4 text-[#F87B1B]" />
                     </div>
                   </div>
                 </div>
@@ -687,14 +687,14 @@ const MaintenanceDetailPage = () => {
 
               {/* Parts Needed */}
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#F87B1B] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Required Parts</h3>
                       <p className="text-sm text-gray-100 mt-1">Materials needed for repair</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <PackageIcon className="h-4 w-4 text-[#005357]" />
+                      <PackageIcon className="h-4 w-4 text-[#F87B1B]" />
                     </div>
                   </div>
                 </div>
@@ -715,7 +715,7 @@ const MaintenanceDetailPage = () => {
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <div className="flex justify-between items-center">
                         <span className="font-medium text-gray-900">Estimated Parts Cost:</span>
-                        <span className="font-bold text-[#005357]">{formatCurrency(request.parts_cost)}</span>
+                        <span className="font-bold text-[#F87B1B]">{formatCurrency(request.parts_cost)}</span>
                       </div>
                     </div>
                   )}
@@ -725,14 +725,14 @@ const MaintenanceDetailPage = () => {
               {/* Request Photos */}
               {request.photos.length > 0 && (
                 <div className="lg:col-span-2 bg-white border border-gray-200">
-                  <div className="p-6 bg-[#005357] text-white">
+                  <div className="p-6 bg-[#F87B1B] text-white">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-xl font-bold text-white">Photos</h3>
                         <p className="text-sm text-gray-100 mt-1">Documentation of the issue</p>
                       </div>
                       <div className="w-8 h-8 bg-white flex items-center justify-center">
-                        <ViewIcon className="h-4 w-4 text-[#005357]" />
+                        <ViewIcon className="h-4 w-4 text-[#F87B1B]" />
                       </div>
                     </div>
                   </div>
@@ -758,14 +758,14 @@ const MaintenanceDetailPage = () => {
             <div className="space-y-6">
               {/* Add New Log Entry */}
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#F87B1B] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Add Work Log Entry</h3>
                       <p className="text-sm text-gray-100 mt-1">Record progress and updates</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <Add01Icon className="h-4 w-4 text-[#005357]" />
+                      <Add01Icon className="h-4 w-4 text-[#F87B1B]" />
                     </div>
                   </div>
                 </div>
@@ -776,7 +776,7 @@ const MaintenanceDetailPage = () => {
                       onChange={(e) => setNewLogEntry(e.target.value)}
                       placeholder="Describe the work performed, progress made, or issues encountered..."
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#005357] focus:border-[#005357] text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
                     />
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-gray-600">
@@ -785,7 +785,7 @@ const MaintenanceDetailPage = () => {
                       <button
                         onClick={handleAddLogEntry}
                         disabled={!newLogEntry.trim()}
-                        className="bg-[#005357] text-white px-4 py-2 text-sm font-medium rounded hover:bg-[#004147] transition-colors disabled:bg-gray-300"
+                        className="bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium rounded hover:bg-[#E66A0A] transition-colors disabled:bg-gray-300"
                       >
                         Add Entry
                       </button>
@@ -796,14 +796,14 @@ const MaintenanceDetailPage = () => {
 
               {/* Work Log Timeline */}
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#F87B1B] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Work Log Timeline</h3>
                       <p className="text-sm text-gray-100 mt-1">Complete history of work performed</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <UserCheckIcon className="h-4 w-4 text-[#005357]" />
+                      <UserCheckIcon className="h-4 w-4 text-[#F87B1B]" />
                     </div>
                   </div>
                 </div>
@@ -850,14 +850,14 @@ const MaintenanceDetailPage = () => {
             <div className="space-y-6">
               {/* Parts Used */}
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#F87B1B] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Parts Used</h3>
                       <p className="text-sm text-gray-100 mt-1">Materials consumed during repair</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <PackageIcon className="h-4 w-4 text-[#005357]" />
+                      <PackageIcon className="h-4 w-4 text-[#F87B1B]" />
                     </div>
                   </div>
                 </div>
@@ -905,14 +905,14 @@ const MaintenanceDetailPage = () => {
 
               {/* Parts Inventory Check */}
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#F87B1B] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Inventory Status</h3>
                       <p className="text-sm text-gray-100 mt-1">Current stock levels for required parts</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <Location01Icon className="h-4 w-4 text-[#005357]" />
+                      <Location01Icon className="h-4 w-4 text-[#F87B1B]" />
                     </div>
                   </div>
                 </div>
@@ -945,14 +945,14 @@ const MaintenanceDetailPage = () => {
             <div className="space-y-6">
               {/* Cost Breakdown */}
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#F87B1B] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Cost Breakdown</h3>
                       <p className="text-sm text-gray-100 mt-1">Detailed cost analysis for this repair</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <PieChartIcon className="h-4 w-4 text-[#005357]" />
+                      <PieChartIcon className="h-4 w-4 text-[#F87B1B]" />
                     </div>
                   </div>
                 </div>
@@ -1014,7 +1014,7 @@ const MaintenanceDetailPage = () => {
                         <div className="border-t pt-3">
                           <div className="flex justify-between">
                             <span className="font-bold text-lg text-gray-900">Total:</span>
-                            <span className="font-bold text-lg text-[#005357]">{formatCurrency(request.cost_breakdown.total_cost)}</span>
+                            <span className="font-bold text-lg text-[#F87B1B]">{formatCurrency(request.cost_breakdown.total_cost)}</span>
                           </div>
                         </div>
                         
@@ -1035,14 +1035,14 @@ const MaintenanceDetailPage = () => {
 
               {/* Cost Comparison */}
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357] text-white">
+                <div className="p-6 bg-[#F87B1B] text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Budget vs Actual</h3>
                       <p className="text-sm text-gray-100 mt-1">Comparison of estimated and actual costs</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <ArrowUp01Icon className="h-4 w-4 text-[#005357]" />
+                      <ArrowUp01Icon className="h-4 w-4 text-[#F87B1B]" />
                     </div>
                   </div>
                 </div>
@@ -1055,7 +1055,7 @@ const MaintenanceDetailPage = () => {
                       <div className="text-sm text-gray-600">Original Estimate</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-[#005357]">
+                      <div className="text-2xl font-bold text-[#F87B1B]">
                         {formatCurrency(request.cost_breakdown.total_cost)}
                       </div>
                       <div className="text-sm text-gray-600">Actual Cost</div>

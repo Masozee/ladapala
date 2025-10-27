@@ -224,11 +224,11 @@ const HousekeepingPage = () => {
             <p className="text-gray-600 mt-2">Manage room cleaning, maintenance, and staff assignments</p>
           </div>
           <div className="flex items-center space-x-2">
-            <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
+            <button className="flex items-center space-x-2 bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors">
               <UserCheckIcon className="h-4 w-4" />
               <span>Daily Report</span>
             </button>
-            <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
+            <button className="flex items-center space-x-2 bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors">
               <Add01Icon className="h-4 w-4" />
               <span>New Task</span>
             </button>
@@ -314,7 +314,7 @@ const HousekeepingPage = () => {
                   <h3 className="text-xl font-bold text-gray-900">{stats.total}</h3>
                   <p className="text-sm text-gray-600 mt-1">Total Rooms</p>
                 </div>
-                <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#F87B1B] flex items-center justify-center">
                   <Building03Icon className="h-4 w-4 text-white" />
                 </div>
               </div>
@@ -327,7 +327,7 @@ const HousekeepingPage = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
-              className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-[#F87B1B] text-white text-sm font-medium hover:bg-[#E66A0A] transition-colors"
             >
               <Settings02Icon className="h-4 w-4" />
               <span>Advanced Filter</span>
@@ -341,7 +341,7 @@ const HousekeepingPage = () => {
                 placeholder="Search rooms, staff, or room type..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64 pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                className="w-64 pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
               />
             </div>
           </div>
@@ -354,7 +354,7 @@ const HousekeepingPage = () => {
                 onClick={() => setViewMode('card')}
                 className={`flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
                   viewMode === 'card'
-                    ? 'bg-[#005357] text-white'
+                    ? 'bg-[#F87B1B] text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -365,7 +365,7 @@ const HousekeepingPage = () => {
                 onClick={() => setViewMode('table')}
                 className={`flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
                   viewMode === 'table'
-                    ? 'bg-[#005357] text-white'
+                    ? 'bg-[#F87B1B] text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -385,7 +385,7 @@ const HousekeepingPage = () => {
         {viewMode === 'table' && (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse bg-white border border-gray-200">
-              <thead className="bg-[#005357]">
+              <thead className="bg-[#F87B1B]">
               <tr>
                 <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
                   Room
@@ -519,7 +519,7 @@ const HousekeepingPage = () => {
                             <EyeIcon className="h-3 w-3 inline mr-1" />
                             View
                           </Link>
-                          <button className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors rounded">
+                          <button className="text-xs bg-[#F87B1B] text-white px-3 py-2 hover:bg-[#E66A0A] transition-colors rounded">
                             <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
                             Update
                           </button>

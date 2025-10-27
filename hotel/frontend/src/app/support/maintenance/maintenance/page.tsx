@@ -297,14 +297,14 @@ export default function MaintenancePage() {
       onClick={() => setActiveTab(tabId)}
       className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${
         activeTab === tabId
-          ? 'bg-[#005357] text-white'
+          ? 'bg-[#F87B1B] text-white'
           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
       }`}
     >
       <span>{label}</span>
       {count !== undefined && (
         <span className={`px-2 py-0.5 text-xs rounded-full ${
-          activeTab === tabId ? 'bg-white text-[#005357]' : 'bg-gray-200 text-gray-600'
+          activeTab === tabId ? 'bg-white text-[#F87B1B]' : 'bg-gray-200 text-gray-600'
         }`}>
           {count}
         </span>
@@ -324,54 +324,54 @@ export default function MaintenancePage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Active Requests</h3>
                   <p className="text-sm text-gray-100 mt-1">Sedang dikerjakan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50">
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357]">{maintenanceStats.activeRequests}</div>
+                <div className="text-3xl font-bold text-[#F87B1B]">{maintenanceStats.activeRequests}</div>
                 <div className="text-sm text-gray-600">permintaan aktif</div>
               </div>
             </div>
           </div>
 
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Pending</h3>
                   <p className="text-sm text-gray-100 mt-1">Menunggu dikerjakan</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock01Icon className="h-4 w-4 text-[#005357]" />
+                  <Clock01Icon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
             <div className="p-4 bg-gray-50">
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#005357]">{maintenanceStats.pendingRequests}</div>
+                <div className="text-3xl font-bold text-[#F87B1B]">{maintenanceStats.pendingRequests}</div>
                 <div className="text-sm text-gray-600">permintaan pending</div>
               </div>
             </div>
           </div>
 
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Urgent</h3>
                   <p className="text-sm text-gray-100 mt-1">Prioritas tinggi</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Alert01Icon className="h-4 w-4 text-[#005357]" />
+                  <Alert01Icon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
@@ -384,14 +384,14 @@ export default function MaintenancePage() {
           </div>
 
           <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Completed Today</h3>
                   <p className="text-sm text-gray-100 mt-1">Selesai hari ini</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <UserCheckIcon className="h-4 w-4 text-[#005357]" />
+                  <UserCheckIcon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
@@ -406,7 +406,7 @@ export default function MaintenancePage() {
 
         {/* Main Content */}
         <div className="bg-white border border-gray-200">
-          <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+          <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white">Maintenance Requests</h3>
@@ -415,13 +415,13 @@ export default function MaintenancePage() {
               <div className="flex items-center space-x-3">
                 <button 
                   onClick={() => setShowCreateForm(true)}
-                  className="bg-white text-[#005357] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2"
+                  className="bg-white text-[#F87B1B] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2"
                 >
                   <Add01Icon className="h-4 w-4" />
                   <span>New Request</span>
                 </button>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Wrench01Icon className="h-4 w-4 text-[#005357]" />
+                  <Wrench01Icon className="h-4 w-4 text-[#F87B1B]" />
                 </div>
               </div>
             </div>
@@ -449,13 +449,13 @@ export default function MaintenancePage() {
                     placeholder="Cari maintenance request..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357] focus:border-[#005357] w-64"
+                    className="pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F87B1B] focus:border-[#F87B1B] w-64"
                   />
                 </div>
                 <select 
                   value={selectedPriority}
                   onChange={(e) => setSelectedPriority(e.target.value)}
-                  className="px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                  className="px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                 >
                   <option value="all">Semua Prioritas</option>
                   <option value="urgent">Darurat</option>
@@ -466,7 +466,7 @@ export default function MaintenancePage() {
                 <select 
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                  className="px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                 >
                   <option value="all">Semua Kategori</option>
                   <option value="HVAC">HVAC</option>
@@ -549,7 +549,7 @@ export default function MaintenancePage() {
                     </div>
 
                     <div className="flex items-center space-x-2 ml-4">
-                      <button className="p-2 text-gray-400 hover:text-[#005357] hover:bg-gray-100 transition-colors rounded">
+                      <button className="p-2 text-gray-400 hover:text-[#F87B1B] hover:bg-gray-100 transition-colors rounded">
                         <EyeIcon className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
@@ -568,14 +568,14 @@ export default function MaintenancePage() {
 
         {/* Technicians Status */}
         <div className="bg-white border border-gray-200">
-          <div className="p-6 border-b border-gray-200 bg-[#005357] text-white">
+          <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white">Technicians Status</h3>
                 <p className="text-sm text-gray-100 mt-1">Status dan ketersediaan teknisi maintenance</p>
               </div>
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <UserIcon className="h-4 w-4 text-[#005357]" />
+                <UserIcon className="h-4 w-4 text-[#F87B1B]" />
               </div>
             </div>
           </div>
@@ -585,7 +585,7 @@ export default function MaintenancePage() {
               {technicians.map((tech) => (
                 <div key={tech.id} className="bg-white p-4 border border-gray-200">
                   <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-12 h-12 bg-[#005357] flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-[#F87B1B] flex items-center justify-center text-white font-bold">
                       {tech.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div className="flex-1">
@@ -622,7 +622,7 @@ export default function MaintenancePage() {
                   </div>
 
                   <div className="flex items-center space-x-2 mt-4">
-                    <button className="flex-1 bg-[#005357] text-white px-3 py-2 text-sm font-medium hover:bg-[#004347] transition-colors">
+                    <button className="flex-1 bg-[#F87B1B] text-white px-3 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors">
                       Assign Job
                     </button>
                     <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors rounded">

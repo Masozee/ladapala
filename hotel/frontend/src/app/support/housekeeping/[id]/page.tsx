@@ -663,7 +663,7 @@ const HousekeepingDetailPage = () => {
             <p className="text-gray-600 mb-6">The room task you're looking for doesn't exist.</p>
             <Link 
               href="/housekeeping"
-              className="inline-flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 hover:bg-[#004147] transition-colors"
+              className="inline-flex items-center space-x-2 bg-[#F87B1B] text-white px-4 py-2 hover:bg-[#E66A0A] transition-colors"
             >
               <ChevronLeftIcon className="h-4 w-4" />
               <span>Back to Housekeeping</span>
@@ -684,7 +684,7 @@ const HousekeepingDetailPage = () => {
         <div className="space-y-4">
           <Link 
             href="/housekeeping"
-            className="inline-flex items-center space-x-2 text-gray-600 hover:text-[#005357] transition-colors"
+            className="inline-flex items-center space-x-2 text-gray-600 hover:text-[#F87B1B] transition-colors"
           >
             <ChevronLeftIcon className="h-4 w-4" />
             <span className="text-sm font-medium">Back to Housekeeping</span>
@@ -710,7 +710,7 @@ const HousekeepingDetailPage = () => {
               <button 
                 onClick={() => updateRoomStatus('clean')}
                 disabled={progressPercentage < 100}
-                className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors disabled:opacity-50"
+                className="flex items-center space-x-2 bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors disabled:opacity-50"
               >
                 <UserCheckIcon className="h-4 w-4" />
                 <span>Mark Complete</span>
@@ -727,7 +727,7 @@ const HousekeepingDetailPage = () => {
                 <h3 className="text-xl font-bold text-gray-900">Overall Progress</h3>
                 <p className="text-sm text-gray-600 mt-1">{completedTasks} of {totalTasks} items completed</p>
               </div>
-              <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#F87B1B] flex items-center justify-center">
                 <Location01Icon className="h-4 w-4 text-white" />
               </div>
             </div>
@@ -735,7 +735,7 @@ const HousekeepingDetailPage = () => {
           <div className="p-4 bg-gray-50">
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div 
-                className="bg-[#005357] h-3 rounded-full transition-all duration-300"
+                className="bg-[#F87B1B] h-3 rounded-full transition-all duration-300"
                 style={{width: `${progressPercentage}%`}}
               ></div>
             </div>
@@ -758,7 +758,7 @@ const HousekeepingDetailPage = () => {
           <div className="space-y-6 sticky top-6 self-start">
             {/* Room Information */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357]">
+              <div className="p-6 bg-[#F87B1B]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Room Details</h3>
@@ -803,7 +803,7 @@ const HousekeepingDetailPage = () => {
 
             {/* Guest Schedule */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357]">
+              <div className="p-6 bg-[#F87B1B]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Guest Schedule</h3>
@@ -838,7 +838,7 @@ const HousekeepingDetailPage = () => {
 
             {/* Staff Assignment */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357]">
+              <div className="p-6 bg-[#F87B1B]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Assigned Staff</h3>
@@ -874,7 +874,7 @@ const HousekeepingDetailPage = () => {
           <div className="space-y-6">
             {/* Housekeeping Checklist */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357]">
+              <div className="p-6 bg-[#F87B1B]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Housekeeping Checklist</h3>
@@ -897,7 +897,7 @@ const HousekeepingDetailPage = () => {
                               {category.items.filter((_, itemIndex) => checkedItems[`${categoryIndex}-${itemIndex}`]).length} of {category.items.length} completed
                             </p>
                           </div>
-                          <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                          <div className="w-8 h-8 bg-[#F87B1B] flex items-center justify-center">
                             {getIconComponent(category.icon)}
                           </div>
                         </div>
@@ -914,13 +914,13 @@ const HousekeepingDetailPage = () => {
                                     type="checkbox"
                                     checked={isChecked}
                                     onChange={() => toggleChecklistItem(categoryIndex, itemIndex)}
-                                    className="w-4 h-4 text-[#005357] border-gray-300 rounded focus:ring-[#005357] focus:ring-2"
+                                    className="w-4 h-4 text-[#F87B1B] border-gray-300 rounded focus:ring-[#F87B1B] focus:ring-2"
                                   />
                                 </div>
                                 <span className={`text-sm transition-colors ${
                                   isChecked 
                                     ? 'text-gray-500 line-through' 
-                                    : 'text-gray-900 group-hover:text-[#005357]'
+                                    : 'text-gray-900 group-hover:text-[#F87B1B]'
                                 }`}>
                                   {item}
                                 </span>
@@ -942,7 +942,7 @@ const HousekeepingDetailPage = () => {
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
-                              className="bg-[#005357] h-2 rounded-full transition-all duration-300"
+                              className="bg-[#F87B1B] h-2 rounded-full transition-all duration-300"
                               style={{
                                 width: `${(category.items.filter((_, itemIndex) => checkedItems[`${categoryIndex}-${itemIndex}`]).length / category.items.length) * 100}%`
                               }}
@@ -959,7 +959,7 @@ const HousekeepingDetailPage = () => {
             {/* Special Instructions */}
             {roomTask.special_instructions && (
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357]">
+                <div className="p-6 bg-[#F87B1B]">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Special Instructions</h3>
@@ -982,7 +982,7 @@ const HousekeepingDetailPage = () => {
             {/* Guest Requests */}
             {roomTask.guest_requests && roomTask.guest_requests.length > 0 && (
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357]">
+                <div className="p-6 bg-[#F87B1B]">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Guest Requests</h3>
@@ -1008,7 +1008,7 @@ const HousekeepingDetailPage = () => {
 
             {/* Maintenance Issues */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357]">
+              <div className="p-6 bg-[#F87B1B]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Maintenance Issues</h3>
@@ -1052,7 +1052,7 @@ const HousekeepingDetailPage = () => {
                     value={newIssue}
                     onChange={(e) => setNewIssue(e.target.value)}
                     placeholder="Describe any maintenance issues found..."
-                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
                     rows={3}
                   />
                   <button
@@ -1068,7 +1068,7 @@ const HousekeepingDetailPage = () => {
 
             {/* Room Notes */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357]">
+              <div className="p-6 bg-[#F87B1B]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Room Notes</h3>
@@ -1091,13 +1091,13 @@ const HousekeepingDetailPage = () => {
                       value={newNote}
                       onChange={(e) => setNewNote(e.target.value)}
                       placeholder="Add notes about room condition, special observations, etc..."
-                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
                       rows={3}
                     />
                     <button
                       onClick={addNote}
                       disabled={!newNote.trim()}
-                      className="mt-2 w-full bg-[#005357] text-white px-3 py-2 text-sm font-medium hover:bg-[#004147] transition-colors disabled:opacity-50"
+                      className="mt-2 w-full bg-[#F87B1B] text-white px-3 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors disabled:opacity-50"
                     >
                       Add Note
                     </button>
@@ -1108,7 +1108,7 @@ const HousekeepingDetailPage = () => {
 
             {/* Guest Lost & Found */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#005357]">
+              <div className="p-6 bg-[#F87B1B]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Guest Lost & Found</h3>
@@ -1187,12 +1187,12 @@ const HousekeepingDetailPage = () => {
                         placeholder="Item name"
                         value={newLostItem.item_name}
                         onChange={(e) => setNewLostItem({...newLostItem, item_name: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
                       />
                       <select
                         value={newLostItem.category}
                         onChange={(e) => setNewLostItem({...newLostItem, category: e.target.value as any})}
-                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
                       >
                         <option value="personal">Personal</option>
                         <option value="electronics">Electronics</option>
@@ -1207,7 +1207,7 @@ const HousekeepingDetailPage = () => {
                       placeholder="Description of the item..."
                       value={newLostItem.description}
                       onChange={(e) => setNewLostItem({...newLostItem, description: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
                       rows={2}
                     />
                     
@@ -1217,12 +1217,12 @@ const HousekeepingDetailPage = () => {
                         placeholder="Where found"
                         value={newLostItem.location_found}
                         onChange={(e) => setNewLostItem({...newLostItem, location_found: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
                       />
                       <select
                         value={newLostItem.condition}
                         onChange={(e) => setNewLostItem({...newLostItem, condition: e.target.value as any})}
-                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
                       >
                         <option value="excellent">Excellent</option>
                         <option value="good">Good</option>
@@ -1246,7 +1246,7 @@ const HousekeepingDetailPage = () => {
             {/* Photos */}
             {(roomTask.photos_before && roomTask.photos_before.length > 0) && (
               <div className="bg-white border border-gray-200">
-                <div className="p-6 bg-[#005357]">
+                <div className="p-6 bg-[#F87B1B]">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Room Photos</h3>
