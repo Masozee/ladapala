@@ -74,7 +74,6 @@ export default function NewReservationPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Guest[]>([]);
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
-  const [showNewGuestForm, setShowNewGuestForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -120,10 +119,7 @@ export default function NewReservationPage() {
       id_type: 'passport',
       id_number: '',
       address: '',
-      is_return_customer: false,
-      previous_stay_date: '',
-      loyalty_number: '',
-      // Additional fields
+      // Additional fields that exist in Guest model
       preferences: '',
       allergies: '',
       emergency_contact_name: '',
@@ -180,23 +176,50 @@ export default function NewReservationPage() {
   const createNewGuest = async () => {
     try {
       setLoading(true);
+
+      // Transform gender to match backend format
+      let genderValue = '';
+      if (formData.guest.gender === 'male') genderValue = 'M';
+      else if (formData.guest.gender === 'female') genderValue = 'F';
+      else if (formData.guest.gender === 'other') genderValue = 'O';
+
+      // Only send fields that exist in the Guest model
+      const guestPayload = {
+        first_name: formData.guest.first_name,
+        last_name: formData.guest.last_name,
+        email: formData.guest.email,
+        phone: formData.guest.phone,
+        date_of_birth: formData.guest.date_of_birth || null,
+        gender: genderValue || null,
+        nationality: formData.guest.nationality || null,
+        id_type: formData.guest.id_type,
+        id_number: formData.guest.id_number || null,
+        address: formData.guest.address || null,
+        preferences: formData.guest.preferences || null,
+        allergies: formData.guest.allergies || null,
+        emergency_contact_name: formData.guest.emergency_contact_name || null,
+        emergency_contact_phone: formData.guest.emergency_contact_phone || null,
+        emergency_contact_relation: formData.guest.emergency_contact_relation || null,
+      };
+
       const response = await fetch(buildApiUrl('hotel/guests/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData.guest),
+        body: JSON.stringify(guestPayload),
       });
 
       if (response.ok) {
         const newGuest = await response.json();
         setSelectedGuest(newGuest);
-        setShowNewGuestForm(false);
         // Reset search
         setSearchQuery('');
         setSearchResults([]);
       } else {
-        alert('Failed to create customer. Please try again.');
+        const errorData = await response.json();
+        console.error('Guest creation error:', errorData);
+        alert(`Failed to create customer: ${JSON.stringify(errorData)}`);
       }
     } catch (error) {
       console.error('Error creating guest:', error);
@@ -411,118 +434,72 @@ export default function NewReservationPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {/* Search */}
-                    <div className="relative">
-                      <Search02Icon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search by name, email, phone..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-[#005357] focus:border-transparent"
-                      />
-                    </div>
-
-                    {/* Search Results */}
-                    {loading && searchQuery && (
-                      <div className="text-center py-4">
-                        <Clock01Icon className="h-4 w-4 animate-spin mx-auto mb-2" />
-                        <p className="text-sm text-gray-500">Searching...</p>
+                    {/* Search Existing Customer */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Search Existing Customer</label>
+                      <div className="relative">
+                        <Search02Icon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search by name, email, phone..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-[#005357] focus:border-transparent"
+                        />
                       </div>
-                    )}
 
-                    {searchResults.length > 0 && (
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {searchResults.map((guest) => (
-                          <div
-                            key={guest.id}
-                            onClick={() => setSelectedGuest(guest)}
-                            className="flex items-center justify-between p-3 bg-white hover:bg-gray-100 cursor-pointer border"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                guest.is_vip ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'
-                              }`}>
-                                {guest.is_vip ? <SparklesIcon className="h-4 w-4" /> : <UserIcon className="h-4 w-4" />}
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900 text-sm">
-                                  {guest.full_name}
-                                  {guest.is_vip && <span className="ml-1 text-xs bg-yellow-100 text-yellow-700 px-1 py-0.5 rounded">VIP</span>}
-                                </p>
-                                <p className="text-xs text-gray-500">{guest.email}</p>
+                      {/* Search Results */}
+                      {loading && searchQuery && (
+                        <div className="text-center py-4">
+                          <Clock01Icon className="h-4 w-4 animate-spin mx-auto mb-2" />
+                          <p className="text-sm text-gray-500">Searching...</p>
+                        </div>
+                      )}
+
+                      {searchResults.length > 0 && (
+                        <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                          {searchResults.map((guest) => (
+                            <div
+                              key={guest.id}
+                              onClick={() => setSelectedGuest(guest)}
+                              className="flex items-center justify-between p-3 bg-white hover:bg-gray-100 cursor-pointer border"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                  guest.is_vip ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'
+                                }`}>
+                                  {guest.is_vip ? <SparklesIcon className="h-4 w-4" /> : <UserIcon className="h-4 w-4" />}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 text-sm">
+                                    {guest.full_name}
+                                    {guest.is_vip && <span className="ml-1 text-xs bg-yellow-100 text-yellow-700 px-1 py-0.5 rounded">VIP</span>}
+                                  </p>
+                                  <p className="text-xs text-gray-500">{guest.email}</p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-                    {/* Create New Customer */}
-                    <div className="border-t pt-4">
-                      <button
-                        onClick={() => setShowNewGuestForm(!showNewGuestForm)}
-                        className="w-full flex items-center justify-center px-4 py-2 border border-[#005357] text-[#005357] hover:bg-[#005357] hover:text-white transition-colors"
-                      >
-                        <Add01Icon className="h-4 w-4 mr-2" />
-                        Create New Customer
-                      </button>
+                    {/* Divider */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-gray-50 text-gray-500">OR CREATE NEW</span>
+                      </div>
                     </div>
 
                     {/* New Customer Form */}
-                    {showNewGuestForm && (
-                      <div className="border border-gray-200 p-4 bg-white space-y-4">
-                        <h4 className="font-medium text-gray-800">New Customer Information</h4>
-                        
-                        {/* Return Customer Check */}
-                        <div className="flex items-center space-x-3 p-3 bg-blue-50">
-                          <input
-                            type="checkbox"
-                            id="return_customer"
-                            checked={formData.guest.is_return_customer}
-                            onChange={(e) => setFormData(prev => ({
-                              ...prev,
-                              guest: { ...prev.guest, is_return_customer: e.target.checked }
-                            }))}
-                            className="w-4 h-4 text-[#005357] rounded"
-                          />
-                          <label htmlFor="return_customer" className="text-sm font-medium text-blue-800">
-                            ✓ Return Customer
-                          </label>
-                        </div>
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-800">New Customer Information</h4>
 
-                        {formData.guest.is_return_customer && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Previous Stay</label>
-                              <input
-                                type="date"
-                                value={formData.guest.previous_stay_date}
-                                onChange={(e) => setFormData(prev => ({
-                                  ...prev,
-                                  guest: { ...prev.guest, previous_stay_date: e.target.value }
-                                }))}
-                                className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#005357] focus:border-transparent"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Loyalty Number</label>
-                              <input
-                                type="text"
-                                value={formData.guest.loyalty_number}
-                                onChange={(e) => setFormData(prev => ({
-                                  ...prev,
-                                  guest: { ...prev.guest, loyalty_number: e.target.value }
-                                }))}
-                                className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#005357] focus:border-transparent"
-                                placeholder="KR123456"
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Basic Information */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Basic Information */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
                             <input
@@ -752,23 +729,16 @@ export default function NewReservationPage() {
                           </div>
                         </div>
 
-                        <div className="flex justify-end space-x-3 pt-3 border-t">
-                          <button
-                            onClick={() => setShowNewGuestForm(false)}
-                            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
-                          >
-                            Cancel
-                          </button>
+                        <div className="flex justify-end pt-3 border-t">
                           <button
                             onClick={createNewGuest}
                             disabled={loading || !formData.guest.first_name || !formData.guest.last_name || !formData.guest.email || !formData.guest.phone || !formData.guest.id_number}
                             className="px-4 py-2 bg-[#005357] text-white hover:bg-[#004147] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            {loading ? 'Creating...' : 'Create Customer'}
+                            {loading ? 'Creating...' : 'Create & Select Customer'}
                           </button>
                         </div>
                       </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -883,8 +853,8 @@ export default function NewReservationPage() {
             </div>
           </div>
 
-          {/* Right Column - Room Selection */}
-          <div className="space-y-6">
+          {/* Right Column - Room Selection & Confirmation (Sticky) */}
+          <div className="space-y-6 sticky top-4">
             {/* Room Selection */}
             <div className="bg-white border border-gray-200">
               <div className="p-6 border-b border-gray-200 bg-[#005357]">
@@ -914,7 +884,7 @@ export default function NewReservationPage() {
                     <p className="text-sm">Select check-in and check-out dates to see availability</p>
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
                     {availableRooms.map((room) => (
                       <div
                         key={room.id}
@@ -978,7 +948,7 @@ export default function NewReservationPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="p-4 bg-gray-50 space-y-4">
                   {/* Customer Info */}
                   <div>
@@ -1016,27 +986,44 @@ export default function NewReservationPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Create Reservation Button */}
-                  <div className="pt-3 border-t">
-                    <button
-                      onClick={createReservation}
-                      disabled={loading}
-                      className="w-full px-4 py-3 bg-[#005357] text-white hover:bg-[#004147] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                    >
-                      {loading ? (
-                        <div className="flex items-center justify-center">
-                          <Clock01Icon className="h-4 w-4 animate-spin mr-2" />
-                          Creating Reservation...
-                        </div>
-                      ) : (
-                        'Create Reservation'
-                      )}
-                    </button>
-                  </div>
                 </div>
               </div>
             )}
+
+            {/* Create Reservation Button - Always Visible */}
+            <div className="bg-white border border-gray-200">
+              <div className="p-4">
+                {!selectedGuest && (
+                  <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+                    ⚠ Please select or create a customer first
+                  </div>
+                )}
+                {selectedGuest && !formData.check_in_date && (
+                  <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+                    ⚠ Please select check-in and check-out dates
+                  </div>
+                )}
+                {selectedGuest && formData.check_in_date && !selectedRoom && (
+                  <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+                    ⚠ Please select a room from available options above
+                  </div>
+                )}
+                <button
+                  onClick={createReservation}
+                  disabled={loading || !selectedGuest || !selectedRoom || !formData.check_in_date || !formData.check_out_date}
+                  className="w-full px-4 py-3 bg-[#005357] text-white hover:bg-[#004147] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-lg"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <Clock01Icon className="h-5 w-5 animate-spin mr-2" />
+                      Creating Reservation...
+                    </div>
+                  ) : (
+                    'Create Reservation'
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         </div>

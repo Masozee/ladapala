@@ -26,7 +26,8 @@ export default function Home() {
 
   // Function to calculate nice scale maximum (round up to nearest nice number)
   const getNiceMax = (maxValue: number): number => {
-    if (maxValue === 0) return 10;
+    // Handle edge cases: 0, negative, NaN, or Infinity
+    if (!isFinite(maxValue) || maxValue <= 0) return 10;
 
     // Calculate order of magnitude
     const magnitude = Math.pow(10, Math.floor(Math.log10(maxValue)));
