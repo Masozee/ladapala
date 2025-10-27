@@ -63,17 +63,17 @@ const OfficeSidebar = () => {
 
   return (
     <Tooltip.Provider delayDuration={300}>
-      <div className="w-20 bg-white border border-gray-200 flex flex-col">
+      <div className="w-20 bg-[#4E61D3] border border-[#4E61D3] flex flex-col">
         {/* Header */}
         <div className="p-4">
           <div className="flex items-center justify-center">
-            <div className="w-10 h-10 bg-[#005357] flex items-center justify-center p-1">
+            <div className="w-10 h-10 bg-white flex items-center justify-center p-1">
               <Image
                 src="/logo.png"
                 alt="Kapulaga Hotel Logo"
                 width={32}
                 height={32}
-                className="object-contain invert"
+                className="object-contain"
               />
             </div>
           </div>
@@ -93,15 +93,15 @@ const OfficeSidebar = () => {
                       href={item.href}
                       className={`relative flex items-center justify-center w-16 h-14 transition-all duration-200 group ${
                         active
-                          ? 'border border-gray-200'
-                          : 'hover:bg-gray-100'
+                          ? ''
+                          : 'hover:bg-[#5B6FE0]'
                       }`}
                     >
                       <div className={`w-10 h-10 flex items-center justify-center transition-transform group-hover:scale-110 ${
-                        active ? 'bg-[#005357]' : 'bg-gray-100'
+                        active ? 'bg-white' : 'bg-white/20'
                       }`}>
                         <Icon className={`h-6 w-6 ${
-                          active ? 'text-white' : 'text-gray-600'
+                          active ? 'text-[#4E61D3]' : 'text-white'
                         }`} />
                       </div>
                       {item.badge && (
@@ -126,14 +126,14 @@ const OfficeSidebar = () => {
             })}
           </div>
 
-          <Separator.Root className="my-4 mx-2 bg-gray-200 h-px" />
+          <Separator.Root className="my-4 mx-2 bg-white/20 h-px" />
 
           {/* Office Operations */}
           <div className="space-y-1 px-2">
             {officeActions.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
-              
+
               return (
                 <Tooltip.Root key={item.href}>
                   <Tooltip.Trigger asChild>
@@ -142,14 +142,14 @@ const OfficeSidebar = () => {
                       className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
                         active
                           ? ''
-                          : 'hover:bg-gray-50'
+                          : 'hover:bg-[#5B6FE0]'
                       }`}
                     >
                       <div className={`w-8 h-8 flex items-center justify-center transition-transform group-hover:scale-110 ${
-                        active ? 'bg-[#005357]' : 'bg-gray-100'
+                        active ? 'bg-white' : 'bg-white/20'
                       }`}>
                         <Icon className={`h-5 w-5 ${
-                          active ? 'text-white' : 'text-gray-600'
+                          active ? 'text-[#4E61D3]' : 'text-white'
                         }`} />
                       </div>
                       {item.badge && (
@@ -181,7 +181,7 @@ const OfficeSidebar = () => {
             {bottomActions.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
-              
+
               return (
                 <Tooltip.Root key={item.href}>
                   <Tooltip.Trigger asChild>
@@ -190,14 +190,14 @@ const OfficeSidebar = () => {
                       className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
                         active
                           ? ''
-                          : 'hover:bg-gray-50'
+                          : 'hover:bg-[#5B6FE0]'
                       }`}
                     >
                       <div className={`w-8 h-8 flex items-center justify-center transition-transform group-hover:scale-110 ${
-                        active ? 'bg-[#005357]' : 'bg-gray-100'
+                        active ? 'bg-white' : 'bg-white/20'
                       }`}>
                         <Icon className={`h-5 w-5 ${
-                          active ? 'text-white' : 'text-gray-600'
+                          active ? 'text-[#4E61D3]' : 'text-white'
                         }`} />
                       </div>
                     </Link>
