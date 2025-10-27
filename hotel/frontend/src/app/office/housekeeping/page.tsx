@@ -144,12 +144,20 @@ const HousekeepingPage = () => {
         fetchTasks();
         fetchStatistics();
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.error || 'Failed to start task'}`);
+        let errorMessage = 'Failed to start task';
+        try {
+          const error = await response.json();
+          errorMessage = error.error || error.detail || errorMessage;
+        } catch (parseError) {
+          const errorText = await response.text();
+          console.error('API Error Response:', errorText);
+          errorMessage = `Server error (${response.status})`;
+        }
+        alert(`Error: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error starting task:', error);
-      alert('Failed to start task');
+      alert('Failed to start task. Check console for details.');
     }
   };
 
@@ -167,12 +175,20 @@ const HousekeepingPage = () => {
         fetchTasks();
         fetchStatistics();
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.error || 'Failed to complete task'}`);
+        let errorMessage = 'Failed to complete task';
+        try {
+          const error = await response.json();
+          errorMessage = error.error || error.detail || errorMessage;
+        } catch (parseError) {
+          const errorText = await response.text();
+          console.error('API Error Response:', errorText);
+          errorMessage = `Server error (${response.status})`;
+        }
+        alert(`Error: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error completing task:', error);
-      alert('Failed to complete task');
+      alert('Failed to complete task. Check console for details.');
     }
   };
 
@@ -193,12 +209,21 @@ const HousekeepingPage = () => {
         fetchTasks();
         fetchStatistics();
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.error || 'Failed to pass inspection'}`);
+        // Try to parse error as JSON, fallback to text
+        let errorMessage = 'Failed to pass inspection';
+        try {
+          const error = await response.json();
+          errorMessage = error.error || error.detail || errorMessage;
+        } catch (parseError) {
+          const errorText = await response.text();
+          console.error('API Error Response:', errorText);
+          errorMessage = `Server error (${response.status})`;
+        }
+        alert(`Error: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error passing inspection:', error);
-      alert('Failed to pass inspection');
+      alert('Failed to pass inspection. Check console for details.');
     }
   };
 
@@ -224,12 +249,20 @@ const HousekeepingPage = () => {
         fetchTasks();
         fetchStatistics();
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.error || 'Failed to fail inspection'}`);
+        let errorMessage = 'Failed to fail inspection';
+        try {
+          const error = await response.json();
+          errorMessage = error.error || error.detail || errorMessage;
+        } catch (parseError) {
+          const errorText = await response.text();
+          console.error('API Error Response:', errorText);
+          errorMessage = `Server error (${response.status})`;
+        }
+        alert(`Error: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error failing inspection:', error);
-      alert('Failed to record inspection failure');
+      alert('Failed to record inspection failure. Check console for details.');
     }
   };
 
