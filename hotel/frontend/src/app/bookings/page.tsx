@@ -557,15 +557,20 @@ const BookingsPage = () => {
 
   const checkOutGuest = async (reservationNumber: string) => {
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/check_out/`), {
         method: 'PATCH',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken })
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to check out guest');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Checkout error:', errorData);
+        throw new Error(errorData.error || 'Failed to check out guest');
       }
 
       const data = await response.json();
