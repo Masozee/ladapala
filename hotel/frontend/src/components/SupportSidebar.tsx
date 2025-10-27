@@ -35,7 +35,7 @@ const SupportSidebar = () => {
 
   const mainNavItems: MenuItem[] = [
     { name: 'Support Dashboard', icon: HeadphonesIcon, href: '/support' },
-    { name: 'Back to Main', icon: ChevronLeftIcon, href: '/' },
+    { name: 'Main Dashboard', icon: ChevronLeftIcon, href: '/' },
   ];
 
   const supportActions: MenuItem[] = [

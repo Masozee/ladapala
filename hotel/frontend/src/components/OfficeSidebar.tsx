@@ -36,7 +36,7 @@ const OfficeSidebar = () => {
 
   const mainNavItems: MenuItem[] = [
     { name: 'Office Dashboard', icon: Building03Icon, href: '/office' },
-    { name: 'Back to Main', icon: ChevronLeftIcon, href: '/' },
+    { name: 'Main Dashboard', icon: ChevronLeftIcon, href: '/' },
   ];
 
   const officeActions: MenuItem[] = [
