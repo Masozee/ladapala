@@ -26,7 +26,9 @@ import {
   Calendar01Icon,
   EyeIcon,
   File01Icon,
-  ViewIcon
+  ViewIcon,
+  Shield01Icon,
+  Alert01Icon
 } from '@/lib/icons';
 
 interface HousekeepingTask {

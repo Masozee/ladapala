@@ -19,12 +19,38 @@ export const buildApiUrl = (endpoint: string): string => {
   return `${API_CONFIG.BASE_URL}/${cleanEndpoint}`;
 };
 
+// Get CSRF token from cookies
+export const getCsrfToken = (): string | null => {
+  if (typeof document === 'undefined') return null;
+
+  const name = 'csrftoken';
+  const cookies = document.cookie.split(';');
+
+  for (let cookie of cookies) {
+    cookie = cookie.trim();
+    if (cookie.startsWith(name + '=')) {
+      return decodeURIComponent(cookie.substring(name.length + 1));
+    }
+  }
+  return null;
+};
+
 // Default headers for API requests
-export const getDefaultHeaders = (): HeadersInit => ({
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Referrer-Policy': 'no-referrer-when-downgrade',
-});
+export const getDefaultHeaders = (): HeadersInit => {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Referrer-Policy': 'no-referrer-when-downgrade',
+  };
+
+  // Add CSRF token if available
+  const csrfToken = getCsrfToken();
+  if (csrfToken) {
+    headers['X-CSRFToken'] = csrfToken;
+  }
+
+  return headers;
+};
 
 // Helper function for API fetch requests with proper headers
 export const apiFetch = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {

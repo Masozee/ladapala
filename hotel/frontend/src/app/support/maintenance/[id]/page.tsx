@@ -22,8 +22,6 @@ import {
   EyeIcon,
   File01Icon,
   ViewIcon,
-  CheckSquare,
-  Square,
   PackageIcon,
   Shield01Icon,
   Settings02Icon,

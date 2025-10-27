@@ -14,7 +14,6 @@ import {
   Calendar01Icon,
   Mail01Icon,
   SparklesIcon,
-  ArrowRight,
   Add01Icon,
   FilterIcon,
   MoreHorizontalIcon,
@@ -200,7 +199,7 @@ export default function SupportDashboard() {
       case 'maintenance': return <Wrench01Icon className="h-4 w-4" />;
       case 'housekeeping': return <BedIcon className="h-4 w-4" />;
       case 'amenities': return <PackageIcon className="h-4 w-4" />;
-      case 'emergency': return <Alert01Icon className="h-4 w-4" />;
+      case 'emergency': return <AlertCircleIcon className="h-4 w-4" />;
       default: return <Mail01Icon className="h-4 w-4" />;
     }
   };

@@ -18,9 +18,6 @@ import {
   UserIcon,
   ChevronLeftIcon,
   HeadphonesIcon,
-  CheckSquare,
-  ShoppingCart,
-  Home,
   Notification02Icon,
   File01Icon,
   Calendar01Icon
@@ -69,7 +66,7 @@ const SupportSidebar = () => {
         <div className="p-4">
           <div className="flex items-center justify-center">
             <div className="w-10 h-10 bg-[#005357] flex items-center justify-center p-1">
-              <ViewIcon
+              <Image
                 src="/logo.png"
                 alt="Kapulaga Hotel Logo"
                 width={32}

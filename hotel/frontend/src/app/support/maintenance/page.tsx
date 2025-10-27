@@ -28,7 +28,8 @@ import {
   ArrowUp01Icon,
   PieChartIcon,
   Location01Icon,
-  Settings02Icon
+  Settings02Icon,
+  Alert01Icon
 } from '@/lib/icons';
 
 interface MaintenanceRequest {

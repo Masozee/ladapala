@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   BedIcon,
   Clock01Icon,
@@ -133,10 +133,14 @@ const HousekeepingPage = () => {
   // Start task
   const handleStartTask = async (taskId: number) => {
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/housekeeping-tasks/${taskId}/start_task/`), {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken })
+        }
       });
 
       if (response.ok) {
@@ -164,10 +168,14 @@ const HousekeepingPage = () => {
   // Complete task
   const handleCompleteTask = async (taskId: number) => {
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/housekeeping-tasks/${taskId}/complete_task/`), {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken })
+        }
       });
 
       if (response.ok) {
@@ -197,10 +205,14 @@ const HousekeepingPage = () => {
     const notes = prompt('Inspection notes (optional):');
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/housekeeping-tasks/${taskId}/pass_inspection/`), {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken })
+        },
         body: JSON.stringify({ notes })
       });
 
@@ -237,10 +249,14 @@ const HousekeepingPage = () => {
     }
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/housekeeping-tasks/${taskId}/fail_inspection/`), {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken })
+        },
         body: JSON.stringify({ notes })
       });
 
