@@ -35,7 +35,6 @@ const SupportSidebar = () => {
 
   const mainNavItems: MenuItem[] = [
     { name: 'Support Dashboard', icon: HeadphonesIcon, href: '/support' },
-    { name: 'Main Dashboard', icon: ChevronLeftIcon, href: '/' },
   ];
 
   const supportActions: MenuItem[] = [
@@ -64,8 +63,8 @@ const SupportSidebar = () => {
       <div className="w-20 bg-[#F87B1B] flex flex-col">
         {/* Header */}
         <div className="p-4">
-          <div className="flex items-center justify-center">
-            <div className="w-10 h-10 bg-white flex items-center justify-center p-1">
+          <Link href="/" className="flex items-center justify-center group">
+            <div className="w-10 h-10 bg-white flex items-center justify-center p-1 transition-transform group-hover:scale-110">
               <Image
                 src="/logo.png"
                 alt="Kapulaga Hotel Logo"
@@ -74,7 +73,7 @@ const SupportSidebar = () => {
                 className="object-contain"
               />
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Main Navigation */}

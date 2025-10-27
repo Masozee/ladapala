@@ -36,7 +36,6 @@ const OfficeSidebar = () => {
 
   const mainNavItems: MenuItem[] = [
     { name: 'Office Dashboard', icon: Building03Icon, href: '/office' },
-    { name: 'Main Dashboard', icon: ChevronLeftIcon, href: '/' },
   ];
 
   const officeActions: MenuItem[] = [
@@ -66,8 +65,8 @@ const OfficeSidebar = () => {
       <div className="w-20 bg-[#4E61D3] border border-[#4E61D3] flex flex-col">
         {/* Header */}
         <div className="p-4">
-          <div className="flex items-center justify-center">
-            <div className="w-10 h-10 bg-white flex items-center justify-center p-1">
+          <Link href="/" className="flex items-center justify-center group">
+            <div className="w-10 h-10 bg-white flex items-center justify-center p-1 transition-transform group-hover:scale-110">
               <Image
                 src="/logo.png"
                 alt="Kapulaga Hotel Logo"
@@ -76,7 +75,7 @@ const OfficeSidebar = () => {
                 className="object-contain"
               />
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Main Navigation */}
