@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.db.models import Q, Count, Avg
 from ..models import HousekeepingTask, AmenityUsage, InventoryItem
@@ -16,6 +17,7 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
         'room', 'room__room_type', 'assigned_to', 'inspector', 'created_by'
     ).prefetch_related('amenity_usages', 'amenity_usages__inventory_item')
     serializer_class = HousekeepingTaskSerializer
+    permission_classes = [IsAuthenticated]
     filterset_fields = ['status', 'priority', 'task_type', 'assigned_to', 'scheduled_date']
     search_fields = ['task_number', 'room__number', 'notes']
     ordering_fields = ['scheduled_date', 'priority', 'created_at', 'estimated_completion']
@@ -241,6 +243,7 @@ class AmenityUsageViewSet(viewsets.ModelViewSet):
         'recorded_by'
     )
     serializer_class = AmenityUsageSerializer
+    permission_classes = [IsAuthenticated]
     filterset_fields = ['housekeeping_task', 'inventory_item', 'recorded_by', 'stock_deducted']
     search_fields = ['inventory_item__name', 'notes']
     ordering_fields = ['recorded_at', 'quantity_used']
