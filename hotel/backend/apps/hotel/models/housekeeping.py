@@ -86,7 +86,7 @@ class HousekeepingTask(models.Model):
     )
 
     class Meta:
-        ordering = ['-scheduled_date', '-priority', 'room__number']
+        ordering = ['-created_at']  # Latest tasks first
         verbose_name = 'Housekeeping Task'
         verbose_name_plural = 'Housekeeping Tasks'
         indexes = [
