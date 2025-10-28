@@ -41,7 +41,6 @@ const OfficeSidebar = () => {
   const officeActions: MenuItem[] = [
     { name: 'Guest Database', icon: UserMultipleIcon, href: '/office/guests' },
     { name: 'Employees', icon: UserSettings01Icon, href: '/office/employees' },
-    { name: 'User Management', icon: UserMultipleIcon, href: '/office/users' },
     { name: 'Housekeeping', icon: CircleArrowReload01Icon, href: '/office/housekeeping' },
     { name: 'Financial', icon: CreditCardIcon, href: '/office/financial' },
     { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse' },

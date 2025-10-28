@@ -267,30 +267,16 @@ export default function FinancialPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white border border-gray-200">
-          <div className="flex space-x-1 p-1 bg-gray-50">
-            <TabButton tabId="overview" label="Ringkasan" icon={PieChartIcon} />
-            <TabButton tabId="transactions" label="Transaksi" icon={File01Icon} />
-            <TabButton tabId="invoices" label="Faktur" icon={File01Icon} />
-            <TabButton tabId="reports" label="Laporan" icon={ArrowUp01Icon} />
-          </div>
+        <div className="flex space-x-1 bg-gray-50">
+          <TabButton tabId="overview" label="Ringkasan" icon={PieChartIcon} />
+          <TabButton tabId="transactions" label="Transaksi" icon={File01Icon} />
+          <TabButton tabId="invoices" label="Faktur" icon={File01Icon} />
+          <TabButton tabId="reports" label="Laporan" icon={ArrowUp01Icon} />
+        </div>
 
-          {/* Overview Tab */}
-          {activeTab === 'overview' && (
-            <div>
-              <div className="p-6 bg-[#4E61D3] text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Ringkasan Keuangan</h3>
-                    <p className="text-sm text-gray-100 mt-1">Gambaran umum performa keuangan bulan ini</p>
-                  </div>
-                  <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <PieChartIcon className="h-4 w-4 text-[#4E61D3]" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6 bg-gray-50">
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div>
                 {/* Loading State */}
                 {loadingOverview && (
                   <div className="text-center py-12">
@@ -491,63 +477,41 @@ export default function FinancialPage() {
                     </div>
                   </div>
                 </div>
-                </div>
                 )}
-              </div>
             </div>
           )}
 
-          {/* Transactions Tab */}
-          {activeTab === 'transactions' && (
-            <div>
-              <div className="p-6 bg-[#4E61D3] text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Riwayat Transaksi</h3>
-                    <p className="text-sm text-gray-100 mt-1">Semua transaksi pendapatan dan pengeluaran</p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button className="bg-white text-[#4E61D3] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
-                      <Add01Icon className="h-4 w-4" />
-                      <span>Tambah Transaksi</span>
-                    </button>
-                    <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <File01Icon className="h-4 w-4 text-[#4E61D3]" />
-                    </div>
-                  </div>
+        {/* Transactions Tab */}
+        {activeTab === 'transactions' && (
+          <div>
+            {/* Filters - Right aligned */}
+            <div className="flex items-center justify-end mb-6 space-x-3">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search02Icon className="h-4 w-4 text-gray-400" />
                 </div>
+                <input
+                  type="text"
+                  placeholder="Cari..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-48"
+                />
               </div>
-
-              <div className="p-6 bg-gray-50">
-                {/* Filters */}
-                <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search02Icon className="h-4 w-4 text-gray-400" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Cari transaksi..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-64"
-                      />
-                    </div>
-                    <select 
-                      value={selectedPaymentStatus}
-                      onChange={(e) => setSelectedPaymentStatus(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
-                    >
-                      <option value="all">Semua Status</option>
-                      <option value="completed">Selesai</option>
-                      <option value="pending">Pending</option>
-                      <option value="failed">Gagal</option>
-                    </select>
-                    <select 
-                      value={selectedPeriod}
-                      onChange={(e) => setSelectedPeriod(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
+              <select
+                value={selectedPaymentStatus}
+                onChange={(e) => setSelectedPaymentStatus(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
+              >
+                <option value="all">All Status</option>
+                <option value="completed">Selesai</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Gagal</option>
+              </select>
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                     >
                       <option value="thisMonth">Bulan Ini</option>
                       <option value="lastMonth">Bulan Lalu</option>

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   Shield01Icon,
   UserMultipleIcon,
@@ -36,10 +38,29 @@ import {
   DatabaseIcon
 } from '@/lib/icons';
 
+interface ApiUser {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  phone: string;
+  is_active: boolean;
+  date_joined: string;
+  last_login: string | null;
+  employee?: {
+    department: string;
+    position: string;
+  };
+}
+
 export default function AdminPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserRole, setSelectedUserRole] = useState('all');
+  const [apiUsers, setApiUsers] = useState<ApiUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Sample system data
   const systemStats = {
@@ -204,7 +225,43 @@ export default function AdminPage() {
     }
   };
 
-  const filteredUsers = users.filter(user => {
+  // Fetch users from API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (activeTab !== 'users') return;
+
+      try {
+        setLoadingUsers(true);
+        const response = await fetch(buildApiUrl('user/users/'), {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setApiUsers(data);
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    fetchUsers();
+  }, [activeTab]);
+
+  // Transform API users to match the UI format
+  const transformedUsers = apiUsers.map(user => ({
+    id: user.id,
+    name: `${user.first_name} ${user.last_name}`,
+    email: user.email,
+    role: user.role.toLowerCase(),
+    department: user.employee?.department || 'N/A',
+    status: user.is_active ? 'active' : 'inactive',
+    lastLogin: user.last_login || user.date_joined,
+    permissions: user.role === 'ADMIN' ? ['all'] : ['basic']
+  }));
+
+  const filteredUsers = transformedUsers.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = selectedUserRole === 'all' || user.role === selectedUserRole;
@@ -235,33 +292,19 @@ export default function AdminPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white border border-gray-200">
-          <div className="flex space-x-1 p-1 bg-gray-50">
-            <TabButton tabId="dashboard" label="Dashboard" icon={ViewIcon} />
-            <TabButton tabId="users" label="Pengguna" icon={UserMultipleIcon} />
-            <TabButton tabId="system" label="Sistem" icon={PackageIcon} />
-            <TabButton tabId="security" label="Keamanan" icon={Shield01Icon} />
-            <TabButton tabId="logs" label="Log Aktivitas" icon={PieChartIcon} />
-          </div>
+        <div className="flex space-x-1 bg-gray-50">
+          <TabButton tabId="dashboard" label="Dashboard" icon={ViewIcon} />
+          <TabButton tabId="users" label="Pengguna" icon={UserMultipleIcon} />
+          <TabButton tabId="system" label="Sistem" icon={PackageIcon} />
+          <TabButton tabId="security" label="Keamanan" icon={Shield01Icon} />
+          <TabButton tabId="logs" label="Log Aktivitas" icon={PieChartIcon} />
+        </div>
 
-          {/* Dashboard Tab */}
-          {activeTab === 'dashboard' && (
-            <div>
-              <div className="p-6 bg-[#4E61D3] text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Dashboard Admin</h3>
-                    <p className="text-sm text-gray-100 mt-1">Monitoring sistem dan statistik pengguna</p>
-                  </div>
-                  <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Monitor className="h-4 w-4 text-[#4E61D3]" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6 bg-gray-50">
-                {/* System Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Dashboard Tab */}
+        {activeTab === 'dashboard' && (
+          <div>
+            {/* System Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                   <div className="bg-white border border-gray-200">
                     <div className="p-6 ">
                       <div className="flex items-center justify-between">
@@ -445,88 +488,77 @@ export default function AdminPage() {
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
           )}
 
-          {/* Users Tab */}
-          {activeTab === 'users' && (
-            <div>
-              <div className="p-6 bg-[#4E61D3] text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Manajemen Pengguna</h3>
-                    <p className="text-sm text-gray-100 mt-1">Kelola akses dan permissions pengguna sistem</p>
+        {/* Users Tab */}
+        {activeTab === 'users' && (
+          <div>
+            {/* Filters - Right aligned */}
+            <div className="flex items-center justify-end mb-6 space-x-3">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search02Icon className="h-4 w-4 text-gray-400" />
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <button className="bg-white text-[#4E61D3] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
-                      <Add01Icon className="h-4 w-4" />
-                      <span>Tambah Pengguna</span>
-                    </button>
-                    <div className="w-8 h-8 bg-white flex items-center justify-center">
-                      <UserMultipleIcon className="h-4 w-4 text-[#4E61D3]" />
-                    </div>
-                  </div>
+                  <input
+                    type="text"
+                    placeholder="Cari..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-48"
+                  />
                 </div>
+                <select
+                  value={selectedUserRole}
+                  onChange={(e) => setSelectedUserRole(e.target.value)}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="admin">Admin</option>
+                  <option value="manager">Manager</option>
+                  <option value="staff">Staff</option>
+                </select>
               </div>
-              
-              <div className="p-6 bg-gray-50">
-                {/* Filters */}
-                <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search02Icon className="h-4 w-4 text-gray-400" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Cari pengguna..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-64"
-                      />
-                    </div>
-                    <select 
-                      value={selectedUserRole}
-                      onChange={(e) => setSelectedUserRole(e.target.value)}
-                      className="px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
-                    >
-                      <option value="all">Semua Role</option>
-                      <option value="admin">Admin</option>
-                      <option value="manager">Manager</option>
-                      <option value="staff">Staff</option>
-                    </select>
-                  </div>
-                  <button className="bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
-                    <ChevronDownIcon className="h-4 w-4" />
-                    <span>Export</span>
-                  </button>
-                </div>
 
                 {/* Users Table */}
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead className="bg-[#4E61D3]">
-                      <tr>
-                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                          Pengguna
-                        </th>
-                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                          Role & Departemen
-                        </th>
-                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                          Status & Login Terakhir
-                        </th>
-                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                          Permissions
-                        </th>
-                        <th className="border border-gray-300 text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                          Aksi
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white">
-                      {filteredUsers.map((user) => (
+                  {loadingUsers ? (
+                    <div className="flex items-center justify-center py-12 bg-white">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4E61D3] mx-auto mb-4"></div>
+                        <p className="text-gray-600">Loading users...</p>
+                      </div>
+                    </div>
+                  ) : filteredUsers.length === 0 ? (
+                    <div className="flex items-center justify-center py-12 bg-white">
+                      <div className="text-center">
+                        <UserMultipleIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                        <p className="text-gray-600">No users found</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <table className="w-full border-collapse">
+                      <thead className="bg-[#4E61D3]">
+                        <tr>
+                          <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                            Pengguna
+                          </th>
+                          <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                            Role & Departemen
+                          </th>
+                          <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                            Status & Login Terakhir
+                          </th>
+                          <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                            Permissions
+                          </th>
+                          <th className="border border-gray-300 text-right py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                            Aksi
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white">
+                        {filteredUsers.map((user) => (
                         <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                           <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center">
@@ -587,31 +619,18 @@ export default function AdminPage() {
                             </div>
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
-              </div>
             </div>
           )}
 
-          {/* System Tab */}
-          {activeTab === 'system' && (
-            <div>
-              <div className="p-6 bg-[#4E61D3] text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Pengaturan Sistem</h3>
-                    <p className="text-sm text-gray-100 mt-1">Konfigurasi dan maintenance sistem</p>
-                  </div>
-                  <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Server className="h-4 w-4 text-[#4E61D3]" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6 bg-gray-50">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* System Tab */}
+        {activeTab === 'system' && (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* System Maintenance */}
                   <div className="bg-white border border-gray-200">
                     <div className="p-6 ">
@@ -717,27 +736,13 @@ export default function AdminPage() {
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
           )}
 
-          {/* Security Tab */}
-          {activeTab === 'security' && (
-            <div>
-              <div className="p-6 bg-[#4E61D3] text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Keamanan Sistem</h3>
-                    <p className="text-sm text-gray-100 mt-1">Monitoring dan pengaturan keamanan</p>
-                  </div>
-                  <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Shield01Icon className="h-4 w-4 text-[#4E61D3]" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6 bg-gray-50">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Security Tab */}
+        {activeTab === 'security' && (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Security Alerts */}
                   <div className="bg-white border border-gray-200">
                     <div className="p-6 ">
@@ -812,28 +817,14 @@ export default function AdminPage() {
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
           )}
 
-          {/* Logs Tab */}
-          {activeTab === 'logs' && (
-            <div>
-              <div className="p-6 bg-[#4E61D3] text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Log Aktivitas</h3>
-                    <p className="text-sm text-gray-100 mt-1">Riwayat aktivitas sistem dan pengguna</p>
-                  </div>
-                  <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Activity className="h-4 w-4 text-[#4E61D3]" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6 bg-gray-50">
-                {/* Logs Table */}
-                <div className="overflow-x-auto">
+        {/* Logs Tab */}
+        {activeTab === 'logs' && (
+          <div>
+            {/* Logs Table */}
+            <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead className="bg-[#4E61D3]">
                       <tr>
@@ -879,10 +870,8 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
-              </div>
             </div>
           )}
-        </div>
       </div>
     </OfficeLayout>
   );

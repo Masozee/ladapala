@@ -1386,12 +1386,7 @@ const RoomsPage = () => {
                         .map((room) => (
                         <tr key={room.id} className="hover:bg-gray-50">
                           <td className="border border-gray-200 px-6 py-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
-                                <BedIcon className="h-5 w-5 text-gray-600" />
-                              </div>
-                              <div className="font-bold text-gray-900">Room {room.number}</div>
-                            </div>
+                            <div className="font-bold text-gray-900">Room {room.number}</div>
                           </td>
                           <td className="border border-gray-200 px-6 py-4">
                             <span className="text-sm text-gray-600">Floor {room.floor || 'N/A'}</span>
