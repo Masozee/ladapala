@@ -393,7 +393,6 @@ export default function FinancialPage() {
                     </div>
                   </div>
                 </div>
-                </div>
 
                 {/* Expense Breakdown */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
