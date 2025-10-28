@@ -8,4 +8,10 @@ urlpatterns = [
     path('profile/', views.user_profile, name='user-profile'),
     path('shifts/', views.user_shifts, name='user-shifts'),
     path('active-session/', views.active_session, name='active-session'),
+
+    # User management endpoints
+    path('users/', views.manage_users, name='manage-users'),
+    path('users/<int:user_id>/', views.manage_user_detail, name='manage-user-detail'),
+    path('departments/', views.department_choices, name='department-choices'),
+    path('roles/', views.role_choices, name='role-choices'),
 ]

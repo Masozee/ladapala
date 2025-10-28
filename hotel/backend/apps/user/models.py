@@ -28,6 +28,17 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    ROLE_CHOICES = [
+        ('ADMIN', 'Administrator'),
+        ('MANAGER', 'Manager'),
+        ('SUPERVISOR', 'Supervisor'),
+        ('RECEPTIONIST', 'Receptionist'),
+        ('HOUSEKEEPING', 'Housekeeping'),
+        ('MAINTENANCE', 'Maintenance'),
+        ('STAFF', 'Staff'),
+    ]
+
+    # Authentication fields
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
@@ -35,6 +46,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
+
+    # Profile fields (merged from UserProfile)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='STAFF')
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    bio = models.TextField(max_length=500, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    last_login_ip = models.GenericIPAddressField(null=True, blank=True)
 
     objects = UserManager()
 
@@ -57,6 +77,43 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self):
         return self.first_name or self.email
+
+    # RBAC Helper Methods
+    def is_admin(self):
+        """Check if user is admin"""
+        return self.role == 'ADMIN' or self.is_superuser
+
+    def is_manager(self):
+        """Check if user is manager or higher"""
+        return self.role in ['ADMIN', 'MANAGER'] or self.is_superuser
+
+    def is_supervisor(self):
+        """Check if user is supervisor or higher"""
+        return self.role in ['ADMIN', 'MANAGER', 'SUPERVISOR'] or self.is_superuser
+
+    def can_manage_users(self):
+        """Check if user can manage other users"""
+        return self.is_admin()
+
+    def can_manage_bookings(self):
+        """Check if user can manage bookings"""
+        return self.role in ['ADMIN', 'MANAGER', 'RECEPTIONIST'] or self.is_superuser
+
+    def can_manage_housekeeping(self):
+        """Check if user can manage housekeeping tasks"""
+        return self.role in ['ADMIN', 'MANAGER', 'SUPERVISOR', 'HOUSEKEEPING'] or self.is_superuser
+
+    def can_view_reports(self):
+        """Check if user can view financial reports"""
+        return self.role in ['ADMIN', 'MANAGER'] or self.is_superuser
+
+    def can_manage_inventory(self):
+        """Check if user can manage inventory"""
+        return self.role in ['ADMIN', 'MANAGER', 'MAINTENANCE'] or self.is_superuser
+
+    def has_role(self, *roles):
+        """Check if user has any of the specified roles"""
+        return self.role in roles or self.is_superuser
 
 
 class Department(models.Model):
@@ -295,38 +352,3 @@ class Attendance(models.Model):
             self.late_minutes = int(late_duration.total_seconds() / 60)
 
         super().save(*args, **kwargs)
-
-
-# User Profile extension for hotel system
-class UserProfile(models.Model):
-    ROLE_CHOICES = [
-        ('ADMIN', 'Administrator'),
-        ('MANAGER', 'Manager'),
-        ('SUPERVISOR', 'Supervisor'),
-        ('RECEPTIONIST', 'Receptionist'),
-        ('HOUSEKEEPING', 'Housekeeping'),
-        ('MAINTENANCE', 'Maintenance'),
-        ('STAFF', 'Staff'),
-    ]
-
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='STAFF')
-    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
-    bio = models.TextField(max_length=500, blank=True)
-    phone = models.CharField(max_length=20, blank=True)
-    address = models.TextField(blank=True)
-    date_of_birth = models.DateField(null=True, blank=True)
-    last_login_ip = models.GenericIPAddressField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'User Profile'
-        verbose_name_plural = 'User Profiles'
-
-    def __str__(self):
-        return f"{self.user.email} - {self.role}"
-
-    @property
-    def full_name(self):
-        return self.user.full_name

@@ -40,7 +40,7 @@ export default function AmenitiesPage() {
   const amenityRequests = [
     {
       id: 'AMN-001',
-      guestName: 'Liu Wei',
+      guestName: 'Maria Santos',
       roomNumber: '205',
       category: 'food_beverage',
       item: 'Welcome Fruit Basket',
@@ -58,7 +58,7 @@ export default function AmenitiesPage() {
     },
     {
       id: 'AMN-002',
-      guestName: 'Maria Santos',
+      guestName: 'Liu Wei',
       roomNumber: '312',
       category: 'toiletries',
       item: 'Extra Towels & Toiletries Set',
@@ -526,138 +526,6 @@ export default function AmenitiesPage() {
               <p className="text-sm text-gray-600">No requests found</p>
             </div>
           )}
-        </div>
-        {/* Categories & Stock */}
-        <div className="bg-white border border-gray-200">
-          <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-white">Amenities Categories & Stock</h3>
-                <p className="text-sm text-gray-100 mt-1">Kategori amenities dan status inventaris</p>
-              </div>
-              <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <PackageIcon className="h-4 w-4 text-[#F87B1B]" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-6 bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {amenityCategories.map((category) => (
-                <div key={category.id} className="bg-white p-4 border border-gray-200">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-12 h-12 bg-[#F87B1B] flex items-center justify-center">
-                      <category.icon className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{category.name}</h4>
-                      <p className="text-sm text-gray-600">{category.items.length} item types</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Stock Level:</span>
-                      <span className={`px-2 py-1 text-xs font-medium ${getStockColor(category.stockLevel)}`}>
-                        {category.stockLevel}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 h-2">
-                      <div 
-                        className="bg-[#F87B1B] h-2" 
-                        style={{ width: `${category.stockLevel}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Daily requests:</span>
-                      <span className="text-gray-900 font-medium">{category.dailyRequests}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className="text-xs text-gray-600 font-medium">Available Items:</p>
-                    {category.items.map((item, index) => (
-                      <div key={index} className="text-xs bg-gray-100 px-2 py-1 text-gray-700">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Service Staff */}
-        <div className="bg-white border border-gray-200">
-          <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-white">Service Staff</h3>
-                <p className="text-sm text-gray-100 mt-1">Tim layanan amenities dan guest services</p>
-              </div>
-              <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <UserIcon className="h-4 w-4 text-[#F87B1B]" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-6 bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {serviceStaff.map((staff) => (
-                <div key={staff.id} className="bg-white p-4 border border-gray-200">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-12 h-12 bg-[#F87B1B] flex items-center justify-center text-white font-bold">
-                      {staff.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{staff.name}</h4>
-                      <p className="text-sm text-gray-600">{staff.role}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Department:</span>
-                      <span className="text-gray-900">{staff.department}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <span className={`px-2 py-1 text-xs font-medium ${
-                        staff.status === 'busy' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                      }`}>
-                        {staff.status === 'busy' ? 'Sibuk' : 'Tersedia'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Active Requests:</span>
-                      <span className="text-gray-900">{staff.activeRequests}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Completed Today:</span>
-                      <span className="text-gray-900">{staff.completedToday}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Specialization:</span>
-                      <span className="text-gray-900 text-xs">{staff.specialization}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 mt-4">
-                    <button className="flex-1 bg-[#F87B1B] text-white px-3 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors">
-                      Assign Request
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors rounded">
-                      <Call02Icon className="h-4 w-4" />
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                      <Mail01Icon className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </SupportLayout>

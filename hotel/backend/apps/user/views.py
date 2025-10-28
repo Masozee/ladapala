@@ -7,11 +7,12 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect, csrf_
 from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from .serializers import (
-    UserSerializer, UserUpdateSerializer, UserProfileUpdateSerializer,
+    UserSerializer, UserUpdateSerializer,
     ShiftSerializer
 )
-from .models import UserProfile, Shift
+from .models import Shift, User
 from django.db import transaction
+from datetime import date
 
 
 class LoginView(APIView):
@@ -68,15 +69,6 @@ class LoginView(APIView):
                 } if employee.department else None
             }
 
-        # Get user profile if available
-        profile_info = None
-        if hasattr(user, 'userprofile'):
-            profile = user.userprofile
-            profile_info = {
-                'role': profile.role,
-                'phone': profile.phone,
-            }
-
         return Response({
             'message': 'Login successful',
             'user': {
@@ -85,11 +77,12 @@ class LoginView(APIView):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'full_name': user.full_name,
+                'role': user.role,
+                'phone': user.phone,
                 'is_staff': user.is_staff,
                 'is_superuser': user.is_superuser,
             },
             'employee': employee_info,
-            'profile': profile_info,
         }, status=status.HTTP_200_OK)
 
 
@@ -129,15 +122,6 @@ def check_session(request):
                 } if employee.department else None
             }
 
-        # Get user profile if available
-        profile_info = None
-        if hasattr(request.user, 'userprofile'):
-            profile = request.user.userprofile
-            profile_info = {
-                'role': profile.role,
-                'phone': profile.phone,
-            }
-
         return Response({
             'authenticated': True,
             'user': {
@@ -146,11 +130,12 @@ def check_session(request):
                 'first_name': request.user.first_name,
                 'last_name': request.user.last_name,
                 'full_name': request.user.full_name,
+                'role': request.user.role,
+                'phone': request.user.phone,
                 'is_staff': request.user.is_staff,
-                'is_superuser': request.user.is_superuser,
+                'is_superuser': request.is_superuser,
             },
             'employee': employee_info,
-            'profile': profile_info,
         })
     else:
         return Response({
@@ -180,20 +165,6 @@ def user_profile(request):
                 } if employee.department else None
             }
 
-        # Get user profile if available
-        profile_info = None
-        if hasattr(request.user, 'userprofile'):
-            profile = request.user.userprofile
-            profile_info = {
-                'id': profile.id,
-                'role': profile.role,
-                'phone': profile.phone,
-                'bio': profile.bio,
-                'address': profile.address,
-                'date_of_birth': profile.date_of_birth,
-                'avatar': request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
-            }
-
         return Response({
             'user': {
                 'id': request.user.id,
@@ -201,45 +172,39 @@ def user_profile(request):
                 'first_name': request.user.first_name,
                 'last_name': request.user.last_name,
                 'full_name': request.user.full_name,
+                'role': request.user.role,
+                'phone': request.user.phone,
+                'bio': request.user.bio,
+                'address': request.user.address,
+                'date_of_birth': request.user.date_of_birth,
+                'avatar': request.build_absolute_uri(request.user.avatar.url) if request.user.avatar else None,
                 'is_staff': request.user.is_staff,
                 'is_superuser': request.user.is_superuser,
             },
             'employee': employee_info,
-            'profile': profile_info,
         })
 
     elif request.method in ['PUT', 'PATCH']:
-        # Update user and profile
+        # Update user (profile fields are now in User model)
         with transaction.atomic():
-            # Update user basic info
             user_data = {
                 'first_name': request.data.get('first_name', request.user.first_name),
                 'last_name': request.data.get('last_name', request.user.last_name),
+                'phone': request.data.get('phone', request.user.phone),
+                'bio': request.data.get('bio', request.user.bio),
+                'address': request.data.get('address', request.user.address),
+                'date_of_birth': request.data.get('date_of_birth', request.user.date_of_birth),
             }
+
+            # Handle avatar upload if present
+            if 'avatar' in request.FILES:
+                user_data['avatar'] = request.FILES['avatar']
+
             user_serializer = UserUpdateSerializer(request.user, data=user_data, partial=True)
             if user_serializer.is_valid():
                 user_serializer.save()
             else:
                 return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-            # Update or create user profile
-            profile, created = UserProfile.objects.get_or_create(user=request.user)
-            profile_data = {
-                'phone': request.data.get('phone', profile.phone),
-                'bio': request.data.get('bio', profile.bio),
-                'address': request.data.get('address', profile.address),
-                'date_of_birth': request.data.get('date_of_birth', profile.date_of_birth),
-            }
-
-            # Handle avatar upload if present
-            if 'avatar' in request.FILES:
-                profile_data['avatar'] = request.FILES['avatar']
-
-            profile_serializer = UserProfileUpdateSerializer(profile, data=profile_data, partial=True)
-            if profile_serializer.is_valid():
-                profile_serializer.save()
-            else:
-                return Response(profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Return updated profile
         serializer = UserSerializer(request.user, context={'request': request})
@@ -385,3 +350,211 @@ def active_session(request):
     }
 
     return Response(response_data)
+
+
+@api_view(['GET'])
+def department_choices(request):
+    """Get available department choices"""
+    departments = [
+        {'id': 'front_office', 'name': 'Front Office'},
+        {'id': 'housekeeping', 'name': 'Housekeeping'},
+        {'id': 'food_beverage', 'name': 'Food & Beverage'},
+        {'id': 'maintenance', 'name': 'Maintenance'},
+        {'id': 'management', 'name': 'Management'},
+    ]
+    return Response(departments)
+
+
+@api_view(['GET'])
+def role_choices(request):
+    """Get available role choices"""
+    roles = [{'id': choice[0], 'name': choice[1]} for choice in User.ROLE_CHOICES]
+    return Response(roles)
+
+
+@api_view(['GET', 'POST'])
+def manage_users(request):
+    """List all users or create a new user"""
+    if request.method == 'GET':
+        # List all users with their profiles and employees
+        from .serializers import UserSerializer
+        users = User.objects.all().order_by('-date_joined')
+        serializer = UserSerializer(users, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        # Create new user
+        from django.db import transaction
+        from .models import Department, Employee
+
+        try:
+            with transaction.atomic():
+                # Validate required fields
+                email = request.data.get('email')
+                password = request.data.get('password')
+                first_name = request.data.get('first_name', '')
+                last_name = request.data.get('last_name', '')
+                role = request.data.get('role', 'STAFF')
+                department_id = request.data.get('department')
+                position = request.data.get('position', '')
+                phone = request.data.get('phone', '')
+
+                if not email or not password:
+                    return Response(
+                        {'error': 'Email and password are required'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Check if user exists
+                if User.objects.filter(email=email).exists():
+                    return Response(
+                        {'error': 'User with this email already exists'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Create user with role and phone
+                user = User.objects.create_user(
+                    email=email,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name,
+                    role=role,
+                    phone=phone,
+                    is_active=True
+                )
+
+                # Set staff permissions for admin/manager/supervisor
+                if role in ['ADMIN', 'MANAGER', 'SUPERVISOR']:
+                    user.is_staff = True
+                    if role == 'ADMIN':
+                        user.is_superuser = True
+                    user.save()
+
+                # Get or create department
+                if department_id:
+                    # Map department_id to actual department name
+                    dept_mapping = {
+                        'front_office': 'Front Office',
+                        'housekeeping': 'Housekeeping',
+                        'food_beverage': 'Food & Beverage',
+                        'maintenance': 'Maintenance',
+                        'management': 'Management',
+                    }
+
+                    dept_name = dept_mapping.get(department_id, department_id)
+                    department, _ = Department.objects.get_or_create(
+                        name=dept_name,
+                        defaults={'description': f'{dept_name} Department'}
+                    )
+
+                    # Create employee record
+                    employee = Employee.objects.create(
+                        user=user,
+                        department=department,
+                        position=position or role.title(),
+                        hire_date=request.data.get('hire_date', date.today()),
+                        phone=phone,
+                        salary=request.data.get('salary', 0),
+                        is_active=True
+                    )
+
+                return Response({
+                    'message': 'User created successfully',
+                    'user': {
+                        'id': user.id,
+                        'email': user.email,
+                        'full_name': user.full_name,
+                        'role': role,
+                    }
+                }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def manage_user_detail(request, user_id):
+    """Get, update, or delete a specific user"""
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if request.method == 'GET':
+        from .serializers import UserSerializer
+        serializer = UserSerializer(user, context={'request': request})
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        from django.db import transaction
+        from .models import Department, Employee
+
+        try:
+            with transaction.atomic():
+                # Update user basic info and role
+                user.first_name = request.data.get('first_name', user.first_name)
+                user.last_name = request.data.get('last_name', user.last_name)
+                user.is_active = request.data.get('is_active', user.is_active)
+                user.role = request.data.get('role', user.role)
+                user.phone = request.data.get('phone', user.phone)
+
+                # Update password if provided
+                new_password = request.data.get('password')
+                if new_password:
+                    user.set_password(new_password)
+
+                # Update staff permissions based on role
+                if user.role in ['ADMIN', 'MANAGER', 'SUPERVISOR']:
+                    user.is_staff = True
+                    if user.role == 'ADMIN':
+                        user.is_superuser = True
+                    else:
+                        user.is_superuser = False
+                else:
+                    user.is_staff = False
+                    user.is_superuser = False
+
+                user.save()
+
+                # Update employee
+                if hasattr(user, 'employee'):
+                    employee = user.employee
+                    employee.position = request.data.get('position', employee.position)
+                    employee.phone = request.data.get('phone', employee.phone)
+                    employee.salary = request.data.get('salary', employee.salary)
+                    employee.save()
+
+                return Response({
+                    'message': 'User updated successfully',
+                    'user': {
+                        'id': user.id,
+                        'email': user.email,
+                        'full_name': user.full_name,
+                    }
+                })
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    elif request.method == 'DELETE':
+        # Soft delete - deactivate instead of deleting
+        user.is_active = False
+        user.save()
+
+        if hasattr(user, 'employee'):
+            user.employee.is_active = False
+            user.employee.employment_status = 'TERMINATED'
+            user.employee.save()
+
+        return Response({
+            'message': 'User deactivated successfully'
+        })

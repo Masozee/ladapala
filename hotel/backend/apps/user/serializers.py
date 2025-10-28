@@ -1,19 +1,23 @@
 from rest_framework import serializers
-from .models import User, UserProfile, Department, Employee, Shift, Attendance
+from .models import User, Department, Employee, Shift, Attendance
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
-    """Serializer for UserProfile"""
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for User (merged with profile)"""
+    full_name = serializers.CharField(read_only=True)
     avatar_url = serializers.SerializerMethodField()
+    role_display = serializers.CharField(source='get_role_display', read_only=True)
 
     class Meta:
-        model = UserProfile
+        model = User
         fields = [
-            'id', 'role', 'avatar', 'avatar_url',
-            'bio', 'phone', 'address', 'date_of_birth',
-            'created_at', 'updated_at'
+            'id', 'email', 'first_name', 'last_name', 'full_name',
+            'role', 'role_display', 'phone', 'address', 'date_of_birth', 'bio',
+            'avatar', 'avatar_url',
+            'is_staff', 'is_superuser', 'is_active',
+            'date_joined', 'last_login'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['email', 'is_staff', 'is_superuser', 'date_joined', 'last_login']
 
     def get_avatar_url(self, obj):
         if obj.avatar:
@@ -23,33 +27,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return None
 
 
-class UserSerializer(serializers.ModelSerializer):
-    """Serializer for User"""
-    full_name = serializers.CharField(read_only=True)
-    profile = UserProfileSerializer(source='userprofile', read_only=True)
-
-    class Meta:
-        model = User
-        fields = [
-            'id', 'email', 'first_name', 'last_name', 'full_name',
-            'is_staff', 'is_superuser', 'is_active',
-            'date_joined', 'last_login', 'profile'
-        ]
-        read_only_fields = ['email', 'is_staff', 'is_superuser', 'date_joined', 'last_login']
-
-
 class UserUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating user basic info"""
+    """Serializer for updating user info"""
     class Meta:
         model = User
-        fields = ['first_name', 'last_name']
-
-
-class UserProfileUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating user profile"""
-    class Meta:
-        model = UserProfile
-        fields = ['phone', 'bio', 'address', 'date_of_birth', 'avatar']
+        fields = ['first_name', 'last_name', 'phone', 'bio', 'address', 'date_of_birth', 'avatar', 'role']
 
 
 class ShiftSerializer(serializers.ModelSerializer):
