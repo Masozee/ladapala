@@ -455,10 +455,26 @@ class RoomListSerializer(serializers.ModelSerializer):
 
 class GuestListSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
-    
+    gender_display = serializers.CharField(source='get_gender_display', read_only=True)
+    loyalty_level = serializers.SerializerMethodField()
+
     class Meta:
         model = Guest
-        fields = ['id', 'full_name', 'email', 'phone', 'nationality', 'is_vip']
+        fields = ['id', 'full_name', 'email', 'phone', 'nationality', 'is_vip', 'gender_display', 'loyalty_points', 'loyalty_level']
+
+    def get_loyalty_level(self, obj):
+        """Calculate loyalty level based on points"""
+        points = obj.loyalty_points
+        if points >= 5000:
+            return 'Diamond'
+        elif points >= 2500:
+            return 'Platinum'
+        elif points >= 1000:
+            return 'Gold'
+        elif points >= 500:
+            return 'Silver'
+        else:
+            return 'Bronze'
 
 
 class ReservationListSerializer(serializers.ModelSerializer):

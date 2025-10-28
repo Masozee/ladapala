@@ -32,8 +32,8 @@ import {
   ChevronRightIcon
 } from '@/lib/icons';
 
-// Django API interfaces
-interface DjangoGuest {
+// API interfaces
+interface ApiGuest {
   id: number;
   full_name: string;
   email: string;
@@ -41,12 +41,12 @@ interface DjangoGuest {
   nationality: string | null;
   loyalty_points: number;
   is_vip: boolean;
-  is_active: boolean;
+  
   gender_display: string | null;
   loyalty_level: string;
 }
 
-interface DjangoGuestDetail {
+interface ApiGuestDetail {
   id: number;
   first_name: string;
   last_name: string;
@@ -66,7 +66,7 @@ interface DjangoGuestDetail {
   preferences: any;
   notes: string | null;
   is_vip: boolean;
-  is_active: boolean;
+  
   created_at: string;
   updated_at: string;
   documents: any[];
@@ -78,11 +78,11 @@ interface DjangoGuestDetail {
   total_spent: number;
 }
 
-interface DjangoApiResponse {
+interface ApiResponse {
   count: number;
   next: string | null;
   previous: string | null;
-  results: DjangoGuest[];
+  results: ApiGuest[];
 }
 
 interface GuestRewards {
@@ -144,8 +144,8 @@ interface Guest {
   marketing_consent: boolean;
 }
 
-// Interfaces for Django reservations API
-interface DjangoReservation {
+// Interfaces for reservations API
+interface ApiReservation {
   id: number;
   reservation_number: string;
   check_in_date: string;
@@ -159,11 +159,11 @@ interface DjangoReservation {
   num_nights: number;
 }
 
-interface DjangoReservationResponse {
+interface ReservationResponse {
   count: number;
   next: string | null;
   previous: string | null;
-  results: DjangoReservation[];
+  results: ApiReservation[];
 }
 
 // Fetch guest reservations
@@ -175,14 +175,14 @@ const fetchGuestReservations = async (guestId: number): Promise<GuestStay[]> => 
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (!response.ok) {
       console.warn(`Could not fetch reservations for guest ${guestId}: ${response.status}`);
       return [];
     }
-    
-    const data: DjangoReservationResponse = await response.json();
-    
+
+    const data: ReservationResponse = await response.json();
+
     return data.results.map((reservation): GuestStay => ({
       id: reservation.id,
       reservation_number: reservation.reservation_number,
@@ -202,7 +202,7 @@ const fetchGuestReservations = async (guestId: number): Promise<GuestStay[]> => 
   }
 };
 
-// Map Django reservation status to frontend format
+// Map reservation status to frontend format
 const mapReservationStatus = (status: string): 'completed' | 'cancelled' | 'no_show' => {
   switch (status.toUpperCase()) {
     case 'CHECKED_OUT': return 'completed';
@@ -227,64 +227,70 @@ const fetchGuests = async (page: number = 1, limit: number = 20): Promise<{ gues
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data: DjangoApiResponse = await response.json();
-    
+    const data: ApiResponse = await response.json();
+
+    // Check if data.results exists and is an array
+    if (!data.results || !Array.isArray(data.results)) {
+      console.warn('API returned invalid data structure:', data);
+      return { guests: [], count: 0 };
+    }
+
     // Fetch reservations for each guest and calculate statistics
     const guestsWithStats = await Promise.all(
-      data.results.map(async (djangoGuest): Promise<Guest> => {
-        const reservations = await fetchGuestReservations(djangoGuest.id);
+      data.results.map(async (apiGuest): Promise<Guest> => {
+        const reservations = await fetchGuestReservations(apiGuest.id);
         const completedReservations = reservations.filter(r => r.status === 'completed');
-        
+
         const totalSpent = completedReservations.reduce((sum, r) => sum + r.total_amount, 0);
         const totalNights = completedReservations.reduce((sum, r) => sum + r.nights, 0);
-        const lastStay = completedReservations.length > 0 
+        const lastStay = completedReservations.length > 0
           ? completedReservations.sort((a, b) => new Date(b.check_out_date).getTime() - new Date(a.check_out_date).getTime())[0].check_out_date
           : new Date().toISOString();
-        
+
         return {
-          id: djangoGuest.id,
-          full_name: djangoGuest.full_name,
-          email: djangoGuest.email,
-          phone: djangoGuest.phone || 'No phone',
-          nationality: djangoGuest.nationality || 'Not specified',
-          address: 'Not specified', // Not available in list API
-          date_of_birth: '1990-01-01', // Default value, get from detail API if needed
-          gender: djangoGuest.gender_display || 'Not specified',
-          id_number: 'Not available', // Not available in list API
-          id_type: 'Not available', // Not available in list API
-          vip_status: djangoGuest.is_vip,
-          preferences: [], // Could be populated from detail API
-          allergies: [], // Not available in current API
-          emergency_contact_name: 'Not specified', // Not available in current API
-          emergency_contact_phone: 'Not specified', // Not available in current API
-          created_at: new Date().toISOString(), // Default value
+          id: apiGuest.id,
+          full_name: apiGuest.full_name,
+          email: apiGuest.email,
+          phone: apiGuest.phone || 'No phone',
+          nationality: apiGuest.nationality || 'Not specified',
+          address: 'Not specified',
+          date_of_birth: '1990-01-01',
+          gender: apiGuest.gender_display || 'Not specified',
+          id_number: 'Not available',
+          id_type: 'Not available',
+          vip_status: apiGuest.is_vip,
+          preferences: [],
+          allergies: [],
+          emergency_contact_name: 'Not specified',
+          emergency_contact_phone: 'Not specified',
+          created_at: new Date().toISOString(),
           last_stay: lastStay,
           total_stays: completedReservations.length,
           total_nights: totalNights,
           total_spent: totalSpent,
-          avg_rating: completedReservations.length > 0 
-            ? completedReservations.reduce((sum, r) => sum + (r.rating || 4.5), 0) / completedReservations.length 
+          avg_rating: completedReservations.length > 0
+            ? completedReservations.reduce((sum, r) => sum + (r.rating || 4.5), 0) / completedReservations.length
             : 4.5,
           rewards: {
             program_name: 'Kapulaga Rewards',
-            member_number: `KR${djangoGuest.id.toString().padStart(9, '0')}`,
-            tier_level: mapLoyaltyLevel(djangoGuest.loyalty_level),
-            points_balance: djangoGuest.loyalty_points,
-            points_lifetime: djangoGuest.loyalty_points * 2, // Estimate
-            tier_benefits: getTierBenefits(mapLoyaltyLevel(djangoGuest.loyalty_level)),
-            next_tier_required: getNextTierRequired(mapLoyaltyLevel(djangoGuest.loyalty_level), djangoGuest.loyalty_points),
-            points_expiring: 0, // Default
+            member_number: `KR${apiGuest.id.toString().padStart(9, '0')}`,
+            tier_level: mapLoyaltyLevel(apiGuest.loyalty_level),
+            points_balance: apiGuest.loyalty_points,
+            points_lifetime: apiGuest.loyalty_points * 2,
+            tier_benefits: getTierBenefits(mapLoyaltyLevel(apiGuest.loyalty_level)),
+            next_tier_required: getNextTierRequired(mapLoyaltyLevel(apiGuest.loyalty_level), apiGuest.loyalty_points),
+            points_expiring: 0,
             expiry_date: '2025-12-31',
             join_date: '2024-01-01'
           },
-          recent_stays: reservations.slice(0, 5), // Show last 5 stays
-          notes: 'Fetched from API', // Default note
-          blacklisted: !djangoGuest.is_active,
-          favorite_room_type: completedReservations.length > 0 
-            ? completedReservations[0].room_type 
+          recent_stays: reservations.slice(0, 5),
+          notes: 'Fetched from API',
+          blacklisted: false,
+          favorite_room_type: completedReservations.length > 0
+            ? completedReservations[0].room_type
             : 'Standard Room',
-          preferred_floor: 1, // Default
-          marketing_consent: true // Default
+          preferred_floor: 1,
+          marketing_consent: true
         };
       })
     );
@@ -295,7 +301,6 @@ const fetchGuests = async (page: number = 1, limit: number = 20): Promise<{ gues
     };
   } catch (error) {
     console.error('Failed to fetch guests:', error);
-    // Re-throw error so it can be handled in the component
     throw error;
   }
 };
@@ -1180,7 +1185,7 @@ const GuestsPage = () => {
                     </button>
                     <button className="text-xs bg-[#4E61D3] text-white px-3 py-2 hover:bg-[#3D4EA8] transition-colors">
                       <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
-                      PencilEdit02Icon
+                      Edit
                     </button>
                   </div>
                 </div>
@@ -1228,7 +1233,7 @@ const GuestsPage = () => {
                       Rewards
                     </th>
                     <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
-                      Stay Clock01Icon
+                      Stay History
                     </th>
                     <th className="border border-gray-300 px-6 py-4 text-left text-sm font-bold text-white">
                       Spending
