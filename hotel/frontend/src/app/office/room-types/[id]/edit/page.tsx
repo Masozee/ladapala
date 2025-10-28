@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   Cancel01Icon,
   UserCheckIcon,
@@ -74,10 +74,12 @@ export default function EditRoomTypePage() {
     setError(null);
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/room-types/${id}/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify(formData),

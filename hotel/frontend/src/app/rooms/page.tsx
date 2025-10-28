@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   Search02Icon,
   Calendar01Icon,
@@ -262,10 +262,12 @@ const RoomsPage = () => {
   const handleAddRoomType = async () => {
     try {
       setFormLoading(true);
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl('hotel/room-types/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -308,10 +310,12 @@ const RoomsPage = () => {
   const handleAddRoom = async () => {
     try {
       setFormLoading(true);
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl('hotel/rooms/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify({
