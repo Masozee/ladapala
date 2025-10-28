@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   UserIcon,
   Mail01Icon,
@@ -31,6 +32,74 @@ import {
   File01Icon
 } from '@/lib/icons';
 
+interface ActiveSession {
+  id: number;
+  clock_in: string;
+  clock_out: string | null;
+  status: string;
+  status_display: string;
+  late_minutes: number;
+  overtime_minutes: number;
+  duration_hours: number;
+  shift: {
+    id: number;
+    shift_date: string;
+    start_time: string;
+    end_time: string;
+    shift_type: string;
+    shift_type_display: string;
+  };
+}
+
+interface UserProfile {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  is_staff: boolean;
+  is_superuser: boolean;
+  is_active: boolean;
+  date_joined: string;
+  last_login: string | null;
+  profile: {
+    id: number;
+    role: string;
+    avatar: string | null;
+    avatar_url: string | null;
+    bio: string;
+    phone: string;
+    address: string;
+    date_of_birth: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+interface Employee {
+  id: number;
+  employee_id: string;
+  full_name: string;
+  first_name: string;
+  last_name: string;
+  position: string;
+  department: string | null;
+  department_id: number | null;
+  employment_status: string;
+  employment_status_display: string;
+  hire_date: string | null;
+  termination_date: string | null;
+  salary: string | null;
+  phone: string;
+  email: string;
+  address: string;
+  emergency_contact: string;
+  emergency_phone: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeSection, setActiveSection] = useState('personal');
@@ -40,6 +109,11 @@ const ProfilePage = () => {
     new: false,
     confirm: false
   });
+  const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [profile, setProfile] = useState({
     // Personal Information
@@ -264,6 +338,31 @@ const ProfilePage = () => {
     });
   };
 
+  // Fetch profile and active session
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(buildApiUrl('user/active-session/'), {
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+          setEmployee(data.employee);
+          setActiveSession(data.active_session);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+        setSessionLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   const sections = [
     { id: 'personal', name: 'Personal', icon: UserIcon },
     { id: 'professional', name: 'Work', icon: PackageIcon },
@@ -274,248 +373,289 @@ const ProfilePage = () => {
     { id: 'statistics', name: 'Stats', icon: PieChartIcon }
   ];
 
-  const renderPersonalInfo = () => (
-    <div className="space-y-6">
-      {/* Profile Picture & Basic Info */}
-      <div className="bg-white border border-gray-200">
-        <div className="p-6 bg-[#005357] text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-white">Personal Information</h3>
-              <p className="text-sm text-gray-100 mt-1">Your basic profile details</p>
+  const renderPersonalInfo = () => {
+    if (!user || !employee) return <div className="text-gray-500">Loading...</div>;
+
+    return (
+      <div className="space-y-6">
+        {/* Profile Picture & Basic Info */}
+        <div className="bg-white border border-gray-200">
+          <div className="p-6 bg-[#005357] text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white">Personal Information</h3>
+                <p className="text-sm text-gray-100 mt-1">Your basic profile details</p>
+              </div>
+              <div className="w-8 h-8 bg-white flex items-center justify-center">
+                <UserIcon className="h-4 w-4 text-[#005357]" />
+              </div>
             </div>
-            <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <UserIcon className="h-4 w-4 text-[#005357]" />
+          </div>
+          <div className="p-6 bg-gray-50">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:space-x-8">
+              {/* Profile Picture */}
+              <div className="flex-shrink-0 mb-6 lg:mb-0">
+                <div className="relative">
+                  {user.profile?.avatar_url ? (
+                    <img
+                      src={user.profile.avatar_url}
+                      alt={user.full_name}
+                      className="w-32 h-32 object-cover rounded"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 bg-gray-200 flex items-center justify-center">
+                      <UserIcon className="h-16 w-16 text-gray-400" />
+                    </div>
+                  )}
+                  {isEditing && (
+                    <button className="absolute bottom-0 right-0 w-8 h-8 bg-[#005357] text-white flex items-center justify-center hover:bg-[#004147] transition-colors">
+                      <ViewIcon className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Basic Info */}
+              <div className="flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                    <input
+                      type="text"
+                      value={user.first_name || ''}
+                      disabled={!isEditing}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                    <input
+                      type="text"
+                      value={user.last_name || ''}
+                      disabled={!isEditing}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input
+                      type="email"
+                      value={user.email}
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-300 bg-gray-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                    <input
+                      type="date"
+                      value={user.profile?.date_of_birth || ''}
+                      disabled={!isEditing}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                    <textarea
+                      value={user.profile?.bio || ''}
+                      disabled={!isEditing}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div className="p-6 bg-gray-50">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:space-x-8">
-            {/* Profile Picture */}
-            <div className="flex-shrink-0 mb-6 lg:mb-0">
-              <div className="relative">
-                <div className="w-32 h-32 bg-gray-200 flex items-center justify-center">
-                  <UserIcon className="h-16 w-16 text-gray-400" />
-                </div>
-                <button className="absolute bottom-0 right-0 w-8 h-8 bg-[#005357] text-white flex items-center justify-center hover:bg-[#004147] transition-colors">
-                  <ViewIcon className="h-4 w-4" />
-                </button>
+
+        {/* Contact Information from Employee */}
+        <div className="bg-white border border-gray-200">
+          <div className="p-6 bg-[#005357] text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white">Contact Information</h3>
+                <p className="text-sm text-gray-100 mt-1">Your contact details</p>
+              </div>
+              <div className="w-8 h-8 bg-white flex items-center justify-center">
+                <Mail01Icon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
-            
-            {/* Basic Info */}
-            <div className="flex-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                  <input
-                    type="text"
-                    value={profile.personal.firstName}
-                    onChange={(e) => handleProfileChange('personal', 'firstName', e.target.value)}
-                    disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                  <input
-                    type="text"
-                    value={profile.personal.lastName}
-                    onChange={(e) => handleProfileChange('personal', 'lastName', e.target.value)}
-                    disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
-                  <input
-                    type="text"
-                    value={profile.personal.displayName}
-                    onChange={(e) => handleProfileChange('personal', 'displayName', e.target.value)}
-                    disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={profile.personal.dateOfBirth}
-                    onChange={(e) => handleProfileChange('personal', 'dateOfBirth', e.target.value)}
-                    disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-                  <select
-                    value={profile.personal.gender}
-                    onChange={(e) => handleProfileChange('personal', 'gender', e.target.value)}
-                    disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                    <option value="Prefer not to say">Prefer not to say</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Nationality</label>
-                  <input
-                    type="text"
-                    value={profile.personal.nationality}
-                    onChange={(e) => handleProfileChange('personal', 'nationality', e.target.value)}
-                    disabled={!isEditing}
-                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
-                  <textarea
-                    value={profile.personal.bio}
-                    onChange={(e) => handleProfileChange('personal', 'bio', e.target.value)}
-                    disabled={!isEditing}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
-                  />
-                </div>
+          </div>
+          <div className="p-6 bg-gray-50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                <input
+                  type="tel"
+                  value={employee.phone || user.profile?.phone || ''}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Personal Email</label>
+                <input
+                  type="email"
+                  value={employee.email || ''}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                <textarea
+                  value={employee.address || user.profile?.address || ''}
+                  disabled={!isEditing}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact</label>
+                <input
+                  type="text"
+                  value={employee.emergency_contact || ''}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Phone</label>
+                <input
+                  type="tel"
+                  value={employee.emergency_phone || ''}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
+    );
+  };
 
-      {/* Languages & Skills */}
-      <div className="bg-white border border-gray-200">
-        <div className="p-6 bg-[#005357] text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-white">Languages & Skills</h3>
-              <p className="text-sm text-gray-100 mt-1">Your language abilities and personal skills</p>
-            </div>
-            <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <PackageIcon className="h-4 w-4 text-[#005357]" />
+  const renderProfessionalInfo = () => {
+    if (!user || !employee) return <div className="text-gray-500">Loading...</div>;
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-white border border-gray-200">
+          <div className="p-6 bg-[#005357] text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white">Professional Information</h3>
+                <p className="text-sm text-gray-100 mt-1">Your work details and career information</p>
+              </div>
+              <div className="w-8 h-8 bg-white flex items-center justify-center">
+                <PackageIcon className="h-4 w-4 text-[#005357]" />
+              </div>
             </div>
           </div>
-        </div>
-        <div className="p-6 bg-gray-50">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Languages</label>
-              <div className="flex flex-wrap gap-2">
-                {profile.personal.languages.map((lang, index) => (
-                  <span key={index} className="px-3 py-1 bg-[#005357] text-white text-sm">
-                    {lang}
+          <div className="p-6 bg-gray-50">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
+                <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
+                  {employee.employee_id}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
+                  {employee.position || '-'}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
+                  {employee.department || '-'}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Employment Status</label>
+                <div className="px-3 py-2 bg-gray-100 border border-gray-300">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    employee.employment_status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
+                    employee.employment_status === 'INACTIVE' ? 'bg-gray-100 text-gray-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {employee.employment_status_display}
                   </span>
-                ))}
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderProfessionalInfo = () => (
-    <div className="space-y-6">
-      <div className="bg-white border border-gray-200">
-        <div className="p-6 bg-[#005357] text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-white">Professional Information</h3>
-              <p className="text-sm text-gray-100 mt-1">Your work details and career information</p>
-            </div>
-            <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <PackageIcon className="h-4 w-4 text-[#005357]" />
-            </div>
-          </div>
-        </div>
-        <div className="p-6 bg-gray-50">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
-              <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
-                {profile.professional.employeeId}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Job Title</label>
-              <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
-                {profile.professional.jobTitle}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-              <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
-                {profile.professional.department}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Direct Manager</label>
-              <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
-                {profile.professional.directManager}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Hire Date</label>
-              <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
-                {formatDate(profile.professional.hireDate)}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Performance Rating</label>
-              <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600 flex items-center space-x-2">
-                <SparklesIcon className="h-4 w-4 text-yellow-500" />
-                <span>{profile.professional.performanceRating}/5.0</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Certifications */}
-      <div className="bg-white border border-gray-200">
-        <div className="p-6 bg-[#005357] text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-white">Certifications & Achievements</h3>
-              <p className="text-sm text-gray-100 mt-1">Your professional qualifications and awards</p>
-            </div>
-            <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <SparklesIcon className="h-4 w-4 text-[#005357]" />
-            </div>
-          </div>
-        </div>
-        <div className="p-6 bg-gray-50">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">Certifications</h4>
-              <div className="space-y-2">
-                {profile.professional.certifications.map((cert, index) => (
-                  <div key={index} className="flex items-center space-x-2 p-2 bg-white border">
-                    <SparklesIcon className="h-4 w-4 text-[#005357]" />
-                    <span className="text-sm text-gray-700">{cert}</span>
+              {employee.hire_date && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hire Date</label>
+                  <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
+                    {formatDate(employee.hire_date)}
                   </div>
-                ))}
+                </div>
+              )}
+              {employee.salary && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
+                  <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
+                    Rp {parseFloat(employee.salary).toLocaleString('id-ID')}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Account Information */}
+        <div className="bg-white border border-gray-200">
+          <div className="p-6 bg-[#005357] text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white">Account Information</h3>
+                <p className="text-sm text-gray-100 mt-1">System access and account details</p>
+              </div>
+              <div className="w-8 h-8 bg-white flex items-center justify-center">
+                <Shield01Icon className="h-4 w-4 text-[#005357]" />
               </div>
             </div>
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">Achievements</h4>
-              <div className="space-y-2">
-                {profile.professional.achievements.map((achievement, index) => (
-                  <div key={index} className="flex items-center space-x-2 p-2 bg-white border">
-                    <SparklesIcon className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm text-gray-700">{achievement}</span>
-                  </div>
-                ))}
+          </div>
+          <div className="p-6 bg-gray-50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
+                  {user.profile?.role || '-'}
+                </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Status</label>
+                <div className="px-3 py-2 bg-gray-100 border border-gray-300">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
+                    {user.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date Joined</label>
+                <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
+                  {formatDate(user.date_joined)}
+                </div>
+              </div>
+              {user.last_login && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Login</label>
+                  <div className="px-3 py-2 bg-gray-100 border border-gray-300 text-gray-600">
+                    {new Date(user.last_login).toLocaleString('id-ID')}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderSecurityInfo = () => (
     <div className="space-y-6">
@@ -808,27 +948,110 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* Profile Summary Card */}
-        <div className="bg-white border border-gray-200">
-          <div className="p-6 bg-[#005357] text-white">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-white/20 flex items-center justify-center">
-                <UserIcon className="h-8 w-8 text-white" />
+        {/* Active Session Card */}
+        {activeSession && (
+          <div className="bg-white border border-gray-200 mb-6">
+            <div className="p-6 bg-green-600 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white/20 flex items-center justify-center">
+                    <Clock01Icon className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">Active Session</h3>
+                    <p className="text-sm text-green-100">You're currently clocked in</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold">{activeSession.duration_hours}h</div>
+                  <div className="text-sm text-green-100">Working time</div>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 bg-gray-50 grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Clock In</div>
+                <div className="font-medium text-gray-900">
+                  {new Date(activeSession.clock_in).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                </div>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">{profile.personal.firstName} {profile.personal.lastName}</h2>
-                <p className="text-gray-100">{profile.professional.jobTitle}</p>
-                <div className="flex items-center space-x-4 mt-2 text-sm text-gray-200">
-                  <span>{profile.professional.department}</span>
-                  <span>•</span>
-                  <span>Employee ID: {profile.professional.employeeId}</span>
-                  <span>•</span>
-                  <span>Joined {formatDate(profile.professional.hireDate)}</span>
+                <div className="text-xs text-gray-500 mb-1">Shift Type</div>
+                <div className="font-medium text-gray-900">{activeSession.shift.shift_type_display}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Status</div>
+                <div className="font-medium text-gray-900">
+                  <span className={`px-2 py-1 text-xs rounded ${
+                    activeSession.late_minutes > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
+                  }`}>
+                    {activeSession.status_display}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Schedule</div>
+                <div className="font-medium text-gray-900">
+                  {activeSession.shift.start_time} - {activeSession.shift.end_time}
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Profile Summary Card */}
+        {loading ? (
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="animate-pulse flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gray-300 rounded"></div>
+              <div className="flex-1">
+                <div className="h-6 bg-gray-300 rounded w-1/3 mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+              </div>
+            </div>
+          </div>
+        ) : user && employee ? (
+          <div className="bg-white border border-gray-200">
+            <div className="p-6 bg-[#005357] text-white">
+              <div className="flex items-center space-x-4">
+                {user.profile?.avatar_url ? (
+                  <img
+                    src={user.profile.avatar_url}
+                    alt={user.full_name}
+                    className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-white/20 flex items-center justify-center rounded-full">
+                    <UserIcon className="h-8 w-8 text-white" />
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-2xl font-bold text-white">{user.full_name}</h2>
+                  <p className="text-gray-100">{employee.position || 'Staff'}</p>
+                  <div className="flex items-center space-x-4 mt-2 text-sm text-gray-200">
+                    {employee.department && (
+                      <>
+                        <span>{employee.department}</span>
+                        <span>•</span>
+                      </>
+                    )}
+                    <span>Employee ID: {employee.employee_id}</span>
+                    {employee.hire_date && (
+                      <>
+                        <span>•</span>
+                        <span>Joined {formatDate(employee.hire_date)}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-200 p-6">
+            <p className="text-gray-500">Unable to load profile data</p>
+          </div>
+        )}
 
         {/* Section Navigation */}
         <div className="border-b border-gray-200">

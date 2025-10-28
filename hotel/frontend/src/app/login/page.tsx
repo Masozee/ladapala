@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -16,6 +16,7 @@ import { buildApiUrl } from '@/lib/config';
 
 const LoginPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,6 +25,9 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get redirect path from query params
+  const redirectPath = searchParams.get('redirect') || '/';
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -56,7 +60,7 @@ const LoginPage = () => {
       }
 
       const data = await response.json();
-      
+
       // Store auth data in localStorage
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('authUser', JSON.stringify(data.user));
@@ -64,8 +68,8 @@ const LoginPage = () => {
         localStorage.setItem('authEmployee', JSON.stringify(data.employee));
       }
 
-      // Redirect to dashboard
-      router.push('/');
+      // Redirect to the original page or dashboard
+      router.push(redirectPath);
     } catch (err) {
       setError('Login failed. Please check your credentials.');
       console.error('Login error:', err);

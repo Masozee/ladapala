@@ -9,7 +9,7 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import { buildApiUrl } from '@/lib/config';
 import {
   Wrench01Icon,
-  BedIcon,
+  CircleArrowReload01Icon,
   PackageIcon,
   Mail01Icon,
   UserCheckIcon,
@@ -76,7 +76,7 @@ const SupportSidebar = () => {
 
   const supportActions: MenuItem[] = [
     { name: 'Maintenance', icon: Wrench01Icon, href: '/support/maintenance' },
-    { name: 'Housekeeping', icon: BedIcon, href: '/support/housekeeping', badge: housekeepingCount > 0 ? housekeepingCount : undefined },
+    { name: 'Housekeeping', icon: CircleArrowReload01Icon, href: '/support/housekeeping', badge: housekeepingCount > 0 ? housekeepingCount : undefined },
     { name: 'Amenities Request', icon: PackageIcon, href: '/support/amenities' },
     { name: 'Work Orders', icon: UserCheckIcon, href: '/support/workorders' },
     { name: 'Emergency', icon: AlertCircleIcon, href: '/support/emergency' },

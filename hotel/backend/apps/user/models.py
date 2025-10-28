@@ -280,10 +280,17 @@ class Attendance(models.Model):
     def save(self, *args, **kwargs):
         # Calculate late minutes if clocked in late
         if self.clock_in and self.is_late():
+            from django.utils import timezone as tz
             scheduled_start = datetime.combine(
                 self.shift.shift_date,
                 self.shift.start_time
             )
+            # Make scheduled_start timezone-aware if clock_in is timezone-aware
+            if tz.is_aware(self.clock_in) and tz.is_naive(scheduled_start):
+                scheduled_start = tz.make_aware(scheduled_start)
+            elif tz.is_naive(self.clock_in) and tz.is_aware(scheduled_start):
+                scheduled_start = tz.make_naive(scheduled_start)
+
             late_duration = self.clock_in - scheduled_start
             self.late_minutes = int(late_duration.total_seconds() / 60)
 

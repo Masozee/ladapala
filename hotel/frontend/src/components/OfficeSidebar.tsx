@@ -21,7 +21,7 @@ import {
   Shield01Icon,
   ChevronLeftIcon,
   PackageIcon,
-  BedIcon
+  CircleArrowReload01Icon
 } from '@/lib/icons';
 
 interface MenuItem {
@@ -41,7 +41,7 @@ const OfficeSidebar = () => {
   const officeActions: MenuItem[] = [
     { name: 'Guest Database', icon: UserMultipleIcon, href: '/office/guests' },
     { name: 'Employees', icon: UserSettings01Icon, href: '/office/employees' },
-    { name: 'Housekeeping', icon: BedIcon, href: '/office/housekeeping' },
+    { name: 'Housekeeping', icon: CircleArrowReload01Icon, href: '/office/housekeeping' },
     { name: 'Financial', icon: CreditCardIcon, href: '/office/financial' },
     { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse' },
     { name: 'Reports', icon: File01Icon, href: '/office/reports' },

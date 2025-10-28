@@ -288,3 +288,100 @@ def user_shifts(request):
             'position': employee.position,
         }
     })
+
+
+@api_view(['GET'])
+def active_session(request):
+    """Get current user's active session with full profile (clocked in but not clocked out)"""
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    from .models import Attendance
+    from django.utils import timezone
+    from .serializers import UserSerializer
+
+    # Get full user profile data
+    user_serializer = UserSerializer(request.user, context={'request': request})
+
+    response_data = {
+        'user': user_serializer.data,
+        'active_session': None,
+        'employee': None
+    }
+
+    # Check if user has employee record
+    if not hasattr(request.user, 'employee'):
+        print(f"[DEBUG] User {request.user.email} has no employee record")
+        response_data['message'] = 'No employee record found for this user'
+        return Response(response_data)
+
+    employee = request.user.employee
+    print(f"[DEBUG] Checking active session for: {request.user.email} (Employee: {employee.full_name})")
+
+    # Add employee data
+    response_data['employee'] = {
+        'id': employee.id,
+        'employee_id': employee.employee_id,
+        'full_name': employee.full_name,
+        'first_name': employee.first_name,
+        'last_name': employee.last_name,
+        'position': employee.position,
+        'department': employee.department.name if employee.department else None,
+        'department_id': employee.department.id if employee.department else None,
+        'employment_status': employee.employment_status,
+        'employment_status_display': employee.get_employment_status_display(),
+        'hire_date': employee.hire_date,
+        'termination_date': employee.termination_date,
+        'salary': str(employee.salary) if employee.salary else None,
+        'phone': employee.phone,
+        'email': employee.email,
+        'address': employee.address,
+        'emergency_contact': employee.emergency_contact,
+        'emergency_phone': employee.emergency_phone,
+        'is_active': employee.is_active,
+        'created_at': employee.created_at,
+        'updated_at': employee.updated_at,
+    }
+
+    # Get active attendance (clocked in but not clocked out)
+    active_attendance = Attendance.objects.filter(
+        shift__employee=employee,
+        clock_in__isnull=False,
+        clock_out__isnull=True
+    ).select_related('shift', 'shift__employee').order_by('-clock_in').first()
+
+    if not active_attendance:
+        print(f"[DEBUG] No active attendance found for {request.user.email}")
+        response_data['message'] = 'No active session found'
+        return Response(response_data)
+
+    print(f"[DEBUG] Found active session ID {active_attendance.id} for {request.user.email}")
+
+    # Calculate session duration
+    now = timezone.now()
+    duration_seconds = (now - active_attendance.clock_in).total_seconds()
+    duration_hours = duration_seconds / 3600
+
+    response_data['active_session'] = {
+        'id': active_attendance.id,
+        'clock_in': active_attendance.clock_in,
+        'clock_out': active_attendance.clock_out,
+        'status': active_attendance.status,
+        'status_display': active_attendance.get_status_display(),
+        'late_minutes': active_attendance.late_minutes,
+        'overtime_minutes': active_attendance.overtime_minutes,
+        'break_start': active_attendance.break_start,
+        'break_end': active_attendance.break_end,
+        'notes': active_attendance.notes,
+        'duration_hours': round(duration_hours, 2),
+        'shift': {
+            'id': active_attendance.shift.id,
+            'shift_date': active_attendance.shift.shift_date,
+            'start_time': active_attendance.shift.start_time,
+            'end_time': active_attendance.shift.end_time,
+            'shift_type': active_attendance.shift.shift_type,
+            'shift_type_display': active_attendance.shift.get_shift_type_display(),
+        }
+    }
+
+    return Response(response_data)

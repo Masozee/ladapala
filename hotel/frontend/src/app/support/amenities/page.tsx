@@ -366,270 +366,167 @@ export default function AmenitiesPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Amenities Management</h1>
-          <p className="text-gray-600 mt-2">Kelola permintaan amenities, layanan tamu, dan inventaris</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Amenities Management</h1>
+          <p className="text-sm text-gray-600 mt-1">Kelola permintaan amenities, layanan tamu, dan inventaris</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Pending Requests</h3>
-                  <p className="text-sm text-gray-100 mt-1">Menunggu diproses</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock01Icon className="h-4 w-4 text-[#F87B1B]" />
-                </div>
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-yellow-100 rounded">
+                <Clock01Icon className="h-6 w-6 text-yellow-600" />
               </div>
             </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#F87B1B]">{amenitiesStats.pendingRequests}</div>
-                <div className="text-sm text-gray-600">permintaan</div>
-              </div>
-            </div>
+            <div className="text-3xl font-semibold text-gray-900 mb-1">{amenitiesStats.pendingRequests}</div>
+            <div className="text-sm font-medium text-gray-900">Pending Requests</div>
+            <div className="text-xs text-gray-600 mt-1">Menunggu diproses</div>
           </div>
 
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">In Progress</h3>
-                  <p className="text-sm text-gray-100 mt-1">Sedang diproses</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock01Icon className="h-4 w-4 text-[#F87B1B]" />
-                </div>
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-blue-100 rounded">
+                <Clock01Icon className="h-6 w-6 text-blue-600" />
               </div>
             </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-[#F87B1B]">{amenitiesStats.inProgress}</div>
-                <div className="text-sm text-gray-600">sedang diproses</div>
-              </div>
-            </div>
+            <div className="text-3xl font-semibold text-gray-900 mb-1">{amenitiesStats.inProgress}</div>
+            <div className="text-sm font-medium text-gray-900">In Progress</div>
+            <div className="text-xs text-gray-600 mt-1">Sedang diproses</div>
           </div>
 
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Completed Today</h3>
-                  <p className="text-sm text-gray-100 mt-1">Selesai hari ini</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <UserCheckIcon className="h-4 w-4 text-[#F87B1B]" />
-                </div>
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-green-100 rounded">
+                <UserCheckIcon className="h-6 w-6 text-green-600" />
               </div>
             </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">{amenitiesStats.completedToday}</div>
-                <div className="text-sm text-gray-600">permintaan selesai</div>
-              </div>
-            </div>
+            <div className="text-3xl font-semibold text-gray-900 mb-1">{amenitiesStats.completedToday}</div>
+            <div className="text-sm font-medium text-gray-900">Completed Today</div>
+            <div className="text-xs text-gray-600 mt-1">Selesai hari ini</div>
           </div>
 
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Urgent Requests</h3>
-                  <p className="text-sm text-gray-100 mt-1">Prioritas tinggi</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Alert01Icon className="h-4 w-4 text-[#F87B1B]" />
-                </div>
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-red-100 rounded">
+                <Alert01Icon className="h-6 w-6 text-red-600" />
               </div>
             </div>
-            <div className="p-4 bg-gray-50">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-red-600">{amenitiesStats.urgentRequests}</div>
-                <div className="text-sm text-gray-600">mendesak</div>
-              </div>
-            </div>
+            <div className="text-3xl font-semibold text-gray-900 mb-1">{amenitiesStats.urgentRequests}</div>
+            <div className="text-sm font-medium text-gray-900">Urgent Requests</div>
+            <div className="text-xs text-gray-600 mt-1">Prioritas tinggi</div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white border border-gray-200">
-          <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-white">Amenities Requests</h3>
-                <p className="text-sm text-gray-100 mt-1">Kelola semua permintaan amenities dan layanan tamu</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <button className="bg-white text-[#F87B1B] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
-                  <Add01Icon className="h-4 w-4" />
-                  <span>New Request</span>
-                </button>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <PackageIcon className="h-4 w-4 text-[#F87B1B]" />
-                </div>
-              </div>
-            </div>
+
+        {/* Amenities Requests Title */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Amenities Requests</h2>
+            <p className="text-sm text-gray-600 mt-1">Kelola semua permintaan amenities dan layanan tamu</p>
           </div>
+          <button className="bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E06A0A] transition-colors flex items-center space-x-2">
+            <Add01Icon className="h-4 w-4" />
+            <span>New Request</span>
+          </button>
+        </div>
 
-          <div className="p-6 bg-gray-50">
-            {/* Tab Navigation */}
-            <div className="flex space-x-1 mb-6 bg-gray-100 p-1">
-              <TabButton tabId="pending" label="Pending" count={amenitiesStats.pendingRequests} />
-              <TabButton tabId="in_progress" label="In Progress" count={amenitiesStats.inProgress} />
-              <TabButton tabId="completed" label="Completed" count={amenitiesStats.completedToday} />
-              <TabButton tabId="urgent" label="Urgent" count={amenitiesStats.urgentRequests} />
-              <TabButton tabId="all" label="All" />
+        {/* Filters */}
+        <div className="flex items-center space-x-4">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search02Icon className="h-4 w-4 text-gray-400" />
             </div>
+            <input
+              type="text"
+              placeholder="Cari tamu, kamar, atau item..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] focus:border-[#F87B1B] w-full"
+            />
+          </div>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
+          >
+            <option value="all">Semua Kategori</option>
+            {amenityCategories.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
+          <div className="flex space-x-1 bg-gray-100 p-1">
+            <TabButton tabId="pending" label="Pending" count={amenitiesStats.pendingRequests} />
+            <TabButton tabId="in_progress" label="In Progress" count={amenitiesStats.inProgress} />
+            <TabButton tabId="completed" label="Completed" count={amenitiesStats.completedToday} />
+            <TabButton tabId="urgent" label="Urgent" count={amenitiesStats.urgentRequests} />
+            <TabButton tabId="all" label="All" />
+          </div>
+        </div>
 
-            {/* Filters */}
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search02Icon className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Cari tamu, kamar, atau item..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F87B1B] focus:border-[#F87B1B] w-64"
-                  />
-                </div>
-                <select 
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
-                >
-                  <option value="all">Semua Kategori</option>
-                  {amenityCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Requests List */}
-            <div className="space-y-4">
+        {/* Requests Table */}
+        <div className="bg-white border border-gray-300 overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#F87B1B] text-white">
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">ID</th>
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">Guest</th>
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">Room</th>
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">Item</th>
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">Category</th>
+                <th className="border border-gray-300 px-3 py-2 text-center text-xs font-semibold">Qty</th>
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">Priority</th>
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">Status</th>
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">Delivery</th>
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">Assigned</th>
+                <th className="border border-gray-300 px-3 py-2 text-right text-xs font-semibold">Cost</th>
+                <th className="border border-gray-300 px-3 py-2 text-center text-xs font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
               {filteredRequests.map((request) => (
-                <div key={request.id} className="bg-white p-6 border border-gray-200">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <span className="font-mono text-sm bg-gray-100 px-2 py-1 text-gray-800">
-                          {request.id}
-                        </span>
-                        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${getCategoryColor(request.category)}`}>
-                          {(() => {
-                            const IconComponent = getCategoryIcon(request.category);
-                            return <IconComponent className="h-4 w-4 mr-1" />;
-                          })()}
-                          {getCategoryName(request.category)}
-                        </span>
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium ${getPriorityColor(request.priority)}`}>
-                          {getPriorityLabel(request.priority)}
-                        </span>
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium ${getStatusColor(request.status)}`}>
-                          {getStatusLabel(request.status)}
-                        </span>
-                      </div>
-                      
-                      <h4 className="font-bold text-lg text-gray-900 mb-2">{request.item}</h4>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                        <div>
-                          <span className="text-gray-600">Guest:</span>
-                          <div className="font-medium text-gray-900">{request.guestName}</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Room:</span>
-                          <div className="font-medium text-[#F87B1B]">#{request.roomNumber}</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Quantity:</span>
-                          <div className="font-medium text-gray-900">{request.quantity}</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Delivery:</span>
-                          <div className="font-medium text-gray-900">{request.deliveryTime}</div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                        <div>
-                          <span className="text-gray-600">Requested:</span>
-                          <div className="font-medium text-gray-900">{formatDate(request.requestedAt)}</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Assigned to:</span>
-                          <div className="font-medium text-gray-900">{request.assignedTo}</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Cost:</span>
-                          <div className="font-medium text-gray-900">
-                            {request.estimatedCost > 0 ? formatCurrency(request.estimatedCost) : 'Complimentary'}
-                          </div>
-                        </div>
-                        {request.deliveredAt && (
-                          <div>
-                            <span className="text-gray-600">Delivered:</span>
-                            <div className="font-medium text-green-600">{formatDate(request.deliveredAt)}</div>
-                          </div>
-                        )}
-                      </div>
-
-                      {request.specialInstructions && (
-                        <div className="bg-blue-50 p-3 mb-3">
-                          <p className="text-sm text-blue-800">
-                            <span className="font-medium">Special Instructions:</span> {request.specialInstructions}
-                          </p>
-                        </div>
-                      )}
-
-                      {request.notes && (
-                        <div className="bg-gray-50 p-3 mb-3">
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">Notes:</span> {request.notes}
-                          </p>
-                        </div>
-                      )}
-
-                      {request.guestRating && (
-                        <div className="flex items-center space-x-2 text-sm">
-                          <span className="text-gray-600">Guest rating:</span>
-                          <div className="flex items-center space-x-1">
-                            {[...Array(5)].map((_, i) => (
-                              <SparklesIcon 
-                                key={i} 
-                                className={`h-4 w-4 ${i < request.guestRating! ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-                              />
-                            ))}
-                            <span className="text-gray-900 font-medium">({request.guestRating}/5)</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center space-x-2 ml-4">
-                      <button className="p-2 text-gray-400 hover:text-[#F87B1B] hover:bg-gray-100 transition-colors rounded">
-                        <EyeIcon className="h-4 w-4" />
-                      </button>
-                      <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                        <PencilEdit02Icon className="h-4 w-4" />
-                      </button>
-                      <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors rounded">
-                        <MoreHorizontalIcon className="h-4 w-4" />
+                <tr key={request.id} className="hover:bg-gray-50">
+                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">{request.id}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">{request.guestName}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs font-medium text-[#F87B1B]">#{request.roomNumber}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900 max-w-[150px] truncate" title={request.item}>{request.item}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs">
+                    <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${getCategoryColor(request.category)}`}>
+                      {getCategoryName(request.category)}
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs text-center text-gray-900">{request.quantity}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs">
+                    <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${getPriorityColor(request.priority)}`}>
+                      {getPriorityLabel(request.priority)}
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs">
+                    <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
+                      {getStatusLabel(request.status)}
+                    </span>
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">{request.deliveryTime}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">{request.assignedTo}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs text-right text-gray-900">
+                    {request.estimatedCost > 0 ? formatCurrency(request.estimatedCost) : 'Free'}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-xs text-center">
+                    <div className="flex items-center justify-center">
+                      <button className="p-1.5 border border-gray-400 hover:bg-gray-100 transition-colors">
+                        <MoreHorizontalIcon className="h-4 w-4 text-gray-600" />
                       </button>
                     </div>
-                  </div>
-                </div>
+                  </td>
+                </tr>
               ))}
+            </tbody>
+          </table>
+          {filteredRequests.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-sm text-gray-600">No requests found</p>
             </div>
-          </div>
+          )}
         </div>
-
         {/* Categories & Stock */}
         <div className="bg-white border border-gray-200">
           <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
