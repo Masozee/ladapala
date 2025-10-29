@@ -11,8 +11,11 @@ import {
   Sun03Icon,
   Moon02Icon,
   Cancel01Icon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  Logout01Icon
 } from '@/lib/icons';
+import { buildApiUrl } from '@/lib/config';
+import { useRouter } from 'next/navigation';
 
 interface OfficeLayoutProps {
   children: React.ReactNode;
@@ -41,6 +44,27 @@ export const useOfficeHeader = () => {
 
 export const OfficeHeaderActions = () => {
   const { darkMode, setDarkMode, searchOpen, setSearchOpen, searchQuery, setSearchQuery, handleSearch } = useOfficeHeader();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(buildApiUrl('user/logout/'), {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        // Redirect to login page
+        router.push('/login');
+      } else {
+        console.error('Logout failed:', response.status);
+        alert('Gagal logout. Silakan coba lagi.');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('Terjadi kesalahan saat logout.');
+    }
+  };
 
   return (
     <div className="flex items-center space-x-4">
@@ -110,6 +134,15 @@ export const OfficeHeaderActions = () => {
         className={`p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}
       >
         {darkMode ? <Sun03Icon className="h-5 w-5" /> : <Moon02Icon className="h-5 w-5" />}
+      </button>
+
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className={`p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}
+        title="Keluar"
+      >
+        <Logout01Icon className="h-5 w-5" />
       </button>
     </div>
   );
