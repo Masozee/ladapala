@@ -29,7 +29,8 @@ import {
   PieChartIcon,
   Location01Icon,
   Settings02Icon,
-  Alert01Icon
+  Alert01Icon,
+  MoreHorizontalIcon
 } from '@/lib/icons';
 
 interface MaintenanceRequest {
@@ -352,11 +353,8 @@ const MOCK_TECHNICIANS: Technician[] = [
 
 const MaintenancePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [filterTechnician, setFilterTechnician] = useState<string>('all');
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -429,7 +427,7 @@ const MaintenancePage = () => {
   };
 
   const filteredRequests = MOCK_MAINTENANCE_REQUESTS.filter(request => {
-    if (searchTerm && 
+    if (searchTerm &&
         !request.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !request.ticket_number.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !request.location.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -439,13 +437,7 @@ const MaintenancePage = () => {
     if (filterStatus !== 'all' && request.status !== filterStatus) {
       return false;
     }
-    if (filterPriority !== 'all' && request.priority !== filterPriority) {
-      return false;
-    }
     if (filterCategory !== 'all' && request.category !== filterCategory) {
-      return false;
-    }
-    if (filterTechnician !== 'all' && request.technician_id?.toString() !== filterTechnician) {
       return false;
     }
     return true;
@@ -481,514 +473,228 @@ const MaintenancePage = () => {
     <SupportLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Maintenance Dashboard</h1>
-            <p className="text-gray-600 mt-2">Track and manage all maintenance requests and technical issues</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button className="flex items-center space-x-2 bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors">
-              <PieChartIcon className="h-4 w-4" />
-              <span>Reports</span>
-            </button>
-            <button className="flex items-center space-x-2 bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors">
-              <Add01Icon className="h-4 w-4" />
-              <span>New Request</span>
-            </button>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Maintenance Management</h1>
+          <p className="text-gray-600 mt-2">Track and manage all maintenance requests and technical issues</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-12 gap-4">
-          {/* First Column - 6 cards in 2 rows */}
-          <div className="col-span-9">
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.open}</h3>
-                      <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Open</p>
-                    </div>
-                    <div className="w-8 h-8 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <AlertCircleIcon className="h-4 w-4 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-gray-50"></div>
-              </div>
-              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.assigned}</h3>
-                      <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Assigned</p>
-                    </div>
-                    <div className="w-8 h-8 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <UserIcon className="h-4 w-4 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-gray-50"></div>
-              </div>
-              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.in_progress}</h3>
-                      <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">In Progress</p>
-                    </div>
-                    <div className="w-8 h-8 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <Wrench01Icon className="h-4 w-4 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-gray-50"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-red-100 rounded">
+                <AlertCircleIcon className="h-6 w-6 text-red-600" />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.on_hold}</h3>
-                      <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">On Hold</p>
-                    </div>
-                    <div className="w-8 h-8 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <Clock01Icon className="h-4 w-4 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-gray-50"></div>
-              </div>
-              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.completed}</h3>
-                      <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Completed</p>
-                    </div>
-                    <div className="w-8 h-8 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <UserCheckIcon className="h-4 w-4 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-gray-50"></div>
-              </div>
-              <div className="bg-white border border-gray-200 hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-white">{stats.urgent}</h3>
-                      <p className="text-sm text-gray-600 group-hover:text-gray-200 mt-1">Urgent</p>
-                    </div>
-                    <div className="w-8 h-8 bg-red-500 group-hover:bg-white flex items-center justify-center transition-colors duration-200">
-                      <Alert01Icon className="h-4 w-4 text-white group-hover:text-red-500 transition-colors duration-200" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-gray-50"></div>
-              </div>
-            </div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{stats.open}</div>
+            <div className="text-sm font-medium text-gray-600">Open Requests</div>
           </div>
-          
-          {/* Second Column - Total card */}
-          <div className="col-span-3">
-            <div className="bg-white border border-gray-200 h-full hover:bg-[#F87B1B] hover:text-white transition-colors duration-200 cursor-pointer group">
-              <div className="p-6 h-full flex flex-col justify-center">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-[#F87B1B] group-hover:bg-white flex items-center justify-center mx-auto mb-4 rounded-full transition-colors duration-200">
-                    <Wrench01Icon className="h-6 w-6 text-white group-hover:text-[#F87B1B] transition-colors duration-200" />
-                  </div>
-                  <h3 className="text-3xl font-bold text-gray-900 group-hover:text-white mb-2">{stats.total}</h3>
-                  <p className="text-sm text-gray-600 group-hover:text-gray-200">Total Requests</p>
-                </div>
+
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-blue-100 rounded">
+                <Wrench01Icon className="h-6 w-6 text-blue-600" />
               </div>
             </div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{stats.in_progress}</div>
+            <div className="text-sm font-medium text-gray-600">In Progress</div>
+          </div>
+
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-green-100 rounded">
+                <UserCheckIcon className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{stats.completed}</div>
+            <div className="text-sm font-medium text-gray-600">Completed</div>
+          </div>
+
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-orange-100 rounded">
+                <Alert01Icon className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{stats.urgent}</div>
+            <div className="text-sm font-medium text-gray-600">Urgent Priority</div>
           </div>
         </div>
 
-        {/* Search & View Control */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button
-              className="flex items-center space-x-2 px-4 py-2 bg-[#F87B1B] text-white text-sm font-medium hover:bg-[#E66A0A] transition-colors"
-            >
-              <Settings02Icon className="h-4 w-4" />
-              <span>Advanced Filter</span>
-            </button>
-            
-            {/* Search Form */}
-            <div className="relative">
-              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        {/* Filters and Actions */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative w-80">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search02Icon className="h-4 w-4 text-gray-400" />
+              </div>
               <input
                 type="text"
                 placeholder="Search tickets, titles, location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64 pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                className="pl-10 pr-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] focus:border-[#F87B1B] w-full rounded"
               />
             </div>
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="px-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] rounded"
+            >
+              <option value="all">All Categories</option>
+              <option value="hvac">HVAC</option>
+              <option value="plumbing">Plumbing</option>
+              <option value="electrical">Electrical</option>
+              <option value="general">General</option>
+              <option value="elevator">Elevator</option>
+              <option value="security">Security</option>
+              <option value="it_network">IT/Network</option>
+              <option value="furniture">Furniture</option>
+              <option value="appliances">Appliances</option>
+            </select>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] rounded"
+            >
+              <option value="all">All Status</option>
+              <option value="open">Open</option>
+              <option value="assigned">Assigned</option>
+              <option value="in_progress">In Progress</option>
+              <option value="on_hold">On Hold</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
-          
-          {/* View Mode Switcher */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">View:</span>
-            <div className="flex border border-gray-300 overflow-hidden">
-              <button
-                onClick={() => setViewMode('card')}
-                className={`flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
-                  viewMode === 'card' 
-                    ? 'bg-[#F87B1B] text-white' 
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <ViewIcon className="h-4 w-4" />
-                <span>Cards</span>
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
-                  viewMode === 'table' 
-                    ? 'bg-[#F87B1B] text-white' 
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <ListViewIcon className="h-4 w-4" />
-                <span>Table</span>
-              </button>
-            </div>
-          </div>
+          <button className="bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E06A0A] transition-colors flex items-center space-x-2 rounded">
+            <Add01Icon className="h-4 w-4" />
+            <span>New Request</span>
+          </button>
         </div>
 
-        {/* Results Summary */}
-        <div className="text-sm text-gray-600">
-          {filteredRequests.length} request{filteredRequests.length !== 1 ? 's' : ''} found
-        </div>
-
-        {/* Maintenance Requests Display */}
-        {viewMode === 'card' ? (
-          /* Card View */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRequests.map((request) => {
-              const timeDeadline = request.estimated_completion ? getTimeUntilDeadline(request.estimated_completion) : null;
-              return (
-                <div key={request.id} className="bg-white border border-gray-200 flex flex-col h-full">
-                  {/* Request Card Header */}
-                  <div className="p-6 bg-[#F87B1B] text-white">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold text-white">{request.ticket_number}</h3>
-                        <div className="text-sm text-gray-100 mt-1">
-                          {request.status.replace('_', ' ')} • {request.priority} • {request.title} • {getCategoryName(request.category)} • {request.location} • {request.reported_by} • {timeDeadline ? timeDeadline.text : ''}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gray-50 flex-1 flex flex-col">
-                    {/* Description */}
-                    <p className="text-sm text-gray-700 mb-4 line-clamp-3">
-                      {request.description}
-                    </p>
-
-                    {/* Key Info */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-[#F87B1B]">
-                          {request.estimated_cost ? formatCurrency(request.estimated_cost) : 'TBD'}
-                        </div>
-                        <div className="text-xs text-gray-600">Est. Cost</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-[#F87B1B]">
-                          {request.labor_hours ? `${request.labor_hours}h` : 'TBD'}
-                        </div>
-                        <div className="text-xs text-gray-600">Est. Time</div>
-                      </div>
-                    </div>
-
-                    {/* Assigned Technician */}
-                    {request.assigned_to && (
-                      <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded">
-                        <div className="flex items-center space-x-2">
-                          <Shield01Icon className="h-4 w-4 text-blue-600" />
-                          <span className="text-blue-800 text-sm font-medium">
-                            Assigned to: {request.assigned_to}
+        {/* Maintenance Requests Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse bg-white border border-gray-200">
+            <thead className="bg-[#F87B1B]">
+              <tr>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Request</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Category</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Status</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Priority</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Assigned To</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Timeline</th>
+                <th className="border border-gray-200 px-6 py-4 text-center text-sm font-medium text-white">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              {filteredRequests.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="border border-gray-200 px-6 py-12 text-center">
+                    <Wrench01Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No maintenance requests found</h3>
+                    <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredRequests.map((request) => {
+                  const timeDeadline = request.estimated_completion ? getTimeUntilDeadline(request.estimated_completion) : null;
+                  return (
+                    <tr key={request.id} className="hover:bg-gray-50">
+                      {/* Request Info */}
+                      <td className="border border-gray-200 px-6 py-4">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getPriorityColor(request.priority)}`}>
+                            {request.priority.toUpperCase()}
                           </span>
                         </div>
-                      </div>
-                    )}
+                        <div className="font-bold text-sm text-gray-900">{request.ticket_number}</div>
+                        <div className="text-sm text-gray-900 font-medium">{request.title}</div>
+                        <div className="text-xs text-gray-600">{request.location}</div>
+                        <div className="text-xs text-gray-500">by {request.reported_by}</div>
+                      </td>
 
-                    {/* Alerts */}
-                    <div className="space-y-2 mb-4">
-                      {request.guest_impact && (
-                        <div className="flex items-center space-x-2 p-2 bg-orange-50 border border-orange-200 rounded">
-                          <Alert01Icon className="h-3 w-3 text-orange-600" />
-                          <span className="text-orange-800 text-xs font-medium">Guest Impact</span>
+                      {/* Category */}
+                      <td className="border border-gray-200 px-6 py-4">
+                        <div className="flex items-center space-x-2">
+                          {getCategoryIcon(request.category)}
+                          <span className="text-sm text-gray-700">{getCategoryName(request.category)}</span>
                         </div>
-                      )}
-                      {request.safety_issue && (
-                        <div className="flex items-center space-x-2 p-2 bg-red-50 border border-red-200 rounded">
-                          <Shield01Icon className="h-3 w-3 text-red-600" />
-                          <span className="text-red-800 text-xs font-medium">Safety Issue</span>
-                        </div>
-                      )}
-                      {request.vendor_required && (
-                        <div className="flex items-center space-x-2 p-2 bg-purple-50 border border-purple-200 rounded">
-                          <UserMultipleIcon className="h-3 w-3 text-purple-600" />
-                          <span className="text-purple-800 text-xs font-medium">Vendor: {request.vendor_name}</span>
-                        </div>
-                      )}
-                    </div>
+                      </td>
 
-                    {/* Parts Needed */}
-                    <div className="flex-1">
-                      {request.parts_needed.length > 0 && (
-                        <div className="mb-4">
-                          <h5 className="font-medium text-gray-900 text-xs uppercase tracking-wide mb-2">Parts Needed</h5>
-                          <div className="flex flex-wrap gap-1">
-                            {request.parts_needed.slice(0, 3).map((part, index) => (
-                              <span key={index} className="inline-block bg-gray-100 text-gray-700 px-2 py-1 text-xs rounded">
-                                {part}
-                              </span>
-                            ))}
-                            {request.parts_needed.length > 3 && (
-                              <span className="inline-block bg-gray-200 text-gray-600 px-2 py-1 text-xs rounded">
-                                +{request.parts_needed.length - 3} more
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                      {/* Status */}
+                      <td className="border border-gray-200 px-6 py-4">
+                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
+                          {request.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                      </td>
 
-                    {/* Actions - Fixed to bottom */}
-                    <div className="grid grid-cols-2 gap-2 mt-auto">
-                      <Link 
-                        href={`/maintenance/${request.id}`}
-                        className="text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors text-center"
-                      >
-                        <EyeIcon className="h-3 w-3 inline mr-1" />
-                        View Details
-                      </Link>
-                      <button className="text-xs bg-[#F87B1B] text-white px-3 py-2 hover:bg-[#E66A0A] transition-colors">
-                        <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
-                        Update
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          /* Table View */
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse bg-white border border-gray-200">
-              <thead className="bg-[#F87B1B]">
-                  <tr>
-                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
-                      Request
-                    </th>
-                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
-                      Category
-                    </th>
-                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
-                      Status
-                    </th>
-                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
-                      Assigned To
-                    </th>
-                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
-                      Timeline
-                    </th>
-                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
-                      Cost
-                    </th>
-                    <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium text-white">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {filteredRequests.map((request) => {
-                    const timeDeadline = request.estimated_completion ? getTimeUntilDeadline(request.estimated_completion) : null;
-                    return (
-                      <tr key={request.id} className="hover:bg-gray-50">
-                        {/* Request Info */}
-                        <td className="border border-gray-200 px-6 py-4">
-                          <div>
-                            <div className="font-bold text-gray-900">{request.ticket_number}</div>
-                            <div className="text-sm text-gray-900 font-medium">{request.title}</div>
-                            <div className="text-xs text-gray-600">{request.location}</div>
-                            <div className="text-xs text-gray-500">by {request.reported_by}</div>
-                          </div>
-                        </td>
-
-                        {/* Category */}
-                        <td className="border border-gray-200 px-6 py-4">
-                          <div className="flex items-center space-x-2">
-                            {getCategoryIcon(request.category)}
-                            <span className="text-sm text-gray-700">{getCategoryName(request.category)}</span>
-                          </div>
-                        </td>
-
-                        {/* Status */}
-                        <td className="border border-gray-200 px-6 py-4">
-                          <div className="space-y-1">
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
-                              {request.status.replace('_', ' ')}
-                            </span>
-                            <span className={`block px-2 py-1 text-xs font-medium rounded ${getPriorityColor(request.priority)}`}>
-                              {request.priority}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Assigned To */}
-                        <td className="border border-gray-200 px-6 py-4">
-                          <div className="text-sm">
-                            {request.assigned_to ? (
-                              <div className="text-gray-900 font-medium">{request.assigned_to}</div>
-                            ) : (
-                              <span className="text-gray-500">Unassigned</span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Timeline */}
-                        <td className="border border-gray-200 px-6 py-4">
-                          <div className="space-y-1 text-xs">
-                            <div className="text-gray-600">
-                              Created: {formatDateTime(request.created_at)}
+                      {/* Priority */}
+                      <td className="border border-gray-200 px-6 py-4">
+                        <div className="space-y-2">
+                          {request.guest_impact && (
+                            <div className="flex items-center space-x-1 text-xs text-orange-600">
+                              <Alert01Icon className="h-3 w-3" />
+                              <span>Guest Impact</span>
                             </div>
-                            {request.estimated_completion && (
-                              <div className={`font-medium ${timeDeadline?.color}`}>
-                                {timeDeadline?.text}
-                              </div>
-                            )}
-                            {request.actual_completion && (
-                              <div className="text-green-600">
-                                Completed: {formatDateTime(request.actual_completion)}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Cost */}
-                        <td className="border border-gray-200 px-6 py-4">
-                          <div className="text-right">
-                            <div className="text-sm font-bold text-[#F87B1B]">
-                              {request.estimated_cost ? formatCurrency(request.estimated_cost) : 'TBD'}
+                          )}
+                          {request.safety_issue && (
+                            <div className="flex items-center space-x-1 text-xs text-red-600">
+                              <Shield01Icon className="h-3 w-3" />
+                              <span>Safety</span>
                             </div>
-                            {request.actual_cost && (
-                              <div className="text-xs text-gray-600">
-                                Actual: {formatCurrency(request.actual_cost)}
-                              </div>
-                            )}
-                          </div>
-                        </td>
+                          )}
+                          {request.vendor_required && (
+                            <div className="flex items-center space-x-1 text-xs text-purple-600">
+                              <UserMultipleIcon className="h-3 w-3" />
+                              <span>Vendor</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
 
-                        {/* Actions */}
-                        <td className="border border-gray-200 px-6 py-4">
-                          <div className="flex space-x-2">
-                            <Link 
-                              href={`/maintenance/${request.id}`}
-                              className="text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors rounded"
-                            >
-                              <EyeIcon className="h-3 w-3 inline mr-1" />
-                              View
-                            </Link>
-                            <button className="text-xs bg-[#F87B1B] text-white px-3 py-2 hover:bg-[#E66A0A] transition-colors rounded">
-                              <PencilEdit02Icon className="h-3 w-3 inline mr-1" />
-                              Update
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-            </table>
-          </div>
-        )}
+                      {/* Assigned To */}
+                      <td className="border border-gray-200 px-6 py-4">
+                        <div className="text-sm">
+                          {request.assigned_to ? (
+                            <div className="text-gray-900 font-medium">{request.assigned_to}</div>
+                          ) : (
+                            <span className="text-gray-500">Unassigned</span>
+                          )}
+                        </div>
+                      </td>
 
-        {/* Technician Status */}
-        <div className="bg-white border border-gray-200">
-          <div className="p-6 ">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Technician Status</h3>
-                <p className="text-sm text-gray-600 mt-1">Current availability and workload</p>
-              </div>
-              <div className="w-8 h-8 bg-[#F87B1B] flex items-center justify-center">
-                <UserMultipleIcon className="h-4 w-4 text-white" />
-              </div>
-            </div>
-          </div>
-          <div className="p-4 bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              {MOCK_TECHNICIANS.map((tech) => (
-                <div key={tech.id} className="bg-white p-4 bg-gray-100 rounded">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tech.available ? 'bg-green-100' : 'bg-red-100'}`}>
-                      <Shield01Icon className={`h-4 w-4 ${tech.available ? 'text-green-600' : 'text-red-600'}`} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-900 text-sm">{tech.name}</h4>
-                      <p className="text-xs text-gray-600">{tech.skill_level}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Active</span>
-                      <span className="font-medium text-gray-900">{tech.active_requests}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Completed Today</span>
-                      <span className="font-medium text-gray-900">{tech.total_completed_today}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Rating</span>
-                      <div className="flex items-center space-x-1">
-                        <div className="text-yellow-400">★</div>
-                        <span className="font-medium text-gray-900">{tech.efficiency_rating}</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Location</span>
-                      <span className="font-medium text-gray-900 text-xs">{tech.current_location}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1 mt-3">
-                    {tech.specialization.slice(0, 2).map((spec, index) => (
-                      <span key={index} className="inline-block bg-blue-100 text-blue-800 px-2 py-1 text-xs rounded">
-                        {spec}
-                      </span>
-                    ))}
-                  </div>
-                  
-                  <button className="w-full mt-3 text-xs bg-gray-100 text-gray-700 px-3 py-2 hover:bg-gray-200 transition-colors">
-                    <Call02Icon className="h-3 w-3 inline mr-1" />
-                    Contact
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+                      {/* Timeline */}
+                      <td className="border border-gray-200 px-6 py-4">
+                        <div className="space-y-1 text-xs">
+                          <div className="text-gray-600">
+                            Created: {formatDateTime(request.created_at)}
+                          </div>
+                          {request.estimated_completion && (
+                            <div className={`font-medium ${timeDeadline?.color}`}>
+                              {timeDeadline?.text}
+                            </div>
+                          )}
+                          {request.actual_completion && (
+                            <div className="text-green-600">
+                              Completed: {formatDateTime(request.actual_completion)}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="border border-gray-200 px-6 py-4 text-center">
+                        <button className="p-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors">
+                          <MoreHorizontalIcon className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-
-        {/* No Results */}
-        {filteredRequests.length === 0 && (
-          <div className="text-center py-12">
-            <Wrench01Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No maintenance requests found</h3>
-            <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
-          </div>
-        )}
       </div>
     </SupportLayout>
   );
