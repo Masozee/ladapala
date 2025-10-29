@@ -153,255 +153,261 @@ export default function NewEmployeePage() {
         </div>
       </div>
 
-      {/* Simple Form */}
-      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Email */}
-          <div className="lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-              placeholder="nama@email.com"
-            />
-          </div>
+      {/* Form with Sections */}
+      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 p-6 space-y-6">
+        {/* Informasi Akun */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">Informasi Akun</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                placeholder="nama@email.com"
+              />
+            </div>
 
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-              placeholder="Minimal 8 karakter"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                placeholder="Minimal 8 karakter"
+              />
+            </div>
 
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Konfirmasi Password <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-              placeholder="Ketik ulang password"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Konfirmasi Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                placeholder="Ketik ulang password"
+              />
+            </div>
 
-          {/* Role */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Role <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-            >
-              {roles.map((role) => (
-                <option key={role.value} value={role.value}>
-                  {role.label}
-                </option>
-              ))}
-            </select>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Role <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+              >
+                {roles.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+        </div>
 
-          {/* First Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nama Depan <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-            />
+        {/* Informasi Pribadi */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">Informasi Pribadi</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nama Depan <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="first_name"
+                value={formData.first_name}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nama Belakang <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="last_name"
+                value={formData.last_name}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor Telepon
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                placeholder="+62"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tanggal Lahir
+              </label>
+              <input
+                type="date"
+                name="date_of_birth"
+                value={formData.date_of_birth}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Alamat
+              </label>
+              <textarea
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+              />
+            </div>
           </div>
+        </div>
 
-          {/* Last Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nama Belakang <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-            />
+        {/* Informasi Kepegawaian */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">Informasi Kepegawaian</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Departemen <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+              >
+                <option value="">Pilih Departemen</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Posisi
+              </label>
+              <input
+                type="text"
+                name="position"
+                value={formData.position}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tanggal Bergabung
+              </label>
+              <input
+                type="date"
+                name="hire_date"
+                value={formData.hire_date}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Gaji (Rp)
+              </label>
+              <input
+                type="number"
+                name="salary"
+                value={formData.salary}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                placeholder="0"
+              />
+            </div>
           </div>
+        </div>
 
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nomor Telepon
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-              placeholder="+62"
-            />
-          </div>
+        {/* Kontak Darurat */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">Kontak Darurat</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nama Kontak
+              </label>
+              <input
+                type="text"
+                name="emergency_contact"
+                value={formData.emergency_contact}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+              />
+            </div>
 
-          {/* Date of Birth */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tanggal Lahir
-            </label>
-            <input
-              type="date"
-              name="date_of_birth"
-              value={formData.date_of_birth}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nomor Telepon
+              </label>
+              <input
+                type="tel"
+                name="emergency_phone"
+                value={formData.emergency_phone}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+              />
+            </div>
 
-          {/* Department */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Departemen <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-            >
-              <option value="">Pilih Departemen</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Position */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Posisi
-            </label>
-            <input
-              type="text"
-              name="position"
-              value={formData.position}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-            />
-          </div>
-
-          {/* Hire Date */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tanggal Bergabung
-            </label>
-            <input
-              type="date"
-              name="hire_date"
-              value={formData.hire_date}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-            />
-          </div>
-
-          {/* Salary */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Gaji (Rp)
-            </label>
-            <input
-              type="number"
-              name="salary"
-              value={formData.salary}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-              placeholder="0"
-            />
-          </div>
-
-          {/* Address */}
-          <div className="lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Alamat
-            </label>
-            <textarea
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              rows={2}
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-            />
-          </div>
-
-          {/* Emergency Contact Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Kontak Darurat
-            </label>
-            <input
-              type="text"
-              name="emergency_contact"
-              value={formData.emergency_contact}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-            />
-          </div>
-
-          {/* Emergency Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Telepon Darurat
-            </label>
-            <input
-              type="tel"
-              name="emergency_phone"
-              value={formData.emergency_phone}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-            />
-          </div>
-
-          {/* Emergency Relationship */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hubungan
-            </label>
-            <input
-              type="text"
-              name="emergency_relationship"
-              value={formData.emergency_relationship}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
-              placeholder="e.g. Suami, Istri, Orang Tua"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Hubungan
+              </label>
+              <input
+                type="text"
+                name="emergency_relationship"
+                value={formData.emergency_relationship}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                placeholder="e.g. Suami, Istri, Orang Tua"
+              />
+            </div>
           </div>
         </div>
 
