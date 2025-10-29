@@ -69,17 +69,26 @@ export default function EmployeesPage() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch(buildApiUrl('user/employees/'), {
+      const url = buildApiUrl('user/employees/');
+      console.log('Fetching employees from:', url);
+
+      const response = await fetch(url, {
         credentials: 'include',
       });
+
+      console.log('Response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Employees data received:', data);
         // Ensure data is an array
         const employeesArray = Array.isArray(data) ? data : [];
+        console.log('Setting employees:', employeesArray.length, 'items');
         setEmployees(employeesArray);
         setFilteredEmployees(employeesArray);
       } else {
-        console.error('Failed to fetch employees:', response.status);
+        const errorText = await response.text();
+        console.error('Failed to fetch employees:', response.status, errorText);
         setEmployees([]);
         setFilteredEmployees([]);
       }
