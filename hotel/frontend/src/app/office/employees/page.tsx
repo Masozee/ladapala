@@ -17,7 +17,8 @@ import {
   PencilEdit02Icon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  FilterIcon
+  FilterIcon,
+  MoreHorizontalIcon
 } from '@/lib/icons';
 
 export default function EmployeesPage() {
@@ -26,6 +27,7 @@ export default function EmployeesPage() {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [selectedShift, setSelectedShift] = useState('all');
   const [selectedWeek, setSelectedWeek] = useState(0);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   // Sample employee data
   const employees = [
@@ -406,21 +408,44 @@ export default function EmployeesPage() {
                         {getStatusBadge(employee.status)}
                       </td>
                       <td className="px-6 py-4 border border-gray-200">
-                        <div className="flex items-center space-x-2">
-                          <Link
-                            href={`/office/employees/${employee.id}`}
-                            className="p-2 text-blue-600 hover:bg-blue-50 transition-colors"
-                            title="Lihat Detail"
+                        <div className="relative">
+                          <button
+                            onClick={() => setOpenMenuId(openMenuId === employee.id ? null : employee.id)}
+                            className="p-2 border border-gray-300 hover:bg-gray-50 transition-colors"
                           >
-                            <EyeIcon className="h-4 w-4" />
-                          </Link>
-                          <Link
-                            href={`/office/employees/${employee.id}/edit`}
-                            className="p-2 text-gray-600 hover:bg-gray-50 transition-colors"
-                            title="Edit"
-                          >
-                            <PencilEdit02Icon className="h-4 w-4" />
-                          </Link>
+                            <MoreHorizontalIcon className="h-4 w-4 text-gray-600" />
+                          </button>
+
+                          {openMenuId === employee.id && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-10">
+                              <Link
+                                href={`/office/employees/${employee.id}`}
+                                className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                onClick={() => setOpenMenuId(null)}
+                              >
+                                <EyeIcon className="h-4 w-4" />
+                                <span>Lihat Detail</span>
+                              </Link>
+                              <Link
+                                href={`/office/employees/${employee.id}/edit`}
+                                className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                onClick={() => setOpenMenuId(null)}
+                              >
+                                <PencilEdit02Icon className="h-4 w-4" />
+                                <span>Edit Karyawan</span>
+                              </Link>
+                              <button
+                                className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  // Handle delete action
+                                }}
+                              >
+                                <CancelCircleIcon className="h-4 w-4" />
+                                <span>Hapus Karyawan</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
