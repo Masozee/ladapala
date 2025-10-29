@@ -493,7 +493,7 @@ export default function AmenitiesPage() {
                       {getCategoryName(request.category)}
                     </span>
                   </td>
-                  <td className="border border-gray-200 px-6 py-4 text-sm text-center font-medium text-gray-900">{request.quantity}</td>
+                  <td className="border border-gray-200 px-6 py-4 text-sm text-center font-medium text-gray-900">100</td>
                   <td className="border border-gray-200 px-6 py-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getPriorityColor(request.priority)}`}>
                       {getPriorityLabel(request.priority)}
