@@ -34,6 +34,7 @@ interface MenuItem {
 const SupportSidebar = () => {
   const pathname = usePathname();
   const [housekeepingCount, setHousekeepingCount] = useState<number>(0);
+  const [amenitiesCount, setAmenitiesCount] = useState<number>(0);
 
   useEffect(() => {
     // Fetch unfinished housekeeping tasks count
@@ -63,10 +64,40 @@ const SupportSidebar = () => {
       }
     };
 
+    // Fetch unfinished amenities requests count
+    // Unfinished = pending + in_progress status
+    const fetchAmenitiesCount = async () => {
+      try {
+        const response = await fetch(
+          buildApiUrl('hotel/amenity-requests/?page_size=1000'),
+          {
+            credentials: 'include',
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const results = data.results || [];
+          // Count requests that are pending or in_progress (unfinished)
+          const unfinishedCount = results.filter(
+            (request: any) => request.status === 'pending' || request.status === 'in_progress'
+          ).length;
+          setAmenitiesCount(unfinishedCount);
+        } else {
+          console.error('Failed to fetch amenities count:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching amenities count:', error);
+      }
+    };
+
     fetchHousekeepingCount();
+    fetchAmenitiesCount();
 
     // Refresh count every 30 seconds
-    const interval = setInterval(fetchHousekeepingCount, 30000);
+    const interval = setInterval(() => {
+      fetchHousekeepingCount();
+      fetchAmenitiesCount();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -77,7 +108,7 @@ const SupportSidebar = () => {
   const supportActions: MenuItem[] = [
     { name: 'Maintenance', icon: Wrench01Icon, href: '/support/maintenance' },
     { name: 'Housekeeping', icon: CircleArrowReload01Icon, href: '/support/housekeeping', badge: housekeepingCount > 0 ? housekeepingCount : undefined },
-    { name: 'Amenities Request', icon: PackageIcon, href: '/support/amenities' },
+    { name: 'Amenities Request', icon: PackageIcon, href: '/support/amenities', badge: amenitiesCount > 0 ? amenitiesCount : undefined },
     { name: 'Work Orders', icon: UserCheckIcon, href: '/support/workorders' },
     { name: 'Emergency', icon: AlertCircleIcon, href: '/support/emergency' },
     { name: 'Reports', icon: File01Icon, href: '/support/reports' },
