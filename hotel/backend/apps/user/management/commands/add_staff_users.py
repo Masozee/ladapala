@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from apps.user.models import User, UserProfile, Department, Employee
+from apps.user.models import User, Department, Employee
 from datetime import date
 
 
@@ -201,12 +201,6 @@ class Command(BaseCommand):
                     user.save()
 
                 # Create profile
-                UserProfile.objects.create(
-                    user=user,
-                    role=user_data['role'],
-                    phone=user_data['phone']
-                )
-
                 # Create employee record
                 Employee.objects.create(
                     user=user,

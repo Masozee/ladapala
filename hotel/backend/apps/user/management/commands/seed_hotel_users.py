@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from apps.user.models import User, UserProfile, Department, Employee
+from apps.user.models import User, Department, Employee
 from datetime import date
 
 
@@ -41,16 +41,6 @@ class Command(BaseCommand):
         )
         admin_user.set_password('admin123')
         admin_user.save()
-
-        # Create profile for admin
-        admin_profile, _ = UserProfile.objects.get_or_create(
-            user=admin_user,
-            defaults={
-                'role': 'ADMIN',
-                'phone': '081234567890',
-            }
-        )
-
         # Create employee record for admin
         admin_employee, _ = Employee.objects.get_or_create(
             user=admin_user,
@@ -81,16 +71,6 @@ class Command(BaseCommand):
         )
         manager_user.set_password('manager123')
         manager_user.save()
-
-        # Create profile for manager
-        manager_profile, _ = UserProfile.objects.get_or_create(
-            user=manager_user,
-            defaults={
-                'role': 'MANAGER',
-                'phone': '081234567891',
-            }
-        )
-
         # Create employee record for manager
         manager_employee, _ = Employee.objects.get_or_create(
             user=manager_user,
@@ -121,16 +101,6 @@ class Command(BaseCommand):
         )
         receptionist_user.set_password('reception123')
         receptionist_user.save()
-
-        # Create profile for receptionist
-        receptionist_profile, _ = UserProfile.objects.get_or_create(
-            user=receptionist_user,
-            defaults={
-                'role': 'RECEPTIONIST',
-                'phone': '081234567892',
-            }
-        )
-
         # Create employee record for receptionist
         receptionist_employee, _ = Employee.objects.get_or_create(
             user=receptionist_user,

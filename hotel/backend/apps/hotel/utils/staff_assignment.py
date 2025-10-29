@@ -9,7 +9,7 @@ Auto-assigns housekeeping staff based on:
 """
 from django.utils import timezone
 from django.db.models import Count, Q
-from apps.user.models import Employee, Shift, Attendance, UserProfile
+from apps.user.models import Employee, Shift, Attendance
 from apps.hotel.models import HousekeepingTask
 
 
@@ -26,11 +26,12 @@ def get_available_housekeeping_staff(target_date=None):
     if target_date is None:
         target_date = timezone.now().date()
 
-    # Get all housekeeping staff users
-    housekeeping_users = UserProfile.objects.filter(
+    # Get all housekeeping staff users (role is now directly on User model)
+    from apps.user.models import User
+    housekeeping_users = User.objects.filter(
         role='HOUSEKEEPING',
-        user__is_active=True
-    ).values_list('user_id', flat=True)
+        is_active=True
+    ).values_list('id', flat=True)
 
     # Get employees for these users who have shifts scheduled today
     scheduled_employees = Employee.objects.filter(

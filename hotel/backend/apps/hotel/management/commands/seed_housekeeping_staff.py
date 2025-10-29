@@ -3,7 +3,7 @@ Management command to seed housekeeping staff with schedules
 """
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from apps.user.models import User, Employee, Department, Shift, Attendance, UserProfile
+from apps.user.models import User, Employee, Department, Shift, Attendance
 from datetime import time
 
 
@@ -102,18 +102,11 @@ class Command(BaseCommand):
                 user.save()
                 self.stdout.write(self.style.SUCCESS(f'✓ Created user: {user.email}'))
 
-            # Create or get user profile with HOUSEKEEPING role
-            profile, profile_created = UserProfile.objects.get_or_create(
-                user=user,
-                defaults={
-                    'role': 'HOUSEKEEPING',
-                    'phone': f'+62812{user.id:07d}'
-                }
-            )
-
-            if profile_created or profile.role != 'HOUSEKEEPING':
-                profile.role = 'HOUSEKEEPING'
-                profile.save()
+            # Set HOUSEKEEPING role (role is now directly on User model)
+            if user.role != 'HOUSEKEEPING':
+                user.role = 'HOUSEKEEPING'
+                user.phone = f'+62812{user.id:07d}'
+                user.save()
                 self.stdout.write(self.style.SUCCESS(f'✓ Set {user.full_name} as HOUSEKEEPING'))
 
             # Create or get employee
