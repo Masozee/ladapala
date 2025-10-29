@@ -478,7 +478,6 @@ export default function AmenitiesPage() {
                 <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Status</th>
                 <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Delivery</th>
                 <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Assigned</th>
-                <th className="border border-gray-300 px-6 py-4 text-right text-sm font-medium">Cost</th>
                 <th className="border border-gray-300 px-6 py-4 text-center text-sm font-medium">Actions</th>
               </tr>
             </thead>
@@ -507,9 +506,6 @@ export default function AmenitiesPage() {
                   </td>
                   <td className="border border-gray-300 px-6 py-4 text-sm text-gray-900">{request.deliveryTime}</td>
                   <td className="border border-gray-300 px-6 py-4 text-sm text-gray-900">{request.assignedTo}</td>
-                  <td className="border border-gray-300 px-6 py-4 text-sm text-right text-gray-900">
-                    {request.estimatedCost > 0 ? formatCurrency(request.estimatedCost) : 'Free'}
-                  </td>
                   <td className="border border-gray-300 px-6 py-4 text-center">
                     <div className="flex items-center justify-center">
                       <button className="p-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors">
