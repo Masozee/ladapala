@@ -37,6 +37,22 @@ class RoomType(models.Model):
             raise ValidationError('Max occupancy must be positive')
 
 
+class RoomTypeImage(models.Model):
+    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, related_name='room_images')
+    image = models.ImageField(upload_to='room_types/')
+    caption = models.CharField(max_length=200, blank=True, null=True)
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_primary', 'created_at']
+        verbose_name = 'Room Type Image'
+        verbose_name_plural = 'Room Type Images'
+
+    def __str__(self):
+        return f'{self.room_type.name} - Image {self.id}'
+
+
 class Room(models.Model):
     STATUS_CHOICES = [
         ('AVAILABLE', 'Available'),

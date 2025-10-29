@@ -7,7 +7,10 @@ import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   Cancel01Icon,
   UserCheckIcon,
-  ChevronLeftIcon
+  ChevronLeftIcon,
+  Image02Icon,
+  Delete02Icon,
+  Add01Icon
 } from '@/lib/icons';
 
 interface RoomType {
@@ -19,6 +22,7 @@ interface RoomType {
   size_sqm: number | null;
   amenities: string;
   is_active: boolean;
+  images?: string[];
 }
 
 export default function EditRoomTypePage() {
@@ -29,6 +33,10 @@ export default function EditRoomTypePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [deletedImages, setDeletedImages] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<RoomType>({
     id: 0,
@@ -39,6 +47,7 @@ export default function EditRoomTypePage() {
     size_sqm: null,
     amenities: '',
     is_active: true,
+    images: [],
   });
 
   useEffect(() => {
@@ -55,6 +64,7 @@ export default function EditRoomTypePage() {
 
         const data = await response.json();
         setFormData(data);
+        setExistingImages(data.images || []);
       } catch (err) {
         setError('Failed to load room type');
         console.error(err);
@@ -68,6 +78,33 @@ export default function EditRoomTypePage() {
     }
   }, [id]);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newFiles = Array.from(files);
+    setImageFiles(prev => [...prev, ...newFiles]);
+
+    // Create previews
+    newFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeNewImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (imageUrl: string) => {
+    setExistingImages(prev => prev.filter(img => img !== imageUrl));
+    setDeletedImages(prev => [...prev, imageUrl]);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -75,6 +112,8 @@ export default function EditRoomTypePage() {
 
     try {
       const csrfToken = getCsrfToken();
+
+      // First, update the room type data
       const response = await fetch(buildApiUrl(`hotel/room-types/${id}/`), {
         method: 'PATCH',
         headers: {
@@ -88,6 +127,40 @@ export default function EditRoomTypePage() {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Failed to update room type');
+      }
+
+      // Upload new images if any
+      if (imageFiles.length > 0) {
+        const formDataImages = new FormData();
+        imageFiles.forEach((file, index) => {
+          formDataImages.append('images', file);
+        });
+
+        const imageResponse = await fetch(buildApiUrl(`hotel/room-types/${id}/upload-images/`), {
+          method: 'POST',
+          headers: {
+            ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+          },
+          credentials: 'include',
+          body: formDataImages,
+        });
+
+        if (!imageResponse.ok) {
+          throw new Error('Failed to upload images');
+        }
+      }
+
+      // Delete removed images if any
+      if (deletedImages.length > 0) {
+        await fetch(buildApiUrl(`hotel/room-types/${id}/delete-images/`), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+          },
+          credentials: 'include',
+          body: JSON.stringify({ images: deletedImages }),
+        });
       }
 
       router.push('/rooms');
@@ -266,6 +339,83 @@ export default function EditRoomTypePage() {
                 />
                 <span className="text-sm font-medium text-gray-700">Active (available for booking)</span>
               </label>
+            </div>
+
+            {/* Image Management */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Room Images
+              </label>
+
+              {/* Existing Images */}
+              {existingImages.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 mb-2">Current Images</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {existingImages.map((imageUrl, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={imageUrl}
+                          alt={`Room ${index + 1}`}
+                          className="w-full h-32 object-cover rounded border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(imageUrl)}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Delete02Icon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* New Image Previews */}
+              {imagePreviews.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 mb-2">New Images to Upload</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={preview}
+                          alt={`New ${index + 1}`}
+                          className="w-full h-32 object-cover rounded border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeNewImage(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Delete02Icon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Button */}
+              <div className="flex items-center justify-center w-full">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Image02Icon className="h-8 w-8 text-gray-400 mb-2" />
+                    <p className="mb-2 text-sm text-gray-500">
+                      <span className="font-semibold">Click to upload</span> or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG, JPEG (MAX. 5MB)</p>
+                  </div>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/png,image/jpeg,image/jpg"
+                    multiple
+                    onChange={handleImageChange}
+                  />
+                </label>
+              </div>
             </div>
           </div>
 

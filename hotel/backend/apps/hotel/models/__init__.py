@@ -1,5 +1,5 @@
 # Import all models to make them available when importing from models
-from .rooms import RoomType, Room
+from .rooms import RoomType, Room, RoomTypeImage
 from .guests import Guest
 from .reservations import Reservation
 from .payments import Payment
@@ -14,7 +14,7 @@ from .housekeeping import HousekeepingTask, AmenityUsage
 
 # Make all models available for import
 __all__ = [
-    'RoomType', 'Room', 'Guest', 'Reservation', 'Payment', 'AdditionalCharge', 'Expense',
+    'RoomType', 'Room', 'RoomTypeImage', 'Guest', 'Reservation', 'Payment', 'AdditionalCharge', 'Expense',
     'Complaint', 'ComplaintImage', 'CheckIn', 'Holiday', 'CalendarEvent', 'InventoryItem',
     'MaintenanceRequest', 'MaintenanceTechnician', 'HousekeepingTask', 'AmenityUsage'
 ]

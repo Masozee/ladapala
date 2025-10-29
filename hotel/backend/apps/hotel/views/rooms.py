@@ -2,8 +2,11 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.parsers import MultiPartParser, FormParser
+import os
+from django.conf import settings
 
-from ..models import RoomType, Room
+from ..models import RoomType, Room, RoomTypeImage
 from ..serializers import (
     RoomTypeSerializer, RoomSerializer, RoomListSerializer
 )
@@ -25,6 +28,70 @@ class RoomTypeViewSet(viewsets.ModelViewSet):
         room_types = self.get_queryset().filter(is_active=True)
         serializer = self.get_serializer(room_types, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def upload_images(self, request, pk=None):
+        """Upload images for a room type"""
+        room_type = self.get_object()
+        images = request.FILES.getlist('images')
+
+        if not images:
+            return Response(
+                {'error': 'No images provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        uploaded_images = []
+        for image in images:
+            room_image = RoomTypeImage.objects.create(
+                room_type=room_type,
+                image=image
+            )
+            uploaded_images.append({
+                'id': room_image.id,
+                'image_url': request.build_absolute_uri(room_image.image.url)
+            })
+
+        return Response({
+            'message': f'{len(uploaded_images)} images uploaded successfully',
+            'images': uploaded_images
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def delete_images(self, request, pk=None):
+        """Delete images for a room type"""
+        room_type = self.get_object()
+        image_urls = request.data.get('images', [])
+
+        if not image_urls:
+            return Response(
+                {'error': 'No images specified for deletion'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        deleted_count = 0
+        for image_url in image_urls:
+            # Extract the path from the URL
+            if '/media/' in image_url:
+                image_path = image_url.split('/media/')[-1]
+                try:
+                    room_image = RoomTypeImage.objects.get(
+                        room_type=room_type,
+                        image=image_path
+                    )
+                    # Delete the file from storage
+                    if room_image.image:
+                        if os.path.isfile(room_image.image.path):
+                            os.remove(room_image.image.path)
+                    room_image.delete()
+                    deleted_count += 1
+                except RoomTypeImage.DoesNotExist:
+                    continue
+
+        return Response({
+            'message': f'{deleted_count} images deleted successfully',
+            'deleted_count': deleted_count
+        })
 
 
 class RoomViewSet(viewsets.ModelViewSet):

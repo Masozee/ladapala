@@ -58,6 +58,7 @@ import {
   HardDriveIcon as HugeHardDrive,
   PrinterIcon as HugePrinter,
   CircleArrowReload01Icon as HugeCircleArrowReload01,
+  Image02Icon as HugeImage02,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 
@@ -125,6 +126,7 @@ export const DatabaseIcon = createIconComponent(HugeDatabase);
 export const HardDriveIcon = createIconComponent(HugeHardDrive);
 export const PrinterIcon = createIconComponent(HugePrinter);
 export const CircleArrowReload01Icon = createIconComponent(HugeCircleArrowReload01);
+export const Image02Icon = createIconComponent(HugeImage02);
 
 // Aliases for compatibility
 export const Trash2 = Delete02Icon;
@@ -206,6 +208,7 @@ DatabaseIcon.displayName = 'DatabaseIcon';
 HardDriveIcon.displayName = 'HardDriveIcon';
 PrinterIcon.displayName = 'PrinterIcon';
 CircleArrowReload01Icon.displayName = 'CircleArrowReload01Icon';
+Image02Icon.displayName = 'Image02Icon';
 Trash2.displayName = 'Trash2';
 Printer.displayName = 'Printer';
 Monitor.displayName = 'Monitor';

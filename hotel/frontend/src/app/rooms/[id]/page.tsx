@@ -230,9 +230,12 @@ const RoomDetailPage = () => {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <button className="flex items-center space-x-2 bg-white/10 text-white px-4 py-2 text-sm font-medium hover:bg-white/20 transition-colors">
+              <button
+                onClick={() => router.push(`/office/room-types/${params.id}/edit`)}
+                className="flex items-center space-x-2 bg-white/10 text-white px-4 py-2 text-sm font-medium hover:bg-white/20 transition-colors"
+              >
                 <Settings02Icon className="h-4 w-4" />
-                <span>Manage Room</span>
+                <span>Edit Room Category</span>
               </button>
             </div>
           </div>
