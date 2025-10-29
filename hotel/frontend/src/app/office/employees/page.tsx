@@ -81,8 +81,8 @@ export default function EmployeesPage() {
       if (response.ok) {
         const data = await response.json();
         console.log('Employees data received:', data);
-        // Ensure data is an array
-        const employeesArray = Array.isArray(data) ? data : [];
+        // Handle paginated response from DRF ViewSet
+        const employeesArray = data.results ? data.results : (Array.isArray(data) ? data : []);
         console.log('Setting employees:', employeesArray.length, 'items');
         setEmployees(employeesArray);
         setFilteredEmployees(employeesArray);
