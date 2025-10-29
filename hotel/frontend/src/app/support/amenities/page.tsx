@@ -382,93 +382,86 @@ export default function AmenitiesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-yellow-100 rounded">
+              <div className="p-3 bg-yellow-100 rounded">
                 <Clock01Icon className="h-6 w-6 text-yellow-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{amenitiesStats.pendingRequests}</div>
-            <div className="text-base font-semibold text-gray-900">Pending Requests</div>
-            <div className="text-sm text-gray-600 mt-1">Menunggu diproses</div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{pendingCount}</div>
+            <div className="text-sm font-medium text-gray-600">Pending Requests</div>
           </div>
 
           <div className="bg-white border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-blue-100 rounded">
+              <div className="p-3 bg-blue-100 rounded">
                 <Clock01Icon className="h-6 w-6 text-blue-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{amenitiesStats.inProgress}</div>
-            <div className="text-base font-semibold text-gray-900">In Progress</div>
-            <div className="text-sm text-gray-600 mt-1">Sedang diproses</div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{inProgressCount}</div>
+            <div className="text-sm font-medium text-gray-600">In Progress</div>
           </div>
 
           <div className="bg-white border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-green-100 rounded">
+              <div className="p-3 bg-green-100 rounded">
                 <UserCheckIcon className="h-6 w-6 text-green-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{amenitiesStats.completedToday}</div>
-            <div className="text-base font-semibold text-gray-900">Completed Today</div>
-            <div className="text-sm text-gray-600 mt-1">Selesai hari ini</div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{completedCount}</div>
+            <div className="text-sm font-medium text-gray-600">Completed Today</div>
           </div>
 
           <div className="bg-white border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-red-100 rounded">
+              <div className="p-3 bg-red-100 rounded">
                 <Alert01Icon className="h-6 w-6 text-red-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{amenitiesStats.urgentRequests}</div>
-            <div className="text-base font-semibold text-gray-900">Urgent Requests</div>
-            <div className="text-sm text-gray-600 mt-1">Prioritas tinggi</div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{urgentCount}</div>
+            <div className="text-sm font-medium text-gray-600">Urgent Requests</div>
           </div>
         </div>
 
-
-        {/* Amenities Requests Title */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Amenities Requests</h2>
-            <p className="text-gray-600 mt-1">Kelola semua permintaan amenities dan layanan tamu</p>
+        {/* Filters and Actions */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative w-80">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search02Icon className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Cari tamu, kamar, atau item..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] focus:border-[#F87B1B] w-full rounded"
+              />
+            </div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] rounded"
+            >
+              <option value="all">Semua Kategori</option>
+              {amenityCategories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="px-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] rounded"
+            >
+              <option value="all">All ({allCount})</option>
+              <option value="pending">Pending ({pendingCount})</option>
+              <option value="in_progress">In Progress ({inProgressCount})</option>
+              <option value="completed">Completed ({completedCount})</option>
+              <option value="urgent">Urgent ({urgentCount})</option>
+            </select>
           </div>
-          <button className="bg-[#F87B1B] text-white px-4 py-2 font-medium hover:bg-[#E06A0A] transition-colors flex items-center space-x-2">
+          <button className="bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E06A0A] transition-colors flex items-center space-x-2 rounded">
             <Add01Icon className="h-4 w-4" />
             <span>New Request</span>
           </button>
-        </div>
-
-        {/* Filters */}
-        <div className="flex items-center space-x-4">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search02Icon className="h-4 w-4 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Cari tamu, kamar, atau item..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] focus:border-[#F87B1B] w-full"
-            />
-          </div>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
-          >
-            <option value="all">Semua Kategori</option>
-            {amenityCategories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
-          <div className="flex space-x-1 bg-gray-100 p-1">
-            <TabButton tabId="pending" label="Pending" count={pendingCount} />
-            <TabButton tabId="in_progress" label="In Progress" count={inProgressCount} />
-            <TabButton tabId="completed" label="Completed" count={completedCount} />
-            <TabButton tabId="urgent" label="Urgent" count={urgentCount} />
-            <TabButton tabId="all" label="All" count={allCount} />
-          </div>
         </div>
 
         {/* Requests Table */}
