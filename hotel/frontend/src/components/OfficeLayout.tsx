@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, createContext, useContext } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import OfficeSidebar from './OfficeSidebar';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -12,13 +12,10 @@ import {
   Moon02Icon,
   Cancel01Icon,
   ChevronRightIcon,
-  Logout01Icon,
-  Calendar01Icon,
-  Clock01Icon,
-  Location01Icon,
-  UserMultipleIcon
+  Logout01Icon
 } from '@/lib/icons';
 import { buildApiUrl } from '@/lib/config';
+import { useRouter } from 'next/navigation';
 
 interface OfficeLayoutProps {
   children: React.ReactNode;
@@ -33,8 +30,6 @@ interface HeaderContextType {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   handleSearch: (e: React.FormEvent) => void;
-  calendarOpen: boolean;
-  setCalendarOpen: (open: boolean) => void;
 }
 
 const HeaderContext = createContext<HeaderContextType | undefined>(undefined);
@@ -48,7 +43,7 @@ export const useOfficeHeader = () => {
 };
 
 export const OfficeHeaderActions = () => {
-  const { darkMode, setDarkMode, searchOpen, setSearchOpen, searchQuery, setSearchQuery, handleSearch, calendarOpen, setCalendarOpen } = useOfficeHeader();
+  const { darkMode, setDarkMode, searchOpen, setSearchOpen, searchQuery, setSearchQuery, handleSearch } = useOfficeHeader();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -59,6 +54,7 @@ export const OfficeHeaderActions = () => {
       });
 
       if (response.ok) {
+        // Redirect to login page
         router.push('/login');
       } else {
         console.error('Logout failed:', response.status);
@@ -69,34 +65,6 @@ export const OfficeHeaderActions = () => {
       alert('Terjadi kesalahan saat logout.');
     }
   };
-
-  // Sample today's events data
-  const todayEvents = [
-    {
-      id: 1,
-      title: 'Review Laporan Keuangan',
-      time: '09:00 AM',
-      location: 'Ruang Rapat A',
-      attendees: 5,
-      type: 'meeting'
-    },
-    {
-      id: 2,
-      title: 'Interview Karyawan Baru',
-      time: '02:00 PM',
-      location: 'Ruang HR',
-      attendees: 3,
-      type: 'interview'
-    },
-    {
-      id: 3,
-      title: 'Audit Inventaris',
-      time: '04:30 PM',
-      location: 'Gudang',
-      attendees: 2,
-      type: 'audit'
-    }
-  ];
 
   return (
     <div className="flex items-center space-x-4">
@@ -127,7 +95,7 @@ export const OfficeHeaderActions = () => {
                   placeholder="Cari karyawan, laporan, keuangan..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
+                  className="w-full px-4 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#005357]"
                   autoFocus
                 />
                 <div className="flex justify-end space-x-2">
@@ -141,93 +109,13 @@ export const OfficeHeaderActions = () => {
                   </Dialog.Close>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#4E61D3] text-white hover:bg-[#3d4fb5] transition-colors"
+                    className="px-4 py-2 bg-[#005357] text-white hover:bg-[#004147] transition-colors"
                   >
                     Cari
                   </button>
                 </div>
               </div>
             </form>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-
-      {/* Calendar Dialog */}
-      <Dialog.Root open={calendarOpen} onOpenChange={setCalendarOpen}>
-        <Dialog.Trigger asChild>
-          <button className={`p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}>
-            <Calendar01Icon className="h-5 w-5" />
-          </button>
-        </Dialog.Trigger>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-          <Dialog.Content className="fixed top-[20%] left-1/2 transform -translate-x-1/2 bg-white border border-gray-300 max-w-md w-full mx-4 p-6 z-50">
-            <div className="flex items-center justify-between mb-4">
-              <Dialog.Title className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                <Calendar01Icon className="h-5 w-5 text-[#4E61D3]" />
-                <span>Agenda Hari Ini</span>
-              </Dialog.Title>
-              <Dialog.Close asChild>
-                <button className="p-1 hover:bg-gray-100 text-gray-500">
-                  <Cancel01Icon className="h-4 w-4" />
-                </button>
-              </Dialog.Close>
-            </div>
-            <div className="mb-4 text-sm text-gray-600">
-              {new Date().toLocaleDateString('id-ID', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </div>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {todayEvents.length > 0 ? (
-                todayEvents.map((event) => (
-                  <div key={event.id} className="p-3 border border-gray-200 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{event.title}</h4>
-                        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
-                          <div className="flex items-center space-x-1">
-                            <Clock01Icon className="h-3 w-3" />
-                            <span>{event.time}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Location01Icon className="h-3 w-3" />
-                            <span>{event.location}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <UserMultipleIcon className="h-3 w-3" />
-                            <span>{event.attendees}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className={`w-3 h-3 rounded-full ${
-                        event.type === 'meeting' ? 'bg-blue-500' :
-                        event.type === 'interview' ? 'bg-green-500' :
-                        event.type === 'audit' ? 'bg-red-500' :
-                        'bg-purple-500'
-                      }`}></div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Calendar01Icon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                  <p>Tidak ada agenda hari ini</p>
-                </div>
-              )}
-            </div>
-            <div className="mt-4 flex justify-end">
-              <Link
-                href="/office/calendar"
-                className="px-4 py-2 bg-[#4E61D3] text-white hover:bg-[#3d4fb5] transition-colors text-sm"
-                onClick={() => setCalendarOpen(false)}
-              >
-                Lihat Kalender Lengkap
-              </Link>
-            </div>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -264,7 +152,6 @@ const OfficeLayout = ({ children, breadcrumb }: OfficeLayoutProps) => {
   const [darkMode, setDarkMode] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [calendarOpen, setCalendarOpen] = useState(false);
   const pathname = usePathname();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -282,22 +169,20 @@ const OfficeLayout = ({ children, breadcrumb }: OfficeLayoutProps) => {
     searchQuery,
     setSearchQuery,
     handleSearch,
-    calendarOpen,
-    setCalendarOpen,
   };
 
   // Generate default breadcrumb if not provided
   const defaultBreadcrumb = () => {
     const paths = pathname.split('/').filter(Boolean);
     const crumbs = [{ label: 'Kantor', href: '/office' }];
-
+    
     // Skip the first 'office' segment since we already have it as root
     paths.slice(1).forEach((path, index) => {
       const href = '/office/' + paths.slice(1, index + 2).join('/');
       const label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
       crumbs.push({ label, href });
     });
-
+    
     return crumbs;
   };
 
@@ -316,7 +201,7 @@ const OfficeLayout = ({ children, breadcrumb }: OfficeLayoutProps) => {
                 <div key={index} className="flex items-center">
                   {index > 0 && <ChevronRightIcon className="h-4 w-4 text-gray-400 mx-2" />}
                   {item.href && index < breadcrumbItems.length - 1 ? (
-                    <Link href={item.href} className="text-gray-600 hover:text-[#4E61D3] transition-colors">
+                    <Link href={item.href} className="text-gray-600 hover:text-[#005357] transition-colors">
                       {item.label}
                     </Link>
                   ) : (
@@ -334,7 +219,9 @@ const OfficeLayout = ({ children, breadcrumb }: OfficeLayoutProps) => {
 
           {/* Main Content */}
           <main className="flex-1 overflow-auto bg-gray-50">
-            {children}
+            <div className="max-w-7xl mx-auto p-6">
+              {children}
+            </div>
           </main>
         </div>
       </div>
