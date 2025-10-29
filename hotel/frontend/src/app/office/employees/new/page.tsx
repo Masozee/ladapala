@@ -56,10 +56,13 @@ export default function NewEmployeePage() {
       });
       if (response.ok) {
         const data = await response.json();
-        setDepartments(data);
+        // Handle paginated response
+        const departmentsArray = data.results ? data.results : (Array.isArray(data) ? data : []);
+        setDepartments(departmentsArray);
       }
     } catch (error) {
       console.error('Error fetching departments:', error);
+      setDepartments([]);
     }
   };
 
