@@ -41,6 +41,9 @@ interface HousekeepingTask {
   completion_time: string | null;
   estimated_completion: string | null;
   notes: string | null;
+  inspection_passed: boolean | null;
+  inspection_notes: string | null;
+  inspection_time: string | null;
   duration_minutes: number;
   is_overdue: boolean;
   time_until_deadline: number | null;

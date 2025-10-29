@@ -12,6 +12,7 @@ import {
   UserCheckIcon,
   CancelCircleIcon,
   AlertCircleIcon,
+  Alert01Icon,
   Add01Icon,
   Building03Icon,
   Call02Icon,
@@ -308,7 +309,7 @@ const MaintenanceDetailPage = () => {
       case 'plumbing': return <PackageIcon className="h-4 w-4" />;
       case 'electrical': return <SparklesIcon className="h-4 w-4" />;
       case 'elevator': return <Building03Icon className="h-4 w-4" />;
-      case 'security': return <Shield className="h-4 w-4" />;
+      case 'security': return <Shield01Icon className="h-4 w-4" />;
       case 'it_network': return <SparklesIcon className="h-4 w-4" />;
       case 'general': return <Wrench01Icon className="h-4 w-4" />;
       case 'furniture': return <Settings02Icon className="h-4 w-4" />;
@@ -454,7 +455,7 @@ const MaintenanceDetailPage = () => {
                   )}
                   {request.safety_issue && (
                     <div className="flex items-center space-x-2 p-2 bg-red-50 border border-red-200 rounded">
-                      <Shield className="h-3 w-3 text-red-600" />
+                      <Shield01Icon className="h-3 w-3 text-red-600" />
                       <span className="text-red-800 text-xs font-medium">Safety Issue</span>
                     </div>
                   )}

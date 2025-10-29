@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -167,6 +168,14 @@ const BookingsPage = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
+
+  // Late checkout states
+  const [showLateCheckoutDialog, setShowLateCheckoutDialog] = useState(false);
+  const [lateCheckoutReservation, setLateCheckoutReservation] = useState<Reservation | null>(null);
+  const [lateCheckoutTime, setLateCheckoutTime] = useState('');
+  const [lateCheckoutNotes, setLateCheckoutNotes] = useState('');
+  const [lateCheckoutFee, setLateCheckoutFee] = useState(0);
+  const [lateCheckoutMode, setLateCheckoutMode] = useState<'request' | 'approve'>('request');
   
   // Calendar view pagination states
   const [roomsCurrentPage, setRoomsCurrentPage] = useState(1);
@@ -607,6 +616,70 @@ const BookingsPage = () => {
       return data;
     } catch (error) {
       console.error('Error checking out guest:', error);
+      throw error;
+    }
+  };
+
+  const requestLateCheckout = async (reservationNumber: string, requestedTime: string, notes: string = '') => {
+    try {
+      const csrfToken = getCsrfToken();
+      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/request_late_checkout/`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken })
+        },
+        body: JSON.stringify({
+          requested_checkout_time: requestedTime,
+          notes: notes
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to request late checkout');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error requesting late checkout:', error);
+      throw error;
+    }
+  };
+
+  const approveLateCheckout = async (
+    reservationNumber: string,
+    approved: boolean,
+    approvedTime?: string,
+    fee?: number,
+    notes?: string
+  ) => {
+    try {
+      const csrfToken = getCsrfToken();
+      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/approve_late_checkout/`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken })
+        },
+        body: JSON.stringify({
+          approved: approved,
+          approved_checkout_time: approvedTime,
+          late_checkout_fee: fee || 0,
+          notes: notes || ''
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to approve late checkout');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error approving late checkout:', error);
       throw error;
     }
   };
@@ -2043,6 +2116,20 @@ const BookingsPage = () => {
                                         <span>Check Out</span>
                                       </button>
                                       <button
+                                        onClick={() => {
+                                          setLateCheckoutReservation(reservation);
+                                          setLateCheckoutMode('request');
+                                          setLateCheckoutTime('');
+                                          setLateCheckoutNotes('');
+                                          setShowLateCheckoutDialog(true);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="flex items-center space-x-2 px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors w-full text-left"
+                                      >
+                                        <Clock01Icon className="h-4 w-4" />
+                                        <span>Request Late Checkout</span>
+                                      </button>
+                                      <button
                                         onClick={async () => {
                                           await handleNavigateToPayment(reservation);
                                           setOpenMenuId(null);
@@ -2960,6 +3047,230 @@ const BookingsPage = () => {
                   )}
                 </div>
               </form>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {/* Late Checkout Dialog */}
+      <Dialog.Root open={showLateCheckoutDialog} onOpenChange={setShowLateCheckoutDialog}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl w-[500px] max-h-[85vh] overflow-y-auto z-50">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div>
+                <Dialog.Title className="text-xl font-bold text-gray-900">
+                  {lateCheckoutMode === 'request' ? 'Request Late Checkout' : 'Approve Late Checkout'}
+                </Dialog.Title>
+                {lateCheckoutReservation && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    Reservation: {lateCheckoutReservation.reservation_number} • Room {lateCheckoutReservation.room_number}
+                  </p>
+                )}
+              </div>
+              <Dialog.Close className="text-gray-400 hover:text-gray-600 transition-colors">
+                <Cancel01Icon className="h-5 w-5" />
+              </Dialog.Close>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {lateCheckoutReservation && (
+                <>
+                  <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-500">Guest Name</p>
+                        <p className="font-medium text-gray-900">{lateCheckoutReservation.guest_name || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Room Number</p>
+                        <p className="font-medium text-gray-900">{lateCheckoutReservation.room_number || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Original Check-out</p>
+                        <p className="font-medium text-gray-900">
+                          {lateCheckoutReservation.check_out_date ? format(new Date(lateCheckoutReservation.check_out_date), 'dd MMM yyyy') : 'N/A'} • 12:00 PM
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Nights</p>
+                        <p className="font-medium text-gray-900">{lateCheckoutReservation.nights || 0} nights</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {lateCheckoutMode === 'request' ? 'Requested Checkout Time' : 'Approved Checkout Time'}
+                    </label>
+                    <input
+                      type="time"
+                      value={lateCheckoutTime}
+                      onChange={(e) => setLateCheckoutTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#005357] focus:border-transparent"
+                      placeholder="e.g., 14:00"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Standard checkout time is 12:00 PM</p>
+                  </div>
+
+                  {lateCheckoutMode === 'approve' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Late Checkout Fee (IDR)
+                      </label>
+                      <input
+                        type="number"
+                        value={lateCheckoutFee}
+                        onChange={(e) => setLateCheckoutFee(Number(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#005357] focus:border-transparent"
+                        placeholder="Enter fee amount"
+                        min="0"
+                        step="50000"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Fee will be added to guest bill</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Notes
+                    </label>
+                    <textarea
+                      value={lateCheckoutNotes}
+                      onChange={(e) => setLateCheckoutNotes(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#005357] focus:border-transparent"
+                      rows={3}
+                      placeholder={lateCheckoutMode === 'request' ? 'Any special requests or reasons...' : 'Approval notes...'}
+                    />
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                    <div className="flex items-start space-x-2">
+                      <AlertCircleIcon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium">Housekeeping Notice</p>
+                        <p className="text-xs mt-1">
+                          {lateCheckoutMode === 'request'
+                            ? 'Request will be sent to front desk for approval. Housekeeping will be notified upon approval.'
+                            : 'Housekeeping schedule will be automatically updated after approval. Cleaning task will be rescheduled to the new checkout time.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end space-x-3">
+              <button
+                onClick={() => setShowLateCheckoutDialog(false)}
+                disabled={loading}
+                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              {lateCheckoutMode === 'request' ? (
+                <button
+                  onClick={async () => {
+                    if (!lateCheckoutReservation || !lateCheckoutTime) return;
+
+                    try {
+                      setLoading(true);
+
+                      // Combine check-out date with requested time
+                      const checkoutDate = new Date(lateCheckoutReservation.check_out_date);
+                      const [hours, minutes] = lateCheckoutTime.split(':');
+                      checkoutDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+                      const result = await requestLateCheckout(
+                        lateCheckoutReservation.reservation_number,
+                        checkoutDate.toISOString(),
+                        lateCheckoutNotes
+                      );
+
+                      if (result) {
+                        alert('Late checkout request submitted successfully!');
+                        setShowLateCheckoutDialog(false);
+                        fetchReservations();
+                      }
+                    } catch (error) {
+                      console.error('Failed to request late checkout:', error);
+                      alert('Failed to submit late checkout request');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading || !lateCheckoutTime}
+                  className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Submitting...' : 'Submit Request'}
+                </button>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={async () => {
+                      if (!lateCheckoutReservation) return;
+
+                      try {
+                        setLoading(true);
+                        await approveLateCheckout(
+                          lateCheckoutReservation.reservation_number,
+                          false,
+                          undefined,
+                          undefined,
+                          lateCheckoutNotes || 'Request denied'
+                        );
+                        alert('Late checkout request denied');
+                        setShowLateCheckoutDialog(false);
+                        fetchReservations();
+                      } catch (error) {
+                        console.error('Failed to deny late checkout:', error);
+                        alert('Failed to process denial');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    disabled={loading}
+                    className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Processing...' : 'Deny'}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!lateCheckoutReservation || !lateCheckoutTime) return;
+
+                      try {
+                        setLoading(true);
+
+                        // Combine check-out date with approved time
+                        const checkoutDate = new Date(lateCheckoutReservation.check_out_date);
+                        const [hours, minutes] = lateCheckoutTime.split(':');
+                        checkoutDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+                        await approveLateCheckout(
+                          lateCheckoutReservation.reservation_number,
+                          true,
+                          checkoutDate.toISOString(),
+                          lateCheckoutFee,
+                          lateCheckoutNotes
+                        );
+                        alert(`Late checkout approved! Fee: ${formatCurrency(lateCheckoutFee)}`);
+                        setShowLateCheckoutDialog(false);
+                        fetchReservations();
+                      } catch (error) {
+                        console.error('Failed to approve late checkout:', error);
+                        alert('Failed to approve late checkout');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    disabled={loading || !lateCheckoutTime}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Processing...' : 'Approve'}
+                  </button>
+                </div>
+              )}
             </div>
           </Dialog.Content>
         </Dialog.Portal>

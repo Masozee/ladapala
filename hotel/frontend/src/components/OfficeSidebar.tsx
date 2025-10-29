@@ -15,7 +15,7 @@ import {
   UserSettings01Icon,
   Clock01Icon,
   ArrowUp01Icon,
-  Home,
+  Home01Icon,
   UserIcon,
   Calendar01Icon,
   Shield01Icon,
