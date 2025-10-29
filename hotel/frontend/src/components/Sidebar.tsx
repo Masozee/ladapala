@@ -133,23 +133,24 @@ const Sidebar = () => {
 
   return (
     <Tooltip.Provider delayDuration={300}>
-      <div className="w-20 bg-[#005357] border border-gray-200 flex flex-col">
+      <div className="w-20 min-w-[5rem] max-w-[5rem] bg-[#005357] border border-gray-200 flex flex-col">
         {/* Header */}
         <div className="p-4">
           <div className="flex items-center justify-center">
-            <div className="w-10 h-10 bg-white flex items-center justify-center p-1">
+            <div className="w-10 h-10 min-w-[2.5rem] min-h-[2.5rem] bg-white flex items-center justify-center p-1">
               <Image
                 src="/logo.png"
                 alt="Kapulaga Hotel Logo"
                 width={32}
                 height={32}
-                className="object-contain"
+                className="object-contain w-full h-full"
+                priority
               />
             </div>
           </div>
         </div>
 
-        <Separator.Root className="mx-6 bg-white/20 h-px" />
+        <Separator.Root className="mx-4 bg-white/20 h-px" />
 
         {/* Main Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
@@ -170,15 +171,15 @@ const Sidebar = () => {
                   <DropdownMenu.Root key={item.name}>
                     <DropdownMenu.Trigger asChild>
                       <button
-                        className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
+                        className={`relative flex items-center justify-center w-full h-12 min-h-[3rem] rounded transition-all duration-200 group ${
                           hasActiveSubmenu
                             ? 'bg-white/10'
                             : 'hover:bg-white/10'
                         }`}
                       >
-                        <Icon className={`h-5 w-5 text-white transition-transform group-hover:scale-110`} />
+                        <Icon className={`h-5 w-5 min-w-[1.25rem] min-h-[1.25rem] text-white transition-transform group-hover:scale-110`} />
                         {totalBadges > 0 && (
-                          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center">
+                          <span className="absolute -top-0.5 -right-0.5 min-h-[1rem] min-w-[1rem] h-4 w-4 rounded-sm bg-red-500 text-white text-[0.625rem] leading-none flex items-center justify-center">
                             {totalBadges}
                           </span>
                         )}
@@ -188,7 +189,7 @@ const Sidebar = () => {
                       <DropdownMenu.Content
                         side="right"
                         sideOffset={12}
-                        className="bg-white border border-gray-300 border min-w-48 py-2 z-50"
+                        className="bg-white border border-gray-300 min-w-[12rem] py-2 z-50 shadow-lg"
                       >
                         <div className="px-3 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
                           {item.name}
@@ -196,21 +197,21 @@ const Sidebar = () => {
                         {item.submenu.map((subItem) => {
                           const SubIcon = subItem.icon;
                           const subActive = subItem.href ? isActive(subItem.href) : false;
-                          
+
                           return (
                             <DropdownMenu.Item key={subItem.name} asChild>
                               <Link
                                 href={subItem.href || '#'}
-                                className={`flex items-center px-3 py-2 text-sm transition-colors hover:bg-white/10 ${
+                                className={`flex items-center px-3 py-2 min-h-[2.5rem] text-sm transition-colors hover:bg-gray-50 ${
                                   subActive ? 'bg-[#005357] text-white' : 'text-gray-700'
                                 }`}
                               >
-                                <SubIcon className={`h-4 w-4 mr-3 ${
+                                <SubIcon className={`h-4 w-4 min-w-[1rem] min-h-[1rem] mr-3 flex-shrink-0 ${
                                   subActive ? 'text-white' : 'text-gray-500'
                                 }`} />
                                 <span className="flex-1">{subItem.name}</span>
                                 {subItem.badge && (
-                                  <span className={`ml-2 px-1.5 py-0.5 text-xs rounded ${
+                                  <span className={`ml-2 px-1.5 py-0.5 text-[0.625rem] leading-none rounded ${
                                     subActive ? 'bg-white text-[#005357]' : 'bg-red-100 text-red-600'
                                   }`}>
                                     {subItem.badge}
@@ -225,24 +226,24 @@ const Sidebar = () => {
                   </DropdownMenu.Root>
                 );
               }
-              
+
               // Handle regular menu items
               const active = item.href ? isActive(item.href) : false;
-              
+
               return (
                 <Tooltip.Root key={item.href || item.name}>
                   <Tooltip.Trigger asChild>
                     <Link
                       href={item.href || '#'}
-                      className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
+                      className={`relative flex items-center justify-center w-full h-12 min-h-[3rem] rounded transition-all duration-200 group ${
                         active
                           ? 'bg-white/10'
                           : 'hover:bg-white/10'
                       }`}
                     >
-                      <Icon className={`h-5 w-5 text-white transition-transform group-hover:scale-110`} />
+                      <Icon className={`h-5 w-5 min-w-[1.25rem] min-h-[1.25rem] text-white transition-transform group-hover:scale-110`} />
                       {item.badge && (
-                        <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center">
+                        <span className="absolute -top-0.5 -right-0.5 min-h-[1rem] min-w-[1rem] h-4 w-4 rounded-sm bg-red-500 text-white text-[0.625rem] leading-none flex items-center justify-center">
                           {item.badge}
                         </span>
                       )}
@@ -252,7 +253,7 @@ const Sidebar = () => {
                     <Tooltip.Content
                       side="right"
                       sideOffset={12}
-                      className="bg-gray-900 text-white px-2 py-1 text-sm border border-gray-300 z-50"
+                      className="bg-gray-900 text-white px-3 py-1.5 text-sm rounded shadow-lg z-50"
                     >
                       {item.name}
                       <Tooltip.Arrow className="fill-gray-900" />
@@ -283,15 +284,15 @@ const Sidebar = () => {
                   <DropdownMenu.Root key={item.name}>
                     <DropdownMenu.Trigger asChild>
                       <button
-                        className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
+                        className={`relative flex items-center justify-center w-full h-12 min-h-[3rem] rounded transition-all duration-200 group ${
                           hasActiveSubmenu
                             ? 'bg-white/10'
                             : 'hover:bg-white/10'
                         }`}
                       >
-                        <Icon className={`h-5 w-5 text-white transition-transform group-hover:scale-110`} />
+                        <Icon className={`h-5 w-5 min-w-[1.25rem] min-h-[1.25rem] text-white transition-transform group-hover:scale-110`} />
                         {totalBadges > 0 && (
-                          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center">
+                          <span className="absolute -top-0.5 -right-0.5 min-h-[1rem] min-w-[1rem] h-4 w-4 rounded-sm bg-red-500 text-white text-[0.625rem] leading-none flex items-center justify-center">
                             {totalBadges}
                           </span>
                         )}
@@ -301,7 +302,7 @@ const Sidebar = () => {
                       <DropdownMenu.Content
                         side="right"
                         sideOffset={12}
-                        className="bg-white border border-gray-300 border min-w-48 py-2 z-50"
+                        className="bg-white border border-gray-300 min-w-[12rem] py-2 z-50 shadow-lg"
                       >
                         <div className="px-3 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
                           {item.name}
@@ -309,21 +310,21 @@ const Sidebar = () => {
                         {item.submenu.map((subItem) => {
                           const SubIcon = subItem.icon;
                           const subActive = subItem.href ? isActive(subItem.href) : false;
-                          
+
                           return (
                             <DropdownMenu.Item key={subItem.name} asChild>
                               <Link
                                 href={subItem.href || '#'}
-                                className={`flex items-center px-3 py-2 text-sm transition-colors hover:bg-white/10 ${
+                                className={`flex items-center px-3 py-2 min-h-[2.5rem] text-sm transition-colors hover:bg-gray-50 ${
                                   subActive ? 'bg-[#005357] text-white' : 'text-gray-700'
                                 }`}
                               >
-                                <SubIcon className={`h-4 w-4 mr-3 ${
+                                <SubIcon className={`h-4 w-4 min-w-[1rem] min-h-[1rem] mr-3 flex-shrink-0 ${
                                   subActive ? 'text-white' : 'text-gray-500'
                                 }`} />
                                 <span className="flex-1">{subItem.name}</span>
                                 {subItem.badge && (
-                                  <span className={`ml-2 px-1.5 py-0.5 text-xs rounded ${
+                                  <span className={`ml-2 px-1.5 py-0.5 text-[0.625rem] leading-none rounded ${
                                     subActive ? 'bg-white text-[#005357]' : 'bg-red-100 text-red-600'
                                   }`}>
                                     {subItem.badge}
@@ -338,29 +339,29 @@ const Sidebar = () => {
                   </DropdownMenu.Root>
                 );
               }
-              
+
               // Handle regular menu items
               const active = item.href ? isActive(item.href) : false;
-              
+
               return (
                 <Tooltip.Root key={item.href || item.name}>
                   <Tooltip.Trigger asChild>
                     <Link
                       href={item.href || '#'}
-                      className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
+                      className={`relative flex items-center justify-center w-full h-12 min-h-[3rem] rounded transition-all duration-200 group ${
                         active
                           ? 'bg-white/10'
                           : 'hover:bg-white/10'
                       }`}
                     >
-                      <Icon className={`h-5 w-5 text-white transition-transform group-hover:scale-110`} />
+                      <Icon className={`h-5 w-5 min-w-[1.25rem] min-h-[1.25rem] text-white transition-transform group-hover:scale-110`} />
                     </Link>
                   </Tooltip.Trigger>
                   <Tooltip.Portal>
                     <Tooltip.Content
                       side="right"
                       sideOffset={12}
-                      className="bg-gray-900 text-white px-2 py-1 text-sm border border-gray-300 z-50"
+                      className="bg-gray-900 text-white px-3 py-1.5 text-sm rounded shadow-lg z-50"
                     >
                       {item.name}
                       <Tooltip.Arrow className="fill-gray-900" />
