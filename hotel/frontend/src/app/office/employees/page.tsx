@@ -218,16 +218,52 @@ function ScheduleTable() {
 
       {/* Schedule Table with Frozen First Column */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-        {/* Table Header Row */}
-        <div className="flex border-b-2 border-gray-300">
-          {/* Employee Header */}
-          <div className="flex-shrink-0 w-72 bg-[#4E61D3] text-white px-6 py-4 border-r-2 border-gray-300">
-            <div className="font-semibold text-sm uppercase tracking-wide">Karyawan</div>
+        <div className="flex">
+          {/* Left Side: Frozen Employee Column */}
+          <div className="flex-shrink-0 w-72 border-r-2 border-gray-300">
+            {/* Employee Header */}
+            <div className="bg-[#4E61D3] text-white px-6 py-4 border-b-2 border-gray-300">
+              <div className="font-semibold text-sm uppercase tracking-wide">Karyawan</div>
+            </div>
+
+            {/* Employee Rows - Vertical Scroll */}
+            <div className="overflow-y-auto" style={{ maxHeight: '600px' }}>
+              {schedules.map((schedule, idx) => {
+                const isEven = idx % 2 === 0;
+                return (
+                  <div
+                    key={schedule.employee_id}
+                    className={`px-6 py-5 border-b border-gray-200 ${
+                      isEven ? 'bg-gray-50' : 'bg-white'
+                    }`}
+                    style={{ height: '88px' }}
+                  >
+                    <div className="font-semibold text-sm text-gray-900 mb-1">
+                      {schedule.employee_name}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-gray-600 font-medium">
+                        {schedule.employee_id}
+                      </div>
+                      <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded border border-gray-200">
+                        {schedule.department}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {schedules.length === 0 && (
+                <div className="px-6 py-12 text-center text-gray-500 text-sm">
+                  Tidak ada karyawan
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Date Headers */}
+          {/* Right Side: Scrollable Date Columns */}
           <div className="flex-1 overflow-x-auto">
-            <div className="inline-flex min-w-full">
+            {/* Date Headers */}
+            <div className="flex border-b-2 border-gray-300">
               {weekDates.map((date, index) => {
                 const isToday = date.toDateString() === new Date().toDateString();
                 const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -235,7 +271,7 @@ function ScheduleTable() {
                 return (
                   <div
                     key={index}
-                    className={`flex-1 min-w-[180px] px-4 py-4 border-r border-gray-300 last:border-r-0 ${
+                    className={`flex-shrink-0 w-[180px] px-4 py-4 border-r border-gray-200 last:border-r-0 ${
                       isToday
                         ? 'bg-[#3d4fb5] text-white'
                         : isWeekend
@@ -256,36 +292,14 @@ function ScheduleTable() {
                 );
               })}
             </div>
-          </div>
-        </div>
 
-        {/* Table Body - Scrollable */}
-        <div className="overflow-y-auto" style={{ maxHeight: '600px' }}>
-          {schedules.map((schedule, idx) => {
-            const isEven = idx % 2 === 0;
+            {/* Schedule Grid - Vertical Scroll */}
+            <div className="overflow-y-auto" style={{ maxHeight: '600px' }}>
+              {schedules.map((schedule, idx) => {
+                const isEven = idx % 2 === 0;
 
-            return (
-              <div key={schedule.employee_id} className="flex border-b border-gray-200 last:border-b-0">
-                {/* Employee Cell - Frozen */}
-                <div className={`flex-shrink-0 w-72 px-6 py-5 border-r-2 border-gray-300 ${
-                  isEven ? 'bg-gray-50' : 'bg-white'
-                }`}>
-                  <div className="font-semibold text-sm text-gray-900 mb-1">
-                    {schedule.employee_name}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-gray-600 font-medium">
-                      {schedule.employee_id}
-                    </div>
-                    <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded border border-gray-200">
-                      {schedule.department}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Schedule Cells - Scrollable */}
-                <div className="flex-1 overflow-x-auto">
-                  <div className="inline-flex min-w-full">
+                return (
+                  <div key={schedule.employee_id} className="flex border-b border-gray-200">
                     {weekDates.map((date, dateIndex) => {
                       const dateKey = date.toISOString().split('T')[0];
                       const shifts = schedule.shifts[dateKey] || [];
@@ -294,12 +308,13 @@ function ScheduleTable() {
                       return (
                         <div
                           key={dateIndex}
-                          className={`flex-1 min-w-[180px] px-3 py-5 border-r border-gray-200 last:border-r-0 ${
+                          className={`flex-shrink-0 w-[180px] px-3 py-5 border-r border-gray-200 last:border-r-0 ${
                             isEven ? 'bg-white' : 'bg-gray-50'
                           } ${isWeekend ? 'bg-gray-100/30' : ''} hover:bg-blue-50 transition-colors`}
+                          style={{ height: '88px' }}
                         >
                           {shifts.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="space-y-2 overflow-y-auto h-full">
                               {shifts.map((shift) => (
                                 <div key={shift.id} className="bg-white p-2 rounded border border-gray-200 shadow-sm">
                                   {getShiftBadge(shift.shift_type)}
@@ -323,16 +338,10 @@ function ScheduleTable() {
                       );
                     })}
                   </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {schedules.length === 0 && (
-            <div className="px-6 py-12 text-center text-gray-500 text-sm">
-              Tidak ada karyawan
+                );
+              })}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
