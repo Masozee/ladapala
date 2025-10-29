@@ -167,7 +167,7 @@ function ScheduleTable() {
     };
     const badge = badges[shiftType] || { bg: 'bg-gray-100', text: 'text-gray-800', label: shiftType };
     return (
-      <span className={`inline-block px-2 py-1 text-xs font-medium ${badge.bg} ${badge.text} rounded mb-1`}>
+      <span className={`inline-block px-1.5 py-0.5 text-[10px] font-semibold ${badge.bg} ${badge.text} rounded`}>
         {badge.label}
       </span>
     );
@@ -310,24 +310,21 @@ function ScheduleTable() {
                       return (
                         <div
                           key={dateIndex}
-                          className={`flex-shrink-0 w-[180px] px-3 py-5 border-r border-gray-200 last:border-r-0 ${
+                          className={`flex-shrink-0 w-[180px] px-2 py-2 border-r border-gray-200 last:border-r-0 ${
                             isEven ? 'bg-white' : 'bg-gray-50'
                           } ${isWeekend ? 'bg-gray-100/30' : ''} hover:bg-blue-50 transition-colors`}
                           style={{ height: '88px' }}
                         >
                           {shifts.length > 0 ? (
-                            <div className="space-y-2 overflow-y-auto h-full">
-                              {shifts.map((shift) => (
-                                <div key={shift.id} className="bg-white p-2 rounded border border-gray-200 shadow-sm">
-                                  {getShiftBadge(shift.shift_type)}
-                                  <div className="text-xs font-semibold text-gray-800 mt-1">
-                                    {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
+                            <div className="space-y-1 h-full flex flex-col">
+                              {shifts.map((shift, shiftIdx) => (
+                                <div key={shift.id} className={`flex items-center justify-between gap-1 ${shiftIdx > 0 ? 'pt-1 border-t border-gray-200' : ''}`}>
+                                  <div className="flex-shrink-0">
+                                    {getShiftBadge(shift.shift_type)}
                                   </div>
-                                  {shift.notes && (
-                                    <div className="text-xs text-gray-600 mt-1 truncate" title={shift.notes}>
-                                      📝 {shift.notes}
-                                    </div>
-                                  )}
+                                  <div className="text-[10px] font-medium text-gray-700 whitespace-nowrap">
+                                    {shift.start_time.substring(0, 5)}-{shift.end_time.substring(0, 5)}
+                                  </div>
                                 </div>
                               ))}
                             </div>
