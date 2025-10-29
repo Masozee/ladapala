@@ -206,6 +206,15 @@ def user_profile(request):
             else:
                 return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+            # Update employee emergency contact if employee exists
+            if hasattr(request.user, 'employee'):
+                employee = request.user.employee
+                if 'emergency_contact' in request.data:
+                    employee.emergency_contact = request.data.get('emergency_contact')
+                if 'emergency_phone' in request.data:
+                    employee.emergency_phone = request.data.get('emergency_phone')
+                employee.save()
+
         # Return updated profile
         serializer = UserSerializer(request.user, context={'request': request})
         return Response({

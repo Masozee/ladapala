@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   UserIcon,
   Mail01Icon,
@@ -393,10 +393,12 @@ const ProfilePage = () => {
     try {
       setSaving(true);
 
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl('user/profile/'), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
         },
         credentials: 'include',
         body: JSON.stringify(formData),
@@ -410,7 +412,8 @@ const ProfilePage = () => {
         window.location.reload();
       } else {
         const error = await response.json();
-        alert(`Failed to update profile: ${error.error || 'Unknown error'}`);
+        console.error('Error response:', error);
+        alert(`Failed to update profile: ${JSON.stringify(error)}`);
       }
     } catch (error) {
       console.error('Error saving profile:', error);
