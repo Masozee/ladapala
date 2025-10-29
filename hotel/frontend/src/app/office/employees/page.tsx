@@ -225,7 +225,7 @@ export default function EmployeesPage() {
           </div>
           <Link
             href="/office/employees/add"
-            className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#4E61D3] text-white text-sm font-medium hover:bg-[#3d4fb5] transition-colors"
           >
             <Add01Icon className="h-4 w-4" />
             <span>Tambah Karyawan</span>
@@ -238,7 +238,7 @@ export default function EmployeesPage() {
             onClick={() => setActiveTab('employees')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'employees'
-                ? 'border-[#005357] text-[#005357] bg-gray-50'
+                ? 'border-[#4E61D3] text-[#4E61D3] bg-gray-50'
                 : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
             }`}
           >
@@ -251,7 +251,7 @@ export default function EmployeesPage() {
             onClick={() => setActiveTab('schedules')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'schedules'
-                ? 'border-[#005357] text-[#005357] bg-gray-50'
+                ? 'border-[#4E61D3] text-[#4E61D3] bg-gray-50'
                 : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
             }`}
           >
@@ -271,7 +271,7 @@ export default function EmployeesPage() {
               <div className="text-3xl font-bold text-gray-900">{employees.length}</div>
               <div className="text-sm text-gray-600 mt-1">Total Karyawan</div>
             </div>
-            <div className="w-12 h-12 bg-[#005357] flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#4E61D3] flex items-center justify-center">
               <UserMultipleIcon className="h-6 w-6 text-white" />
             </div>
           </div>
@@ -326,14 +326,14 @@ export default function EmployeesPage() {
                 placeholder="Cari karyawan..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm"
               />
             </div>
 
             <select
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
-              className="px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm w-48"
+              className="px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm w-48"
             >
               <option value="all">Semua Departemen</option>
               {departments.filter(d => d !== 'all').map(dept => (
@@ -344,7 +344,7 @@ export default function EmployeesPage() {
             <select
               value={selectedShift}
               onChange={(e) => setSelectedShift(e.target.value)}
-              className="px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm w-40"
+              className="px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3] text-sm w-40"
             >
               <option value="all">Semua Shift</option>
               <option value="morning">Pagi</option>
@@ -358,7 +358,7 @@ export default function EmployeesPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-[#005357]">
+                  <tr className="bg-[#4E61D3]">
                     <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">ID Karyawan</th>
                     <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Nama</th>
                     <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Posisi</th>
@@ -501,8 +501,8 @@ export default function EmployeesPage() {
           <div className="bg-white border border-gray-200 overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-[#005357]">
-                  <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300 sticky left-0 bg-[#005357]">
+                <tr className="bg-[#4E61D3]">
+                  <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300 sticky left-0 bg-[#4E61D3]">
                     Karyawan
                   </th>
                   {dayLabels.map((day, index) => (
