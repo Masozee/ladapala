@@ -463,154 +463,116 @@ export default function WorkOrdersPage() {
               </button>
             </div>
 
-            {/* Work Orders List */}
-            <div className="space-y-6">
-              {filteredOrders.map((order) => {
-                const progress = calculateProgress(order.tasks);
-                const deptInfo = getDepartmentInfo(order.department);
-                const isOverdue = new Date(order.dueDate) < new Date() && order.status !== 'completed';
+            {/* Work Orders Table */}
+            <div className="bg-white border border-gray-200">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-[#F87B1B]">
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">ID</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Title & Description</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Department</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Priority</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Status</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Assigned To</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Location</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Due Date</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Progress</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredOrders.map((order) => {
+                      const progress = calculateProgress(order.tasks);
+                      const deptInfo = getDepartmentInfo(order.department);
+                      const isOverdue = new Date(order.dueDate) < new Date() && order.status !== 'completed';
 
-                return (
-                  <div key={order.id} className="bg-white p-6 border border-gray-200">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <span className="font-mono text-sm bg-gray-100 px-2 py-1 text-gray-800">
-                            {order.id}
-                          </span>
-                          <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${deptInfo.color}`}>
-                            <deptInfo.icon className="h-3 w-3 mr-1" />
-                            {deptInfo.name}
-                          </span>
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium ${getPriorityColor(order.priority)}`}>
-                            {getPriorityLabel(order.priority)}
-                          </span>
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium ${getStatusColor(order.status)}`}>
-                            {getStatusLabel(order.status)}
-                          </span>
-                          {isOverdue && (
-                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800">
-                              <Alert01Icon className="h-3 w-3 mr-1" />
-                              Overdue
+                      return (
+                        <tr key={order.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 border border-gray-200">
+                            <div className="font-mono text-sm font-medium text-gray-900">{order.id}</div>
+                          </td>
+                          <td className="px-6 py-4 border border-gray-200">
+                            <div className="font-semibold text-sm text-gray-900 mb-1">{order.title}</div>
+                            <div className="text-xs text-gray-600 line-clamp-2">{order.description}</div>
+                          </td>
+                          <td className="px-6 py-4 border border-gray-200">
+                            <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${deptInfo.color}`}>
+                              <deptInfo.icon className="h-3 w-3 mr-1" />
+                              {deptInfo.name}
                             </span>
-                          )}
-                        </div>
-                        
-                        <h4 className="font-bold text-lg text-gray-900 mb-2">{order.title}</h4>
-                        <p className="text-sm text-gray-600 mb-4">{order.description}</p>
-                        
-                        {/* Progress Bar */}
-                        <div className="mb-4">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm text-gray-600">Progress</span>
-                            <span className="text-sm font-medium text-gray-900">{progress}%</span>
-                          </div>
-                          <div className="w-full bg-gray-200 h-2">
-                            <div 
-                              className="bg-[#F87B1B] h-2 transition-all duration-300" 
-                              style={{ width: `${progress}%` }}
-                            ></div>
-                          </div>
-                        </div>
-
-                        {/* Key Info */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                          <div>
-                            <span className="text-gray-600">Assigned to:</span>
-                            <div className="font-medium text-gray-900">{order.assignedTo}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Supervisor:</span>
-                            <div className="font-medium text-gray-900">{order.supervisedBy}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Location:</span>
-                            <div className="font-medium text-gray-900">{order.location}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Due date:</span>
-                            <div className={`font-medium ${isOverdue ? 'text-red-600' : 'text-gray-900'}`}>
-                              {formatDate(order.dueDate)}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Time & Cost */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                          <div>
-                            <span className="text-gray-600">Estimated hours:</span>
-                            <div className="font-medium text-gray-900">{order.estimatedHours}h</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Actual hours:</span>
-                            <div className="font-medium text-gray-900">{order.actualHours}h</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Cost:</span>
-                            <div className="font-medium text-gray-900">{formatCurrency(order.cost)}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Photos:</span>
-                            <div className="font-medium text-gray-900">{order.photos} attached</div>
-                          </div>
-                        </div>
-
-                        {/* Tasks */}
-                        <div className="mb-4">
-                          <h5 className="font-medium text-gray-900 mb-2">Tasks ({order.tasks.filter(t => t.status === 'completed').length}/{order.tasks.length} completed)</h5>
-                          <div className="space-y-2">
-                            {order.tasks.map((task) => (
-                              <div key={task.id} className="flex items-center space-x-3 text-sm">
-                                <UserCheckIcon className={`h-4 w-4 ${getTaskStatusColor(task.status)}`} />
-                                <span className={`flex-1 ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                                  {task.task}
-                                </span>
-                                <span className="text-gray-500 text-xs">{task.assignedTo}</span>
-                                <span className={`px-2 py-1 text-xs ${getTaskStatusColor(task.status)} bg-gray-100`}>
-                                  {task.status}
+                          </td>
+                          <td className="px-6 py-4 border border-gray-200">
+                            <span className={`inline-flex px-2 py-1 text-xs font-medium ${getPriorityColor(order.priority)}`}>
+                              {getPriorityLabel(order.priority)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 border border-gray-200">
+                            <span className={`inline-flex px-2 py-1 text-xs font-medium ${getStatusColor(order.status)}`}>
+                              {getStatusLabel(order.status)}
+                            </span>
+                            {isOverdue && (
+                              <div className="mt-1">
+                                <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800">
+                                  <Alert01Icon className="h-3 w-3 mr-1" />
+                                  Overdue
                                 </span>
                               </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Materials */}
-                        <div className="mb-4">
-                          <h5 className="font-medium text-gray-900 mb-2">Materials Required</h5>
-                          <div className="flex flex-wrap gap-2">
-                            {order.materials.map((material, index) => (
-                              <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 text-xs">
-                                {material}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Notes */}
-                        {order.notes && (
-                          <div className="bg-gray-50 p-3 mb-4">
-                            <p className="text-sm text-gray-600">
-                              <span className="font-medium">Notes:</span> {order.notes}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center space-x-2 ml-4">
-                        <button className="p-2 text-gray-400 hover:text-[#F87B1B] hover:bg-gray-100 transition-colors rounded">
-                          <EyeIcon className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                          <PencilEdit02Icon className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors rounded">
-                          <MoreHorizontalIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                            )}
+                          </td>
+                          <td className="px-6 py-4 border border-gray-200">
+                            <div className="text-sm text-gray-900">{order.assignedTo}</div>
+                            <div className="text-xs text-gray-500">Supervisor: {order.supervisedBy}</div>
+                          </td>
+                          <td className="px-6 py-4 border border-gray-200">
+                            <div className="flex items-center space-x-1 text-sm text-gray-900">
+                              <Location01Icon className="h-3 w-3 text-gray-400" />
+                              <span>{order.location}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 border border-gray-200">
+                            <div className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-900'}`}>
+                              {formatDate(order.dueDate)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {order.estimatedHours}h est / {order.actualHours}h actual
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 border border-gray-200">
+                            <div className="w-full">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs text-gray-600">{progress}%</span>
+                                <span className="text-xs text-gray-500">
+                                  {order.tasks.filter(t => t.status === 'completed').length}/{order.tasks.length}
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-200 h-1.5">
+                                <div
+                                  className="bg-[#F87B1B] h-1.5 transition-all duration-300"
+                                  style={{ width: `${progress}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 border border-gray-200">
+                            <div className="flex items-center space-x-1">
+                              <button className="p-1.5 text-gray-400 hover:text-[#F87B1B] hover:bg-gray-100 transition-colors rounded">
+                                <EyeIcon className="h-4 w-4" />
+                              </button>
+                              <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
+                                <PencilEdit02Icon className="h-4 w-4" />
+                              </button>
+                              <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors rounded">
+                                <MoreHorizontalIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
