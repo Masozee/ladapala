@@ -494,7 +494,9 @@ export default function AmenitiesPage() {
                 <td className="border border-gray-200 px-6 py-4 text-sm font-medium text-gray-900">{request.id}</td>
                 <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.guestName}</td>
                 <td className="border border-gray-200 px-6 py-4 text-sm font-semibold text-[#F87B1B]">#{request.roomNumber}</td>
-                <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900 max-w-[200px] truncate" title={request.item}>{request.item}</td>
+                <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">
+                  <div className="whitespace-normal break-words">{request.item}</div>
+                </td>
                 <td className="border border-gray-200 px-6 py-4">
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getCategoryColor(request.category)}`}>
                     {getCategoryName(request.category)}
