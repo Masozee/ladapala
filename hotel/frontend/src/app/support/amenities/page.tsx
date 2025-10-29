@@ -464,49 +464,49 @@ export default function AmenitiesPage() {
         </div>
 
         {/* Requests Table */}
-        <div className="bg-white border border-gray-300 overflow-x-auto">
+        <div className="bg-white border border-gray-200 overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-[#F87B1B] text-white">
-                <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">ID</th>
-                <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Guest</th>
-                <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Room</th>
-                <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Item</th>
-                <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Category</th>
-                <th className="border border-gray-300 px-6 py-4 text-center text-sm font-medium">Qty</th>
-                <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Priority</th>
-                <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Status</th>
-                <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Delivery</th>
-                <th className="border border-gray-300 px-6 py-4 text-left text-sm font-medium">Assigned</th>
-                <th className="border border-gray-300 px-6 py-4 text-center text-sm font-medium">Actions</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">ID</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Guest</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Room</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Item</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Category</th>
+                <th className="border border-gray-200 px-6 py-4 text-center text-sm font-medium">Qty</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Priority</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Status</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Delivery</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Assigned</th>
+                <th className="border border-gray-200 px-6 py-4 text-center text-sm font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredRequests.map((request) => (
                 <tr key={request.id} className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-6 py-4 text-sm font-medium text-gray-900">{request.id}</td>
-                  <td className="border border-gray-300 px-6 py-4 text-sm text-gray-900">{request.guestName}</td>
-                  <td className="border border-gray-300 px-6 py-4 text-sm font-semibold text-[#F87B1B]">#{request.roomNumber}</td>
-                  <td className="border border-gray-300 px-6 py-4 text-sm text-gray-900 max-w-[200px] truncate" title={request.item}>{request.item}</td>
-                  <td className="border border-gray-300 px-6 py-4">
+                  <td className="border border-gray-200 px-6 py-4 text-sm font-medium text-gray-900">{request.id}</td>
+                  <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.guestName}</td>
+                  <td className="border border-gray-200 px-6 py-4 text-sm font-semibold text-[#F87B1B]">#{request.roomNumber}</td>
+                  <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900 max-w-[200px] truncate" title={request.item}>{request.item}</td>
+                  <td className="border border-gray-200 px-6 py-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getCategoryColor(request.category)}`}>
                       {getCategoryName(request.category)}
                     </span>
                   </td>
-                  <td className="border border-gray-300 px-6 py-4 text-sm text-center font-medium text-gray-900">{request.quantity}</td>
-                  <td className="border border-gray-300 px-6 py-4">
+                  <td className="border border-gray-200 px-6 py-4 text-sm text-center font-medium text-gray-900">{request.quantity}</td>
+                  <td className="border border-gray-200 px-6 py-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getPriorityColor(request.priority)}`}>
                       {getPriorityLabel(request.priority)}
                     </span>
                   </td>
-                  <td className="border border-gray-300 px-6 py-4">
+                  <td className="border border-gray-200 px-6 py-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
                       {getStatusLabel(request.status)}
                     </span>
                   </td>
-                  <td className="border border-gray-300 px-6 py-4 text-sm text-gray-900">{request.deliveryTime}</td>
-                  <td className="border border-gray-300 px-6 py-4 text-sm text-gray-900">{request.assignedTo}</td>
-                  <td className="border border-gray-300 px-6 py-4 text-center">
+                  <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.deliveryTime}</td>
+                  <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.assignedTo}</td>
+                  <td className="border border-gray-200 px-6 py-4 text-center">
                     <div className="flex items-center justify-center">
                       <button className="p-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors">
                         <MoreHorizontalIcon className="h-4 w-4 text-gray-600" />
