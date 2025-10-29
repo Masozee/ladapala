@@ -26,6 +26,7 @@ export default function AmenitiesPage() {
   const [activeTab, setActiveTab] = useState('pending');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Sample amenities data
   const amenitiesStats = {
@@ -507,10 +508,33 @@ export default function AmenitiesPage() {
                   <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.deliveryTime}</td>
                   <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.assignedTo}</td>
                   <td className="border border-gray-200 px-6 py-4 text-center">
-                    <div className="flex items-center justify-center">
-                      <button className="p-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center justify-center relative">
+                      <button
+                        onClick={() => setOpenMenuId(openMenuId === request.id ? null : request.id)}
+                        className="p-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                      >
                         <MoreHorizontalIcon className="h-4 w-4 text-gray-600" />
                       </button>
+                      {openMenuId === request.id && (
+                        <div className="absolute right-0 top-12 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-10 rounded">
+                          <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
+                            <EyeIcon className="h-4 w-4" />
+                            <span>View Details</span>
+                          </button>
+                          <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
+                            <PencilEdit02Icon className="h-4 w-4" />
+                            <span>Edit Request</span>
+                          </button>
+                          <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
+                            <UserCheckIcon className="h-4 w-4" />
+                            <span>Mark Complete</span>
+                          </button>
+                          <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2 border-t border-gray-200">
+                            <AlertCircleIcon className="h-4 w-4" />
+                            <span>Cancel Request</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </td>
                 </tr>
