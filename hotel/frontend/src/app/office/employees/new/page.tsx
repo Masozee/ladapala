@@ -136,25 +136,24 @@ export default function NewEmployeePage() {
 
   return (
     <OfficeLayout>
-      <div className="px-6 py-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 transition-colors"
-            >
-              <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Tambah Karyawan Baru</h1>
-              <p className="text-sm text-gray-600 mt-1">Isi formulir untuk menambahkan karyawan baru</p>
-            </div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gray-100 transition-colors"
+          >
+            <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Tambah Karyawan Baru</h1>
+            <p className="text-sm text-gray-600 mt-1">Isi formulir untuk menambahkan karyawan baru</p>
           </div>
         </div>
+      </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="max-w-4xl">
+      {/* Form */}
+      <form onSubmit={handleSubmit}>
           {/* Account Information */}
           <div className="bg-white border border-gray-200 mb-6">
             <div className="p-6 bg-[#4E61D3] text-white">
@@ -447,27 +446,26 @@ export default function NewEmployeePage() {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end space-x-3">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="flex items-center space-x-2 px-6 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <Cancel01Icon className="h-4 w-4" />
-              <span>Batal</span>
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex items-center space-x-2 px-6 py-3 bg-[#4E61D3] text-white hover:bg-[#3d4fb5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <UserCheckIcon className="h-4 w-4" />
-              <span>{loading ? 'Menyimpan...' : 'Simpan Karyawan'}</span>
-            </button>
-          </div>
-        </form>
-      </div>
+        {/* Actions */}
+        <div className="flex items-center justify-end space-x-3">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex items-center space-x-2 px-6 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <Cancel01Icon className="h-4 w-4" />
+            <span>Batal</span>
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center space-x-2 px-6 py-3 bg-[#4E61D3] text-white hover:bg-[#3d4fb5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <UserCheckIcon className="h-4 w-4" />
+            <span>{loading ? 'Menyimpan...' : 'Simpan Karyawan'}</span>
+          </button>
+        </div>
+      </form>
     </OfficeLayout>
   );
 }
