@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import Link from 'next/link';
 import {
   Search02Icon,
@@ -345,12 +345,17 @@ const ComplaintsPage = () => {
 
     try {
       setFormLoading(true);
+
+      // Get CSRF token
+      const csrfToken = getCsrfToken();
+
       const response = await fetch(
         buildApiUrl(`hotel/complaints/${selectedComplaint.id}/assign_staff/`),
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
           },
           credentials: 'include',
           body: JSON.stringify({ user_id: selectedStaffId })
@@ -364,13 +369,15 @@ const ComplaintsPage = () => {
         setShowAssignStaffDialog(false);
         setSelectedComplaint(null);
         setSelectedStaffId('');
+        alert('Staff assigned successfully!');
       } else {
         const errorData = await response.json();
+        console.error('Error response:', errorData);
         alert(errorData.error || 'Failed to assign staff');
       }
     } catch (err) {
       console.error('Error assigning staff:', err);
-      alert('Failed to assign staff');
+      alert('Failed to assign staff. Please try again.');
     } finally {
       setFormLoading(false);
     }
