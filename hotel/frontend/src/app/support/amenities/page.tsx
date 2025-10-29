@@ -465,88 +465,88 @@ export default function AmenitiesPage() {
         </div>
 
         {/* Requests Table */}
-        <div className="bg-white border border-gray-200 overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-[#F87B1B] text-white">
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">ID</th>
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Guest</th>
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Room</th>
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Item</th>
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Category</th>
-                <th className="border border-gray-200 px-6 py-4 text-center text-sm font-medium">Qty</th>
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Priority</th>
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Status</th>
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Delivery</th>
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Assigned</th>
-                <th className="border border-gray-200 px-6 py-4 text-center text-sm font-medium">Actions</th>
+        <table className="w-full border-collapse bg-white border border-gray-200">
+          <thead>
+            <tr className="bg-[#F87B1B] text-white">
+              <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">ID</th>
+              <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Guest</th>
+              <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Room</th>
+              <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Item</th>
+              <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Category</th>
+              <th className="border border-gray-200 px-6 py-4 text-center text-sm font-medium">Qty</th>
+              <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Priority</th>
+              <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Status</th>
+              <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Delivery</th>
+              <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">Assigned</th>
+              <th className="border border-gray-200 px-6 py-4 text-center text-sm font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRequests.map((request) => (
+              <tr key={request.id} className="hover:bg-gray-50">
+                <td className="border border-gray-200 px-6 py-4 text-sm font-medium text-gray-900">{request.id}</td>
+                <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.guestName}</td>
+                <td className="border border-gray-200 px-6 py-4 text-sm font-semibold text-[#F87B1B]">#{request.roomNumber}</td>
+                <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900 max-w-[200px] truncate" title={request.item}>{request.item}</td>
+                <td className="border border-gray-200 px-6 py-4">
+                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getCategoryColor(request.category)}`}>
+                    {getCategoryName(request.category)}
+                  </span>
+                </td>
+                <td className="border border-gray-200 px-6 py-4 text-sm text-center font-medium text-gray-900">100</td>
+                <td className="border border-gray-200 px-6 py-4">
+                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getPriorityColor(request.priority)}`}>
+                    {getPriorityLabel(request.priority)}
+                  </span>
+                </td>
+                <td className="border border-gray-200 px-6 py-4">
+                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
+                    {getStatusLabel(request.status)}
+                  </span>
+                </td>
+                <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.deliveryTime}</td>
+                <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.assignedTo}</td>
+                <td className="border border-gray-200 px-6 py-4 text-center">
+                  <div className="flex items-center justify-center relative">
+                    <button
+                      onClick={() => setOpenMenuId(openMenuId === request.id ? null : request.id)}
+                      className="p-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                    >
+                      <MoreHorizontalIcon className="h-4 w-4 text-gray-600" />
+                    </button>
+                    {openMenuId === request.id && (
+                      <div className="absolute right-0 top-12 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-10 rounded">
+                        <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
+                          <EyeIcon className="h-4 w-4" />
+                          <span>View Details</span>
+                        </button>
+                        <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
+                          <PencilEdit02Icon className="h-4 w-4" />
+                          <span>Edit Request</span>
+                        </button>
+                        <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
+                          <UserCheckIcon className="h-4 w-4" />
+                          <span>Mark Complete</span>
+                        </button>
+                        <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2 border-t border-gray-200">
+                          <AlertCircleIcon className="h-4 w-4" />
+                          <span>Cancel Request</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredRequests.map((request) => (
-                <tr key={request.id} className="hover:bg-gray-50">
-                  <td className="border border-gray-200 px-6 py-4 text-sm font-medium text-gray-900">{request.id}</td>
-                  <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.guestName}</td>
-                  <td className="border border-gray-200 px-6 py-4 text-sm font-semibold text-[#F87B1B]">#{request.roomNumber}</td>
-                  <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900 max-w-[200px] truncate" title={request.item}>{request.item}</td>
-                  <td className="border border-gray-200 px-6 py-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getCategoryColor(request.category)}`}>
-                      {getCategoryName(request.category)}
-                    </span>
-                  </td>
-                  <td className="border border-gray-200 px-6 py-4 text-sm text-center font-medium text-gray-900">100</td>
-                  <td className="border border-gray-200 px-6 py-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getPriorityColor(request.priority)}`}>
-                      {getPriorityLabel(request.priority)}
-                    </span>
-                  </td>
-                  <td className="border border-gray-200 px-6 py-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
-                      {getStatusLabel(request.status)}
-                    </span>
-                  </td>
-                  <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.deliveryTime}</td>
-                  <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{request.assignedTo}</td>
-                  <td className="border border-gray-200 px-6 py-4 text-center">
-                    <div className="flex items-center justify-center relative">
-                      <button
-                        onClick={() => setOpenMenuId(openMenuId === request.id ? null : request.id)}
-                        className="p-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
-                      >
-                        <MoreHorizontalIcon className="h-4 w-4 text-gray-600" />
-                      </button>
-                      {openMenuId === request.id && (
-                        <div className="absolute right-0 top-12 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-10 rounded">
-                          <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
-                            <EyeIcon className="h-4 w-4" />
-                            <span>View Details</span>
-                          </button>
-                          <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
-                            <PencilEdit02Icon className="h-4 w-4" />
-                            <span>Edit Request</span>
-                          </button>
-                          <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
-                            <UserCheckIcon className="h-4 w-4" />
-                            <span>Mark Complete</span>
-                          </button>
-                          <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2 border-t border-gray-200">
-                            <AlertCircleIcon className="h-4 w-4" />
-                            <span>Cancel Request</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredRequests.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-gray-600">No requests found</p>
-            </div>
-          )}
-        </div>
+            ))}
+            {filteredRequests.length === 0 && (
+              <tr>
+                <td colSpan={11} className="text-center py-8 text-gray-600">
+                  No requests found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </SupportLayout>
   );
