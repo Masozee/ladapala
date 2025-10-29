@@ -6,6 +6,7 @@ from . import views
 router = DefaultRouter()
 router.register(r'employees', views.EmployeeViewSet, basename='employee')
 router.register(r'departments-manage', views.DepartmentViewSet, basename='department-manage')
+router.register(r'shifts-manage', views.ShiftViewSet, basename='shift-manage')
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),

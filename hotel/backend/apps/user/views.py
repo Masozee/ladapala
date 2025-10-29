@@ -638,3 +638,35 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all().order_by('name')
     serializer_class = DepartmentSerializer
     permission_classes = [IsAuthenticated]
+
+
+class ShiftViewSet(viewsets.ModelViewSet):
+    """ViewSet for Shift management"""
+    queryset = Shift.objects.all().select_related('employee', 'employee__user', 'employee__department').order_by('-shift_date', 'start_time')
+    serializer_class = ShiftSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Filter shifts based on query parameters"""
+        queryset = super().get_queryset()
+
+        # Filter by date range
+        from_date = self.request.query_params.get('from_date')
+        to_date = self.request.query_params.get('to_date')
+
+        if from_date:
+            queryset = queryset.filter(shift_date__gte=from_date)
+        if to_date:
+            queryset = queryset.filter(shift_date__lte=to_date)
+
+        # Filter by employee
+        employee_id = self.request.query_params.get('employee_id')
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+
+        # Filter by shift type
+        shift_type = self.request.query_params.get('shift_type')
+        if shift_type:
+            queryset = queryset.filter(shift_type=shift_type)
+
+        return queryset

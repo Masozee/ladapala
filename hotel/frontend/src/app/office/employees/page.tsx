@@ -42,6 +42,259 @@ interface Statistics {
   new_this_month: number;
 }
 
+interface Shift {
+  id: number;
+  employee: number;
+  shift_date: string;
+  start_time: string;
+  end_time: string;
+  shift_type: string;
+  notes?: string;
+}
+
+interface EmployeeSchedule {
+  employee_id: string;
+  employee_name: string;
+  department: string;
+  shifts: { [date: string]: Shift[] };
+}
+
+// Schedule Table Component with frozen employee column
+function ScheduleTable() {
+  const [schedules, setSchedules] = useState<EmployeeSchedule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
+
+  // Generate array of dates for the week
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(currentWeekStart);
+    date.setDate(date.getDate() + i);
+    return date;
+  });
+
+  useEffect(() => {
+    fetchSchedules();
+  }, [currentWeekStart]);
+
+  const fetchSchedules = async () => {
+    try {
+      setLoading(true);
+      // Get employees first
+      const employeesRes = await fetch(buildApiUrl('user/employees/'), {
+        credentials: 'include',
+      });
+      const employeesData = await employeesRes.json();
+      const employees = employeesData.results || [];
+
+      // Get shifts for the week
+      const startDate = weekDates[0].toISOString().split('T')[0];
+      const endDate = weekDates[6].toISOString().split('T')[0];
+
+      const shiftsRes = await fetch(
+        buildApiUrl(`user/shifts-manage/?from_date=${startDate}&to_date=${endDate}`),
+        { credentials: 'include' }
+      );
+      const shiftsData = await shiftsRes.json();
+      const shifts = shiftsData.results || shiftsData || [];
+
+      // Organize shifts by employee and date
+      const scheduleMap: { [empId: string]: EmployeeSchedule } = {};
+
+      employees.forEach((emp: Employee) => {
+        scheduleMap[emp.employee_id] = {
+          employee_id: emp.employee_id,
+          employee_name: emp.full_name,
+          department: emp.department_name,
+          shifts: {}
+        };
+      });
+
+      shifts.forEach((shift: Shift) => {
+        const employee = employees.find((e: Employee) => e.id === shift.employee);
+        if (employee && scheduleMap[employee.employee_id]) {
+          const dateKey = shift.shift_date;
+          if (!scheduleMap[employee.employee_id].shifts[dateKey]) {
+            scheduleMap[employee.employee_id].shifts[dateKey] = [];
+          }
+          scheduleMap[employee.employee_id].shifts[dateKey].push(shift);
+        }
+      });
+
+      setSchedules(Object.values(scheduleMap));
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const goToPreviousWeek = () => {
+    const newDate = new Date(currentWeekStart);
+    newDate.setDate(newDate.getDate() - 7);
+    setCurrentWeekStart(newDate);
+  };
+
+  const goToNextWeek = () => {
+    const newDate = new Date(currentWeekStart);
+    newDate.setDate(newDate.getDate() + 7);
+    setCurrentWeekStart(newDate);
+  };
+
+  const goToToday = () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+    setCurrentWeekStart(monday);
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+  };
+
+  const formatDayName = (date: Date) => {
+    return date.toLocaleDateString('id-ID', { weekday: 'short' });
+  };
+
+  const getShiftBadge = (shiftType: string) => {
+    const badges: { [key: string]: { bg: string; text: string; label: string } } = {
+      MORNING: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Pagi' },
+      AFTERNOON: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Siang' },
+      EVENING: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Sore' },
+      NIGHT: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Malam' },
+      OVERTIME: { bg: 'bg-red-100', text: 'text-red-800', label: 'Lembur' },
+    };
+    const badge = badges[shiftType] || { bg: 'bg-gray-100', text: 'text-gray-800', label: shiftType };
+    return (
+      <span className={`inline-block px-2 py-1 text-xs font-medium ${badge.bg} ${badge.text} rounded mb-1`}>
+        {badge.label}
+      </span>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="px-6 py-6">
+        <div className="bg-white border border-gray-200 p-8 text-center">
+          <p className="text-gray-500">Memuat jadwal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-6 py-6">
+      {/* Week Navigation */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={goToPreviousWeek}
+            className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+          >
+            ← Minggu Sebelumnya
+          </button>
+          <button
+            onClick={goToToday}
+            className="px-4 py-2 bg-[#4E61D3] text-white hover:bg-[#3d4fb5] text-sm"
+          >
+            Minggu Ini
+          </button>
+          <button
+            onClick={goToNextWeek}
+            className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+          >
+            Minggu Berikutnya →
+          </button>
+        </div>
+        <div className="text-sm text-gray-600">
+          {weekDates[0].toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} - {weekDates[6].toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+        </div>
+      </div>
+
+      {/* Schedule Table with Frozen First Column */}
+      <div className="bg-white border border-gray-200 overflow-hidden">
+        <div className="flex">
+          {/* Frozen Employee Column */}
+          <div className="flex-shrink-0 w-64 border-r border-gray-200">
+            {/* Header */}
+            <div className="bg-[#4E61D3] text-white px-4 py-3 border-b border-gray-300">
+              <div className="font-medium text-sm">Karyawan</div>
+            </div>
+            {/* Employee Rows */}
+            <div className="overflow-y-auto" style={{ maxHeight: '600px' }}>
+              {schedules.map((schedule) => (
+                <div
+                  key={schedule.employee_id}
+                  className="px-4 py-4 border-b border-gray-200 hover:bg-gray-50"
+                >
+                  <div className="font-medium text-sm text-gray-900">{schedule.employee_name}</div>
+                  <div className="text-xs text-gray-500 mt-1">{schedule.employee_id}</div>
+                  <div className="text-xs text-gray-500">{schedule.department}</div>
+                </div>
+              ))}
+              {schedules.length === 0 && (
+                <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                  Tidak ada karyawan
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Scrollable Date Columns */}
+          <div className="flex-1 overflow-x-auto">
+            <div className="inline-flex min-w-full">
+              {weekDates.map((date, index) => {
+                const dateKey = date.toISOString().split('T')[0];
+                const isToday = date.toDateString() === new Date().toDateString();
+
+                return (
+                  <div key={index} className="flex-1 min-w-[150px] border-r border-gray-200 last:border-r-0">
+                    {/* Date Header */}
+                    <div className={`px-4 py-3 border-b border-gray-300 ${isToday ? 'bg-[#4E61D3] text-white' : 'bg-[#4E61D3] text-white'}`}>
+                      <div className="text-xs font-medium">{formatDayName(date)}</div>
+                      <div className="text-sm font-semibold">{formatDate(date)}</div>
+                    </div>
+                    {/* Shift Cells */}
+                    <div className="overflow-y-auto" style={{ maxHeight: '600px' }}>
+                      {schedules.map((schedule) => {
+                        const shifts = schedule.shifts[dateKey] || [];
+                        return (
+                          <div
+                            key={`${schedule.employee_id}-${dateKey}`}
+                            className="px-2 py-4 border-b border-gray-200 hover:bg-gray-50 min-h-[80px]"
+                          >
+                            {shifts.length > 0 ? (
+                              <div className="space-y-1">
+                                {shifts.map((shift) => (
+                                  <div key={shift.id}>
+                                    {getShiftBadge(shift.shift_type)}
+                                    <div className="text-xs text-gray-700">
+                                      {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
+                                    </div>
+                                    {shift.notes && (
+                                      <div className="text-xs text-gray-500 truncate">{shift.notes}</div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-400 text-center">-</div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function EmployeesPage() {
   const [activeTab, setActiveTab] = useState<'employees' | 'schedules'>('employees');
   const [searchQuery, setSearchQuery] = useState('');
@@ -371,11 +624,7 @@ export default function EmployeesPage() {
       )}
 
       {activeTab === 'schedules' && (
-        <div className="px-6 py-6">
-          <div className="bg-white border border-gray-200 p-8 text-center">
-            <p className="text-gray-500">Jadwal kerja akan segera tersedia</p>
-          </div>
-        </div>
+        <ScheduleTable />
       )}
     </OfficeLayout>
   );
