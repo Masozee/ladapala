@@ -297,7 +297,7 @@ export default function FinancialPage() {
 
                 {/* Summary Cards */}
                 {!loadingOverview && !errorOverview && revenueData && expenseData && profitData && (
-                <>
+                <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="bg-white border border-gray-200">
                     <div className="p-6 bg-[#4E61D3] text-white">
@@ -477,8 +477,9 @@ export default function FinancialPage() {
                     </div>
                   </div>
                 </div>
-                </>
+                </div>
                 )}
+              </div>
             </div>
           )}
 
@@ -513,35 +514,40 @@ export default function FinancialPage() {
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
-              >
-                <option value="thisMonth">Bulan Ini</option>
-                <option value="lastMonth">Bulan Lalu</option>
-                <option value="thisYear">Tahun Ini</option>
-                <option value="custom">Periode Kustom</option>
-              </select>
-            </div>
-
-            {/* Loading State */}
-            {loadingTransactions && (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E61D3]"></div>
-                <p className="mt-4 text-gray-600">Memuat data transaksi...</p>
-              </div>
-            )}
-
-            {/* Error State */}
-            {errorTransactions && !loadingTransactions && (
-              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 mb-6">
-                <div className="flex items-center">
-                  <AlertCircleIcon className="h-5 w-5 mr-2" />
-                  <span>{errorTransactions}</span>
+                    >
+                      <option value="thisMonth">Bulan Ini</option>
+                      <option value="lastMonth">Bulan Lalu</option>
+                      <option value="thisYear">Tahun Ini</option>
+                      <option value="custom">Periode Kustom</option>
+                    </select>
+                  </div>
+                  <button className="bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors border border-gray-300 flex items-center space-x-2">
+                    <ChevronDownIcon className="h-4 w-4" />
+                    <span>Export</span>
+                  </button>
                 </div>
-              </div>
-            )}
 
-            {/* Transactions Table */}
-            {!loadingTransactions && !errorTransactions && (
-            <div className="overflow-x-auto">
+                {/* Loading State */}
+                {loadingTransactions && (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E61D3]"></div>
+                    <p className="mt-4 text-gray-600">Memuat data transaksi...</p>
+                  </div>
+                )}
+
+                {/* Error State */}
+                {errorTransactions && !loadingTransactions && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 mb-6">
+                    <div className="flex items-center">
+                      <AlertCircleIcon className="h-5 w-5 mr-2" />
+                      <span>{errorTransactions}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Transactions Table */}
+                {!loadingTransactions && !errorTransactions && (
+                <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead className="bg-[#4E61D3]">
                       <tr>
@@ -645,11 +651,12 @@ export default function FinancialPage() {
                     </tbody>
                   </table>
                 </div>
-            )}
-          </div>
-        )}
+                )}
+              </div>
+            </div>
+          )}
 
-        {/* Invoices Tab */}
+          {/* Invoices Tab */}
           {activeTab === 'invoices' && (
             <div>
               <div className="p-6 bg-[#4E61D3] text-white">
@@ -918,6 +925,7 @@ export default function FinancialPage() {
               </div>
             </div>
           )}
+        </div>
       </div>
     </OfficeLayout>
   );
