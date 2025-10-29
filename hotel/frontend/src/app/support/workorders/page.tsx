@@ -457,18 +457,15 @@ export default function WorkOrdersPage() {
                   <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">ID</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Title & Description</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Department</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Priority</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Status</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Assigned To</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Location</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Due Date</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Progress</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredOrders.map((order) => {
-                  const progress = calculateProgress(order.tasks);
                   const deptInfo = getDepartmentInfo(order.department);
                   const isOverdue = new Date(order.dueDate) < new Date() && order.status !== 'completed';
 
@@ -478,6 +475,11 @@ export default function WorkOrdersPage() {
                         <div className="font-mono text-sm font-medium text-gray-900">{order.id}</div>
                       </td>
                       <td className="px-6 py-4 border border-gray-200">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium ${getPriorityColor(order.priority)}`}>
+                            {getPriorityLabel(order.priority)}
+                          </span>
+                        </div>
                         <div className="font-semibold text-sm text-gray-900 mb-1">{order.title}</div>
                         <div className="text-xs text-gray-600 line-clamp-2">{order.description}</div>
                       </td>
@@ -485,11 +487,6 @@ export default function WorkOrdersPage() {
                         <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${deptInfo.color}`}>
                           <deptInfo.icon className="h-3 w-3 mr-1" />
                           {deptInfo.name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 border border-gray-200">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium ${getPriorityColor(order.priority)}`}>
-                          {getPriorityLabel(order.priority)}
                         </span>
                       </td>
                       <td className="px-6 py-4 border border-gray-200">
@@ -524,33 +521,9 @@ export default function WorkOrdersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 border border-gray-200">
-                        <div className="w-full">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs text-gray-600">{progress}%</span>
-                            <span className="text-xs text-gray-500">
-                              {order.tasks.filter(t => t.status === 'completed').length}/{order.tasks.length}
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 h-1.5">
-                            <div
-                              className="bg-[#F87B1B] h-1.5 transition-all duration-300"
-                              style={{ width: `${progress}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 border border-gray-200">
-                        <div className="flex items-center space-x-1">
-                          <button className="p-1.5 text-gray-400 hover:text-[#F87B1B] hover:bg-gray-100 transition-colors rounded">
-                            <EyeIcon className="h-4 w-4" />
-                          </button>
-                          <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                            <PencilEdit02Icon className="h-4 w-4" />
-                          </button>
-                          <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors rounded">
-                            <MoreHorizontalIcon className="h-4 w-4" />
-                          </button>
-                        </div>
+                        <button className="p-2 text-gray-600 hover:bg-gray-100 transition-colors border border-gray-300 rounded">
+                          <MoreHorizontalIcon className="h-4 w-4" />
+                        </button>
                       </td>
                     </tr>
                   );
