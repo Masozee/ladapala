@@ -81,12 +81,13 @@ interface Complaint {
   description: string;
   category: ComplaintCategory;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  status: 'SUBMITTED' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'UNDER_REVIEW' | 'RESOLVED' | 'CLOSED';
+  status: 'SUBMITTED' | 'ACKNOWLEDGED' | 'IN_PROGRESS' | 'UNDER_REVIEW' | 'RESOLVED' | 'CLOSED' | 'OPEN';
   source: string;
   guest: Guest;
   room_number?: string;
   incident_date: string;
-  assigned_to?: any;
+  assigned_to?: number;
+  assigned_to_name?: string;
   assigned_department?: AssignedDepartment;
   is_escalated: boolean;
   follow_up_required: boolean;
@@ -179,6 +180,12 @@ const ComplaintsPage = () => {
   // Image upload states
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+  // Assign staff states
+  const [showAssignStaffDialog, setShowAssignStaffDialog] = useState(false);
+  const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
+  const [staffMembers, setStaffMembers] = useState<any[]>([]);
+  const [selectedStaffId, setSelectedStaffId] = useState<string>('');
 
   // Load complaints data
   useEffect(() => {
@@ -306,6 +313,64 @@ const ComplaintsPage = () => {
     } catch (err: any) {
       setFormError('Failed to submit complaint. Please try again.');
       console.error(err);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  // Load staff members when assign dialog is opened
+  useEffect(() => {
+    if (showAssignStaffDialog) {
+      const loadStaff = async () => {
+        try {
+          const response = await fetch(buildApiUrl('user/users/'), {
+            credentials: 'include',
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setStaffMembers(data.results || data || []);
+          }
+        } catch (err) {
+          console.error('Error loading staff:', err);
+        }
+      };
+
+      loadStaff();
+    }
+  }, [showAssignStaffDialog]);
+
+  // Handle assign staff
+  const handleAssignStaff = async () => {
+    if (!selectedComplaint || !selectedStaffId) return;
+
+    try {
+      setFormLoading(true);
+      const response = await fetch(
+        buildApiUrl(`hotel/complaints/${selectedComplaint.id}/assign_staff/`),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ user_id: selectedStaffId })
+        }
+      );
+
+      if (response.ok) {
+        // Reload complaints
+        const data = await fetchComplaints();
+        setComplaintsData(data);
+        setShowAssignStaffDialog(false);
+        setSelectedComplaint(null);
+        setSelectedStaffId('');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to assign staff');
+      }
+    } catch (err) {
+      console.error('Error assigning staff:', err);
+      alert('Failed to assign staff');
     } finally {
       setFormLoading(false);
     }
@@ -649,7 +714,7 @@ const ComplaintsPage = () => {
                       {/* Assigned To */}
                       <td className="px-6 py-4 border border-gray-200">
                         <div className="text-sm text-gray-900">
-                          {complaint.assigned_department?.name || complaint.assigned_to?.full_name || 'Unassigned'}
+                          {complaint.assigned_to_name || 'Unassigned'}
                         </div>
                       </td>
 
@@ -688,7 +753,11 @@ const ComplaintsPage = () => {
                               </button>
                               <button
                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                onClick={() => setOpenDropdown(null)}
+                                onClick={() => {
+                                  setSelectedComplaint(complaint);
+                                  setShowAssignStaffDialog(true);
+                                  setOpenDropdown(null);
+                                }}
                               >
                                 <UserCheckIcon className="h-4 w-4 inline mr-2" />
                                 Assign Staff
@@ -1115,6 +1184,85 @@ const ComplaintsPage = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Assign Staff Dialog */}
+        {showAssignStaffDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white max-w-md w-full">
+              {/* Dialog Header */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Assign Staff</h3>
+                    {selectedComplaint && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        {selectedComplaint.complaint_number} - {selectedComplaint.title}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAssignStaffDialog(false);
+                      setSelectedComplaint(null);
+                      setSelectedStaffId('');
+                    }}
+                    className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <Cancel01Icon className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Dialog Content */}
+              <div className="p-6 bg-gray-50">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Staff Member
+                  </label>
+                  <select
+                    value={selectedStaffId}
+                    onChange={(e) => setSelectedStaffId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                  >
+                    <option value="">-- Select Staff --</option>
+                    {staffMembers.map((staff: any) => (
+                      <option key={staff.id} value={staff.id}>
+                        {staff.first_name} {staff.last_name} ({staff.email})
+                      </option>
+                    ))}
+                  </select>
+                  {selectedComplaint?.assigned_to && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Currently assigned to: {selectedComplaint.assigned_to_name || 'N/A'}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Dialog Footer */}
+              <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowAssignStaffDialog(false);
+                    setSelectedComplaint(null);
+                    setSelectedStaffId('');
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 transition-colors"
+                  disabled={formLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAssignStaff}
+                  className="px-4 py-2 bg-[#005357] text-white text-sm hover:bg-[#004147] disabled:opacity-50"
+                  disabled={formLoading || !selectedStaffId}
+                >
+                  {formLoading ? 'Assigning...' : 'Assign Staff'}
+                </button>
+              </div>
             </div>
           </div>
         )}

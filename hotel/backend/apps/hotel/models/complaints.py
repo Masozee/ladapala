@@ -40,6 +40,7 @@ class Complaint(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     incident_date = models.DateTimeField(null=True, blank=True)
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_complaints')
     resolution = models.TextField(null=True, blank=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -307,6 +307,7 @@ class ComplaintSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     images = ComplaintImageSerializer(many=True, read_only=True)
     image_count = serializers.SerializerMethodField()
+    assigned_to_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Complaint
@@ -314,14 +315,20 @@ class ComplaintSerializer(serializers.ModelSerializer):
             'id', 'complaint_number', 'title', 'description', 'category',
             'category_display', 'priority', 'priority_display', 'status',
             'status_display', 'guest', 'guest_name', 'guest_details', 'room', 'room_number',
-            'incident_date', 'resolution', 'resolved_at', 'images', 'image_count',
-            'created_at', 'updated_at'
+            'incident_date', 'assigned_to', 'assigned_to_name', 'resolution', 'resolved_at',
+            'images', 'image_count', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'complaint_number', 'image_count']
+        read_only_fields = ['created_at', 'updated_at', 'complaint_number', 'image_count', 'assigned_to_name']
 
     def get_image_count(self, obj):
         """Get count of images for this complaint"""
         return obj.images.count()
+
+    def get_assigned_to_name(self, obj):
+        """Get name of assigned staff member"""
+        if obj.assigned_to:
+            return f"{obj.assigned_to.first_name} {obj.assigned_to.last_name}".strip() or obj.assigned_to.username
+        return None
 
 
 class CheckInSerializer(serializers.ModelSerializer):
