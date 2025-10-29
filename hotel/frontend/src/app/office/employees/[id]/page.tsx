@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
 import {
   ChevronLeftIcon,
@@ -10,73 +11,108 @@ import {
   Call02Icon,
   Calendar01Icon,
   Clock01Icon,
-  SparklesIcon,
-  ArrowUp01Icon,
-  AlertCircleIcon,
   UserCheckIcon,
   PencilEdit02Icon,
-  PackageIcon,
-  Cancel01Icon,
-  PieChartIcon
+  Building03Icon,
+  Location01Icon,
+  Shield01Icon,
+  ArrowUp01Icon,
+  CancelCircleIcon
 } from '@/lib/icons';
 
 interface EmployeeDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function EmployeeDetailPage({ params }: EmployeeDetailPageProps) {
-  const { id } = await params;
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState('2024-01');
+export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) {
+  const resolvedParams = use(params);
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'info' | 'attendance' | 'performance'>('info');
 
-  // Sample employee data (in real app, this would come from API based on params.id)
-  const employee = {
-    id: parseInt(id),
-    name: 'Siti Nurhaliza',
-    employeeId: 'EMP001',
-    position: 'Housekeeping',
-    department: 'Operations',
-    shift: 'morning',
-    status: 'active',
-    schedule: {
-      monday: 'morning',
-      tuesday: 'morning', 
-      wednesday: 'morning',
-      thursday: 'morning',
-      friday: 'morning',
-      saturday: 'off',
-      sunday: 'off'
+  // Sample employee data - in production, fetch from API using resolvedParams.id
+  const employees = [
+    {
+      id: 1,
+      name: 'Siti Nurhaliza',
+      employeeId: 'EMP001',
+      position: 'Housekeeping Staff',
+      department: 'Housekeeping',
+      shift: 'morning',
+      status: 'active',
+      phone: '081234567890',
+      email: 'siti.nurhaliza@hotel.com',
+      joinDate: '2023-01-15',
+      attendanceRate: 96,
+      birthDate: '1995-08-15',
+      address: 'Jl. Merdeka No. 123, Jakarta Pusat',
+      emergencyContact: {
+        name: 'Budi Nurhaliza',
+        relationship: 'Suami',
+        phone: '081234567899'
+      },
+      salary: 4500000,
+      schedule: {
+        monday: 'morning',
+        tuesday: 'morning',
+        wednesday: 'morning',
+        thursday: 'morning',
+        friday: 'morning',
+        saturday: 'off',
+        sunday: 'off'
+      }
     },
-    phone: '081234567890',
-    email: 'siti.nurhaliza@kapulaga.com',
-    joinDate: '2023-01-15',
-    lastAttendance: '2024-01-28 07:00',
-    attendanceRate: 96,
-    salary: 4500000,
-    emergencyContact: {
-      name: 'Budi Nurhaliza',
-      relationship: 'Suami',
-      phone: '081234567899'
-    },
-    address: 'Jl. Merdeka No. 123, Jakarta Pusat',
-    birthDate: '1995-08-15',
-    hireDate: '2023-01-15',
-    performanceScore: 4.2
-  };
-
-  // Sample attendance data for the month
-  const attendanceData = [
-    { date: '2024-01-01', status: 'present', checkIn: '07:00', checkOut: '15:00', shift: 'morning' },
-    { date: '2024-01-02', status: 'present', checkIn: '07:05', checkOut: '15:10', shift: 'morning' },
-    { date: '2024-01-03', status: 'present', checkIn: '06:55', checkOut: '15:00', shift: 'morning' },
-    { date: '2024-01-04', status: 'present', checkIn: '07:15', checkOut: '15:15', shift: 'morning' },
-    { date: '2024-01-05', status: 'present', checkIn: '07:00', checkOut: '15:05', shift: 'morning' },
-    { date: '2024-01-06', status: 'off', checkIn: null, checkOut: null, shift: 'off' },
-    { date: '2024-01-07', status: 'off', checkIn: null, checkOut: null, shift: 'off' },
-    { date: '2024-01-08', status: 'present', checkIn: '07:10', checkOut: '15:00', shift: 'morning' },
-    { date: '2024-01-09', status: 'late', checkIn: '07:30', checkOut: '15:30', shift: 'morning' },
-    { date: '2024-01-10', status: 'present', checkIn: '07:00', checkOut: '15:00', shift: 'morning' }
+    {
+      id: 2,
+      name: 'Ahmad Rizki',
+      employeeId: 'EMP002',
+      position: 'Security Officer',
+      department: 'Security',
+      shift: 'night',
+      status: 'active',
+      phone: '081234567891',
+      email: 'ahmad.rizki@hotel.com',
+      joinDate: '2022-08-20',
+      attendanceRate: 94,
+      birthDate: '1990-03-22',
+      address: 'Jl. Sudirman No. 45, Jakarta Selatan',
+      emergencyContact: {
+        name: 'Siti Rizki',
+        relationship: 'Istri',
+        phone: '081234567888'
+      },
+      salary: 5000000,
+      schedule: {
+        monday: 'night',
+        tuesday: 'night',
+        wednesday: 'off',
+        thursday: 'night',
+        friday: 'night',
+        saturday: 'night',
+        sunday: 'off'
+      }
+    }
   ];
+
+  const employee = employees.find(e => e.employeeId === resolvedParams.id) || employees[0];
+
+  const attendanceData = [
+    { date: '2024-10-01', status: 'present', checkIn: '07:00', checkOut: '15:00' },
+    { date: '2024-10-02', status: 'present', checkIn: '07:05', checkOut: '15:10' },
+    { date: '2024-10-03', status: 'present', checkIn: '06:55', checkOut: '15:00' },
+    { date: '2024-10-04', status: 'late', checkIn: '07:30', checkOut: '15:30' },
+    { date: '2024-10-05', status: 'present', checkIn: '07:00', checkOut: '15:05' },
+    { date: '2024-10-06', status: 'off', checkIn: null, checkOut: null },
+    { date: '2024-10-07', status: 'off', checkIn: null, checkOut: null }
+  ];
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active': return <span className="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 rounded">Aktif</span>;
+      case 'on_leave': return <span className="px-3 py-1 text-sm font-medium bg-yellow-100 text-yellow-800 rounded">Cuti</span>;
+      case 'inactive': return <span className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded">Non-aktif</span>;
+      default: return <span className="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-600 rounded">{status}</span>;
+    }
+  };
 
   const getShiftLabel = (shift: string) => {
     switch (shift) {
@@ -88,324 +124,331 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
     }
   };
 
-  const getShiftColor = (shift: string) => {
-    switch (shift) {
-      case 'morning': return 'bg-yellow-100 text-yellow-800';
-      case 'afternoon': return 'bg-blue-100 text-blue-800';
-      case 'night': return 'bg-purple-100 text-purple-800';
-      case 'off': return 'bg-gray-100 text-gray-500';
-      default: return 'bg-gray-100 text-gray-500';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
+  const getAttendanceStatusBadge = (status: string) => {
     switch (status) {
-      case 'present': return 'text-green-600';
-      case 'late': return 'text-yellow-600';
-      case 'absent': return 'text-red-600';
-      case 'off': return 'text-gray-500';
-      default: return 'text-gray-500';
+      case 'present': return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">Hadir</span>;
+      case 'late': return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">Terlambat</span>;
+      case 'absent': return <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">Tidak Hadir</span>;
+      case 'off': return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">Libur</span>;
+      default: return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">{status}</span>;
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'present': return 'Hadir';
-      case 'late': return 'Terlambat';
-      case 'absent': return 'Absen';
-      case 'off': return 'Libur';
-      default: return status;
-    }
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(amount);
   };
 
-  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
   const dayLabels = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   return (
-    <OfficeLayout breadcrumb={[
-      { label: 'Karyawan', href: '/office/employees' },
-      { label: employee.name }
-    ]}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    <OfficeLayout>
+      {/* Header */}
+      <div className="px-6 py-4 mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
-            <Link 
-              href="/office/employees"
+            <button
+              onClick={() => router.back()}
               className="p-2 hover:bg-gray-100 transition-colors"
             >
               <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
-            </Link>
+            </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{employee.name}</h1>
-              <p className="text-gray-600">{employee.employeeId} • {employee.position}</p>
+              <h1 className="text-2xl font-bold text-gray-900">Detail Karyawan</h1>
+              <p className="text-sm text-gray-600 mt-1">{employee.employeeId} - {employee.name}</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <button 
-              onClick={() => setIsEditing(!isEditing)}
-              className="bg-[#4E61D3] text-white px-4 py-2 text-sm font-medium hover:bg-[#3D4EA8] transition-colors flex items-center space-x-2"
+            <Link
+              href={`/office/employees/${employee.employeeId}/edit`}
+              className="flex items-center space-x-2 px-4 py-2 bg-[#4E61D3] text-white text-sm font-medium hover:bg-[#3d4fb5] transition-colors"
             >
               <PencilEdit02Icon className="h-4 w-4" />
-              <span>{isEditing ? 'Batal' : 'Edit'}</span>
+              <span>Edit</span>
+            </Link>
+            <button
+              className="flex items-center space-x-2 px-4 py-2 border border-red-600 text-red-600 text-sm font-medium hover:bg-red-50 transition-colors"
+            >
+              <CancelCircleIcon className="h-4 w-4" />
+              <span>Nonaktifkan</span>
             </button>
           </div>
         </div>
 
-        {/* Employee Information Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Personal Information */}
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#4E61D3] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Informasi Pribadi</h3>
-                  <p className="text-sm text-gray-100 mt-1">Data personal karyawan</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <UserIcon className="h-4 w-4 text-[#4E61D3]" />
-                </div>
-              </div>
-            </div>
-            <div className="p-6 bg-gray-50">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Mail01Icon className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <div className="text-sm text-gray-600">Email</div>
-                    <div className="font-medium text-gray-900">{employee.email}</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Call02Icon className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <div className="text-sm text-gray-600">Telepon</div>
-                    <div className="font-medium text-gray-900">{employee.phone}</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Calendar01Icon className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <div className="text-sm text-gray-600">Tanggal Bergabung</div>
-                    <div className="font-medium text-gray-900">{new Date(employee.joinDate).toLocaleDateString('id-ID')}</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <UserIcon className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <div className="text-sm text-gray-600">Kontak Darurat</div>
-                    <div className="font-medium text-gray-900">{employee.emergencyContact.name}</div>
-                    <div className="text-sm text-gray-500">{employee.emergencyContact.relationship} • {employee.emergencyContact.phone}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Work Information */}
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#4E61D3] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Informasi Kerja</h3>
-                  <p className="text-sm text-gray-100 mt-1">Detail pekerjaan dan shift</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Clock01Icon className="h-4 w-4 text-[#4E61D3]" />
-                </div>
-              </div>
-            </div>
-            <div className="p-6 bg-gray-50">
-              <div className="space-y-4">
-                <div>
-                  <div className="text-sm text-gray-600">Departemen</div>
-                  <div className="font-medium text-gray-900">{employee.department}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Posisi</div>
-                  <div className="font-medium text-gray-900">{employee.position}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Shift Utama</div>
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium ${getShiftColor(employee.shift)}`}>
-                    {getShiftLabel(employee.shift)}
-                  </span>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Status</div>
-                  <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800">
-                    Aktif
-                  </span>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-600">Gaji Pokok</div>
-                  <div className="font-medium text-gray-900">Rp {employee.salary.toLocaleString('id-ID')}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Performance Stats */}
-          <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#4E61D3] text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Performa</h3>
-                  <p className="text-sm text-gray-100 mt-1">Statistik kinerja</p>
-                </div>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <SparklesIcon className="h-4 w-4 text-[#4E61D3]" />
-                </div>
-              </div>
-            </div>
-            <div className="p-6 bg-gray-50">
-              <div className="space-y-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-[#4E61D3]">{employee.attendanceRate}%</div>
-                  <div className="text-sm text-gray-600">Tingkat Kehadiran</div>
-                  <div className="w-full bg-gray-200 h-2 mt-2">
-                    <div 
-                      className="bg-[#4E61D3] h-2" 
-                      style={{ width: `${employee.attendanceRate}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-[#4E61D3]">{employee.performanceScore}/5</div>
-                  <div className="text-sm text-gray-600">Skor Performa</div>
-                  <div className="flex justify-center mt-2">
-                    {[...Array(5)].map((_, i) => (
-                      <SparklesIcon key={i} className={`h-4 w-4 ${
-                        i < Math.floor(employee.performanceScore) ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                      }`} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Weekly Schedule */}
-        <div className="bg-white border border-gray-200">
-          <div className="p-6 bg-[#4E61D3] text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-white">Jadwal Kerja Mingguan</h3>
-                <p className="text-sm text-gray-100 mt-1">Pengaturan shift kerja</p>
-              </div>
-              <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <Calendar01Icon className="h-4 w-4 text-[#4E61D3]" />
-              </div>
-            </div>
-          </div>
-          <div className="p-6 bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-              {days.map((day, index) => {
-                const shift = employee.schedule[day as keyof typeof employee.schedule];
-                return (
-                  <div key={index} className="bg-white p-4 text-center">
-                    <div className="font-medium text-gray-900 mb-2">{dayLabels[index]}</div>
-                    <div className={`px-3 py-2 text-sm font-medium ${getShiftColor(shift)}`}>
-                      {shift === 'morning' ? 'Pagi' : shift === 'afternoon' ? 'Siang' : shift === 'night' ? 'Malam' : 'Libur'}
-                    </div>
-                    {shift !== 'off' && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {shift === 'morning' ? '07:00-15:00' : 
-                         shift === 'afternoon' ? '15:00-23:00' : 
-                         shift === 'night' ? '23:00-07:00' : ''}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Attendance History */}
-        <div className="bg-white border border-gray-200">
-          <div className="p-6 bg-[#4E61D3] text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-white">Riwayat Kehadiran</h3>
-                <p className="text-sm text-gray-100 mt-1">Log kehadiran bulanan</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="px-3 py-1 text-[#4E61D3] text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-white"
-                >
-                  <option value="2024-01">Januari 2024</option>
-                  <option value="2023-12">Desember 2023</option>
-                  <option value="2023-11">November 2023</option>
-                </select>
-                <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <PieChartIcon className="h-4 w-4 text-[#4E61D3]" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="p-6 bg-gray-50">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                    <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jam Masuk</th>
-                    <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jam Keluar</th>
-                    <th className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {attendanceData.map((record, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="border border-gray-200 px-4 py-4 text-sm text-gray-900">
-                        {new Date(record.date).toLocaleDateString('id-ID', { 
-                          weekday: 'long', 
-                          day: 'numeric', 
-                          month: 'long' 
-                        })}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-4">
-                        <div className="flex items-center space-x-2">
-                          {record.status === 'present' ? (
-                            <UserCheckIcon className="h-4 w-4 text-green-600" />
-                          ) : record.status === 'late' ? (
-                            <AlertCircleIcon className="h-4 w-4 text-yellow-600" />
-                          ) : record.status === 'off' ? (
-                            <Cancel01Icon className="h-4 w-4 text-gray-400" />
-                          ) : (
-                            <Cancel01Icon className="h-4 w-4 text-red-600" />
-                          )}
-                          <span className={`text-sm font-medium ${getStatusColor(record.status)}`}>
-                            {getStatusLabel(record.status)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="border border-gray-200 px-4 py-4 text-sm text-gray-900">
-                        {record.checkIn || '-'}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-4 text-sm text-gray-900">
-                        {record.checkOut || '-'}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-4">
-                        <span className={`px-2 py-1 text-xs font-medium ${getShiftColor(record.shift)}`}>
-                          {record.shift === 'morning' ? 'P' : 
-                           record.shift === 'afternoon' ? 'S' : 
-                           record.shift === 'night' ? 'M' : '-'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('info')}
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'info'
+                ? 'border-[#4E61D3] text-[#4E61D3] bg-gray-50'
+                : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+            }`}
+          >
+            Informasi
+          </button>
+          <button
+            onClick={() => setActiveTab('attendance')}
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'attendance'
+                ? 'border-[#4E61D3] text-[#4E61D3] bg-gray-50'
+                : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+            }`}
+          >
+            Kehadiran
+          </button>
+          <button
+            onClick={() => setActiveTab('performance')}
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'performance'
+                ? 'border-[#4E61D3] text-[#4E61D3] bg-gray-50'
+                : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+            }`}
+          >
+            Performa
+          </button>
         </div>
       </div>
+
+      {/* Information Tab */}
+      {activeTab === 'info' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Profile Card */}
+          <div className="lg:col-span-1">
+            <div className="bg-white border border-gray-200 p-6">
+              <div className="text-center mb-6">
+                <div className="w-24 h-24 bg-[#4E61D3] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <UserIcon className="h-12 w-12 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">{employee.name}</h2>
+                <p className="text-sm text-gray-600 mt-1">{employee.position}</p>
+                <div className="mt-3">{getStatusBadge(employee.status)}</div>
+              </div>
+
+              <div className="space-y-4 border-t border-gray-200 pt-4">
+                <div className="flex items-start space-x-3">
+                  <UserCheckIcon className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-gray-500">ID Karyawan</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.employeeId}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <Building03Icon className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-gray-500">Departemen</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.department}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <Clock01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-gray-500">Shift</div>
+                    <div className="text-sm font-medium text-gray-900">{getShiftLabel(employee.shift)}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <Calendar01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-gray-500">Tanggal Bergabung</div>
+                    <div className="text-sm font-medium text-gray-900">{formatDate(employee.joinDate)}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <ArrowUp01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-gray-500">Tingkat Kehadiran</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.attendanceRate}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Details */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Contact Information */}
+            <div className="bg-white border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Informasi Kontak</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-start space-x-3">
+                  <Mail01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-gray-500">Email</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.email}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <Call02Icon className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-gray-500">Telepon</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.phone}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <Calendar01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-gray-500">Tanggal Lahir</div>
+                    <div className="text-sm font-medium text-gray-900">{formatDate(employee.birthDate)}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <Location01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-gray-500">Alamat</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.address}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div className="bg-white border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center space-x-2">
+                <Shield01Icon className="h-5 w-5" />
+                <span>Kontak Darurat</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <div className="text-xs text-gray-500">Nama</div>
+                  <div className="text-sm font-medium text-gray-900">{employee.emergencyContact.name}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">Hubungan</div>
+                  <div className="text-sm font-medium text-gray-900">{employee.emergencyContact.relationship}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">Telepon</div>
+                  <div className="text-sm font-medium text-gray-900">{employee.emergencyContact.phone}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Work Schedule */}
+            <div className="bg-white border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Jadwal Kerja</h3>
+              <div className="grid grid-cols-7 gap-3">
+                {days.map((day, index) => (
+                  <div key={day} className="text-center">
+                    <div className="text-xs text-gray-500 mb-2">{dayLabels[index]}</div>
+                    <div className={`px-2 py-3 rounded text-xs font-medium ${
+                      employee.schedule[day as keyof typeof employee.schedule] === 'off'
+                        ? 'bg-gray-100 text-gray-600'
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {employee.schedule[day as keyof typeof employee.schedule] === 'morning' && 'Pagi'}
+                      {employee.schedule[day as keyof typeof employee.schedule] === 'afternoon' && 'Siang'}
+                      {employee.schedule[day as keyof typeof employee.schedule] === 'night' && 'Malam'}
+                      {employee.schedule[day as keyof typeof employee.schedule] === 'off' && 'Libur'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Attendance Tab */}
+      {activeTab === 'attendance' && (
+        <div className="bg-white border border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">Riwayat Kehadiran</h3>
+              <div className="text-sm text-gray-600">Oktober 2024</div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#4E61D3]">
+                  <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Tanggal</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Status</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Jam Masuk</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Jam Keluar</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-white border border-gray-300">Total Jam</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceData.map((record) => {
+                  const hours = record.checkIn && record.checkOut ? 8 : 0;
+                  return (
+                    <tr key={record.date} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 border border-gray-200">
+                        <div className="text-sm text-gray-900">{formatDate(record.date)}</div>
+                      </td>
+                      <td className="px-6 py-4 border border-gray-200">
+                        {getAttendanceStatusBadge(record.status)}
+                      </td>
+                      <td className="px-6 py-4 border border-gray-200">
+                        <div className="text-sm text-gray-900">{record.checkIn || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 border border-gray-200">
+                        <div className="text-sm text-gray-900">{record.checkOut || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 border border-gray-200">
+                        <div className="text-sm text-gray-900">{hours > 0 ? `${hours} jam` : '-'}</div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Performance Tab */}
+      {activeTab === 'performance' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white border border-gray-200 p-6">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-gray-900 mb-2">{employee.attendanceRate}%</div>
+                <div className="text-sm text-gray-600">Tingkat Kehadiran</div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 p-6">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-gray-900 mb-2">23</div>
+                <div className="text-sm text-gray-600">Hari Hadir Bulan Ini</div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 p-6">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-gray-900 mb-2">2</div>
+                <div className="text-sm text-gray-600">Keterlambatan Bulan Ini</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Catatan Performa</h3>
+            <p className="text-sm text-gray-600">Data performa belum tersedia.</p>
+          </div>
+        </div>
+      )}
     </OfficeLayout>
   );
 }
