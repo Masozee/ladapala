@@ -621,6 +621,46 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def update(self, request, *args, **kwargs):
+        """Update employee and related user data"""
+        from django.db import transaction
+
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        with transaction.atomic():
+            # Update User fields
+            user = instance.user
+            if 'first_name' in request.data:
+                user.first_name = request.data['first_name']
+            if 'last_name' in request.data:
+                user.last_name = request.data['last_name']
+            if 'phone' in request.data:
+                user.phone = request.data['phone']
+            if 'address' in request.data:
+                user.address = request.data['address']
+            if 'date_of_birth' in request.data:
+                user.date_of_birth = request.data['date_of_birth'] if request.data['date_of_birth'] else None
+            user.save()
+
+            # Update Employee fields
+            if 'department' in request.data:
+                instance.department_id = request.data['department']
+            if 'position' in request.data:
+                instance.position = request.data['position']
+            if 'salary' in request.data:
+                instance.salary = request.data['salary'] if request.data['salary'] else 0
+            if 'emergency_contact' in request.data:
+                instance.emergency_contact = request.data['emergency_contact']
+            if 'emergency_phone' in request.data:
+                instance.emergency_phone = request.data['emergency_phone']
+            if 'emergency_relationship' in request.data:
+                instance.emergency_relationship = request.data['emergency_relationship']
+            instance.save()
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def statistics(self, request):
         """Get employee statistics"""
