@@ -114,6 +114,19 @@ const ProfilePage = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Editable form data
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    phone: '',
+    address: '',
+    date_of_birth: '',
+    bio: '',
+    emergency_contact: '',
+    emergency_phone: '',
+  });
 
   const [profile, setProfile] = useState({
     // Personal Information
@@ -351,6 +364,18 @@ const ProfilePage = () => {
           setUser(data.user);
           setEmployee(data.employee);
           setActiveSession(data.active_session);
+
+          // Populate form data
+          setFormData({
+            first_name: data.user?.first_name || '',
+            last_name: data.user?.last_name || '',
+            phone: data.employee?.phone || data.user?.profile?.phone || '',
+            address: data.employee?.address || data.user?.profile?.address || '',
+            date_of_birth: data.user?.profile?.date_of_birth || '',
+            bio: data.user?.profile?.bio || '',
+            emergency_contact: data.employee?.emergency_contact || '',
+            emergency_phone: data.employee?.emergency_phone || '',
+          });
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -362,6 +387,45 @@ const ProfilePage = () => {
 
     fetchProfile();
   }, []);
+
+  // Save profile changes
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+
+      const response = await fetch(buildApiUrl('user/profile/'), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert('Profile updated successfully!');
+        setIsEditing(false);
+        // Refresh the data
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        alert(`Failed to update profile: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('An error occurred while saving your profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFormChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const sections = [
     { id: 'personal', name: 'Personal', icon: UserIcon },
@@ -422,8 +486,10 @@ const ProfilePage = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
                     <input
                       type="text"
-                      value={user.first_name || ''}
+                      value={formData.first_name}
+                      onChange={(e) => handleFormChange('first_name', e.target.value)}
                       disabled={!isEditing}
+                      placeholder={isEditing ? "Enter your first name" : ""}
                       className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
                     />
                   </div>
@@ -431,8 +497,10 @@ const ProfilePage = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
                     <input
                       type="text"
-                      value={user.last_name || ''}
+                      value={formData.last_name}
+                      onChange={(e) => handleFormChange('last_name', e.target.value)}
                       disabled={!isEditing}
+                      placeholder={isEditing ? "Enter your last name" : ""}
                       className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
                     />
                   </div>
@@ -449,7 +517,8 @@ const ProfilePage = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
                     <input
                       type="date"
-                      value={user.profile?.date_of_birth || ''}
+                      value={formData.date_of_birth}
+                      onChange={(e) => handleFormChange('date_of_birth', e.target.value)}
                       disabled={!isEditing}
                       className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
                     />
@@ -457,8 +526,10 @@ const ProfilePage = () => {
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
                     <textarea
-                      value={user.profile?.bio || ''}
+                      value={formData.bio}
+                      onChange={(e) => handleFormChange('bio', e.target.value)}
                       disabled={!isEditing}
+                      placeholder={isEditing ? "Tell us about yourself..." : ""}
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
                     />
@@ -488,35 +559,41 @@ const ProfilePage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
                 <input
                   type="tel"
-                  value={employee.phone || user.profile?.phone || ''}
+                  value={formData.phone}
+                  onChange={(e) => handleFormChange('phone', e.target.value)}
                   disabled={!isEditing}
+                  placeholder={isEditing ? "+62" : ""}
                   className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Personal Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Work Email</label>
                 <input
                   type="email"
-                  value={employee.email || ''}
-                  disabled={!isEditing}
-                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
+                  value={user.email}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 bg-gray-100"
                 />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
                 <textarea
-                  value={employee.address || user.profile?.address || ''}
+                  value={formData.address}
+                  onChange={(e) => handleFormChange('address', e.target.value)}
                   disabled={!isEditing}
+                  placeholder={isEditing ? "Enter your address" : ""}
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Name</label>
                 <input
                   type="text"
-                  value={employee.emergency_contact || ''}
+                  value={formData.emergency_contact}
+                  onChange={(e) => handleFormChange('emergency_contact', e.target.value)}
                   disabled={!isEditing}
+                  placeholder={isEditing ? "Contact person name" : ""}
                   className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
                 />
               </div>
@@ -524,8 +601,10 @@ const ProfilePage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Phone</label>
                 <input
                   type="tel"
-                  value={employee.emergency_phone || ''}
+                  value={formData.emergency_phone}
+                  onChange={(e) => handleFormChange('emergency_phone', e.target.value)}
                   disabled={!isEditing}
+                  placeholder={isEditing ? "+62" : ""}
                   className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] disabled:bg-gray-100"
                 />
               </div>
@@ -940,9 +1019,13 @@ const ProfilePage = () => {
               <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
             </button>
             {isEditing && (
-              <button className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors text-sm font-medium">
+              <button
+                onClick={handleSaveProfile}
+                disabled={saving}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <PackageIcon className="h-4 w-4" />
-                <span>Save Changes</span>
+                <span>{saving ? 'Saving...' : 'Save Changes'}</span>
               </button>
             )}
           </div>
