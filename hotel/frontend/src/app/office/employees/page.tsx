@@ -314,43 +314,41 @@ export default function EmployeesPage() {
 
       {/* Employees Tab Content */}
       {activeTab === 'employees' && (
-        <div>
-          {/* Filters */}
-          <div className="bg-white border border-gray-200 p-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative">
-                <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Cari nama, ID, atau posisi..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
-                />
-              </div>
-
-              <select
-                value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
-              >
-                <option value="all">Semua Departemen</option>
-                {departments.filter(d => d !== 'all').map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-
-              <select
-                value={selectedShift}
-                onChange={(e) => setSelectedShift(e.target.value)}
-                className="px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
-              >
-                <option value="all">Semua Shift</option>
-                <option value="morning">Shift Pagi</option>
-                <option value="afternoon">Shift Siang</option>
-                <option value="night">Shift Malam</option>
-              </select>
+        <>
+          {/* Filters - Right aligned, short */}
+          <div className="flex items-center justify-end space-x-3 mb-6">
+            <div className="relative w-64">
+              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Cari karyawan..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+              />
             </div>
+
+            <select
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+              className="px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm w-48"
+            >
+              <option value="all">Semua Departemen</option>
+              {departments.filter(d => d !== 'all').map(dept => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+
+            <select
+              value={selectedShift}
+              onChange={(e) => setSelectedShift(e.target.value)}
+              className="px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm w-40"
+            >
+              <option value="all">Semua Shift</option>
+              <option value="morning">Pagi</option>
+              <option value="afternoon">Siang</option>
+              <option value="night">Malam</option>
+            </select>
           </div>
 
           {/* Table */}
@@ -438,12 +436,12 @@ export default function EmployeesPage() {
               </div>
             )}
           </div>
-        </div>
+        </>
       )}
 
       {/* Schedules Tab Content */}
       {activeTab === 'schedules' && (
-        <div>
+        <>
           {/* Week Navigation */}
           <div className="bg-white border border-gray-200 p-4 mb-6">
             <div className="flex items-center justify-between">
@@ -508,7 +506,7 @@ export default function EmployeesPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </>
       )}
     </OfficeLayout>
   );
