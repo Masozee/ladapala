@@ -1,115 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils import timezone
 from decimal import Decimal
-
-
-class Room(models.Model):
-    """Room model for hotel room inventory"""
-    ROOM_TYPES = [
-        ('standard', 'Standard Room'),
-        ('deluxe', 'Deluxe Room'),
-        ('junior_suite', 'Junior Suite'),
-        ('executive_suite', 'Executive Suite'),
-        ('presidential_suite', 'Presidential Suite'),
-    ]
-
-    room_number = models.CharField(max_length=10, unique=True)
-    room_type = models.CharField(max_length=20, choices=ROOM_TYPES)
-    floor = models.IntegerField()
-    rate_per_night = models.DecimalField(max_digits=12, decimal_places=2)
-    max_occupancy = models.IntegerField(default=2)
-    description = models.TextField(blank=True)
-    amenities = models.JSONField(default=list)  # List of amenities
-    is_available = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['floor', 'room_number']
-
-    def __str__(self):
-        return f"{self.room_number} - {self.get_room_type_display()}"
-
-
-class Guest(models.Model):
-    """Guest information"""
-    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    email = models.EmailField()
-    phone = models.CharField(max_length=20)
-    id_number = models.CharField(max_length=50)  # Passport or ID card
-    address = models.TextField()
-    nationality = models.CharField(max_length=50)
-    date_of_birth = models.DateField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"
-
-    @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}"
-
-
-class Reservation(models.Model):
-    """Hotel reservation/booking"""
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
-        ('checked_in', 'Checked In'),
-        ('checked_out', 'Checked Out'),
-        ('cancelled', 'Cancelled'),
-        ('no_show', 'No Show'),
-    ]
-
-    reservation_number = models.CharField(max_length=20, unique=True)
-    guest = models.ForeignKey(Guest, on_delete=models.CASCADE, related_name='reservations')
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='reservations')
-    check_in_date = models.DateField()
-    check_out_date = models.DateField()
-    actual_check_in = models.DateTimeField(null=True, blank=True)
-    actual_check_out = models.DateTimeField(null=True, blank=True)
-    number_of_guests = models.IntegerField()
-    number_of_nights = models.IntegerField()
-    rate_per_night = models.DecimalField(max_digits=12, decimal_places=2)
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    service_charge = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    grand_total = models.DecimalField(max_digits=12, decimal_places=2)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    special_requests = models.TextField(blank=True)
-    notes = models.TextField(blank=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_reservations')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.reservation_number} - {self.guest.full_name}"
-
-    def save(self, *args, **kwargs):
-        # Auto-calculate number of nights
-        if self.check_in_date and self.check_out_date:
-            delta = self.check_out_date - self.check_in_date
-            self.number_of_nights = delta.days
-
-        # Auto-calculate totals
-        if self.rate_per_night and self.number_of_nights:
-            self.total_amount = Decimal(self.rate_per_night) * Decimal(self.number_of_nights)
-            # 10% tax and 5% service charge
-            self.tax_amount = self.total_amount * Decimal('0.10')
-            self.service_charge = self.total_amount * Decimal('0.05')
-            self.grand_total = self.total_amount + self.tax_amount + self.service_charge
-
-        super().save(*args, **kwargs)
+from .rooms import Room
+from .guests import Guest
+from .reservations import Reservation
 
 
 class FinancialTransaction(models.Model):
@@ -164,9 +59,9 @@ class FinancialTransaction(models.Model):
     reference_number = models.CharField(max_length=100, blank=True)
 
     # Relations
-    reservation = models.ForeignKey(Reservation, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions')
-    guest = models.ForeignKey(Guest, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions')
-    processed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='processed_transactions')
+    reservation = models.ForeignKey(Reservation, on_delete=models.SET_NULL, null=True, blank=True, related_name='financial_transactions')
+    guest = models.ForeignKey(Guest, on_delete=models.SET_NULL, null=True, blank=True, related_name='financial_transactions')
+    processed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='processed_financial_transactions')
 
     # Timestamps
     transaction_date = models.DateField()
@@ -240,7 +135,7 @@ class Invoice(models.Model):
     notes = models.TextField(blank=True)
     terms_and_conditions = models.TextField(blank=True)
 
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_invoices')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_invoices')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from .models import (
     RoomType, Room, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
     CheckIn, Holiday, InventoryItem, MaintenanceRequest, MaintenanceTechnician,
-    HousekeepingTask, AmenityUsage
+    HousekeepingTask, AmenityUsage, FinancialTransaction, Invoice, InvoiceItem
 )
 
 
@@ -615,3 +615,56 @@ class HousekeepingTaskSerializer(serializers.ModelSerializer):
             'is_overdue', 'amenity_usages', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'task_number', 'duration_minutes', 'time_until_deadline', 'is_overdue']
+
+
+class FinancialTransactionSerializer(serializers.ModelSerializer):
+    """Serializer for financial transactions"""
+    transaction_type_display = serializers.CharField(source='get_transaction_type_display', read_only=True)
+    payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    guest_name = serializers.CharField(source='guest.full_name', read_only=True, allow_null=True)
+    reservation_number = serializers.CharField(source='reservation.reservation_number', read_only=True, allow_null=True)
+    processed_by_name = serializers.CharField(source='processed_by.get_full_name', read_only=True, allow_null=True)
+
+    class Meta:
+        model = FinancialTransaction
+        fields = [
+            'id', 'transaction_id', 'transaction_type', 'transaction_type_display',
+            'category', 'description', 'amount', 'payment_method', 'payment_method_display',
+            'status', 'status_display', 'reference_number', 'reservation', 'reservation_number',
+            'guest', 'guest_name', 'processed_by', 'processed_by_name',
+            'transaction_date', 'transaction_time', 'notes', 'receipt_url',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'transaction_id']
+
+
+class InvoiceItemSerializer(serializers.ModelSerializer):
+    """Serializer for invoice line items"""
+    class Meta:
+        model = InvoiceItem
+        fields = ['id', 'invoice', 'description', 'quantity', 'rate', 'amount']
+        read_only_fields = ['amount']
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    """Serializer for invoices"""
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    guest_name = serializers.CharField(source='guest.full_name', read_only=True)
+    guest_details = GuestSerializer(source='guest', read_only=True)
+    reservation_number = serializers.CharField(source='reservation.reservation_number', read_only=True)
+    items = InvoiceItemSerializer(many=True, read_only=True)
+    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True, allow_null=True)
+
+    class Meta:
+        model = Invoice
+        fields = [
+            'id', 'invoice_number', 'reservation', 'reservation_number',
+            'guest', 'guest_name', 'guest_details', 'issue_date', 'due_date',
+            'payment_date', 'subtotal', 'tax_amount', 'service_charge',
+            'discount', 'total_amount', 'paid_amount', 'balance',
+            'status', 'status_display', 'payment_method', 'notes',
+            'terms_and_conditions', 'items', 'created_by', 'created_by_name',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'invoice_number', 'balance']

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
-    RoomType, Room, Guest, Reservation, Payment, Complaint, 
-    CheckIn, Holiday, InventoryItem
+    RoomType, Room, Guest, Reservation, Payment, Complaint,
+    CheckIn, Holiday, InventoryItem, FinancialTransaction, Invoice, InvoiceItem
 )
 
 
@@ -68,3 +68,25 @@ class InventoryItemAdmin(admin.ModelAdmin):
     list_display = ['name', 'category', 'current_stock', 'minimum_stock', 'unit_price', 'is_low_stock']
     list_filter = ['category', 'is_active']
     search_fields = ['name', 'description', 'supplier']
+
+
+@admin.register(FinancialTransaction)
+class FinancialTransactionAdmin(admin.ModelAdmin):
+    list_display = ['transaction_id', 'transaction_type', 'category', 'amount', 'status', 'transaction_date']
+    list_filter = ['transaction_type', 'status', 'category', 'payment_method', 'transaction_date']
+    search_fields = ['transaction_id', 'description', 'reference_number']
+    date_hierarchy = 'transaction_date'
+
+
+@admin.register(Invoice)
+class InvoiceAdmin(admin.ModelAdmin):
+    list_display = ['invoice_number', 'guest', 'total_amount', 'balance', 'status', 'issue_date', 'due_date']
+    list_filter = ['status', 'issue_date']
+    search_fields = ['invoice_number', 'guest__first_name', 'guest__last_name']
+    date_hierarchy = 'issue_date'
+
+
+@admin.register(InvoiceItem)
+class InvoiceItemAdmin(admin.ModelAdmin):
+    list_display = ['invoice', 'description', 'quantity', 'rate', 'amount']
+    search_fields = ['invoice__invoice_number', 'description']
