@@ -1,16 +1,16 @@
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework import status, viewsets
+from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect, csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from .serializers import (
     UserSerializer, UserUpdateSerializer,
-    ShiftSerializer
+    ShiftSerializer, EmployeeSerializer, DepartmentSerializer
 )
-from .models import Shift, User
+from .models import Shift, User, Employee, Department
 from django.db import transaction
 from datetime import date
 
@@ -453,7 +453,6 @@ def manage_users(request):
                         department=department,
                         position=position or role.title(),
                         hire_date=request.data.get('hire_date', date.today()),
-                        phone=phone,
                         salary=request.data.get('salary', 0),
                         is_active=True
                     )
@@ -526,7 +525,6 @@ def manage_user_detail(request, user_id):
                 if hasattr(user, 'employee'):
                     employee = user.employee
                     employee.position = request.data.get('position', employee.position)
-                    employee.phone = request.data.get('phone', employee.phone)
                     employee.salary = request.data.get('salary', employee.salary)
                     employee.save()
 
@@ -558,3 +556,74 @@ def manage_user_detail(request, user_id):
         return Response({
             'message': 'User deactivated successfully'
         })
+
+
+class EmployeeViewSet(viewsets.ModelViewSet):
+    """ViewSet for Employee management"""
+    queryset = Employee.objects.all().select_related('user', 'department').order_by('employee_id')
+    serializer_class = EmployeeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Filter employees based on query parameters"""
+        queryset = super().get_queryset()
+
+        # Filter by department
+        department_id = self.request.query_params.get('department')
+        if department_id:
+            queryset = queryset.filter(department_id=department_id)
+
+        # Filter by role
+        role = self.request.query_params.get('role')
+        if role:
+            queryset = queryset.filter(user__role=role)
+
+        # Filter by employment status
+        employment_status = self.request.query_params.get('employment_status')
+        if employment_status:
+            queryset = queryset.filter(employment_status=employment_status)
+
+        # Filter by active status
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active.lower() == 'true')
+
+        # Search by name or employee ID
+        from django.db import models as django_models
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                django_models.Q(employee_id__icontains=search) |
+                django_models.Q(user__first_name__icontains=search) |
+                django_models.Q(user__last_name__icontains=search) |
+                django_models.Q(user__email__icontains=search)
+            )
+
+        return queryset
+
+    @action(detail=False, methods=['get'])
+    def statistics(self, request):
+        """Get employee statistics"""
+        from django.db.models import Count, Q
+
+        total = Employee.objects.count()
+        active = Employee.objects.filter(is_active=True, employment_status='ACTIVE').count()
+        on_leave = 0  # Will be calculated from attendance/leave records
+        new_this_month = Employee.objects.filter(
+            hire_date__year=date.today().year,
+            hire_date__month=date.today().month
+        ).count()
+
+        return Response({
+            'total_employees': total,
+            'active_employees': active,
+            'on_leave': on_leave,
+            'new_this_month': new_this_month,
+        })
+
+
+class DepartmentViewSet(viewsets.ModelViewSet):
+    """ViewSet for Department management"""
+    queryset = Department.objects.all().order_by('name')
+    serializer_class = DepartmentSerializer
+    permission_classes = [IsAuthenticated]

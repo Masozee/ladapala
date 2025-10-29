@@ -141,15 +141,11 @@ class Employee(models.Model):
         ('RESIGNED', 'Resigned'),
     ]
 
-    # User access is optional - some employees don't need system access
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True,
-                               help_text="Link to user account for system access (optional)")
+    # Every employee has a user account - unified authentication and employee data
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
 
-    # Employee personal information
+    # Employee identification
     employee_id = models.CharField(max_length=20, unique=True)
-    first_name = models.CharField(max_length=30, blank=True, null=True)
-    last_name = models.CharField(max_length=30, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True, help_text="Personal email (not for system login)")
 
     # Employment details
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
@@ -158,11 +154,10 @@ class Employee(models.Model):
     hire_date = models.DateField(null=True, blank=True)
     termination_date = models.DateField(null=True, blank=True)
 
-    # Contact information
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    address = models.TextField(blank=True, null=True)
+    # Emergency contact (separate from user's contact info)
     emergency_contact = models.CharField(max_length=100, blank=True, null=True)
     emergency_phone = models.CharField(max_length=20, blank=True, null=True)
+    emergency_relationship = models.CharField(max_length=50, blank=True, null=True)
 
     # Status
     employment_status = models.CharField(max_length=20, choices=EMPLOYMENT_STATUS_CHOICES, default='ACTIVE')
@@ -176,20 +171,42 @@ class Employee(models.Model):
         verbose_name_plural = 'Employees'
 
     def __str__(self):
-        return f"{self.employee_id} - {self.full_name}"
+        return f"{self.employee_id} - {self.user.full_name}"
 
     @property
     def full_name(self):
-        if self.user:
-            return self.user.full_name
-        first = self.first_name or ""
-        last = self.last_name or ""
-        return f"{first} {last}".strip() or f"Employee {self.employee_id}"
+        """Get employee full name from user"""
+        return self.user.full_name
 
     @property
-    def has_system_access(self):
-        """Check if employee has system access"""
-        return self.user is not None and self.user.is_active
+    def email(self):
+        """Get employee email from user"""
+        return self.user.email
+
+    @property
+    def phone(self):
+        """Get employee phone from user"""
+        return self.user.phone
+
+    @property
+    def address(self):
+        """Get employee address from user"""
+        return self.user.address
+
+    @property
+    def first_name(self):
+        """Get employee first name from user"""
+        return self.user.first_name
+
+    @property
+    def last_name(self):
+        """Get employee last name from user"""
+        return self.user.last_name
+
+    @property
+    def role(self):
+        """Get employee role from user"""
+        return self.user.role
 
     def save(self, *args, **kwargs):
         if not self.employee_id:
@@ -198,9 +215,9 @@ class Employee(models.Model):
 
     def generate_employee_id(self):
         """Generate employee ID automatically"""
-        prefix = 'HOTEL'
+        prefix = 'EMP'
         count = Employee.objects.count() + 1
-        return f"{prefix}{count:04d}"
+        return f"{prefix}{count:03d}"
 
 
 class Shift(models.Model):

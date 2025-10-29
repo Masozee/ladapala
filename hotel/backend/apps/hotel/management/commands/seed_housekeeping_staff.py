@@ -113,9 +113,6 @@ class Command(BaseCommand):
             employee, emp_created = Employee.objects.get_or_create(
                 user=user,
                 defaults={
-                    'first_name': staff_info['first_name'],
-                    'last_name': staff_info['last_name'],
-                    'email': staff_info['email'],
                     'department': housekeeping_dept,
                     'position': staff_info['position'],
                     'employment_status': 'ACTIVE',

@@ -1,5 +1,11 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+
+# Create router for viewsets
+router = DefaultRouter()
+router.register(r'employees', views.EmployeeViewSet, basename='employee')
+router.register(r'departments-manage', views.DepartmentViewSet, basename='department-manage')
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
@@ -14,4 +20,7 @@ urlpatterns = [
     path('users/<int:user_id>/', views.manage_user_detail, name='manage-user-detail'),
     path('departments/', views.department_choices, name='department-choices'),
     path('roles/', views.role_choices, name='role-choices'),
+
+    # Include router URLs
+    path('', include(router.urls)),
 ]
