@@ -24,6 +24,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [employeeDbId, setEmployeeDbId] = useState<number | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [formData, setFormData] = useState({
     // User fields
@@ -83,6 +84,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
         const employee = employees.find((emp: any) => emp.employee_id === resolvedParams.id);
 
         if (employee) {
+          setEmployeeDbId(employee.id);
           setFormData({
             first_name: employee.first_name || '',
             last_name: employee.last_name || '',
@@ -120,11 +122,16 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!employeeDbId) {
+      alert('Employee ID not found');
+      return;
+    }
+
     try {
       setSaving(true);
 
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`user/employees/${resolvedParams.id}/`), {
+      const response = await fetch(buildApiUrl(`user/employees/${employeeDbId}/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
