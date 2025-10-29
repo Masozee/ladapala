@@ -185,55 +185,64 @@ function ScheduleTable() {
   return (
     <div className="px-6 py-6">
       {/* Week Navigation */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <button
             onClick={goToPreviousWeek}
-            className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+            className="px-4 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium rounded"
           >
             ← Minggu Sebelumnya
           </button>
           <button
             onClick={goToToday}
-            className="px-4 py-2 bg-[#4E61D3] text-white hover:bg-[#3d4fb5] text-sm"
+            className="px-4 py-2.5 bg-[#4E61D3] text-white hover:bg-[#3d4fb5] transition-colors text-sm font-medium rounded shadow-sm"
           >
             Minggu Ini
           </button>
           <button
             onClick={goToNextWeek}
-            className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+            className="px-4 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium rounded"
           >
             Minggu Berikutnya →
           </button>
         </div>
-        <div className="text-sm text-gray-600">
-          {weekDates[0].toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} - {weekDates[6].toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+        <div className="flex flex-col items-end">
+          <div className="text-sm font-semibold text-gray-900">
+            {weekDates[0].toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })} - {weekDates[6].toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
+          <div className="text-xs text-gray-500 mt-0.5">
+            {schedules.length} karyawan terdaftar
+          </div>
         </div>
       </div>
 
       {/* Schedule Table with Frozen First Column */}
-      <div className="bg-white border border-gray-200 overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
         <div className="flex">
           {/* Frozen Employee Column */}
-          <div className="flex-shrink-0 w-64 border-r border-gray-200">
+          <div className="flex-shrink-0 w-72 border-r-2 border-gray-300 bg-gray-50">
             {/* Header */}
-            <div className="bg-[#4E61D3] text-white px-4 py-3 border-b border-gray-300">
-              <div className="font-medium text-sm">Karyawan</div>
+            <div className="bg-[#4E61D3] text-white px-6 py-4 sticky top-0 z-10">
+              <div className="font-semibold text-sm uppercase tracking-wide">Karyawan</div>
             </div>
             {/* Employee Rows */}
             <div className="overflow-y-auto" style={{ maxHeight: '600px' }}>
-              {schedules.map((schedule) => (
+              {schedules.map((schedule, idx) => (
                 <div
                   key={schedule.employee_id}
-                  className="px-4 py-4 border-b border-gray-200 hover:bg-gray-50"
+                  className={`px-6 py-5 border-b border-gray-200 hover:bg-white transition-colors ${idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
                 >
-                  <div className="font-medium text-sm text-gray-900">{schedule.employee_name}</div>
-                  <div className="text-xs text-gray-500 mt-1">{schedule.employee_id}</div>
-                  <div className="text-xs text-gray-500">{schedule.department}</div>
+                  <div className="font-semibold text-sm text-gray-900 mb-1">{schedule.employee_name}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs text-gray-600 font-medium">{schedule.employee_id}</div>
+                    <div className="text-xs text-gray-500 bg-white px-2 py-1 rounded border border-gray-200">
+                      {schedule.department}
+                    </div>
+                  </div>
                 </div>
               ))}
               {schedules.length === 0 && (
-                <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                <div className="px-6 py-12 text-center text-gray-500 text-sm">
                   Tidak ada karyawan
                 </div>
               )}
@@ -246,39 +255,59 @@ function ScheduleTable() {
               {weekDates.map((date, index) => {
                 const dateKey = date.toISOString().split('T')[0];
                 const isToday = date.toDateString() === new Date().toDateString();
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
                 return (
-                  <div key={index} className="flex-1 min-w-[150px] border-r border-gray-200 last:border-r-0">
+                  <div key={index} className="flex-1 min-w-[180px] border-r border-gray-200 last:border-r-0">
                     {/* Date Header */}
-                    <div className={`px-4 py-3 border-b border-gray-300 ${isToday ? 'bg-[#4E61D3] text-white' : 'bg-[#4E61D3] text-white'}`}>
-                      <div className="text-xs font-medium">{formatDayName(date)}</div>
-                      <div className="text-sm font-semibold">{formatDate(date)}</div>
+                    <div className={`px-4 py-4 sticky top-0 z-10 ${
+                      isToday
+                        ? 'bg-[#3d4fb5] text-white shadow-md'
+                        : isWeekend
+                        ? 'bg-gray-100 text-gray-700 border-b-2 border-gray-300'
+                        : 'bg-[#4E61D3] text-white'
+                    }`}>
+                      <div className="text-xs font-semibold uppercase tracking-wide mb-0.5">
+                        {formatDayName(date)}
+                      </div>
+                      <div className="text-sm font-bold">
+                        {formatDate(date)}
+                      </div>
+                      {isToday && (
+                        <div className="text-xs mt-1 opacity-90">Hari Ini</div>
+                      )}
                     </div>
                     {/* Shift Cells */}
                     <div className="overflow-y-auto" style={{ maxHeight: '600px' }}>
-                      {schedules.map((schedule) => {
+                      {schedules.map((schedule, idx) => {
                         const shifts = schedule.shifts[dateKey] || [];
                         return (
                           <div
                             key={`${schedule.employee_id}-${dateKey}`}
-                            className="px-2 py-4 border-b border-gray-200 hover:bg-gray-50 min-h-[80px]"
+                            className={`px-3 py-5 border-b border-gray-200 hover:bg-blue-50 transition-colors min-h-[88px] ${
+                              idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                            } ${isWeekend ? 'bg-gray-100/50' : ''}`}
                           >
                             {shifts.length > 0 ? (
-                              <div className="space-y-1">
+                              <div className="space-y-2">
                                 {shifts.map((shift) => (
-                                  <div key={shift.id}>
+                                  <div key={shift.id} className="bg-white p-2 rounded border border-gray-200 shadow-sm">
                                     {getShiftBadge(shift.shift_type)}
-                                    <div className="text-xs text-gray-700">
+                                    <div className="text-xs font-semibold text-gray-800 mt-1">
                                       {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}
                                     </div>
                                     {shift.notes && (
-                                      <div className="text-xs text-gray-500 truncate">{shift.notes}</div>
+                                      <div className="text-xs text-gray-600 mt-1 truncate" title={shift.notes}>
+                                        📝 {shift.notes}
+                                      </div>
                                     )}
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <div className="text-xs text-gray-400 text-center">-</div>
+                              <div className="flex items-center justify-center h-full">
+                                <div className="text-xs text-gray-400">—</div>
+                              </div>
                             )}
                           </div>
                         );
@@ -288,6 +317,33 @@ function ScheduleTable() {
                 );
               })}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-6 bg-white border border-gray-200 rounded-lg p-4">
+        <div className="text-xs font-semibold text-gray-700 mb-3 uppercase tracking-wide">Keterangan Shift:</div>
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center space-x-2">
+            <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">Pagi</span>
+            <span className="text-xs text-gray-600">Morning Shift</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="inline-block px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">Siang</span>
+            <span className="text-xs text-gray-600">Afternoon Shift</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="inline-block px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded">Sore</span>
+            <span className="text-xs text-gray-600">Evening Shift</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="inline-block px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded">Malam</span>
+            <span className="text-xs text-gray-600">Night Shift</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="inline-block px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">Lembur</span>
+            <span className="text-xs text-gray-600">Overtime</span>
           </div>
         </div>
       </div>
