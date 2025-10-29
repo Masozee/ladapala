@@ -64,6 +64,7 @@ function ScheduleTable() {
   const [schedules, setSchedules] = useState<EmployeeSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   // Generate array of dates for the week
   const weekDates = Array.from({ length: 7 }, (_, i) => {
@@ -217,16 +218,16 @@ function ScheduleTable() {
       </div>
 
       {/* Schedule Table with Frozen First Column */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="flex">
           {/* Left Side: Frozen Employee Column */}
           <div className="flex-shrink-0 w-72 border-r-2 border-gray-300">
             {/* Employee Header */}
-            <div className="bg-[#4E61D3] text-white px-6 py-4 border-b-2 border-gray-300">
+            <div className="bg-[#4E61D3] text-white px-6 py-4 border-b-2 border-gray-300" style={{ height: '72px' }}>
               <div className="font-semibold text-sm uppercase tracking-wide">Karyawan</div>
             </div>
 
-            {/* Employee Rows - Vertical Scroll */}
+            {/* Employee Rows */}
             <div className="overflow-y-auto" style={{ maxHeight: '600px' }}>
               {schedules.map((schedule, idx) => {
                 const isEven = idx % 2 === 0;
@@ -260,10 +261,10 @@ function ScheduleTable() {
             </div>
           </div>
 
-          {/* Right Side: Scrollable Date Columns */}
-          <div className="flex-1 overflow-x-auto">
-            {/* Date Headers */}
-            <div className="flex border-b-2 border-gray-300">
+          {/* Right Side: Single Scrollable Container for Dates and Attendance */}
+          <div className="flex-1 overflow-x-auto overflow-y-auto" style={{ maxHeight: '672px' }}>
+            {/* Date Headers - Fixed at top */}
+            <div className="flex border-b-2 border-gray-300 sticky top-0 z-10">
               {weekDates.map((date, index) => {
                 const isToday = date.toDateString() === new Date().toDateString();
                 const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -278,6 +279,7 @@ function ScheduleTable() {
                         ? 'bg-gray-200 text-gray-800'
                         : 'bg-[#4E61D3] text-white'
                     }`}
+                    style={{ height: '72px' }}
                   >
                     <div className="text-xs font-semibold uppercase tracking-wide mb-0.5">
                       {formatDayName(date)}
@@ -293,8 +295,8 @@ function ScheduleTable() {
               })}
             </div>
 
-            {/* Schedule Grid - Vertical Scroll */}
-            <div className="overflow-y-auto" style={{ maxHeight: '600px' }}>
+            {/* Schedule Grid - All rows scroll together */}
+            <div>
               {schedules.map((schedule, idx) => {
                 const isEven = idx % 2 === 0;
 
