@@ -99,10 +99,15 @@ export default function NewEmployeePage() {
           last_name: formData.last_name,
           role: formData.role,
           phone: formData.phone,
+          address: formData.address,
+          date_of_birth: formData.date_of_birth || null,
           department: formData.department,
           position: formData.position,
           hire_date: formData.hire_date,
           salary: formData.salary || 0,
+          emergency_contact: formData.emergency_contact,
+          emergency_phone: formData.emergency_phone,
+          emergency_relationship: formData.emergency_relationship,
         }),
       });
 

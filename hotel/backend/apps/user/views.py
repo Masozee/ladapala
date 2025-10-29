@@ -398,6 +398,8 @@ def manage_users(request):
                 department_id = request.data.get('department')
                 position = request.data.get('position', '')
                 phone = request.data.get('phone', '')
+                address = request.data.get('address', '')
+                date_of_birth = request.data.get('date_of_birth')
 
                 if not email or not password:
                     return Response(
@@ -412,7 +414,7 @@ def manage_users(request):
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-                # Create user with role and phone
+                # Create user with all fields
                 user = User.objects.create_user(
                     email=email,
                     password=password,
@@ -420,6 +422,8 @@ def manage_users(request):
                     last_name=last_name,
                     role=role,
                     phone=phone,
+                    address=address,
+                    date_of_birth=date_of_birth if date_of_birth else None,
                     is_active=True
                 )
 
@@ -432,28 +436,35 @@ def manage_users(request):
 
                 # Get or create department
                 if department_id:
-                    # Map department_id to actual department name
-                    dept_mapping = {
-                        'front_office': 'Front Office',
-                        'housekeeping': 'Housekeeping',
-                        'food_beverage': 'Food & Beverage',
-                        'maintenance': 'Maintenance',
-                        'management': 'Management',
-                    }
+                    # Check if department_id is a numeric ID (from frontend form)
+                    try:
+                        department = Department.objects.get(id=int(department_id))
+                    except (ValueError, Department.DoesNotExist):
+                        # If not numeric or not found, try string mapping
+                        dept_mapping = {
+                            'front_office': 'Front Office',
+                            'housekeeping': 'Housekeeping',
+                            'food_beverage': 'Food & Beverage',
+                            'maintenance': 'Maintenance',
+                            'management': 'Management',
+                        }
 
-                    dept_name = dept_mapping.get(department_id, department_id)
-                    department, _ = Department.objects.get_or_create(
-                        name=dept_name,
-                        defaults={'description': f'{dept_name} Department'}
-                    )
+                        dept_name = dept_mapping.get(department_id, department_id)
+                        department, _ = Department.objects.get_or_create(
+                            name=dept_name,
+                            defaults={'description': f'{dept_name} Department'}
+                        )
 
-                    # Create employee record
+                    # Create employee record with all fields
                     employee = Employee.objects.create(
                         user=user,
                         department=department,
                         position=position or role.title(),
                         hire_date=request.data.get('hire_date', date.today()),
                         salary=request.data.get('salary', 0),
+                        emergency_contact=request.data.get('emergency_contact', ''),
+                        emergency_phone=request.data.get('emergency_phone', ''),
+                        emergency_relationship=request.data.get('emergency_relationship', ''),
                         is_active=True
                     )
 
