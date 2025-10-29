@@ -154,10 +154,13 @@ export default function NewEmployeePage() {
       </div>
 
       {/* Form with Sections */}
-      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 p-6 space-y-8">
         {/* Informasi Akun */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Informasi Akun</h3>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Informasi Akun</h3>
+            <p className="text-sm text-gray-500 mt-1">Kredensial login dan hak akses sistem</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -227,7 +230,10 @@ export default function NewEmployeePage() {
 
         {/* Informasi Pribadi */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Informasi Pribadi</h3>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Informasi Pribadi</h3>
+            <p className="text-sm text-gray-500 mt-1">Data pribadi dan informasi kontak karyawan</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -301,7 +307,10 @@ export default function NewEmployeePage() {
 
         {/* Informasi Kepegawaian */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Informasi Kepegawaian</h3>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Informasi Kepegawaian</h3>
+            <p className="text-sm text-gray-500 mt-1">Detail pekerjaan dan status kepegawaian</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -367,7 +376,10 @@ export default function NewEmployeePage() {
 
         {/* Kontak Darurat */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Kontak Darurat</h3>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Kontak Darurat</h3>
+            <p className="text-sm text-gray-500 mt-1">Informasi kontak yang dapat dihubungi saat keadaan darurat</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
