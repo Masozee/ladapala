@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   ChevronLeftIcon,
   UserIcon,
@@ -24,12 +25,71 @@ interface EmployeeDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+interface Employee {
+  id: number;
+  employee_id: string;
+  full_name: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  date_of_birth: string | null;
+  position: string;
+  department: number;
+  department_name: string;
+  hire_date: string;
+  salary: string;
+  employment_status: string;
+  employment_status_display: string;
+  emergency_contact: string;
+  emergency_phone: string;
+  emergency_relationship: string;
+  role: string;
+  role_display: string;
+  is_active: boolean;
+}
+
 export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'info' | 'attendance' | 'performance'>('info');
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Sample employee data - in production, fetch from API using resolvedParams.id
+  useEffect(() => {
+    fetchEmployee();
+  }, [resolvedParams.id]);
+
+  const fetchEmployee = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(buildApiUrl(`user/employees/?employee_id=${resolvedParams.id}`), {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const employees = data.results || data || [];
+        const foundEmployee = employees.find((emp: Employee) => emp.employee_id === resolvedParams.id);
+        if (foundEmployee) {
+          setEmployee(foundEmployee);
+        } else {
+          alert('Employee not found');
+          router.push('/office/employees');
+        }
+      } else {
+        alert('Failed to fetch employee data');
+      }
+    } catch (error) {
+      console.error('Error fetching employee:', error);
+      alert('Error loading employee data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Sample data for tabs that don't have API yet
   const employees = [
     {
       id: 1,
@@ -93,8 +153,6 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
     }
   ];
 
-  const employee = employees.find(e => e.employeeId === resolvedParams.id) || employees[0];
-
   const attendanceData = [
     { date: '2024-10-01', status: 'present', checkIn: '07:00', checkOut: '15:00' },
     { date: '2024-10-02', status: 'present', checkIn: '07:05', checkOut: '15:10' },
@@ -153,6 +211,26 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
   const dayLabels = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
+  if (loading) {
+    return (
+      <OfficeLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Loading employee data...</div>
+        </div>
+      </OfficeLayout>
+    );
+  }
+
+  if (!employee) {
+    return (
+      <OfficeLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Employee not found</div>
+        </div>
+      </OfficeLayout>
+    );
+  }
+
   return (
     <OfficeLayout>
       {/* Header */}
@@ -167,12 +245,12 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
             </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Detail Karyawan</h1>
-              <p className="text-sm text-gray-600 mt-1">{employee.employeeId} - {employee.name}</p>
+              <p className="text-sm text-gray-600 mt-1">{employee.employee_id} - {employee.full_name}</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             <Link
-              href={`/office/employees/${employee.employeeId}/edit`}
+              href={`/office/employees/${employee.employee_id}/edit`}
               className="flex items-center space-x-2 px-4 py-2 bg-[#4E61D3] text-white text-sm font-medium hover:bg-[#3d4fb5] transition-colors"
             >
               <PencilEdit02Icon className="h-4 w-4" />
@@ -232,9 +310,9 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
                 <div className="w-24 h-24 bg-[#4E61D3] rounded-full flex items-center justify-center mx-auto mb-4">
                   <UserIcon className="h-12 w-12 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">{employee.name}</h2>
-                <p className="text-sm text-gray-600 mt-1">{employee.position}</p>
-                <div className="mt-3">{getStatusBadge(employee.status)}</div>
+                <h2 className="text-xl font-bold text-gray-900">{employee.full_name}</h2>
+                <p className="text-sm text-gray-600 mt-1">{employee.position || '-'}</p>
+                <div className="mt-3">{getStatusBadge(employee.employment_status.toLowerCase())}</div>
               </div>
 
               <div className="space-y-4 border-t border-gray-200 pt-4">
@@ -242,7 +320,7 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
                   <UserCheckIcon className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <div className="text-xs text-gray-500">ID Karyawan</div>
-                    <div className="text-sm font-medium text-gray-900">{employee.employeeId}</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.employee_id}</div>
                   </div>
                 </div>
 
@@ -250,15 +328,15 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
                   <Building03Icon className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <div className="text-xs text-gray-500">Departemen</div>
-                    <div className="text-sm font-medium text-gray-900">{employee.department}</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.department_name || '-'}</div>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-3">
-                  <Clock01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <Shield01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <div className="text-xs text-gray-500">Shift</div>
-                    <div className="text-sm font-medium text-gray-900">{getShiftLabel(employee.shift)}</div>
+                    <div className="text-xs text-gray-500">Role</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.role_display}</div>
                   </div>
                 </div>
 
@@ -266,15 +344,15 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
                   <Calendar01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <div className="text-xs text-gray-500">Tanggal Bergabung</div>
-                    <div className="text-sm font-medium text-gray-900">{formatDate(employee.joinDate)}</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.hire_date ? formatDate(employee.hire_date) : '-'}</div>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-3">
                   <ArrowUp01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <div className="text-xs text-gray-500">Tingkat Kehadiran</div>
-                    <div className="text-sm font-medium text-gray-900">{employee.attendanceRate}%</div>
+                    <div className="text-xs text-gray-500">Gaji</div>
+                    <div className="text-sm font-medium text-gray-900">{formatCurrency(parseFloat(employee.salary))}</div>
                   </div>
                 </div>
               </div>
@@ -291,7 +369,7 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
                   <Mail01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <div className="text-xs text-gray-500">Email</div>
-                    <div className="text-sm font-medium text-gray-900">{employee.email}</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.email || '-'}</div>
                   </div>
                 </div>
 
@@ -299,7 +377,7 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
                   <Call02Icon className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <div className="text-xs text-gray-500">Telepon</div>
-                    <div className="text-sm font-medium text-gray-900">{employee.phone}</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.phone || '-'}</div>
                   </div>
                 </div>
 
@@ -307,7 +385,7 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
                   <Calendar01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <div className="text-xs text-gray-500">Tanggal Lahir</div>
-                    <div className="text-sm font-medium text-gray-900">{formatDate(employee.birthDate)}</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.date_of_birth ? formatDate(employee.date_of_birth) : '-'}</div>
                   </div>
                 </div>
 
@@ -315,7 +393,7 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
                   <Location01Icon className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <div className="text-xs text-gray-500">Alamat</div>
-                    <div className="text-sm font-medium text-gray-900">{employee.address}</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.address || '-'}</div>
                   </div>
                 </div>
               </div>
@@ -330,39 +408,23 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <div className="text-xs text-gray-500">Nama</div>
-                  <div className="text-sm font-medium text-gray-900">{employee.emergencyContact.name}</div>
+                  <div className="text-sm font-medium text-gray-900">{employee.emergency_contact || '-'}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-500">Hubungan</div>
-                  <div className="text-sm font-medium text-gray-900">{employee.emergencyContact.relationship}</div>
+                  <div className="text-sm font-medium text-gray-900">{employee.emergency_relationship || '-'}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-500">Telepon</div>
-                  <div className="text-sm font-medium text-gray-900">{employee.emergencyContact.phone}</div>
+                  <div className="text-sm font-medium text-gray-900">{employee.emergency_phone || '-'}</div>
                 </div>
               </div>
             </div>
 
-            {/* Work Schedule */}
+            {/* Work Schedule - Show shifts from API */}
             <div className="bg-white border border-gray-200 p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Jadwal Kerja</h3>
-              <div className="grid grid-cols-7 gap-3">
-                {days.map((day, index) => (
-                  <div key={day} className="text-center">
-                    <div className="text-xs text-gray-500 mb-2">{dayLabels[index]}</div>
-                    <div className={`px-2 py-3 rounded text-xs font-medium ${
-                      employee.schedule[day as keyof typeof employee.schedule] === 'off'
-                        ? 'bg-gray-100 text-gray-600'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {employee.schedule[day as keyof typeof employee.schedule] === 'morning' && 'Pagi'}
-                      {employee.schedule[day as keyof typeof employee.schedule] === 'afternoon' && 'Siang'}
-                      {employee.schedule[day as keyof typeof employee.schedule] === 'night' && 'Malam'}
-                      {employee.schedule[day as keyof typeof employee.schedule] === 'off' && 'Libur'}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="text-sm text-gray-600">Lihat jadwal kerja di tab "Jadwal" pada halaman utama karyawan.</p>
             </div>
           </div>
         </div>
