@@ -45,14 +45,43 @@ class ReservationViewSet(viewsets.ModelViewSet):
     lookup_url_kwarg = 'reservation_number'
 
     def get_queryset(self):
-        """Override to filter from today onwards by default"""
+        """Override to filter from today onwards by default (unless date filters are provided)"""
         queryset = super().get_queryset()
 
-        # Only apply date filter for list action (not for detail, check_in, etc.)
+        # Only apply filters for list action (not for detail, check_in, etc.)
         if self.action == 'list':
-            today = timezone.now().date()
-            # Show reservations from today onwards
-            queryset = queryset.filter(check_in_date__gte=today)
+            # Check for custom date range parameters
+            date_from = self.request.query_params.get('date_from')
+            date_to = self.request.query_params.get('date_to')
+
+            if date_from and date_to:
+                # Show all reservations that overlap with the date range
+                # Overlap condition: check_in_date <= date_to AND check_out_date >= date_from
+                queryset = queryset.filter(
+                    check_in_date__lte=date_to,
+                    check_out_date__gte=date_from
+                )
+            elif date_from:
+                # Only start date provided
+                queryset = queryset.filter(check_out_date__gte=date_from)
+            elif date_to:
+                # Only end date provided
+                queryset = queryset.filter(check_in_date__lte=date_to)
+            else:
+                # No date filters - check for legacy filters
+                has_date_filters = any([
+                    self.request.query_params.get('check_in_date__gte'),
+                    self.request.query_params.get('check_in_date__lte'),
+                    self.request.query_params.get('check_out_date__gte'),
+                    self.request.query_params.get('check_out_date__lte'),
+                    self.request.query_params.get('check_in_date'),
+                    self.request.query_params.get('check_out_date'),
+                ])
+
+                # Only apply default "from today onwards" filter if no date filters at all
+                if not has_date_filters:
+                    today = timezone.now().date()
+                    queryset = queryset.filter(check_in_date__gte=today)
 
         return queryset
 

@@ -380,19 +380,25 @@ const BookingsPage = () => {
   };
 
   // API service functions
-  const fetchReservations = async (page = 1, filters: ReservationFilters = {}) => {
+  const fetchReservations = async (page = 1, filters: any = {}) => {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         ...(filters.status && { status: filters.status }),
         ...(filters.booking_source && { booking_source: filters.booking_source }),
         ...(filters.search && { search: filters.search }),
-        ...(filters.check_in_date && { check_in_date: filters.check_in_date }),
-        ...(filters.check_out_date && { check_out_date: filters.check_out_date }),
         ordering: sortOrder === 'asc' ? sortField : `-${sortField}`
       });
-      
-      const response = await fetch(buildApiUrl(`hotel/reservations/?${params}`));
+
+      // Add any additional filter parameters (like date ranges)
+      Object.keys(filters).forEach(key => {
+        if (!['status', 'booking_source', 'search'].includes(key) && filters[key]) {
+          params.append(key, filters[key]);
+        }
+      });
+
+      const url = buildApiUrl(`hotel/reservations/?${params}`);
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch reservations');
       }
@@ -416,14 +422,21 @@ const BookingsPage = () => {
   const loadReservations = async (page = currentPage) => {
     setLoading(true);
     try {
-      const filters: ReservationFilters = {
+      const filters: any = {
         ...(statusFilter && { status: statusFilter }),
         ...(bookingSourceFilter && { booking_source: bookingSourceFilter }),
         ...(searchQuery && { search: searchQuery }),
-        ...(checkInDateFilter && { check_in_date: checkInDateFilter }),
-        ...(checkOutDateFilter && { check_out_date: checkOutDateFilter }),
       };
-      
+
+      // Add simple date range filters using date_from and date_to
+      // Backend will handle showing all reservations that overlap with this date range
+      if (checkInDateFilter) {
+        filters.date_from = checkInDateFilter;
+      }
+      if (checkOutDateFilter) {
+        filters.date_to = checkOutDateFilter;
+      }
+
       const reservationsData = await fetchReservations(page, filters);
       setReservations(reservationsData);
       setCurrentPage(page);
