@@ -441,7 +441,7 @@ const ProfilePage = () => {
   ];
 
   const renderPersonalInfo = () => {
-    if (!user || !employee) return <div className="text-gray-500">Loading...</div>;
+    if (!user) return <div className="text-gray-500">Loading...</div>;
 
     return (
       <div className="space-y-6">
@@ -619,7 +619,31 @@ const ProfilePage = () => {
   };
 
   const renderProfessionalInfo = () => {
-    if (!user || !employee) return <div className="text-gray-500">Loading...</div>;
+    if (!user) return <div className="text-gray-500">Loading...</div>;
+
+    // Show message if no employee record
+    if (!employee) {
+      return (
+        <div className="bg-white border border-gray-200">
+          <div className="p-6 bg-[#005357] text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white">Professional Information</h3>
+                <p className="text-sm text-gray-100 mt-1">Your work details and career information</p>
+              </div>
+              <div className="w-8 h-8 bg-white flex items-center justify-center">
+                <PackageIcon className="h-4 w-4 text-[#005357]" />
+              </div>
+            </div>
+          </div>
+          <div className="p-6 bg-gray-50 text-center py-12">
+            <AlertCircleIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Employee Record</h3>
+            <p className="text-gray-600">You don't have an employee record yet. Contact HR to set up your employee profile.</p>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="space-y-6">
@@ -1096,13 +1120,13 @@ const ProfilePage = () => {
               </div>
             </div>
           </div>
-        ) : user && employee ? (
+        ) : user ? (
           <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center space-x-4">
-                {user.profile?.avatar_url ? (
+                {user.avatar_url ? (
                   <img
-                    src={user.profile.avatar_url}
+                    src={user.avatar_url}
                     alt={user.full_name}
                     className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
                   />
@@ -1113,16 +1137,21 @@ const ProfilePage = () => {
                 )}
                 <div>
                   <h2 className="text-2xl font-bold text-white">{user.full_name}</h2>
-                  <p className="text-gray-100">{employee.position || 'Staff'}</p>
+                  <p className="text-gray-100">{employee?.position || user.role_display || 'Staff'}</p>
                   <div className="flex items-center space-x-4 mt-2 text-sm text-gray-200">
-                    {employee.department && (
+                    {employee?.department && (
                       <>
                         <span>{employee.department}</span>
                         <span>•</span>
                       </>
                     )}
-                    <span>Employee ID: {employee.employee_id}</span>
-                    {employee.hire_date && (
+                    {employee?.employee_id && (
+                      <span>Employee ID: {employee.employee_id}</span>
+                    )}
+                    {!employee && user.is_superuser && (
+                      <span className="bg-yellow-500/20 px-2 py-1 rounded text-xs">Superuser</span>
+                    )}
+                    {employee?.hire_date && (
                       <>
                         <span>•</span>
                         <span>Joined {formatDate(employee.hire_date)}</span>
