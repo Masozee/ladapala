@@ -74,11 +74,19 @@ export default function EmployeesPage() {
       });
       if (response.ok) {
         const data = await response.json();
-        setEmployees(data);
-        setFilteredEmployees(data);
+        // Ensure data is an array
+        const employeesArray = Array.isArray(data) ? data : [];
+        setEmployees(employeesArray);
+        setFilteredEmployees(employeesArray);
+      } else {
+        console.error('Failed to fetch employees:', response.status);
+        setEmployees([]);
+        setFilteredEmployees([]);
       }
     } catch (error) {
       console.error('Error fetching employees:', error);
+      setEmployees([]);
+      setFilteredEmployees([]);
     } finally {
       setLoading(false);
     }
@@ -99,6 +107,12 @@ export default function EmployeesPage() {
   };
 
   const filterEmployees = () => {
+    // Ensure employees is an array before filtering
+    if (!Array.isArray(employees)) {
+      setFilteredEmployees([]);
+      return;
+    }
+
     let filtered = [...employees];
 
     // Search filter
@@ -141,7 +155,9 @@ export default function EmployeesPage() {
     });
   };
 
-  const departments = Array.from(new Set(employees.map(emp => emp.department_name)));
+  const departments = Array.isArray(employees)
+    ? Array.from(new Set(employees.map(emp => emp.department_name)))
+    : [];
 
   return (
     <OfficeLayout>
