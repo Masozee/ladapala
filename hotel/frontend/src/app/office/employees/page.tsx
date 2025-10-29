@@ -215,21 +215,19 @@ export default function EmployeesPage() {
   return (
     <OfficeLayout>
       {/* Header with Tabs */}
-      <div className="bg-white border-b border-gray-200 mb-6">
-        <div className="px-6 py-4 bg-[#005357]">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Manajemen Karyawan</h1>
-              <p className="text-sm text-gray-100 mt-1">Kelola data karyawan dan jadwal kerja</p>
-            </div>
-            <Link
-              href="/office/employees/add"
-              className="flex items-center space-x-2 px-4 py-2 bg-white text-[#005357] text-sm font-medium hover:bg-gray-100 transition-colors"
-            >
-              <Add01Icon className="h-4 w-4" />
-              <span>Tambah Karyawan</span>
-            </Link>
+      <div className="px-6 py-4 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Manajemen Karyawan</h1>
+            <p className="text-sm text-gray-600 mt-1">Kelola data karyawan dan jadwal kerja</p>
           </div>
+          <Link
+            href="/office/employees/add"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white text-sm font-medium hover:bg-[#004147] transition-colors"
+          >
+            <Add01Icon className="h-4 w-4" />
+            <span>Tambah Karyawan</span>
+          </Link>
         </div>
 
         {/* Tabs */}
@@ -264,7 +262,7 @@ export default function EmployeesPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 px-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div className="bg-white border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -316,7 +314,7 @@ export default function EmployeesPage() {
 
       {/* Employees Tab Content */}
       {activeTab === 'employees' && (
-        <div className="px-6">
+        <div>
           {/* Filters */}
           <div className="bg-white border border-gray-200 p-4 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -445,7 +443,7 @@ export default function EmployeesPage() {
 
       {/* Schedules Tab Content */}
       {activeTab === 'schedules' && (
-        <div className="px-6">
+        <div>
           {/* Week Navigation */}
           <div className="bg-white border border-gray-200 p-4 mb-6">
             <div className="flex items-center justify-between">
