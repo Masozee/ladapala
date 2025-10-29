@@ -326,19 +326,26 @@ export default function AmenitiesPage() {
     return 'bg-red-100 text-red-800';
   };
 
+  // Calculate dynamic counts for tabs
+  const pendingCount = amenityRequests.filter(r => r.status === 'pending').length;
+  const inProgressCount = amenityRequests.filter(r => r.status === 'in_progress').length;
+  const completedCount = amenityRequests.filter(r => r.status === 'completed').length;
+  const urgentCount = amenityRequests.filter(r => r.priority === 'urgent').length;
+  const allCount = amenityRequests.length;
+
   const filteredRequests = amenityRequests.filter(request => {
-    const matchesTab = activeTab === 'all' || 
+    const matchesTab = activeTab === 'all' ||
                       (activeTab === 'pending' && request.status === 'pending') ||
                       (activeTab === 'in_progress' && request.status === 'in_progress') ||
                       (activeTab === 'completed' && request.status === 'completed') ||
                       (activeTab === 'urgent' && request.priority === 'urgent');
-    
+
     const matchesSearch = request.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          request.roomNumber.includes(searchQuery) ||
                          request.item.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesCategory = selectedCategory === 'all' || request.category === selectedCategory;
-    
+
     return matchesTab && matchesSearch && matchesCategory;
   });
 
@@ -456,11 +463,11 @@ export default function AmenitiesPage() {
             ))}
           </select>
           <div className="flex space-x-1 bg-gray-100 p-1">
-            <TabButton tabId="pending" label="Pending" count={amenitiesStats.pendingRequests} />
-            <TabButton tabId="in_progress" label="In Progress" count={amenitiesStats.inProgress} />
-            <TabButton tabId="completed" label="Completed" count={amenitiesStats.completedToday} />
-            <TabButton tabId="urgent" label="Urgent" count={amenitiesStats.urgentRequests} />
-            <TabButton tabId="all" label="All" />
+            <TabButton tabId="pending" label="Pending" count={pendingCount} />
+            <TabButton tabId="in_progress" label="In Progress" count={inProgressCount} />
+            <TabButton tabId="completed" label="Completed" count={completedCount} />
+            <TabButton tabId="urgent" label="Urgent" count={urgentCount} />
+            <TabButton tabId="all" label="All" count={allCount} />
           </div>
         </div>
 
