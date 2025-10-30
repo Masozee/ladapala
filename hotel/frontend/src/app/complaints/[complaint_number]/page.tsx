@@ -923,24 +923,24 @@ const ComplaintDetailPage = () => {
                             <img
                               src={image.image_url}
                               alt={image.caption || 'Complaint image'}
-                              className="w-full h-full object-cover cursor-pointer hover:opacity-75 transition-opacity"
+                              className="w-full h-full object-cover cursor-pointer transition-all"
                               onClick={() => setShowImageModal(image.image_url)}
                             />
                           </div>
-                          
-                          {/* Image overlay */}
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2">
+
+                          {/* Image overlay - only visible on hover */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end justify-center pb-2">
+                            <div className="flex space-x-2">
                               <button
                                 onClick={() => setShowImageModal(image.image_url)}
-                                className="bg-white text-gray-700 p-2 hover:bg-gray-100 transition-colors"
+                                className="bg-white text-gray-700 p-2 rounded hover:bg-gray-100 transition-colors shadow-lg"
                                 title="View full size"
                               >
                                 <EyeIcon className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteImage(image.id)}
-                                className="bg-red-600 text-white p-2 hover:bg-red-700 transition-colors"
+                                className="bg-red-600 text-white p-2 rounded hover:bg-red-700 transition-colors shadow-lg"
                                 title="Delete image"
                               >
                                 <Delete02Icon className="h-4 w-4" />
