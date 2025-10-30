@@ -943,7 +943,7 @@ const PaymentsPage = () => {
       {/* Transaction History Table - Outside wrapper div */}
       {activeTab === 'history' && (
         <div className="no-print mt-6 px-6">
-          <div className="bg-white border border-gray-200">
+          <div className="bg-white border border-gray-200 overflow-visible">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -964,7 +964,7 @@ const PaymentsPage = () => {
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overflow-y-visible">
               {loadingTransactions ? (
                 <div className="p-8 text-center text-gray-500">Loading transactions...</div>
               ) : transactions.length === 0 ? (
@@ -1019,8 +1019,8 @@ const PaymentsPage = () => {
                             {transaction.status_display}
                           </span>
                         </td>
-                        <td className="border border-gray-200 px-6 py-4 text-right text-sm">
-                          <div className="relative flex justify-center">
+                        <td className="border border-gray-200 px-6 py-4 text-right text-sm relative">
+                          <div className="flex justify-center">
                             <button
                               onClick={() => setOpenTransactionMenu(openTransactionMenu === transaction.id ? null : transaction.id)}
                               className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
@@ -1029,7 +1029,7 @@ const PaymentsPage = () => {
                             </button>
 
                             {openTransactionMenu === transaction.id && (
-                              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-10 top-full">
+                              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-50 top-full">
                                 <button
                                   onClick={() => {
                                     handleReprintReceipt(transaction);
