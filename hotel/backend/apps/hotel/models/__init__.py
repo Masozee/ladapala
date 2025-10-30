@@ -8,7 +8,7 @@ from .expenses import Expense
 from .complaints import Complaint, ComplaintImage
 from .checkins import CheckIn
 from .calendars import Holiday, CalendarEvent
-from .inventory import InventoryItem
+from .inventory import InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement
 from .maintenance import MaintenanceRequest, MaintenanceTechnician
 from .housekeeping import HousekeepingTask, AmenityUsage
 from .financial import FinancialTransaction, Invoice, InvoiceItem
@@ -17,6 +17,7 @@ from .financial import FinancialTransaction, Invoice, InvoiceItem
 __all__ = [
     'RoomType', 'Room', 'RoomTypeImage', 'Guest', 'Reservation', 'Payment', 'AdditionalCharge', 'Expense',
     'Complaint', 'ComplaintImage', 'CheckIn', 'Holiday', 'CalendarEvent', 'InventoryItem',
+    'PurchaseOrder', 'PurchaseOrderItem', 'StockMovement',
     'MaintenanceRequest', 'MaintenanceTechnician', 'HousekeepingTask', 'AmenityUsage',
     'FinancialTransaction', 'Invoice', 'InvoiceItem'
 ]
