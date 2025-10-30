@@ -166,6 +166,13 @@ const PaymentsPage = () => {
     }
   };
 
+  // Fetch CSRF token on mount
+  useEffect(() => {
+    fetch('http://localhost:8000/api/user/csrf/', {
+      credentials: 'include'
+    }).catch(err => console.error('Error fetching CSRF token:', err));
+  }, []);
+
   useEffect(() => {
     // Parse URL parameters
     const resId = searchParams.get('reservationId');
@@ -401,11 +408,18 @@ const PaymentsPage = () => {
     }
 
     try {
+      // Get CSRF token first
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
       // Authenticate manager
       const authResponse = await fetch('http://localhost:8000/api/user/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify({

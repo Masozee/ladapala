@@ -9,6 +9,7 @@ router.register(r'departments-manage', views.DepartmentViewSet, basename='depart
 router.register(r'shifts-manage', views.ShiftViewSet, basename='shift-manage')
 
 urlpatterns = [
+    path('csrf/', views.get_csrf_token, name='csrf-token'),
     path('login/', views.LoginView.as_view(), name='login'),
     path('logout/', views.logout, name='logout'),
     path('check-session/', views.check_session, name='check-session'),

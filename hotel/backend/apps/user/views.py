@@ -87,6 +87,14 @@ class LoginView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+@ensure_csrf_cookie
+@permission_classes([AllowAny])
+def get_csrf_token(request):
+    """Get CSRF token cookie"""
+    return Response({'detail': 'CSRF cookie set'})
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def logout(request):

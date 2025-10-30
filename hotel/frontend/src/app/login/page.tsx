@@ -29,6 +29,13 @@ const LoginPage = () => {
   // Get redirect path from query params
   const redirectPath = searchParams.get('redirect') || '/';
 
+  // Fetch CSRF token on mount
+  useEffect(() => {
+    fetch(buildApiUrl('user/csrf/'), {
+      credentials: 'include'
+    }).catch(err => console.error('Error fetching CSRF token:', err));
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -41,12 +48,19 @@ const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    
+
     try {
+      // Get CSRF token first
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+
       const response = await fetch(buildApiUrl('user/login/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -247,10 +261,7 @@ const LoginPage = () => {
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200">
               <h4 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</h4>
               <div className="space-y-1 text-xs text-blue-800">
-                <div><strong>Admin:</strong> admin@kapulaga.hotel / password123</div>
-                <div><strong>Manager:</strong> manager@kapulaga.hotel / password123</div>
-                <div><strong>Front Desk:</strong> frontdesk@kapulaga.hotel / password123</div>
-                <div><strong>Housekeeping:</strong> housekeeping@kapulaga.hotel / password123</div>
+                <div><strong>Admin:</strong> admin@gmail.com / 687654</div>
               </div>
             </div>
           </div>
