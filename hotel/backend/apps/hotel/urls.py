@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    FinancialViewSet, FinancialTransactionViewSet, InvoiceViewSet
+    FinancialViewSet, FinancialTransactionViewSet, InvoiceViewSet,
+    system_resources, system_stats, process_list
 )
 
 try:
@@ -50,6 +51,10 @@ if LEGACY_VIEWS:
 
 urlpatterns = [
     path('', include(router.urls)),
+    # System monitoring endpoints
+    path('system/resources/', system_resources, name='system-resources'),
+    path('system/stats/', system_stats, name='system-stats'),
+    path('system/processes/', process_list, name='process-list'),
 ]
 
 # Add legacy URL patterns if views are available

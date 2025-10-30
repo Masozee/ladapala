@@ -62,17 +62,19 @@ export default function AdminPage() {
   const [apiUsers, setApiUsers] = useState<ApiUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
-  // Sample system data
-  const systemStats = {
+  // System stats state
+  const [systemStats, setSystemStats] = useState({
     totalUsers: 24,
     activeUsers: 18,
     systemUptime: '99.9%',
-    serverLoad: 32,
-    diskUsage: 68,
-    memoryUsage: 45,
+    serverLoad: 0,
+    diskUsage: 0,
+    memoryUsage: 0,
     lastBackup: '2024-08-28',
-    securityAlerts: 2
-  };
+    securityAlerts: 2,
+    processCount: 0,
+    uptimeDays: 0
+  });
 
   const users = [
     {
@@ -224,6 +226,37 @@ export default function AdminPage() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Fetch system stats from API
+  useEffect(() => {
+    const fetchSystemStats = async () => {
+      try {
+        const response = await fetch(buildApiUrl('hotel/system/stats/'));
+        if (response.ok) {
+          const data = await response.json();
+          setSystemStats(prevStats => ({
+            ...prevStats,
+            serverLoad: data.serverLoad || 0,
+            diskUsage: data.diskUsage || 0,
+            memoryUsage: data.memoryUsage || 0,
+            systemUptime: data.systemUptime || '99.9%',
+            processCount: data.processCount || 0,
+            uptimeDays: data.uptimeDays || 0
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching system stats:', error);
+      }
+    };
+
+    // Fetch immediately
+    fetchSystemStats();
+
+    // Refresh every 10 seconds
+    const interval = setInterval(fetchSystemStats, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch users from API
   useEffect(() => {
