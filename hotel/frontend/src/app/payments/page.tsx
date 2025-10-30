@@ -118,6 +118,13 @@ const PaymentsPage = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [isAlreadyPaid, setIsAlreadyPaid] = useState(false);
 
+  // Manager authorization modal state
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [pendingVoidTransaction, setPendingVoidTransaction] = useState<Transaction | null>(null);
+
   const paymentMethods: PaymentMethod[] = [
     { id: 'cash', name: 'Cash', icon: CreditCardIcon, enabled: true },
     { id: 'debit_credit', name: 'Debit/Credit Card', icon: CreditCardIcon, enabled: true },
@@ -142,6 +149,21 @@ const PaymentsPage = () => {
     { name: 'WiFi Premium', price: 25000, category: 'amenity' as const },
     { name: 'Late Checkout', price: 100000, category: 'service' as const },
   ];
+
+  const loadTransactions = async () => {
+    setLoadingTransactions(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/hotel/payments/today_payments/');
+      if (response.ok) {
+        const data = await response.json();
+        setTransactions(data.payments || []);
+      }
+    } catch (error) {
+      console.error('Error loading transactions:', error);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
 
   useEffect(() => {
     // Parse URL parameters
@@ -179,11 +201,6 @@ const PaymentsPage = () => {
     if (checkIn) setCheckInDate(checkIn);
     if (checkOut) setCheckOutDate(checkOut);
 
-    // Load transactions when switching to history tab
-    if (activeTab === 'history') {
-      loadTransactions();
-    }
-
     if (amount) {
       const roomCharge: LineItem = {
         id: 'room-charge',
@@ -196,22 +213,15 @@ const PaymentsPage = () => {
       setLineItems([roomCharge]);
       setPaymentAmount(parseFloat(amount));
     }
-  }, [searchParams, router, activeTab]);
+  }, [searchParams, router]);
 
-  const loadTransactions = async () => {
-    setLoadingTransactions(true);
-    try {
-      const response = await fetch('http://localhost:8000/api/hotel/payments/today_payments/');
-      if (response.ok) {
-        const data = await response.json();
-        setTransactions(data.payments || []);
-      }
-    } catch (error) {
-      console.error('Error loading transactions:', error);
-    } finally {
-      setLoadingTransactions(false);
+  // Separate useEffect for loading transactions when tab changes
+  useEffect(() => {
+    if (activeTab === 'history') {
+      loadTransactions();
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const subtotal = lineItems.reduce((sum, item) => sum + item.total, 0);
   const taxRate = 0.11; // 11% tax
@@ -369,20 +379,58 @@ const PaymentsPage = () => {
     }, 100);
   };
 
-  const handleVoidTransaction = async (transaction: Transaction) => {
-    if (!confirm(`Are you sure you want to void this transaction?\n\nReservation: ${transaction.reservation_number}\nAmount: ${formatCurrency(parseFloat(transaction.amount))}\n\nThis action cannot be undone.`)) {
+  const handleVoidTransaction = (transaction: Transaction) => {
+    setPendingVoidTransaction(transaction);
+    setShowAuthModal(true);
+    setAuthError('');
+    setAuthEmail('');
+    setAuthPassword('');
+  };
+
+  const handleAuthSubmit = async () => {
+    if (!authEmail || !authPassword) {
+      setAuthError('Please enter email and password');
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/hotel/payments/${transaction.id}/`, {
+      // Authenticate manager
+      const authResponse = await fetch('http://localhost:8000/api/user/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: authEmail,
+          password: authPassword,
+        }),
+      });
+
+      if (!authResponse.ok) {
+        setAuthError('Invalid credentials');
+        return;
+      }
+
+      const authData = await authResponse.json();
+
+      // Check if user is manager or admin
+      if (!authData.employee || !['MANAGER', 'ADMIN'].includes(authData.employee.position)) {
+        setAuthError('Only managers or administrators can void transactions');
+        return;
+      }
+
+      // Proceed with voiding the transaction
+      if (!pendingVoidTransaction) return;
+
+      const response = await fetch(`http://localhost:8000/api/hotel/payments/${pendingVoidTransaction.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           status: 'CANCELLED',
-          notes: `${transaction.notes}\n[VOIDED on ${new Date().toLocaleString('id-ID')}]`
+          notes: `${pendingVoidTransaction.notes}\n[VOIDED on ${new Date().toLocaleString('id-ID')} by ${authData.employee.full_name}]`
         }),
       });
 
@@ -391,10 +439,15 @@ const PaymentsPage = () => {
       }
 
       alert('Transaction voided successfully');
+      setShowAuthModal(false);
+      setPendingVoidTransaction(null);
+      setAuthEmail('');
+      setAuthPassword('');
+      setAuthError('');
       loadTransactions();
     } catch (error) {
       console.error('Error voiding transaction:', error);
-      alert('Failed to void transaction. Please try again.');
+      setAuthError('Failed to void transaction. Please try again.');
     }
   };
 
@@ -406,8 +459,9 @@ const PaymentsPage = () => {
   };
 
   return (
-    <AppLayout>
+    <>
       <style dangerouslySetInnerHTML={{ __html: printStyles }} />
+      <AppLayout>
       <div>
         {/* Header */}
         <div className="mb-6 no-print">
@@ -792,135 +846,6 @@ const PaymentsPage = () => {
         </div>
         )}
 
-        {/* Transaction History Tab */}
-        {activeTab === 'history' && (
-          <div className="no-print">
-            <div className="bg-white border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Today's Transactions</h3>
-                    <p className="text-sm text-gray-600 mt-1">{new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search transactions..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#005357] focus:border-transparent"
-                    />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                      <Search02Icon className="h-5 w-5 text-gray-400" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                {loadingTransactions ? (
-                  <div className="p-8 text-center text-gray-500">Loading transactions...</div>
-                ) : transactions.length === 0 ? (
-                  <div className="p-8 text-center text-gray-500">No transactions found</div>
-                ) : (
-                  <table className="w-full border-collapse">
-                    <thead className="bg-gray-50 border-b">
-                      <tr>
-                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reservation</th>
-                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guest</th>
-                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Room</th>
-                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-in</th>
-                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
-                        <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th className="border border-gray-300 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions
-                        .filter(transaction => {
-                          if (!searchQuery) return true;
-                          const search = searchQuery.toLowerCase();
-                          return (
-                            transaction.reservation_number.toLowerCase().includes(search) ||
-                            transaction.guest_name?.toLowerCase().includes(search) ||
-                            transaction.notes.toLowerCase().includes(search) ||
-                            transaction.payment_method_display.toLowerCase().includes(search)
-                          );
-                        })
-                        .map((transaction) => {
-                          return (
-                        <tr key={transaction.id} className="hover:bg-gray-50">
-                          <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">
-                            {transaction.reservation_number}
-                            <div className="text-xs text-gray-500">
-                              {new Date(transaction.payment_date).toLocaleDateString('id-ID')} {new Date(transaction.payment_date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                          </td>
-                          <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{transaction.guest_name || '-'}</td>
-                          <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{transaction.room_number || '-'}</td>
-                          <td className="border border-gray-200 px-6 py-4 text-sm text-gray-600">
-                            {transaction.check_in_date ? new Date(transaction.check_in_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}
-                          </td>
-                          <td className="border border-gray-200 px-6 py-4 text-sm font-medium text-gray-900">{formatCurrency(parseFloat(transaction.amount))}</td>
-                          <td className="border border-gray-200 px-6 py-4 text-sm text-gray-600">{transaction.payment_method_display}</td>
-                          <td className="border border-gray-200 px-6 py-4">
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
-                              transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                              transaction.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {transaction.status_display}
-                            </span>
-                          </td>
-                          <td className="border border-gray-200 px-6 py-4 text-right text-sm">
-                            <div className="relative flex justify-center">
-                              <button
-                                onClick={() => setOpenTransactionMenu(openTransactionMenu === transaction.id ? null : transaction.id)}
-                                className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                              >
-                                <MoreHorizontalIcon className="h-5 w-5" />
-                              </button>
-
-                              {openTransactionMenu === transaction.id && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-10 top-full">
-                                  <button
-                                    onClick={() => {
-                                      handleReprintReceipt(transaction);
-                                      setOpenTransactionMenu(null);
-                                    }}
-                                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
-                                  >
-                                    <PrinterIcon className="h-4 w-4" />
-                                    <span>Reprint Receipt</span>
-                                  </button>
-                                  {transaction.status === 'COMPLETED' && (
-                                    <button
-                                      onClick={() => {
-                                        handleVoidTransaction(transaction);
-                                        setOpenTransactionMenu(null);
-                                      }}
-                                      className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
-                                    >
-                                      <Cancel01Icon className="h-4 w-4" />
-                                      <span>Void Transaction</span>
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                          );
-                        })
-                      }
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Print-only Receipt */}
         <div className="print-only" style={{ maxWidth: '80mm', margin: '0 auto', fontFamily: 'monospace' }}>
           <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #000', paddingBottom: '10px' }}>
@@ -1001,7 +926,235 @@ const PaymentsPage = () => {
           </div>
         </div>
       </div>
-    </AppLayout>
+
+      {/* Transaction History Table - Outside wrapper div */}
+      {activeTab === 'history' && (
+        <div className="no-print mt-6 px-6">
+          <div className="bg-white border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Today's Transactions</h3>
+                  <p className="text-sm text-gray-600 mt-1">{new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search transactions..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#005357] focus:border-transparent"
+                  />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <Search02Icon className="h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              {loadingTransactions ? (
+                <div className="p-8 text-center text-gray-500">Loading transactions...</div>
+              ) : transactions.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">No transactions found</div>
+              ) : (
+                <table className="w-full border-collapse">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reservation</th>
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guest</th>
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Room</th>
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-in</th>
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      <th className="border border-gray-300 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions
+                      .filter(transaction => {
+                        if (!searchQuery) return true;
+                        const search = searchQuery.toLowerCase();
+                        return (
+                          transaction.reservation_number.toLowerCase().includes(search) ||
+                          transaction.guest_name?.toLowerCase().includes(search) ||
+                          transaction.notes.toLowerCase().includes(search) ||
+                          transaction.payment_method_display.toLowerCase().includes(search)
+                        );
+                      })
+                      .map((transaction) => (
+                      <tr key={transaction.id} className="hover:bg-gray-50">
+                        <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">
+                          {transaction.reservation_number}
+                          <div className="text-xs text-gray-500">
+                            {new Date(transaction.payment_date).toLocaleDateString('id-ID')} {new Date(transaction.payment_date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </td>
+                        <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{transaction.guest_name || '-'}</td>
+                        <td className="border border-gray-200 px-6 py-4 text-sm text-gray-900">{transaction.room_number || '-'}</td>
+                        <td className="border border-gray-200 px-6 py-4 text-sm text-gray-600">
+                          {transaction.check_in_date ? new Date(transaction.check_in_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}
+                        </td>
+                        <td className="border border-gray-200 px-6 py-4 text-sm font-medium text-gray-900">{formatCurrency(parseFloat(transaction.amount))}</td>
+                        <td className="border border-gray-200 px-6 py-4 text-sm text-gray-600">{transaction.payment_method_display}</td>
+                        <td className="border border-gray-200 px-6 py-4">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
+                            transaction.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                            transaction.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {transaction.status_display}
+                          </span>
+                        </td>
+                        <td className="border border-gray-200 px-6 py-4 text-right text-sm">
+                          <div className="relative flex justify-center">
+                            <button
+                              onClick={() => setOpenTransactionMenu(openTransactionMenu === transaction.id ? null : transaction.id)}
+                              className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                            >
+                              <MoreHorizontalIcon className="h-5 w-5" />
+                            </button>
+
+                            {openTransactionMenu === transaction.id && (
+                              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-10 top-full">
+                                <button
+                                  onClick={() => {
+                                    handleReprintReceipt(transaction);
+                                    setOpenTransactionMenu(null);
+                                  }}
+                                  className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
+                                >
+                                  <PrinterIcon className="h-4 w-4" />
+                                  <span>Reprint Receipt</span>
+                                </button>
+                                {transaction.status === 'COMPLETED' && (
+                                  <button
+                                    onClick={() => {
+                                      handleVoidTransaction(transaction);
+                                      setOpenTransactionMenu(null);
+                                    }}
+                                    className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                                  >
+                                    <Cancel01Icon className="h-4 w-4" />
+                                    <span>Void Transaction</span>
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      </AppLayout>
+
+      {/* Manager Authorization Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900">Manager Authorization Required</h3>
+                <button
+                  onClick={() => {
+                    setShowAuthModal(false);
+                    setPendingVoidTransaction(null);
+                    setAuthEmail('');
+                    setAuthPassword('');
+                    setAuthError('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <Cancel01Icon className="h-6 w-6" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Voiding a transaction requires manager or administrator approval
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {pendingVoidTransaction && (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm font-medium text-gray-900">Transaction to void:</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Reservation: {pendingVoidTransaction.reservation_number}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Amount: {formatCurrency(parseFloat(pendingVoidTransaction.amount))}
+                  </p>
+                </div>
+              )}
+
+              {authError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+                  {authError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Manager Email *
+                </label>
+                <input
+                  type="email"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#005357] focus:border-transparent"
+                  placeholder="manager@example.com"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password *
+                </label>
+                <input
+                  type="password"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleAuthSubmit();
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#005357] focus:border-transparent"
+                  placeholder="Enter password"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowAuthModal(false);
+                  setPendingVoidTransaction(null);
+                  setAuthEmail('');
+                  setAuthPassword('');
+                  setAuthError('');
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAuthSubmit}
+                className="px-4 py-2 bg-[#005357] text-white font-medium rounded-lg hover:bg-[#004449] transition-colors"
+              >
+                Authorize & Void
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

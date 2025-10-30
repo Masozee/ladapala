@@ -50,21 +50,50 @@ export const OfficeHeaderActions = () => {
 
   const handleLogout = async () => {
     try {
+      // Get CSRF token from cookies
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return null;
+      };
+
+      const csrfToken = getCookie('csrftoken');
+
       const response = await fetch(buildApiUrl('user/logout/'), {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+        },
       });
 
       if (response.ok) {
-        // Redirect to login page
-        router.push('/login');
+        // Clear any local storage
+        if (typeof window !== 'undefined') {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+        // Redirect to login page using window.location for full page reload
+        window.location.href = '/login';
       } else {
-        console.error('Logout failed:', response.status);
-        alert('Gagal logout. Silakan coba lagi.');
+        console.error('Logout failed:', response.status, await response.text());
+        // Force logout on client side anyway
+        if (typeof window !== 'undefined') {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+        window.location.href = '/login';
       }
     } catch (error) {
       console.error('Logout error:', error);
-      alert('Terjadi kesalahan saat logout.');
+      // Force logout on client side anyway
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+      window.location.href = '/login';
     }
   };
 

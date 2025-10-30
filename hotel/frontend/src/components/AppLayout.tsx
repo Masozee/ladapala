@@ -16,7 +16,8 @@ import {
   Clock01Icon,
   Location01Icon,
   UserMultipleIcon,
-  UserCheckIcon
+  UserCheckIcon,
+  Logout01Icon
 } from '@/lib/icons';
 
 interface AppLayoutProps {
@@ -233,6 +234,63 @@ export const HeaderActions = () => {
         className={`p-2 hover:bg-gray-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600'}`}
       >
         {darkMode ? <Sun03Icon className="h-5 w-5" /> : <Moon02Icon className="h-5 w-5" />}
+      </button>
+
+      {/* Logout Button */}
+      <button
+        onClick={async () => {
+          try {
+            // Get CSRF token from cookies
+            const getCookie = (name: string) => {
+              const value = `; ${document.cookie}`;
+              const parts = value.split(`; ${name}=`);
+              if (parts.length === 2) return parts.pop()?.split(';').shift();
+              return null;
+            };
+
+            const csrfToken = getCookie('csrftoken');
+
+            // Call logout API
+            const response = await fetch('http://localhost:8000/api/user/logout/', {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+              },
+            });
+
+            if (response.ok) {
+              // Clear any local storage
+              if (typeof window !== 'undefined') {
+                localStorage.clear();
+                sessionStorage.clear();
+              }
+              // Redirect to login
+              window.location.href = '/login';
+            } else {
+              console.error('Logout failed:', response.status, await response.text());
+              // Force logout on client side anyway
+              if (typeof window !== 'undefined') {
+                localStorage.clear();
+                sessionStorage.clear();
+              }
+              window.location.href = '/login';
+            }
+          } catch (error) {
+            console.error('Logout error:', error);
+            // Force logout on client side anyway
+            if (typeof window !== 'undefined') {
+              localStorage.clear();
+              sessionStorage.clear();
+            }
+            window.location.href = '/login';
+          }
+        }}
+        className={`p-2 hover:bg-red-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-red-900' : 'text-red-600'}`}
+        title="Logout"
+      >
+        <Logout01Icon className="h-5 w-5" />
       </button>
     </div>
   );
