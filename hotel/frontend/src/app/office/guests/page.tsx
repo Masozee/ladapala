@@ -1352,7 +1352,7 @@ const GuestsPage = () => {
                               <div className="py-1">
                                 <button
                                   onClick={() => {
-                                    router.push(`/guests/${guest.id}`);
+                                    router.push(`/office/guests/${guest.id}`);
                                     setActiveDropdown(null);
                                   }}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
@@ -1361,7 +1361,10 @@ const GuestsPage = () => {
                                   <span>View Profile</span>
                                 </button>
                                 <button
-                                  onClick={() => setActiveDropdown(null)}
+                                  onClick={() => {
+                                    router.push(`/office/guests/${guest.id}/edit`);
+                                    setActiveDropdown(null);
+                                  }}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
                                   <PencilEdit02Icon className="h-4 w-4" />
@@ -1370,23 +1373,9 @@ const GuestsPage = () => {
                                 <div className="border-t border-gray-100 my-1"></div>
                                 <button
                                   onClick={() => {
-                                    router.push(`/guests/${guest.id}`);
+                                    router.push(`/office/reservations/new?guest=${guest.id}`);
                                     setActiveDropdown(null);
                                   }}
-                                  className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                >
-                                  <SparklesIcon className="h-4 w-4" />
-                                  <span>View Rewards</span>
-                                </button>
-                                <button
-                                  onClick={() => setActiveDropdown(null)}
-                                  className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                >
-                                  <Calendar01Icon className="h-4 w-4" />
-                                  <span>Booking History</span>
-                                </button>
-                                <button
-                                  onClick={() => setActiveDropdown(null)}
                                   className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
                                   <Add01Icon className="h-4 w-4" />
