@@ -189,12 +189,7 @@ const ComplaintsPage = () => {
 
   // Edit complaint states
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editFormData, setEditFormData] = useState({
-    title: '',
-    description: '',
-    priority: '',
-    status: ''
-  });
+  const [editStatus, setEditStatus] = useState('');
 
   // Close complaint states
   const [showCloseDialog, setShowCloseDialog] = useState(false);
@@ -396,15 +391,10 @@ const ComplaintsPage = () => {
     }
   };
 
-  // Handle edit complaint
+  // Handle edit complaint (status only)
   const handleEditComplaint = (complaint: Complaint) => {
     setSelectedComplaint(complaint);
-    setEditFormData({
-      title: complaint.title,
-      description: complaint.description,
-      priority: complaint.priority,
-      status: complaint.status
-    });
+    setEditStatus(complaint.status);
     setShowEditDialog(true);
     setOpenDropdown(null);
   };
@@ -425,7 +415,7 @@ const ComplaintsPage = () => {
             ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
           },
           credentials: 'include',
-          body: JSON.stringify(editFormData)
+          body: JSON.stringify({ status: editStatus })
         }
       );
 
@@ -434,10 +424,10 @@ const ComplaintsPage = () => {
         setComplaintsData(data);
         setShowEditDialog(false);
         setSelectedComplaint(null);
-        alert('Complaint updated successfully!');
+        alert('Complaint status updated successfully!');
       } else {
         const errorData = await response.json();
-        alert(errorData.error || 'Failed to update complaint');
+        alert(errorData.error || 'Failed to update complaint status');
       }
     } catch (err) {
       console.error('Error updating complaint:', err);
@@ -874,7 +864,7 @@ const ComplaintsPage = () => {
                                 onClick={() => handleEditComplaint(complaint)}
                               >
                                 <PencilEdit02Icon className="h-4 w-4 inline mr-2" />
-                                Edit Complaint
+                                Update Status
                               </button>
                               <button
                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -1322,7 +1312,7 @@ const ComplaintsPage = () => {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Edit Complaint</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Update Complaint Status</h3>
                     {selectedComplaint && (
                       <p className="text-sm text-gray-600 mt-1">
                         {selectedComplaint.complaint_number}
@@ -1348,66 +1338,39 @@ const ComplaintsPage = () => {
 
               {/* Dialog Content */}
               <div className="p-6 bg-gray-50">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Title <span className="text-red-600">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={editFormData.title}
-                      onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
-                    />
+                {selectedComplaint && (
+                  <div className="mb-4 p-4 bg-gray-100 border border-gray-200 rounded">
+                    <p className="text-sm font-medium text-gray-900">{selectedComplaint.title}</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Guest: {(selectedComplaint as any).guest_name || selectedComplaint.guest?.full_name}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Priority: <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${getPriorityColor(selectedComplaint.priority)}`}>
+                        {selectedComplaint.priority}
+                      </span>
+                    </p>
                   </div>
+                )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description <span className="text-red-600">*</span>
-                    </label>
-                    <textarea
-                      value={editFormData.description}
-                      onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Priority <span className="text-red-600">*</span>
-                      </label>
-                      <select
-                        value={editFormData.priority}
-                        onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
-                      >
-                        <option value="LOW">Low</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="HIGH">High</option>
-                        <option value="URGENT">Urgent</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Status <span className="text-red-600">*</span>
-                      </label>
-                      <select
-                        value={editFormData.status}
-                        onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
-                      >
-                        <option value="SUBMITTED">Submitted</option>
-                        <option value="ACKNOWLEDGED">Acknowledged</option>
-                        <option value="IN_PROGRESS">In Progress</option>
-                        <option value="UNDER_REVIEW">Under Review</option>
-                        <option value="RESOLVED">Resolved</option>
-                        <option value="CLOSED">Closed</option>
-                      </select>
-                    </div>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Update Status <span className="text-red-600">*</span>
+                  </label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                  >
+                    <option value="SUBMITTED">Submitted</option>
+                    <option value="ACKNOWLEDGED">Acknowledged</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="UNDER_REVIEW">Under Review</option>
+                    <option value="RESOLVED">Resolved</option>
+                    <option value="CLOSED">Closed</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Only the complaint status can be updated. Use "Close Complaint" for proper closure with reason.
+                  </p>
                 </div>
               </div>
 
@@ -1428,7 +1391,7 @@ const ComplaintsPage = () => {
                   className="px-4 py-2 bg-[#005357] text-white text-sm hover:bg-[#004147] disabled:opacity-50"
                   disabled={formLoading}
                 >
-                  {formLoading ? 'Saving...' : 'Save Changes'}
+                  {formLoading ? 'Updating...' : 'Update Status'}
                 </button>
               </div>
             </div>
