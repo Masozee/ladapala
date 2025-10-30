@@ -636,8 +636,8 @@ const ComplaintDetailPage = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Column - Guest Information (1/4 width) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Guest Information (1/3 width) */}
           <div className="lg:col-span-1 bg-[#005357] p-6 sticky top-6 self-start">
             <div className="mb-4">
               <h2 className="text-lg font-bold text-white">Guest Information & Complaint Details</h2>
@@ -742,8 +742,8 @@ const ComplaintDetailPage = () => {
             </div>
           </div>
 
-          {/* Right Column - All Details & Actions (3/4 width) */}
-          <div className="lg:col-span-3 space-y-3">
+          {/* Right Column - All Details & Actions (2/3 width) */}
+          <div className="lg:col-span-2 space-y-3">
             {/* Complaint Details */}
             <div className="bg-white border border-gray-200">
               <div className="p-4 border-b border-gray-200">
