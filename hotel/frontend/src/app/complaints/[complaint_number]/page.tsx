@@ -566,7 +566,7 @@ const ComplaintDetailPage = () => {
         <div className="p-6">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="h-32 bg-gray-200 rounded"></div>
               ))}
@@ -602,7 +602,7 @@ const ComplaintDetailPage = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <Link 
             href="/complaints"
             className="inline-flex items-center space-x-2 text-gray-600 hover:text-[#005357] transition-colors"
@@ -636,11 +636,11 @@ const ComplaintDetailPage = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Guest Information */}
           <div className="bg-[#005357] p-6 sticky top-6 self-start">
             <div className="mb-4">
-              <h2 className="text-xl font-bold text-white">Guest Information & Complaint Details</h2>
+              <h2 className="text-lg font-bold text-white">Guest Information & Complaint Details</h2>
               <p className="text-green-100">Information provided by the guest</p>
             </div>
             
@@ -650,7 +650,7 @@ const ComplaintDetailPage = () => {
               <div className="p-6 border-b border-[#003035]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-white">Guest Information</h3>
+                    <h3 className="text-lg font-bold text-white">Guest Information</h3>
                     <p className="text-sm text-green-100 mt-1">Contact details and reservation info</p>
                   </div>
                   <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
@@ -659,7 +659,7 @@ const ComplaintDetailPage = () => {
                 </div>
               </div>
               <div className="p-4 bg-[#003035]">
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium text-green-200">Guest Name</label>
                     <p className="text-white font-bold text-lg">{complaint.guest_name || complaint.guest_details?.full_name || 'N/A'}</p>
@@ -690,7 +690,7 @@ const ComplaintDetailPage = () => {
               <div className="p-6 border-b border-[#003035]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-white">Complaint Description</h3>
+                    <h3 className="text-lg font-bold text-white">Complaint Description</h3>
                     <p className="text-sm text-green-100 mt-1">Guest's detailed complaint</p>
                   </div>
                   <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
@@ -699,7 +699,7 @@ const ComplaintDetailPage = () => {
                 </div>
               </div>
               <div className="p-4 bg-[#003035]">
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
                     <h4 className="text-lg font-bold text-white mb-3">{complaint.title}</h4>
                     <p className="text-green-100 leading-relaxed whitespace-pre-wrap">
@@ -715,7 +715,7 @@ const ComplaintDetailPage = () => {
               <div className="p-6 border-b border-[#003035]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-white">Attachments</h3>
+                    <h3 className="text-lg font-bold text-white">Attachments</h3>
                     <p className="text-sm text-green-100 mt-1">Supporting documents and images</p>
                   </div>
                   <div className="w-8 h-8 bg-[#2baf6a] flex items-center justify-center">
@@ -742,14 +742,14 @@ const ComplaintDetailPage = () => {
             </div>
           </div>
 
-          {/* Middle Column - Internal Details */}
-          <div className="space-y-6">
+          {/* Right Column - All Details & Actions */}
+          <div className="space-y-3">
             {/* Complaint Details */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Internal Details</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Internal Details</h3>
                     <p className="text-sm text-gray-600 mt-1">Category and assignment information</p>
                   </div>
                   <div className="w-8 h-8 bg-gray-600 flex items-center justify-center">
@@ -758,7 +758,7 @@ const ComplaintDetailPage = () => {
                 </div>
               </div>
               <div className="p-4 bg-gray-50">
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Category</label>
                     <div className="flex items-center space-x-2 mt-1">
@@ -792,10 +792,10 @@ const ComplaintDetailPage = () => {
 
             {/* Status Information */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Status Information</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Status Information</h3>
                     <p className="text-sm text-gray-600 mt-1">Follow-up and status details</p>
                   </div>
                   <div className="w-8 h-8 bg-gray-600 flex items-center justify-center">
@@ -804,7 +804,7 @@ const ComplaintDetailPage = () => {
                 </div>
               </div>
               <div className="p-4 bg-gray-50">
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {complaint.follow_up_required && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded">
                       <div className="flex items-center space-x-2 text-orange-800">
@@ -845,10 +845,10 @@ const ComplaintDetailPage = () => {
 
             {/* Quick Actions */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Quick Actions</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Quick Actions</h3>
                     <p className="text-sm text-gray-600 mt-1">Update complaint status</p>
                   </div>
                   <div className="w-8 h-8 bg-gray-600 flex items-center justify-center">
@@ -893,16 +893,13 @@ const ComplaintDetailPage = () => {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Column - Timeline & Actions */}
-          <div className="space-y-6">
             {/* Images Section */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Images</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Images</h3>
                     <p className="text-sm text-gray-600 mt-1">
                       {complaint?.images?.length || 0} image{(complaint?.images?.length || 0) !== 1 ? 's' : ''} attached
                     </p>
@@ -1056,10 +1053,10 @@ const ComplaintDetailPage = () => {
             </div>
             {/* Complaint Timeline */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Complaint Timeline</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Complaint Timeline</h3>
                     <p className="text-sm text-gray-600 mt-1">Complete history from submission to resolution</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
@@ -1127,10 +1124,10 @@ const ComplaintDetailPage = () => {
             {/* Responses Section */}
             {(complaint.resolution || (complaint.responses && complaint.responses.length > 0)) && (
               <div className="bg-white border border-gray-200">
-                <div className="p-6 border-b border-gray-200">
+                <div className="p-4 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Responses</h3>
+                      <h3 className="text-lg font-bold text-gray-900">Responses</h3>
                       <p className="text-sm text-gray-600 mt-1">
                         {complaint.responses?.length || (complaint.resolution ? '1' : '0')} response{((complaint.responses?.length || 0) !== 1 && !complaint.resolution) ? 's' : ''} to this complaint
                       </p>
@@ -1141,7 +1138,7 @@ const ComplaintDetailPage = () => {
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50">
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {complaint.responses && complaint.responses.length > 0 ? (
                       complaint.responses.map((response, index) => (
                       <div key={response.id} className="bg-white border-l-4 border-[#005357] p-4">
@@ -1232,10 +1229,10 @@ const ComplaintDetailPage = () => {
 
             {/* Add Response */}
             <div className="bg-white border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Add Response</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Add Response</h3>
                     <p className="text-sm text-gray-600 mt-1">Respond to the guest's complaint</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
@@ -1244,7 +1241,7 @@ const ComplaintDetailPage = () => {
                 </div>
               </div>
               <div className="p-4 bg-gray-50">
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {responseError && (
                     <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded">
                       {responseError}
