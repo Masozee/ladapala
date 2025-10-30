@@ -115,6 +115,33 @@ class ComplaintViewSet(viewsets.ModelViewSet):
         except Complaint.DoesNotExist:
             return Response({'error': 'Complaint not found'}, status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=True, methods=['post'])
+    def add_response(self, request, pk=None):
+        """Add a response to a complaint"""
+        complaint = self.get_object()
+        message = request.data.get('message')
+
+        if not message:
+            return Response({'error': 'message field is required'},
+                          status=status.HTTP_400_BAD_REQUEST)
+
+        # For now, just update the complaint's resolution field with the response
+        # In a full implementation, you might have a separate ComplaintResponse model
+        action_taken = request.data.get('action_taken', '')
+
+        if complaint.resolution:
+            complaint.resolution += f"\n\n---\n{message}"
+        else:
+            complaint.resolution = message
+
+        if action_taken:
+            complaint.resolution += f"\n\nAction Taken: {action_taken}"
+
+        complaint.save(update_fields=['resolution', 'updated_at'])
+
+        serializer = self.get_serializer(complaint)
+        return Response(serializer.data)
+
 
 class ComplaintImageViewSet(viewsets.ModelViewSet):
     """ViewSet for managing complaint images"""

@@ -1125,13 +1125,15 @@ const ComplaintDetailPage = () => {
             </div>
 
             {/* Responses Section */}
-            {complaint.responses && complaint.responses.length > 0 && (
+            {(complaint.resolution || (complaint.responses && complaint.responses.length > 0)) && (
               <div className="bg-white border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-gray-900">Responses</h3>
-                      <p className="text-sm text-gray-600 mt-1">{complaint.responses.length} response{complaint.responses.length !== 1 ? 's' : ''} to this complaint</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {complaint.responses?.length || (complaint.resolution ? '1' : '0')} response{((complaint.responses?.length || 0) !== 1 && !complaint.resolution) ? 's' : ''} to this complaint
+                      </p>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
                       <Mail01Icon className="h-4 w-4 text-white" />
@@ -1140,7 +1142,8 @@ const ComplaintDetailPage = () => {
                 </div>
                 <div className="p-4 bg-gray-50">
                   <div className="space-y-4">
-                    {complaint.responses.map((response, index) => (
+                    {complaint.responses && complaint.responses.length > 0 ? (
+                      complaint.responses.map((response, index) => (
                       <div key={response.id} className="bg-white border-l-4 border-[#005357] p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div>
@@ -1197,7 +1200,31 @@ const ComplaintDetailPage = () => {
                           </div>
                         )}
                       </div>
-                    ))}
+                    ))
+                    ) : complaint.resolution ? (
+                      <div className="bg-white border-l-4 border-[#005357] p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">
+                                Staff Response
+                              </span>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              <span className="font-medium">Staff</span>
+                              {' • '}
+                              <time dateTime={complaint.updated_at}>
+                                {formatDateTime(complaint.updated_at)}
+                              </time>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mb-3">
+                          <p className="text-gray-900 whitespace-pre-wrap">{complaint.resolution}</p>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
