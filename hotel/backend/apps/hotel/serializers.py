@@ -291,10 +291,21 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 class ComplaintImageSerializer(serializers.ModelSerializer):
     """Serializer for complaint images"""
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = ComplaintImage
-        fields = ['id', 'complaint', 'image', 'caption', 'is_evidence', 'uploaded_by', 'created_at']
-        read_only_fields = ['created_at', 'uploaded_by']
+        fields = ['id', 'complaint', 'image', 'image_url', 'caption', 'is_evidence', 'uploaded_by', 'created_at']
+        read_only_fields = ['created_at', 'uploaded_by', 'image_url']
+
+    def get_image_url(self, obj):
+        """Get the full URL for the image"""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class ComplaintSerializer(serializers.ModelSerializer):
