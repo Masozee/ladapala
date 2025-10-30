@@ -1361,10 +1361,8 @@ const ComplaintsPage = () => {
                     onChange={(e) => setEditStatus(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
                   >
-                    <option value="SUBMITTED">Submitted</option>
-                    <option value="ACKNOWLEDGED">Acknowledged</option>
+                    <option value="OPEN">Open</option>
                     <option value="IN_PROGRESS">In Progress</option>
-                    <option value="UNDER_REVIEW">Under Review</option>
                     <option value="RESOLVED">Resolved</option>
                     <option value="CLOSED">Closed</option>
                   </select>
