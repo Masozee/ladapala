@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
 import { buildApiUrl } from '@/lib/config';
-import { getAuthHeaders, isAuthenticated, getAuthUser } from '@/lib/auth';
 import {
   ChevronLeftIcon,
   AlertCircleIcon,
@@ -279,12 +278,12 @@ const ComplaintDetailPage = () => {
     setResponseSuccess(null);
 
     try {
-      const response = await fetch(buildApiUrl(`complaints/${complaint.complaint_number}/responses/`), {
+      const response = await fetch(buildApiUrl(`hotel/complaints/${complaint.id}/add_response/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
+        credentials: 'include',
         body: JSON.stringify({
           message: newResponse,
           action_taken: newActionTaken || null,
@@ -298,8 +297,8 @@ const ComplaintDetailPage = () => {
       }
 
       // Reload the complaint to get updated data
-      const complaintResponse = await fetch(buildApiUrl(`complaints/${complaint.complaint_number}/`), {
-        headers: getAuthHeaders()
+      const complaintResponse = await fetch(buildApiUrl(`hotel/complaints/by-number/${complaint.complaint_number}/`), {
+        credentials: 'include'
       });
       if (complaintResponse.ok) {
         const updatedComplaint = await complaintResponse.json();
@@ -309,7 +308,7 @@ const ComplaintDetailPage = () => {
       setNewResponse('');
       setNewActionTaken('');
       setResponseSuccess('Response added successfully!');
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => setResponseSuccess(null), 3000);
     } catch (err) {
@@ -328,12 +327,12 @@ const ComplaintDetailPage = () => {
     setStatusSuccess(null);
 
     try {
-      const response = await fetch(buildApiUrl(`complaints/${complaint.complaint_number}/`), {
+      const response = await fetch(buildApiUrl(`hotel/complaints/${complaint.id}/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
         },
+        credentials: 'include',
         body: JSON.stringify({
           status: newStatus
         })
@@ -347,7 +346,7 @@ const ComplaintDetailPage = () => {
       setComplaint(updatedComplaint);
       setNewStatus('');
       setStatusSuccess('Status updated successfully!');
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => setStatusSuccess(null), 3000);
     } catch (err) {
@@ -388,11 +387,11 @@ const ComplaintDetailPage = () => {
 
   const handleImageUpload = async () => {
     if (!selectedImage || !complaint) return;
-    
+
     setUploadingImage(true);
     setImageUploadError(null);
     setImageUploadSuccess(null);
-    
+
     try {
       const formData = new FormData();
       formData.append('image', selectedImage);
@@ -401,35 +400,33 @@ const ComplaintDetailPage = () => {
         formData.append('caption', imageCaption);
       }
       formData.append('is_evidence', isEvidence.toString());
-      
-      const response = await fetch(buildApiUrl('complaint-images/'), {
+
+      const response = await fetch(buildApiUrl('hotel/complaint-images/'), {
         method: 'POST',
-        headers: {
-          ...getAuthHeaders()
-        },
+        credentials: 'include',
         body: formData
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to upload image');
       }
-      
+
       // Clear form
       setSelectedImage(null);
       setImageCaption('');
       setIsEvidence(false);
       setPreviewImage(null);
       setImageUploadSuccess('Image uploaded successfully!');
-      
+
       // Reload complaint data
-      const complaintResponse = await fetch(buildApiUrl(`complaints/${complaint.complaint_number}/`), {
-        headers: getAuthHeaders()
+      const complaintResponse = await fetch(buildApiUrl(`hotel/complaints/by-number/${complaint.complaint_number}/`), {
+        credentials: 'include'
       });
       if (complaintResponse.ok) {
         const updatedComplaint = await complaintResponse.json();
         setComplaint(updatedComplaint);
       }
-      
+
       setTimeout(() => setImageUploadSuccess(null), 3000);
     } catch (err) {
       setImageUploadError('Failed to upload image. Please try again.');
@@ -441,29 +438,31 @@ const ComplaintDetailPage = () => {
 
   const handleDeleteImage = async (imageId: number) => {
     if (!complaint) return;
-    
+
+    if (!confirm('Are you sure you want to delete this image?')) return;
+
     try {
-      const response = await fetch(buildApiUrl(`complaint-images/${imageId}/`), {
+      const response = await fetch(buildApiUrl(`hotel/complaint-images/${imageId}/`), {
         method: 'DELETE',
-        headers: {
-          ...getAuthHeaders()
-        }
+        credentials: 'include'
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete image');
       }
-      
+
       // Reload complaint data
-      const complaintResponse = await fetch(buildApiUrl(`complaints/${complaint.complaint_number}/`), {
-        headers: getAuthHeaders()
+      const complaintResponse = await fetch(buildApiUrl(`hotel/complaints/by-number/${complaint.complaint_number}/`), {
+        credentials: 'include'
       });
       if (complaintResponse.ok) {
         const updatedComplaint = await complaintResponse.json();
         setComplaint(updatedComplaint);
       }
+      alert('Image deleted successfully!');
     } catch (err) {
       console.error('Error deleting image:', err);
+      alert('Failed to delete image. Please try again.');
     }
   };
 
