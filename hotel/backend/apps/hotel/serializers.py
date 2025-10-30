@@ -2,8 +2,9 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
     RoomType, Room, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
-    CheckIn, Holiday, InventoryItem, MaintenanceRequest, MaintenanceTechnician,
-    HousekeepingTask, AmenityUsage, FinancialTransaction, Invoice, InvoiceItem
+    CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement,
+    MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
+    FinancialTransaction, Invoice, InvoiceItem
 )
 
 
@@ -390,16 +391,94 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     category_display = serializers.CharField(source='get_category_display', read_only=True)
     stock_status = serializers.CharField(read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
-    
+    unit_of_measurement = serializers.CharField(default='pieces')
+
     class Meta:
         model = InventoryItem
         fields = [
             'id', 'name', 'description', 'category', 'category_display',
             'current_stock', 'minimum_stock', 'maximum_stock', 'unit_price',
-            'supplier', 'last_restocked', 'stock_status', 'is_low_stock',
-            'is_active', 'created_at', 'updated_at'
+            'unit_of_measurement', 'supplier', 'last_restocked', 'stock_status',
+            'is_low_stock', 'is_active', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'stock_status', 'is_low_stock']
+
+
+class PurchaseOrderItemSerializer(serializers.ModelSerializer):
+    """Serializer for purchase order items"""
+    inventory_item_name = serializers.CharField(source='inventory_item.name', read_only=True)
+    inventory_item_unit = serializers.CharField(source='inventory_item.unit_of_measurement', read_only=True)
+    subtotal = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    is_fully_received = serializers.BooleanField(read_only=True)
+    quantity_pending = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = PurchaseOrderItem
+        fields = [
+            'id', 'purchase_order', 'inventory_item', 'inventory_item_name',
+            'inventory_item_unit', 'quantity_ordered', 'unit_price',
+            'quantity_received', 'subtotal', 'is_fully_received',
+            'quantity_pending', 'notes', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'subtotal', 'is_fully_received', 'quantity_pending']
+
+
+class PurchaseOrderSerializer(serializers.ModelSerializer):
+    """Serializer for purchase orders"""
+    items = PurchaseOrderItemSerializer(many=True, read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+    received_by_name = serializers.SerializerMethodField()
+    items_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+            'id', 'po_number', 'supplier', 'order_date', 'expected_delivery',
+            'status', 'status_display', 'notes', 'total_amount', 'items',
+            'items_count', 'created_by', 'created_by_name', 'received_by',
+            'received_by_name', 'received_date', 'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'po_number', 'created_at', 'updated_at', 'received_date',
+            'status_display', 'created_by_name', 'received_by_name', 'items_count'
+        ]
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return f"{obj.created_by.first_name} {obj.created_by.last_name}".strip() or obj.created_by.username
+        return None
+
+    def get_received_by_name(self, obj):
+        if obj.received_by:
+            return f"{obj.received_by.first_name} {obj.received_by.last_name}".strip() or obj.received_by.username
+        return None
+
+    def get_items_count(self, obj):
+        return obj.items.count()
+
+
+class StockMovementSerializer(serializers.ModelSerializer):
+    """Serializer for stock movements"""
+    inventory_item_name = serializers.CharField(source='inventory_item.name', read_only=True)
+    inventory_item_unit = serializers.CharField(source='inventory_item.unit_of_measurement', read_only=True)
+    movement_type_display = serializers.CharField(source='get_movement_type_display', read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StockMovement
+        fields = [
+            'id', 'inventory_item', 'inventory_item_name', 'inventory_item_unit',
+            'movement_type', 'movement_type_display', 'quantity', 'balance_after',
+            'reference', 'notes', 'movement_date', 'created_by', 'created_by_name',
+            'created_at'
+        ]
+        read_only_fields = ['created_at', 'created_by_name', 'movement_type_display']
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return f"{obj.created_by.first_name} {obj.created_by.last_name}".strip() or obj.created_by.username
+        return None
 
 
 # List serializers for simplified views

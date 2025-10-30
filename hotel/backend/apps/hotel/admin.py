@@ -70,6 +70,28 @@ class InventoryItemAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description', 'supplier']
 
 
+@admin.register(models.PurchaseOrder)
+class PurchaseOrderAdmin(admin.ModelAdmin):
+    list_display = ['po_number', 'supplier', 'order_date', 'status', 'total_amount', 'created_by']
+    list_filter = ['status', 'order_date', 'supplier']
+    search_fields = ['po_number', 'supplier', 'notes']
+    readonly_fields = ['po_number', 'created_at', 'updated_at']
+
+
+class PurchaseOrderItemInline(admin.TabularInline):
+    model = models.PurchaseOrderItem
+    extra = 1
+    fields = ['inventory_item', 'quantity_ordered', 'unit_price', 'quantity_received', 'notes']
+
+
+@admin.register(models.StockMovement)
+class StockMovementAdmin(admin.ModelAdmin):
+    list_display = ['inventory_item', 'movement_type', 'quantity', 'balance_after', 'reference', 'movement_date', 'created_by']
+    list_filter = ['movement_type', 'movement_date']
+    search_fields = ['inventory_item__name', 'reference', 'notes']
+    readonly_fields = ['created_at']
+
+
 @admin.register(FinancialTransaction)
 class FinancialTransactionAdmin(admin.ModelAdmin):
     list_display = ['transaction_id', 'transaction_type', 'category', 'amount', 'status', 'transaction_date']

@@ -14,6 +14,7 @@ try:
     from .views.complaints import ComplaintImageViewSet
     from .views.housekeeping import HousekeepingTaskViewSet, AmenityUsageViewSet
     from .views.payments import AdditionalChargeViewSet
+    from .views.warehouse import PurchaseOrderViewSet, PurchaseOrderItemViewSet, StockMovementViewSet
     from .views.reports import (
         daily_reports, daily_reports_range, monthly_reports,
         report_summary, available_reports, occupancy_report,
@@ -46,6 +47,9 @@ if LEGACY_VIEWS:
     router.register(r'checkins', CheckInViewSet, basename='hotel-checkins')
     router.register(r'holidays', HolidayViewSet, basename='hotel-holidays')
     router.register(r'inventory', InventoryItemViewSet, basename='hotel-inventory')
+    router.register(r'purchase-orders', PurchaseOrderViewSet, basename='hotel-purchase-orders')
+    router.register(r'purchase-order-items', PurchaseOrderItemViewSet, basename='hotel-purchase-order-items')
+    router.register(r'stock-movements', StockMovementViewSet, basename='hotel-stock-movements')
     router.register(r'housekeeping-tasks', HousekeepingTaskViewSet, basename='hotel-housekeeping-tasks')
     router.register(r'amenity-usages', AmenityUsageViewSet, basename='hotel-amenity-usages')
 
