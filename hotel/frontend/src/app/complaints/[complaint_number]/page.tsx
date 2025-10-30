@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   ChevronLeftIcon,
   AlertCircleIcon,
@@ -136,6 +136,7 @@ interface Complaint {
   room_number?: string;
   incident_date: string;
   assigned_to?: any;
+  assigned_to_name?: string;
   assigned_department?: AssignedDepartment;
   is_escalated: boolean;
   follow_up_required: boolean;
@@ -278,10 +279,12 @@ const ComplaintDetailPage = () => {
     setResponseSuccess(null);
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/complaints/${complaint.id}/add_response/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -327,10 +330,12 @@ const ComplaintDetailPage = () => {
     setStatusSuccess(null);
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/complaints/${complaint.id}/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -401,14 +406,24 @@ const ComplaintDetailPage = () => {
       }
       formData.append('is_evidence', isEvidence.toString());
 
+      // Get CSRF token
+      const csrfToken = getCsrfToken();
+      const headers: HeadersInit = {};
+      if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+      }
+
       const response = await fetch(buildApiUrl('hotel/complaint-images/'), {
         method: 'POST',
+        headers: headers,
         credentials: 'include',
         body: formData
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Image upload error:', errorData);
+        throw new Error(errorData.detail || errorData.error || 'Failed to upload image');
       }
 
       // Clear form
@@ -429,7 +444,8 @@ const ComplaintDetailPage = () => {
 
       setTimeout(() => setImageUploadSuccess(null), 3000);
     } catch (err) {
-      setImageUploadError('Failed to upload image. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to upload image. Please try again.';
+      setImageUploadError(errorMessage);
       console.error('Error uploading image:', err);
     } finally {
       setUploadingImage(false);
@@ -442,8 +458,12 @@ const ComplaintDetailPage = () => {
     if (!confirm('Are you sure you want to delete this image?')) return;
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/complaint-images/${imageId}/`), {
         method: 'DELETE',
+        headers: {
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+        },
         credentials: 'include'
       });
 
@@ -752,12 +772,10 @@ const ComplaintDetailPage = () => {
                     <p className="text-gray-900 font-medium">{complaint.assigned_department?.name || 'Unassigned'}</p>
                   </div>
                   
-                  {complaint.assigned_to && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Assigned To</label>
-                      <p className="text-gray-900 font-medium">{complaint.assigned_to}</p>
-                    </div>
-                  )}
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Assigned To</label>
+                    <p className="text-gray-900 font-medium">{complaint.assigned_to_name || 'Unassigned'}</p>
+                  </div>
                   
                   <div>
                     <label className="text-sm font-medium text-gray-600">Source</label>
