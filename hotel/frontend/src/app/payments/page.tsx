@@ -123,6 +123,7 @@ const PaymentsPage = () => {
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [voidReason, setVoidReason] = useState('');
   const [pendingVoidTransaction, setPendingVoidTransaction] = useState<Transaction | null>(null);
 
   const paymentMethods: PaymentMethod[] = [
@@ -385,11 +386,17 @@ const PaymentsPage = () => {
     setAuthError('');
     setAuthEmail('');
     setAuthPassword('');
+    setVoidReason('');
   };
 
   const handleAuthSubmit = async () => {
     if (!authEmail || !authPassword) {
       setAuthError('Please enter email and password');
+      return;
+    }
+
+    if (!voidReason || voidReason.trim().length < 10) {
+      setAuthError('Please provide a detailed reason (minimum 10 characters)');
       return;
     }
 
@@ -414,9 +421,14 @@ const PaymentsPage = () => {
 
       const authData = await authResponse.json();
 
-      // Check if user is manager or admin
-      if (!authData.employee || !['MANAGER', 'ADMIN'].includes(authData.employee.position)) {
-        setAuthError('Only managers or administrators can void transactions');
+      // Check if user is from Management department with Active employment status
+      if (!authData.employee || authData.employee.department?.name !== 'Management') {
+        setAuthError('Only employees from Management department can void transactions');
+        return;
+      }
+
+      if (authData.employee.employment_status !== 'ACTIVE') {
+        setAuthError('Only active employees can void transactions');
         return;
       }
 
@@ -430,7 +442,7 @@ const PaymentsPage = () => {
         },
         body: JSON.stringify({
           status: 'CANCELLED',
-          notes: `${pendingVoidTransaction.notes}\n[VOIDED on ${new Date().toLocaleString('id-ID')} by ${authData.employee.full_name}]`
+          notes: `${pendingVoidTransaction.notes}\n[VOIDED on ${new Date().toLocaleString('id-ID')} by ${authData.employee.full_name}]\nReason: ${voidReason}`
         }),
       });
 
@@ -444,6 +456,7 @@ const PaymentsPage = () => {
       setAuthEmail('');
       setAuthPassword('');
       setAuthError('');
+      setVoidReason('');
       loadTransactions();
     } catch (error) {
       console.error('Error voiding transaction:', error);
@@ -1068,6 +1081,7 @@ const PaymentsPage = () => {
                     setAuthEmail('');
                     setAuthPassword('');
                     setAuthError('');
+                    setVoidReason('');
                   }}
                   className="text-gray-400 hover:text-gray-600"
                 >
@@ -1120,14 +1134,31 @@ const PaymentsPage = () => {
                   type="password"
                   value={authPassword}
                   onChange={(e) => setAuthPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#005357] focus:border-transparent"
+                  placeholder="Enter password"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Void Reason *
+                </label>
+                <textarea
+                  value={voidReason}
+                  onChange={(e) => setVoidReason(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === 'Enter' && e.ctrlKey) {
                       handleAuthSubmit();
                     }
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#005357] focus:border-transparent"
-                  placeholder="Enter password"
+                  placeholder="Please provide a detailed reason for voiding this transaction (minimum 10 characters)"
+                  rows={3}
+                  required
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Minimum 10 characters. Press Ctrl+Enter to submit.
+                </p>
               </div>
             </div>
 
@@ -1139,6 +1170,7 @@ const PaymentsPage = () => {
                   setAuthEmail('');
                   setAuthPassword('');
                   setAuthError('');
+                  setVoidReason('');
                 }}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >

@@ -193,23 +193,23 @@ class DepartmentAdmin(admin.ModelAdmin):
 class EmployeeAdmin(admin.ModelAdmin):
     list_display = ['employee_id', 'full_name', 'department', 'position', 'employment_badge', 'hire_date_short']
     list_filter = ['employment_status', 'is_active', 'department', 'hire_date']
-    search_fields = ['employee_id', 'first_name', 'last_name', 'email', 'user__email']
+    search_fields = ['employee_id', 'user__first_name', 'user__last_name', 'user__email']
     ordering = ['-hire_date']
     list_per_page = 25
 
     fieldsets = (
         ('🔗 System Link', {
             'fields': ('user',),
-            'description': 'Link to user account (optional - only if employee needs system access)'
+            'description': 'Link to user account - personal info (name, email, phone) is managed through the User model'
         }),
-        ('👤 Personal Info', {
-            'fields': ('employee_id', 'first_name', 'last_name', 'email')
+        ('🆔 Employee Info', {
+            'fields': ('employee_id',)
         }),
         ('💼 Employment', {
             'fields': ('department', 'position', 'hire_date', 'termination_date', 'salary', 'employment_status')
         }),
-        ('📞 Contact', {
-            'fields': ('phone', 'address', 'emergency_contact', 'emergency_phone')
+        ('🆘 Emergency Contact', {
+            'fields': ('emergency_contact', 'emergency_phone', 'emergency_relationship')
         }),
         ('✅ Status', {
             'fields': ('is_active',)

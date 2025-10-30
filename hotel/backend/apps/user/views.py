@@ -63,6 +63,7 @@ class LoginView(APIView):
                 'employee_id': employee.employee_id,
                 'full_name': employee.full_name,
                 'position': employee.position,
+                'employment_status': employee.employment_status,
                 'department': {
                     'id': employee.department.id,
                     'name': employee.department.name
@@ -116,6 +117,7 @@ def check_session(request):
                 'employee_id': employee.employee_id,
                 'full_name': employee.full_name,
                 'position': employee.position,
+                'employment_status': employee.employment_status,
                 'department': {
                     'id': employee.department.id,
                     'name': employee.department.name
