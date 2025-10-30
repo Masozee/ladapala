@@ -187,6 +187,19 @@ const ComplaintsPage = () => {
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
   const [selectedStaffId, setSelectedStaffId] = useState<string>('');
 
+  // Edit complaint states
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    description: '',
+    priority: '',
+    status: ''
+  });
+
+  // Close complaint states
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
+  const [closeReason, setCloseReason] = useState('');
+
   // Load complaints data
   useEffect(() => {
     const loadComplaints = async () => {
@@ -378,6 +391,111 @@ const ComplaintsPage = () => {
     } catch (err) {
       console.error('Error assigning staff:', err);
       alert('Failed to assign staff. Please try again.');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  // Handle edit complaint
+  const handleEditComplaint = (complaint: Complaint) => {
+    setSelectedComplaint(complaint);
+    setEditFormData({
+      title: complaint.title,
+      description: complaint.description,
+      priority: complaint.priority,
+      status: complaint.status
+    });
+    setShowEditDialog(true);
+    setOpenDropdown(null);
+  };
+
+  const handleSubmitEdit = async () => {
+    if (!selectedComplaint) return;
+
+    try {
+      setFormLoading(true);
+      const csrfToken = getCsrfToken();
+
+      const response = await fetch(
+        buildApiUrl(`hotel/complaints/${selectedComplaint.id}/`),
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+          },
+          credentials: 'include',
+          body: JSON.stringify(editFormData)
+        }
+      );
+
+      if (response.ok) {
+        const data = await fetchComplaints();
+        setComplaintsData(data);
+        setShowEditDialog(false);
+        setSelectedComplaint(null);
+        alert('Complaint updated successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to update complaint');
+      }
+    } catch (err) {
+      console.error('Error updating complaint:', err);
+      alert('Failed to update complaint. Please try again.');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  // Handle close complaint
+  const handleCloseComplaint = (complaint: Complaint) => {
+    setSelectedComplaint(complaint);
+    setCloseReason('');
+    setShowCloseDialog(true);
+    setOpenDropdown(null);
+  };
+
+  const handleSubmitClose = async () => {
+    if (!selectedComplaint) return;
+    if (!closeReason.trim() || closeReason.trim().length < 10) {
+      alert('Please provide a detailed reason (minimum 10 characters)');
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      const csrfToken = getCsrfToken();
+
+      const response = await fetch(
+        buildApiUrl(`hotel/complaints/${selectedComplaint.id}/`),
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            status: 'CLOSED',
+            description: `${selectedComplaint.description}\n\n[CLOSED] Reason: ${closeReason}`
+          })
+        }
+      );
+
+      if (response.ok) {
+        const data = await fetchComplaints();
+        setComplaintsData(data);
+        setShowCloseDialog(false);
+        setSelectedComplaint(null);
+        setCloseReason('');
+        alert('Complaint closed successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to close complaint');
+      }
+    } catch (err) {
+      console.error('Error closing complaint:', err);
+      alert('Failed to close complaint. Please try again.');
     } finally {
       setFormLoading(false);
     }
@@ -753,7 +871,7 @@ const ComplaintsPage = () => {
                               </Link>
                               <button
                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                onClick={() => setOpenDropdown(null)}
+                                onClick={() => handleEditComplaint(complaint)}
                               >
                                 <PencilEdit02Icon className="h-4 w-4 inline mr-2" />
                                 Edit Complaint
@@ -772,10 +890,11 @@ const ComplaintsPage = () => {
                               <div className="border-t border-gray-100 my-1"></div>
                               <button
                                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                                onClick={() => setOpenDropdown(null)}
+                                onClick={() => handleCloseComplaint(complaint)}
+                                disabled={complaint.status === 'CLOSED'}
                               >
                                 <CancelCircleIcon className="h-4 w-4 inline mr-2" />
-                                Close Complaint
+                                {complaint.status === 'CLOSED' ? 'Already Closed' : 'Close Complaint'}
                               </button>
                             </div>
                           )}
@@ -1191,6 +1310,219 @@ const ComplaintsPage = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Complaint Dialog */}
+        {showEditDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Dialog Header */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Edit Complaint</h3>
+                    {selectedComplaint && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        {selectedComplaint.complaint_number}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
+                      <PencilEdit02Icon className="h-4 w-4 text-white" />
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowEditDialog(false);
+                        setSelectedComplaint(null);
+                      }}
+                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <Cancel01Icon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dialog Content */}
+              <div className="p-6 bg-gray-50">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Title <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.title}
+                      onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description <span className="text-red-600">*</span>
+                    </label>
+                    <textarea
+                      value={editFormData.description}
+                      onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Priority <span className="text-red-600">*</span>
+                      </label>
+                      <select
+                        value={editFormData.priority}
+                        onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                      >
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="HIGH">High</option>
+                        <option value="URGENT">Urgent</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Status <span className="text-red-600">*</span>
+                      </label>
+                      <select
+                        value={editFormData.status}
+                        onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                      >
+                        <option value="SUBMITTED">Submitted</option>
+                        <option value="ACKNOWLEDGED">Acknowledged</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="UNDER_REVIEW">Under Review</option>
+                        <option value="RESOLVED">Resolved</option>
+                        <option value="CLOSED">Closed</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dialog Footer */}
+              <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setSelectedComplaint(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 transition-colors"
+                  disabled={formLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitEdit}
+                  className="px-4 py-2 bg-[#005357] text-white text-sm hover:bg-[#004147] disabled:opacity-50"
+                  disabled={formLoading}
+                >
+                  {formLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Close Complaint Dialog */}
+        {showCloseDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white max-w-md w-full">
+              {/* Dialog Header */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Close Complaint</h3>
+                    {selectedComplaint && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        {selectedComplaint.complaint_number}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-red-600 flex items-center justify-center">
+                      <CancelCircleIcon className="h-4 w-4 text-white" />
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowCloseDialog(false);
+                        setSelectedComplaint(null);
+                        setCloseReason('');
+                      }}
+                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <Cancel01Icon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dialog Content */}
+              <div className="p-6 bg-gray-50">
+                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Warning:</strong> Closing this complaint will mark it as resolved and no further action will be taken.
+                  </p>
+                </div>
+
+                {selectedComplaint && (
+                  <div className="mb-4 p-4 bg-gray-100 border border-gray-200 rounded">
+                    <p className="text-sm font-medium text-gray-900">{selectedComplaint.title}</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Guest: {(selectedComplaint as any).guest_name || selectedComplaint.guest?.full_name}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Closure Reason <span className="text-red-600">*</span>
+                  </label>
+                  <textarea
+                    value={closeReason}
+                    onChange={(e) => setCloseReason(e.target.value)}
+                    placeholder="Please provide a detailed reason for closing this complaint (minimum 10 characters)"
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357] text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Minimum 10 characters required
+                  </p>
+                </div>
+              </div>
+
+              {/* Dialog Footer */}
+              <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowCloseDialog(false);
+                    setSelectedComplaint(null);
+                    setCloseReason('');
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 transition-colors"
+                  disabled={formLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitClose}
+                  className="px-4 py-2 bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-50"
+                  disabled={formLoading || !closeReason.trim() || closeReason.trim().length < 10}
+                >
+                  {formLoading ? 'Closing...' : 'Close Complaint'}
+                </button>
+              </div>
             </div>
           </div>
         )}
