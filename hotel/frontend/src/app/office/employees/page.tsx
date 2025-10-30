@@ -65,6 +65,15 @@ function ScheduleTable() {
   const [loading, setLoading] = useState(true);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [newShift, setNewShift] = useState({
+    shift_type: 'MORNING',
+    start_time: '07:00',
+    end_time: '15:00',
+    notes: ''
+  });
 
   // Generate array of dates for the week
   const weekDates = Array.from({ length: 7 }, (_, i) => {
@@ -147,6 +156,69 @@ function ScheduleTable() {
     const monday = new Date(today);
     monday.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
     setCurrentWeekStart(monday);
+  };
+
+  const openAddShiftModal = (employeeId: number, date: string) => {
+    setSelectedEmployee(employeeId);
+    setSelectedDate(date);
+    setShowAddModal(true);
+  };
+
+  const handleAddShift = async () => {
+    if (!selectedEmployee || !selectedDate) return;
+
+    try {
+      const response = await fetch(buildApiUrl('user/shifts-manage/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          employee: selectedEmployee,
+          shift_date: selectedDate,
+          shift_type: newShift.shift_type,
+          start_time: newShift.start_time,
+          end_time: newShift.end_time,
+          notes: newShift.notes
+        })
+      });
+
+      if (response.ok) {
+        setShowAddModal(false);
+        setNewShift({
+          shift_type: 'MORNING',
+          start_time: '07:00',
+          end_time: '15:00',
+          notes: ''
+        });
+        fetchSchedules(); // Refresh schedules
+      } else {
+        const error = await response.json();
+        alert('Gagal menambahkan shift: ' + (error.detail || 'Terjadi kesalahan'));
+      }
+    } catch (error) {
+      console.error('Error adding shift:', error);
+      alert('Gagal menambahkan shift');
+    }
+  };
+
+  const handleShiftTypeChange = (type: string) => {
+    const shiftTimes: { [key: string]: { start: string; end: string } } = {
+      MORNING: { start: '07:00', end: '15:00' },
+      AFTERNOON: { start: '15:00', end: '23:00' },
+      EVENING: { start: '14:00', end: '22:00' },
+      NIGHT: { start: '23:00', end: '07:00' },
+      OVERTIME: { start: '17:00', end: '20:00' }
+    };
+
+    const times = shiftTimes[type] || { start: '08:00', end: '16:00' };
+    setNewShift(prev => ({
+      ...prev,
+      shift_type: type,
+      start_time: times.start,
+      end_time: times.end
+    }));
   };
 
   const formatDate = (date: Date) => {
@@ -310,7 +382,14 @@ function ScheduleTable() {
                       return (
                         <div
                           key={dateIndex}
-                          className={`flex-shrink-0 w-[180px] px-2 py-2 border-r border-gray-200 last:border-r-0 ${
+                          onClick={() => {
+                            const employeeId = schedules.find(s => s.employee_id === schedule.employee_id)?.employee_id;
+                            if (employeeId) {
+                              const empIdNum = parseInt(employeeId.replace(/\D/g, ''));
+                              openAddShiftModal(empIdNum, dateKey);
+                            }
+                          }}
+                          className={`flex-shrink-0 w-[180px] px-2 py-2 border-r border-gray-200 last:border-r-0 cursor-pointer ${
                             isEven ? 'bg-white' : 'bg-gray-50'
                           } ${isWeekend ? 'bg-gray-100/30' : ''} hover:bg-blue-50 transition-colors`}
                           style={{ height: '88px' }}
@@ -330,7 +409,7 @@ function ScheduleTable() {
                             </div>
                           ) : (
                             <div className="flex items-center justify-center h-full">
-                              <div className="text-xs text-gray-400">—</div>
+                              <div className="text-xs text-gray-400">+ Tambah</div>
                             </div>
                           )}
                         </div>
@@ -370,6 +449,89 @@ function ScheduleTable() {
           </div>
         </div>
       </div>
+
+      {/* Add Shift Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Tambah Shift</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                <input
+                  type="text"
+                  value={selectedDate || ''}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tipe Shift</label>
+                <select
+                  value={newShift.shift_type}
+                  onChange={(e) => handleShiftTypeChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                >
+                  <option value="MORNING">Pagi (07:00 - 15:00)</option>
+                  <option value="AFTERNOON">Siang (15:00 - 23:00)</option>
+                  <option value="EVENING">Sore (14:00 - 22:00)</option>
+                  <option value="NIGHT">Malam (23:00 - 07:00)</option>
+                  <option value="OVERTIME">Lembur (17:00 - 20:00)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Jam Mulai</label>
+                  <input
+                    type="time"
+                    value={newShift.start_time}
+                    onChange={(e) => setNewShift(prev => ({ ...prev, start_time: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Jam Selesai</label>
+                  <input
+                    type="time"
+                    value={newShift.end_time}
+                    onChange={(e) => setNewShift(prev => ({ ...prev, end_time: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
+                <textarea
+                  value={newShift.notes}
+                  onChange={(e) => setNewShift(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  placeholder="Catatan tambahan..."
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleAddShift}
+                className="px-4 py-2 text-sm font-medium text-white bg-[#4E61D3] rounded hover:bg-[#3d4fb5]"
+              >
+                Tambah Shift
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
