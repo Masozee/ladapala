@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   UserMultipleIcon,
   Search02Icon,
@@ -168,10 +168,12 @@ function ScheduleTable() {
     if (!selectedEmployee || !selectedDate) return;
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl('user/shifts-manage/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify({
