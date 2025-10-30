@@ -226,8 +226,28 @@ export default function WarehousePage() {
     <OfficeLayout>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Warehouse Management</h1>
-        <p className="text-gray-600 mt-2">Manajemen stok barang dan inventaris hotel</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Warehouse Management</h1>
+            <p className="text-gray-600 mt-2">Manajemen stok barang dan inventaris hotel</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => window.location.href = '/office/warehouse/purchase-orders'}
+              className="bg-[#4E61D3] text-white px-4 py-2 text-sm font-medium hover:bg-[#3d4fa8] transition-colors flex items-center space-x-2"
+            >
+              <PackageIcon className="h-4 w-4" />
+              <span>Purchase Orders</span>
+            </button>
+            <button
+              onClick={() => window.location.href = '/office/warehouse/stock-movements'}
+              className="bg-gray-700 text-white px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors flex items-center space-x-2"
+            >
+              <PackageIcon className="h-4 w-4" />
+              <span>Stock Movements</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Summary Cards */}
