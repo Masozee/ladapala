@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 import psutil
 import platform
+import os
 from datetime import datetime, timedelta
 from django.utils import timezone
 
@@ -32,8 +33,13 @@ def system_resources(request):
         memory_used = memory.used / (1024 ** 3)
         memory_available = memory.available / (1024 ** 3)
 
-        # Disk Usage
-        disk = psutil.disk_usage('/')
+        # Disk Usage - Check for macOS Data volume first
+        disk_path = '/'
+        if os.path.exists('/System/Volumes/Data'):
+            # macOS Catalina+ stores user data here
+            disk_path = '/System/Volumes/Data'
+
+        disk = psutil.disk_usage(disk_path)
         disk_percent = disk.percent
         disk_total = disk.total / (1024 ** 3)  # Convert to GB
         disk_used = disk.used / (1024 ** 3)
@@ -124,7 +130,13 @@ def system_stats(request):
         # Get basic metrics
         cpu_percent = psutil.cpu_percent(interval=1)
         memory_percent = psutil.virtual_memory().percent
-        disk_percent = psutil.disk_usage('/').percent
+
+        # Disk usage - Check for macOS Data volume first
+        disk_path = '/'
+        if os.path.exists('/System/Volumes/Data'):
+            disk_path = '/System/Volumes/Data'
+
+        disk_percent = psutil.disk_usage(disk_path).percent
 
         # Calculate uptime percentage (assume 99.9% if running)
         boot_time = datetime.fromtimestamp(psutil.boot_time())
