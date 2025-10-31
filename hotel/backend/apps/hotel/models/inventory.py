@@ -1,21 +1,17 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from .amenities import AmenityCategory
 
 
 class InventoryItem(models.Model):
-    CATEGORY_CHOICES = [
-        ('ROOM_SUPPLIES', 'Room Supplies'),
-        ('CLEANING', 'Cleaning Supplies'),
-        ('MAINTENANCE', 'Maintenance'),
-        ('OFFICE', 'Office Supplies'),
-        ('FOOD', 'Food & Beverage'),
-        ('AMENITIES', 'Guest Amenities'),
-        ('OTHER', 'Other'),
-    ]
-
     name = models.CharField(max_length=100)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    category = models.ForeignKey(
+        AmenityCategory,
+        on_delete=models.PROTECT,
+        related_name='inventory_items',
+        help_text='Category from Amenity Categories'
+    )
     description = models.TextField(blank=True, null=True)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     current_stock = models.PositiveIntegerField(default=0)

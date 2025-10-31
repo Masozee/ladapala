@@ -388,7 +388,8 @@ class HolidaySerializer(serializers.ModelSerializer):
 
 class InventoryItemSerializer(serializers.ModelSerializer):
     """Serializer for inventory items"""
-    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    category_display = serializers.CharField(source='category.display_name', read_only=True)
     stock_status = serializers.CharField(read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
     unit_of_measurement = serializers.CharField(default='pieces')
@@ -397,12 +398,12 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = InventoryItem
         fields = [
-            'id', 'name', 'description', 'category', 'category_display',
+            'id', 'name', 'description', 'category', 'category_name', 'category_display',
             'current_stock', 'minimum_stock', 'maximum_stock', 'unit_price',
             'unit_of_measurement', 'supplier', 'supplier_name', 'last_restocked', 'stock_status',
             'is_low_stock', 'is_active', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'stock_status', 'is_low_stock', 'supplier_name']
+        read_only_fields = ['created_at', 'updated_at', 'stock_status', 'is_low_stock', 'supplier_name', 'category_name', 'category_display']
 
 
 class PurchaseOrderItemSerializer(serializers.ModelSerializer):

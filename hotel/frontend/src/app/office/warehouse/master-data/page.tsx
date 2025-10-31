@@ -45,12 +45,12 @@ interface Supplier {
 
 const getCategoryLabel = (category: string): string => {
   const categoryMap: Record<string, string> = {
-    'ROOM_SUPPLIES': 'Room Supplies',
-    'CLEANING': 'Cleaning Supplies',
-    'MAINTENANCE': 'Maintenance',
-    'OFFICE': 'Office Supplies',
-    'FOOD': 'Food & Beverage',
-    'AMENITIES': 'Guest Amenities',
+    'FOOD_BEVERAGE': 'Food & Beverage',
+    'TOILETRIES': 'Toiletries & Bath',
+    'BEVERAGE': 'Beverages',
+    'LAUNDRY': 'Laundry & Cleaning',
+    'TECHNOLOGY': 'Technology',
+    'FLOWERS': 'Flowers & Decor',
     'OTHER': 'Other',
   };
   return categoryMap[category] || category;
@@ -75,7 +75,7 @@ export default function WarehousePage() {
   const [hasPrevious, setHasPrevious] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    category: 'AMENITIES',
+    category: 'TOILETRIES',
     minimum_stock: '10',
     maximum_stock: '',
     unit_of_measurement: '',
@@ -486,12 +486,12 @@ export default function WarehousePage() {
             className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-full appearance-none bg-white"
           >
             <option value="All">Kategori</option>
-            <option value="AMENITIES">Guest Amenities</option>
-            <option value="FOOD">Food & Beverage</option>
-            <option value="CLEANING">Cleaning Supplies</option>
-            <option value="ROOM_SUPPLIES">Room Supplies</option>
-            <option value="MAINTENANCE">Maintenance</option>
-            <option value="OFFICE">Office Supplies</option>
+            <option value="FOOD_BEVERAGE">Food & Beverage</option>
+            <option value="TOILETRIES">Toiletries & Bath</option>
+            <option value="BEVERAGE">Beverages</option>
+            <option value="LAUNDRY">Laundry & Cleaning</option>
+            <option value="TECHNOLOGY">Technology</option>
+            <option value="FLOWERS">Flowers & Decor</option>
             <option value="OTHER">Other</option>
           </select>
         </div>
