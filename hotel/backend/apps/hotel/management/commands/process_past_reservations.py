@@ -1,26 +1,30 @@
 """
 Management command to process past reservations and payments
 Automatically:
-- Pays all unpaid reservations
+- Pays all unpaid reservations from the last 30 days
 - Checks in guests based on check-in date
 - Checks out guests based on check-out date
 """
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from datetime import timedelta
 from apps.hotel.models import Reservation, Payment
 
 
 class Command(BaseCommand):
-    help = 'Process all reservations: auto-pay, check in/out based on schedule'
+    help = 'Process reservations from last 30 days: auto-pay, check in/out based on schedule'
 
     def handle(self, *args, **options):
         today = timezone.now().date()
+        thirty_days_ago = today - timedelta(days=30)
 
-        self.stdout.write(self.style.SUCCESS(f'\n=== Processing All Reservations ===\n'))
+        self.stdout.write(self.style.SUCCESS(f'\n=== Processing Reservations (Last 30 Days) ===\n'))
 
-        # Get all active reservations
-        reservations_to_process = Reservation.objects.exclude(
+        # Get reservations from last 30 days
+        reservations_to_process = Reservation.objects.filter(
+            check_in_date__gte=thirty_days_ago
+        ).exclude(
             status__in=['CANCELLED', 'NO_SHOW']
         ).order_by('check_in_date')
 
