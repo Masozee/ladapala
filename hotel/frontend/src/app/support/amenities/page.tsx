@@ -20,7 +20,6 @@ import {
 interface AmenityCategory {
   id: number;
   name: string;
-  display_name: string;
 }
 
 interface InventoryItem {
@@ -707,7 +706,7 @@ export default function AmenitiesPage() {
                     >
                       <option value="">Select Category</option>
                       {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.display_name}</option>
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
                     </select>
                   </div>
@@ -986,7 +985,7 @@ export default function AmenitiesPage() {
                     >
                       <option value="">Select Category</option>
                       {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.display_name}</option>
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
                     </select>
                   </div>
