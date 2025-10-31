@@ -157,6 +157,20 @@ CORS_ALLOW_CREDENTIALS = True
 # Allow all origins for API access (development/testing)
 CORS_ALLOW_ALL_ORIGINS = True
 
+# Allow custom headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'referrer-policy',
+]
+
 # Session and CSRF settings for cross-origin authentication
 SESSION_COOKIE_SAMESITE = 'Lax'  # Use 'Lax' for local development without HTTPS
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS

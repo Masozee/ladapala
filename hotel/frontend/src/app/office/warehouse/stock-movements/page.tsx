@@ -15,15 +15,17 @@ interface StockMovement {
   id: number
   inventory_item: number
   inventory_item_name: string
+  inventory_item_unit: string
   movement_type: string
   movement_type_display: string
   quantity: number
   balance_after: number
   reference: string
   notes: string
+  movement_date: string
   created_at: string
-  created_by: number
-  created_by_name: string
+  created_by: number | null
+  created_by_name: string | null
 }
 
 interface PaginatedResponse {
@@ -68,11 +70,20 @@ export default function StockMovementsPage() {
       if (movementsRes.ok && itemsRes.ok) {
         const movementsData: PaginatedResponse = await movementsRes.json()
         const itemsData: PaginatedResponse = await itemsRes.json()
-        setMovements(movementsData.results)
-        setInventoryItems(itemsData.results)
+        setMovements(movementsData.results || [])
+        setInventoryItems(itemsData.results || [])
+      } else {
+        console.error('API Error:', {
+          movementsStatus: movementsRes.status,
+          itemsStatus: itemsRes.status
+        })
+        setMovements([])
+        setInventoryItems([])
       }
     } catch (error) {
       console.error('Error fetching data:', error)
+      setMovements([])
+      setInventoryItems([])
     } finally {
       setLoading(false)
     }
@@ -112,7 +123,7 @@ export default function StockMovementsPage() {
     const matchesSearch =
       movement.inventory_item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       movement.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      movement.created_by_name.toLowerCase().includes(searchTerm.toLowerCase())
+      (movement.created_by_name && movement.created_by_name.toLowerCase().includes(searchTerm.toLowerCase()))
 
     return matchesSearch
   })
