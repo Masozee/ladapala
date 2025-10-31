@@ -193,7 +193,7 @@ export default function AmenitiesPage() {
   };
 
   const handleCreateRequest = async () => {
-    if (!formData.guest_name || !formData.room_number || !formData.category || !formData.item) {
+    if (!formData.guest_name || !formData.room_number || !formData.category || !formData.inventory_item) {
       alert('Mohon isi semua field yang wajib');
       return;
     }
@@ -238,7 +238,7 @@ export default function AmenitiesPage() {
   };
 
   const handleUpdateRequest = async () => {
-    if (!selectedRequest || !formData.guest_name || !formData.room_number || !formData.item) {
+    if (!selectedRequest || !formData.guest_name || !formData.room_number || !formData.inventory_item) {
       alert('Mohon isi semua field yang wajib');
       return;
     }
@@ -697,7 +697,7 @@ export default function AmenitiesPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Inventory Item (Opsional)
+                    Select Item from Warehouse <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.inventory_item}
@@ -706,31 +706,31 @@ export default function AmenitiesPage() {
                       setFormData({
                         ...formData,
                         inventory_item: e.target.value,
-                        item: selectedItem ? selectedItem.name : formData.item
+                        item: selectedItem ? selectedItem.name : ''
                       });
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                   >
-                    <option value="">Pilih dari Warehouse atau ketik manual</option>
+                    <option value="">Select item...</option>
                     {inventoryItems.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.name} (Stock: {item.current_stock} {item.unit_of_measurement})
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Pilih item dari warehouse untuk auto-deduct stock saat deliver</p>
+                  <p className="text-xs text-gray-500 mt-1">Stock will be automatically deducted when delivered</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Item <span className="text-red-500">*</span>
+                    Item Name
                   </label>
                   <input
                     type="text"
                     value={formData.item}
-                    onChange={(e) => setFormData({ ...formData, item: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
-                    placeholder="Nama item (otomatis terisi jika pilih dari inventory)"
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-700"
+                    placeholder="Auto-filled from selection above"
                   />
                 </div>
 
@@ -979,7 +979,7 @@ export default function AmenitiesPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Inventory Item (Opsional)
+                    Select Item from Warehouse <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.inventory_item}
@@ -988,31 +988,31 @@ export default function AmenitiesPage() {
                       setFormData({
                         ...formData,
                         inventory_item: e.target.value,
-                        item: selectedItem ? selectedItem.name : formData.item
+                        item: selectedItem ? selectedItem.name : ''
                       });
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                   >
-                    <option value="">Pilih dari Warehouse atau ketik manual</option>
+                    <option value="">Select item...</option>
                     {inventoryItems.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.name} (Stock: {item.current_stock} {item.unit_of_measurement})
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Pilih item dari warehouse untuk auto-deduct stock saat deliver</p>
+                  <p className="text-xs text-gray-500 mt-1">Stock will be automatically deducted when delivered</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Item <span className="text-red-500">*</span>
+                    Item Name
                   </label>
                   <input
                     type="text"
                     value={formData.item}
-                    onChange={(e) => setFormData({ ...formData, item: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
-                    placeholder="Nama item (otomatis terisi jika pilih dari inventory)"
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-700"
+                    placeholder="Auto-filled from selection above"
                   />
                 </div>
 

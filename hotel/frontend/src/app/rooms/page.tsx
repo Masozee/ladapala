@@ -671,7 +671,7 @@ const RoomsPage = () => {
   };
 
   const handleCreateAmenityRequest = async () => {
-    if (!selectedRoomForAction || !amenityFormData.category || !amenityFormData.item) {
+    if (!selectedRoomForAction || !amenityFormData.category || !amenityFormData.inventory_item) {
       alert('Please fill in all required fields');
       return;
     }
@@ -2097,7 +2097,7 @@ const RoomsPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Inventory Item (Opsional)
+                    Select Item from Warehouse <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={amenityFormData.inventory_item}
@@ -2106,31 +2106,31 @@ const RoomsPage = () => {
                       setAmenityFormData({
                         ...amenityFormData,
                         inventory_item: e.target.value,
-                        item: selectedItem ? selectedItem.name : amenityFormData.item
+                        item: selectedItem ? selectedItem.name : ''
                       });
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
                   >
-                    <option value="">Pilih dari Warehouse atau ketik manual</option>
+                    <option value="">Select item...</option>
                     {inventoryItems.map((item: any) => (
                       <option key={item.id} value={item.id}>
                         {item.name} (Stock: {item.current_stock} {item.unit_of_measurement})
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Pilih item dari warehouse untuk auto-deduct stock saat deliver</p>
+                  <p className="text-xs text-gray-500 mt-1">Stock will be automatically deducted when delivered</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Item/Service <span className="text-red-500">*</span>
+                    Item Name
                   </label>
                   <input
                     type="text"
                     value={amenityFormData.item}
-                    onChange={(e) => setAmenityFormData({ ...amenityFormData, item: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
-                    placeholder="Nama item (otomatis terisi jika pilih dari inventory)"
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-700"
+                    placeholder="Auto-filled from selection above"
                   />
                 </div>
 
