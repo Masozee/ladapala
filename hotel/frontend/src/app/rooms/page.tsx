@@ -635,19 +635,32 @@ const RoomsPage = () => {
         }
         alert('Room status updated successfully!');
       } else {
-        const error = await response.json();
+        // Try to parse JSON error, fallback to text if not JSON
+        let errorMessage = 'Unknown error';
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const error = await response.json();
 
-        // Special handling for payment validation error
-        if (error.reservation_number && error.is_fully_paid === false) {
-          const goToPayment = confirm(
-            `${error.message}\n\nWould you like to go to the payment page for ${error.reservation_number}?`
-          );
-          if (goToPayment) {
-            window.location.href = `/bookings`;
+            // Special handling for payment validation error
+            if (error.reservation_number && error.is_fully_paid === false) {
+              const goToPayment = confirm(
+                `${error.message}\n\nWould you like to go to the payment page for ${error.reservation_number}?`
+              );
+              if (goToPayment) {
+                window.location.href = `/bookings`;
+              }
+              return;
+            }
+            errorMessage = error.error || error.message || 'Unknown error';
+          } else {
+            // Response is not JSON (might be HTML error page)
+            errorMessage = `Server error (${response.status}): ${response.statusText}`;
           }
-        } else {
-          alert(`Failed to update room status: ${error.error || error.message || 'Unknown error'}`);
+        } catch (parseError) {
+          errorMessage = `Failed to parse error response (${response.status})`;
         }
+        alert(`Failed to update room status: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error updating room status:', error);
