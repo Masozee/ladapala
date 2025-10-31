@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import OfficeLayout from '@/components/OfficeLayout'
-import { Add01Icon, Search02Icon, ArrowDown01Icon, ArrowUp01Icon, PackageIcon, FilterIcon, Cancel01Icon } from '@/lib/icons'
+import { Add01Icon, Search02Icon, ArrowDown01Icon, ArrowUp01Icon, PackageIcon, FilterIcon, Cancel01Icon, ChevronLeftIcon, ChevronRightIcon } from '@/lib/icons'
 import { apiFetch } from '@/lib/config'
 
 interface InventoryItem {
@@ -42,6 +42,10 @@ export default function StockMovementsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [itemFilter, setItemFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrevious, setHasPrevious] = useState(false)
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false)
   const [adjustmentData, setAdjustmentData] = useState({
     inventory_item: '',
@@ -51,7 +55,7 @@ export default function StockMovementsPage() {
 
   useEffect(() => {
     fetchData()
-  }, [itemFilter, typeFilter])
+  }, [itemFilter, typeFilter, currentPage])
 
   const fetchData = async () => {
     try {
@@ -61,10 +65,11 @@ export default function StockMovementsPage() {
       if (itemFilter) params.append('inventory_item', itemFilter)
       if (typeFilter) params.append('movement_type', typeFilter)
       params.append('ordering', '-created_at')
+      params.append('page', currentPage.toString())
 
       const [movementsRes, itemsRes] = await Promise.all([
         apiFetch(`hotel/stock-movements/?${params.toString()}`),
-        apiFetch('hotel/inventory/')
+        apiFetch('hotel/inventory/?page_size=100')
       ])
 
       if (movementsRes.ok && itemsRes.ok) {
@@ -72,6 +77,9 @@ export default function StockMovementsPage() {
         const itemsData: PaginatedResponse = await itemsRes.json()
         setMovements(movementsData.results || [])
         setInventoryItems(itemsData.results || [])
+        setTotalCount(movementsData.count || 0)
+        setHasNext(!!movementsData.next)
+        setHasPrevious(!!movementsData.previous)
       } else {
         console.error('API Error:', {
           movementsStatus: movementsRes.status,
@@ -164,14 +172,37 @@ export default function StockMovementsPage() {
   }
 
   const removeFilter = (type: string) => {
-    if (type === 'item') setItemFilter('')
-    if (type === 'type') setTypeFilter('')
+    if (type === 'item') {
+      setItemFilter('')
+      setCurrentPage(1)
+    }
+    if (type === 'type') {
+      setTypeFilter('')
+      setCurrentPage(1)
+    }
   }
 
   // Calculate summary stats
   const purchaseCount = movements.filter(m => m.movement_type === 'PURCHASE').length
   const adjustmentCount = movements.filter(m => m.movement_type === 'ADJUSTMENT').length
   const usageCount = movements.filter(m => m.movement_type === 'USAGE').length
+
+  // Pagination handlers
+  const handlePreviousPage = () => {
+    if (hasPrevious) {
+      setCurrentPage(prev => prev - 1)
+    }
+  }
+
+  const handleNextPage = () => {
+    if (hasNext) {
+      setCurrentPage(prev => prev + 1)
+    }
+  }
+
+  // Calculate total pages
+  const pageSize = 20
+  const totalPages = Math.ceil(totalCount / pageSize)
 
   return (
     <OfficeLayout>
@@ -265,7 +296,10 @@ export default function StockMovementsPage() {
           </div>
           <select
             value={itemFilter}
-            onChange={(e) => setItemFilter(e.target.value)}
+            onChange={(e) => {
+              setItemFilter(e.target.value)
+              setCurrentPage(1)
+            }}
             className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-full appearance-none bg-white"
           >
             <option value="">Semua Item</option>
@@ -282,7 +316,10 @@ export default function StockMovementsPage() {
           </div>
           <select
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            onChange={(e) => {
+              setTypeFilter(e.target.value)
+              setCurrentPage(1)
+            }}
             className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-full appearance-none bg-white"
           >
             <option value="">Semua Tipe</option>
@@ -417,6 +454,41 @@ export default function StockMovementsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && filteredMovements.length > 0 && totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Menampilkan halaman {currentPage} dari {totalPages} ({totalCount} total pergerakan)
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={!hasPrevious}
+                  className={`px-3 py-2 border rounded-lg flex items-center gap-2 ${
+                    hasPrevious
+                      ? 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  }`}
+                >
+                  <ChevronLeftIcon className="h-4 w-4" />
+                  <span>Sebelumnya</span>
+                </button>
+                <button
+                  onClick={handleNextPage}
+                  disabled={!hasNext}
+                  className={`px-3 py-2 border rounded-lg flex items-center gap-2 ${
+                    hasNext
+                      ? 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  }`}
+                >
+                  <span>Selanjutnya</span>
+                  <ChevronRightIcon className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>

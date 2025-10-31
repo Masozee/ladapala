@@ -16,7 +16,9 @@ import {
   ArrowDown01Icon,
   UserCheckIcon,
   FilterIcon,
-  Cancel01Icon
+  Cancel01Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@/lib/icons';
 
 interface InventoryItem {
@@ -41,9 +43,6 @@ interface Supplier {
   status: string;
 }
 
-type SortField = 'name' | 'current_stock' | 'status';
-type SortDirection = 'asc' | 'desc';
-
 const getCategoryLabel = (category: string): string => {
   const categoryMap: Record<string, string> = {
     'ROOM_SUPPLIES': 'Room Supplies',
@@ -66,12 +65,14 @@ export default function WarehousePage() {
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [csrfToken, setCsrfToken] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     category: 'AMENITIES',
@@ -86,7 +87,7 @@ export default function WarehousePage() {
     fetchCSRFToken();
     fetchInventory();
     fetchSuppliers();
-  }, []);
+  }, [categoryFilter, statusFilter, currentPage]);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -123,7 +124,17 @@ export default function WarehousePage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(buildApiUrl('hotel/inventory/'), {
+
+      const params = new URLSearchParams();
+      if (categoryFilter !== 'All') params.append('category', categoryFilter);
+      if (statusFilter !== 'All') {
+        if (statusFilter === 'Low Stock') params.append('is_low_stock', 'true');
+        if (statusFilter === 'Out of Stock') params.append('out_of_stock', 'true');
+      }
+      params.append('page', currentPage.toString());
+      params.append('ordering', 'name');
+
+      const response = await fetch(buildApiUrl(`hotel/inventory/?${params.toString()}`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -136,6 +147,9 @@ export default function WarehousePage() {
 
       const data = await response.json();
       setItems(data.results || data);
+      setTotalCount(data.count || 0);
+      setHasNext(!!data.next);
+      setHasPrevious(!!data.previous);
     } catch (err) {
       console.error('Error fetching inventory:', err);
       setError('Gagal memuat data inventaris');
@@ -328,58 +342,11 @@ export default function WarehousePage() {
     return item.current_stock * unitPrice;
   };
 
-  const getStatusSeverity = (item: InventoryItem): number => {
-    if (item.current_stock === 0) return 3;
-    if (item.is_low_stock) return 2;
-    if (item.maximum_stock && item.current_stock >= item.maximum_stock) return 1;
-    return 0;
-  };
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return null;
-    return sortDirection === 'asc' ? ArrowUp01Icon : ArrowDown01Icon;
-  };
-
+  // Client-side search filtering (after server-side pagination)
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                  item.category.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
-
-    let matchesStatus = true;
-    if (statusFilter === 'Normal') {
-      matchesStatus = !item.is_low_stock && item.current_stock > 0;
-    } else if (statusFilter === 'Low Stock') {
-      matchesStatus = item.is_low_stock && item.current_stock > 0;
-    } else if (statusFilter === 'Out of Stock') {
-      matchesStatus = item.current_stock === 0;
-    }
-
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
-
-  const sortedItems = [...filteredItems].sort((a, b) => {
-    if (!sortField) return 0;
-
-    let comparison = 0;
-    if (sortField === 'name') {
-      comparison = a.name.localeCompare(b.name);
-    } else if (sortField === 'current_stock') {
-      comparison = a.current_stock - b.current_stock;
-    } else if (sortField === 'status') {
-      comparison = getStatusSeverity(b) - getStatusSeverity(a);
-    }
-
-    return sortDirection === 'asc' ? comparison : -comparison;
+    return matchesSearch;
   });
 
   const activeFilters = [];
@@ -387,9 +354,32 @@ export default function WarehousePage() {
   if (statusFilter !== 'All') activeFilters.push({ type: 'status', value: statusFilter });
 
   const removeFilter = (type: string) => {
-    if (type === 'category') setCategoryFilter('All');
-    if (type === 'status') setStatusFilter('All');
+    if (type === 'category') {
+      setCategoryFilter('All');
+      setCurrentPage(1);
+    }
+    if (type === 'status') {
+      setStatusFilter('All');
+      setCurrentPage(1);
+    }
   };
+
+  // Pagination handlers
+  const handlePreviousPage = () => {
+    if (hasPrevious) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (hasNext) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  // Calculate total pages
+  const pageSize = 20;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const lowStockCount = items.filter(item => item.is_low_stock && item.current_stock > 0).length;
   const criticalStockCount = items.filter(item => item.current_stock === 0).length;
@@ -489,7 +479,10 @@ export default function WarehousePage() {
           </div>
           <select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-full appearance-none bg-white"
           >
             <option value="All">Kategori</option>
@@ -510,7 +503,10 @@ export default function WarehousePage() {
           </div>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-full appearance-none bg-white"
           >
             <option value="All">Status</option>
@@ -580,44 +576,20 @@ export default function WarehousePage() {
             <table className="w-full border-collapse text-sm">
               <thead className="bg-[#4E61D3]">
                 <tr>
-                  <th
-                    onClick={() => handleSort('name')}
-                    className="border border-gray-300 text-left py-3 px-4 text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-[#006a6f] transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span>Nama Item</span>
-                      {sortField === 'name' && getSortIcon('name') && (
-                        React.createElement(getSortIcon('name')!, { className: 'h-3 w-3' })
-                      )}
-                    </div>
+                  <th className="border border-gray-300 text-left py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
+                    Nama Item
                   </th>
                   <th className="border border-gray-300 text-left py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
                     Kategori
                   </th>
-                  <th
-                    onClick={() => handleSort('current_stock')}
-                    className="border border-gray-300 text-center py-3 px-4 text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-[#006a6f] transition-colors"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Stok</span>
-                      {sortField === 'current_stock' && getSortIcon('current_stock') && (
-                        React.createElement(getSortIcon('current_stock')!, { className: 'h-3 w-3' })
-                      )}
-                    </div>
+                  <th className="border border-gray-300 text-center py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
+                    Stok
                   </th>
                   <th className="border border-gray-300 text-center py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
                     Min/Max
                   </th>
-                  <th
-                    onClick={() => handleSort('status')}
-                    className="border border-gray-300 text-center py-3 px-4 text-xs font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-[#006a6f] transition-colors"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Status</span>
-                      {sortField === 'status' && getSortIcon('status') && (
-                        React.createElement(getSortIcon('status')!, { className: 'h-3 w-3' })
-                      )}
-                    </div>
+                  <th className="border border-gray-300 text-center py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
+                    Status
                   </th>
                   <th className="border border-gray-300 text-right py-3 px-4 text-xs font-bold text-white uppercase tracking-wider">
                     Harga
@@ -634,7 +606,7 @@ export default function WarehousePage() {
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {sortedItems.map((item) => {
+                {filteredItems.map((item) => {
                   const StatusIcon = getStockStatusIcon(item);
                   const stockPercentage = getStockPercentage(item);
                   const progressColor = getProgressBarColor(stockPercentage);
@@ -737,11 +709,46 @@ export default function WarehousePage() {
             </div>
 
           {/* No Results */}
-          {sortedItems.length === 0 && (
+          {filteredItems.length === 0 && (
             <div className="text-center py-12 bg-gray-50">
               <PackageIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada item ditemukan</h3>
               <p className="text-gray-600">Coba ubah kata kunci pencarian atau filter Anda.</p>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && filteredItems.length > 0 && totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Menampilkan halaman {currentPage} dari {totalPages} ({totalCount} total item)
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={!hasPrevious}
+                  className={`px-3 py-2 border rounded-lg flex items-center gap-2 ${
+                    hasPrevious
+                      ? 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  }`}
+                >
+                  <ChevronLeftIcon className="h-4 w-4" />
+                  <span>Sebelumnya</span>
+                </button>
+                <button
+                  onClick={handleNextPage}
+                  disabled={!hasNext}
+                  className={`px-3 py-2 border rounded-lg flex items-center gap-2 ${
+                    hasNext
+                      ? 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  }`}
+                >
+                  <span>Selanjutnya</span>
+                  <ChevronRightIcon className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>
