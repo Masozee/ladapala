@@ -43,17 +43,17 @@ interface Supplier {
   status: string;
 }
 
+interface AmenityCategory {
+  id: number;
+  name: string;
+  display_name: string;
+  is_active: boolean;
+}
+
+// This function is no longer needed since we'll display category_display directly
+// Keeping for backward compatibility
 const getCategoryLabel = (category: string): string => {
-  const categoryMap: Record<string, string> = {
-    'FOOD_BEVERAGE': 'Food & Beverage',
-    'TOILETRIES': 'Toiletries & Bath',
-    'BEVERAGE': 'Beverages',
-    'LAUNDRY': 'Laundry & Cleaning',
-    'TECHNOLOGY': 'Technology',
-    'FLOWERS': 'Flowers & Decor',
-    'OTHER': 'Other',
-  };
-  return categoryMap[category] || category;
+  return category;
 };
 
 export default function WarehousePage() {
@@ -61,6 +61,7 @@ export default function WarehousePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [categories, setCategories] = useState<AmenityCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -75,7 +76,7 @@ export default function WarehousePage() {
   const [hasPrevious, setHasPrevious] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    category: 'TOILETRIES',
+    category: '',
     minimum_stock: '10',
     maximum_stock: '',
     unit_of_measurement: '',
@@ -87,6 +88,7 @@ export default function WarehousePage() {
     fetchCSRFToken();
     fetchInventory();
     fetchSuppliers();
+    fetchCategories();
   }, [categoryFilter, statusFilter, currentPage]);
 
   useEffect(() => {
@@ -172,6 +174,23 @@ export default function WarehousePage() {
       setSuppliers(data.results || data);
     } catch (err) {
       console.error('Error fetching suppliers:', err);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/amenity-categories/'), {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+
+      const data = await response.json();
+      setCategories((data.results || data).filter((cat: AmenityCategory) => cat.is_active));
+    } catch (err) {
+      console.error('Error fetching categories:', err);
     }
   };
 
@@ -345,7 +364,7 @@ export default function WarehousePage() {
   // Client-side search filtering (after server-side pagination)
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                 item.category.toLowerCase().includes(searchQuery.toLowerCase());
+                 (item.category_display && item.category_display.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesSearch;
   });
 
@@ -486,13 +505,11 @@ export default function WarehousePage() {
             className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-full appearance-none bg-white"
           >
             <option value="All">Kategori</option>
-            <option value="FOOD_BEVERAGE">Food & Beverage</option>
-            <option value="TOILETRIES">Toiletries & Bath</option>
-            <option value="BEVERAGE">Beverages</option>
-            <option value="LAUNDRY">Laundry & Cleaning</option>
-            <option value="TECHNOLOGY">Technology</option>
-            <option value="FLOWERS">Flowers & Decor</option>
-            <option value="OTHER">Other</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.display_name}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -621,7 +638,7 @@ export default function WarehousePage() {
                         )}
                       </td>
                       <td className="border border-gray-200 px-4 py-3">
-                        <span className="text-sm text-gray-600">{getCategoryLabel(item.category)}</span>
+                        <span className="text-sm text-gray-600">{item.category_display}</span>
                       </td>
                       <td className="border border-gray-200 px-4 py-3">
                         <div className="space-y-2">
