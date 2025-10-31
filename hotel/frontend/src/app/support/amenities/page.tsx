@@ -669,7 +669,7 @@ export default function AmenitiesPage() {
                     </label>
                     <select
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value, inventory_item: '', item: '' })}
                       className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                     >
                       <option value="">Select Category</option>
@@ -712,13 +712,38 @@ export default function AmenitiesPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                   >
                     <option value="">Select item...</option>
-                    {inventoryItems.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name} (Stock: {item.current_stock} {item.unit_of_measurement})
-                      </option>
-                    ))}
+                    {inventoryItems
+                      .filter((item) => {
+                        if (!formData.category) return true; // Show all if no category selected
+
+                        const selectedCategory = categories.find((cat) => cat.id === parseInt(formData.category));
+                        if (!selectedCategory) return true;
+
+                        const itemName = item.name.toLowerCase();
+                        const categoryName = selectedCategory.name;
+
+                        // Map category to keywords
+                        const categoryKeywords: Record<string, string[]> = {
+                          'TOILETRIES': ['towel', 'handuk', 'shampoo', 'soap', 'sabun', 'pasta', 'sikat', 'sisir', 'shower', 'bath', 'tangan', 'kaki', 'mandi'],
+                          'FOOD_BEVERAGE': ['food', 'beverage', 'makanan', 'minuman', 'snack', 'drink'],
+                          'BEVERAGE': ['beverage', 'minuman', 'drink', 'coffee', 'tea', 'kopi', 'teh'],
+                          'LAUNDRY': ['laundry', 'sprei', 'bed', 'sheet', 'pillow', 'sarung', 'bantal', 'selimut', 'blanket'],
+                          'TECHNOLOGY': ['technology', 'teknologi', 'charger', 'adapter', 'remote', 'cable'],
+                          'FLOWERS': ['flower', 'bunga', 'decor', 'dekorasi', 'sajadah', 'mukena', 'quran', 'al-quran', 'mushaf', 'kiblat', 'kompas']
+                        };
+
+                        const keywords = categoryKeywords[categoryName] || [];
+                        return keywords.some(keyword => itemName.includes(keyword));
+                      })
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} (Stock: {item.current_stock} {item.unit_of_measurement})
+                        </option>
+                      ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Stock will be automatically deducted when delivered</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.category ? 'Showing items matching selected category' : 'Select a category to filter items'}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
@@ -938,7 +963,7 @@ export default function AmenitiesPage() {
                     </label>
                     <select
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value, inventory_item: '', item: '' })}
                       className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                     >
                       <option value="">Select Category</option>
@@ -981,13 +1006,38 @@ export default function AmenitiesPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                   >
                     <option value="">Select item...</option>
-                    {inventoryItems.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name} (Stock: {item.current_stock} {item.unit_of_measurement})
-                      </option>
-                    ))}
+                    {inventoryItems
+                      .filter((item) => {
+                        if (!formData.category) return true; // Show all if no category selected
+
+                        const selectedCategory = categories.find((cat) => cat.id === parseInt(formData.category));
+                        if (!selectedCategory) return true;
+
+                        const itemName = item.name.toLowerCase();
+                        const categoryName = selectedCategory.name;
+
+                        // Map category to keywords
+                        const categoryKeywords: Record<string, string[]> = {
+                          'TOILETRIES': ['towel', 'handuk', 'shampoo', 'soap', 'sabun', 'pasta', 'sikat', 'sisir', 'shower', 'bath', 'tangan', 'kaki', 'mandi'],
+                          'FOOD_BEVERAGE': ['food', 'beverage', 'makanan', 'minuman', 'snack', 'drink'],
+                          'BEVERAGE': ['beverage', 'minuman', 'drink', 'coffee', 'tea', 'kopi', 'teh'],
+                          'LAUNDRY': ['laundry', 'sprei', 'bed', 'sheet', 'pillow', 'sarung', 'bantal', 'selimut', 'blanket'],
+                          'TECHNOLOGY': ['technology', 'teknologi', 'charger', 'adapter', 'remote', 'cable'],
+                          'FLOWERS': ['flower', 'bunga', 'decor', 'dekorasi', 'sajadah', 'mukena', 'quran', 'al-quran', 'mushaf', 'kiblat', 'kompas']
+                        };
+
+                        const keywords = categoryKeywords[categoryName] || [];
+                        return keywords.some(keyword => itemName.includes(keyword));
+                      })
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} (Stock: {item.current_stock} {item.unit_of_measurement})
+                        </option>
+                      ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Stock will be automatically deducted when delivered</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.category ? 'Showing items matching selected category' : 'Select a category to filter items'}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
