@@ -24,7 +24,8 @@ import {
 interface InventoryItem {
   id: number;
   name: string;
-  category: string;
+  category: number;
+  category_name?: string;
   current_stock: number;
   minimum_stock: number;
   maximum_stock: number | null;
@@ -284,7 +285,7 @@ export default function WarehousePage() {
     setEditingItem(item);
     setFormData({
       name: item.name,
-      category: item.category,
+      category: item.category.toString(),
       minimum_stock: item.minimum_stock.toString(),
       maximum_stock: item.maximum_stock?.toString() || '',
       unit_of_measurement: item.unit_of_measurement,
@@ -802,13 +803,12 @@ export default function WarehousePage() {
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
                   >
-                    <option value="AMENITIES">Guest Amenities</option>
-                    <option value="FOOD">Food & Beverage</option>
-                    <option value="CLEANING">Cleaning Supplies</option>
-                    <option value="ROOM_SUPPLIES">Room Supplies</option>
-                    <option value="MAINTENANCE">Maintenance</option>
-                    <option value="OFFICE">Office Supplies</option>
-                    <option value="OTHER">Other</option>
+                    <option value="">Pilih Kategori</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -943,13 +943,12 @@ export default function WarehousePage() {
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
                   >
-                    <option value="AMENITIES">Guest Amenities</option>
-                    <option value="FOOD">Food & Beverage</option>
-                    <option value="CLEANING">Cleaning Supplies</option>
-                    <option value="ROOM_SUPPLIES">Room Supplies</option>
-                    <option value="MAINTENANCE">Maintenance</option>
-                    <option value="OFFICE">Office Supplies</option>
-                    <option value="OTHER">Other</option>
+                    <option value="">Pilih Kategori</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
