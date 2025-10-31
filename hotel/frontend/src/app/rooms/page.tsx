@@ -2140,7 +2140,7 @@ const RoomsPage = () => {
                     >
                       <option value="">Select Category</option>
                       {categories.map((cat: any) => (
-                        <option key={cat.id} value={cat.id}>{cat.display_name}</option>
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
                     </select>
                   </div>
@@ -2181,25 +2181,7 @@ const RoomsPage = () => {
                     {inventoryItems
                       .filter((item: any) => {
                         if (!amenityFormData.category) return true; // Show all if no category selected
-
-                        const selectedCategory = categories.find((cat: any) => cat.id === parseInt(amenityFormData.category));
-                        if (!selectedCategory) return true;
-
-                        const itemName = item.name.toLowerCase();
-                        const categoryName = selectedCategory.name;
-
-                        // Map category to keywords
-                        const categoryKeywords: Record<string, string[]> = {
-                          'TOILETRIES': ['towel', 'handuk', 'shampoo', 'soap', 'sabun', 'pasta', 'sikat', 'sisir', 'shower', 'bath', 'tangan', 'kaki', 'mandi'],
-                          'FOOD_BEVERAGE': ['food', 'beverage', 'makanan', 'minuman', 'snack', 'drink'],
-                          'BEVERAGE': ['beverage', 'minuman', 'drink', 'coffee', 'tea', 'kopi', 'teh'],
-                          'LAUNDRY': ['laundry', 'sprei', 'bed', 'sheet', 'pillow', 'sarung', 'bantal', 'selimut', 'blanket'],
-                          'TECHNOLOGY': ['technology', 'teknologi', 'charger', 'adapter', 'remote', 'cable'],
-                          'FLOWERS': ['flower', 'bunga', 'decor', 'dekorasi', 'sajadah', 'mukena', 'quran', 'al-quran', 'mushaf', 'kiblat', 'kompas']
-                        };
-
-                        const keywords = categoryKeywords[categoryName] || [];
-                        return keywords.some(keyword => itemName.includes(keyword));
+                        return item.category === parseInt(amenityFormData.category);
                       })
                       .map((item: any) => (
                         <option key={item.id} value={item.id}>
