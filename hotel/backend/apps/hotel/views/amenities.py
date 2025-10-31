@@ -119,11 +119,10 @@ class AmenityRequestViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def inventory_items(self, request):
-        """Get inventory items categorized as AMENITIES"""
-        amenities = InventoryItem.objects.filter(
-            category='AMENITIES',
+        """Get all active inventory items"""
+        items = InventoryItem.objects.filter(
             is_active=True
-        ).order_by('name')
+        ).select_related('category').order_by('name')
 
-        serializer = InventoryItemSerializer(amenities, many=True)
+        serializer = InventoryItemSerializer(items, many=True)
         return Response(serializer.data)

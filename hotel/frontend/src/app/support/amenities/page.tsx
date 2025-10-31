@@ -25,7 +25,8 @@ interface AmenityCategory {
 interface InventoryItem {
   id: number;
   name: string;
-  category: string;
+  category: number;
+  category_name?: string;
   current_stock: number;
   unit_of_measurement: string;
   unit_price: string;
@@ -178,7 +179,10 @@ export default function AmenitiesPage() {
       });
       if (response.ok) {
         const data = await response.json();
+        console.log('Inventory items fetched:', data);
         setInventoryItems(data);
+      } else {
+        console.error('Failed to fetch inventory items. Status:', response.status);
       }
     } catch (error) {
       console.error('Error fetching inventory items:', error);
@@ -747,25 +751,7 @@ export default function AmenitiesPage() {
                     {inventoryItems
                       .filter((item) => {
                         if (!formData.category) return true; // Show all if no category selected
-
-                        const selectedCategory = categories.find((cat) => cat.id === parseInt(formData.category));
-                        if (!selectedCategory) return true;
-
-                        const itemName = item.name.toLowerCase();
-                        const categoryName = selectedCategory.name;
-
-                        // Map category to keywords
-                        const categoryKeywords: Record<string, string[]> = {
-                          'TOILETRIES': ['towel', 'handuk', 'shampoo', 'soap', 'sabun', 'pasta', 'sikat', 'sisir', 'shower', 'bath', 'tangan', 'kaki', 'mandi'],
-                          'FOOD_BEVERAGE': ['food', 'beverage', 'makanan', 'minuman', 'snack', 'drink'],
-                          'BEVERAGE': ['beverage', 'minuman', 'drink', 'coffee', 'tea', 'kopi', 'teh'],
-                          'LAUNDRY': ['laundry', 'sprei', 'bed', 'sheet', 'pillow', 'sarung', 'bantal', 'selimut', 'blanket'],
-                          'TECHNOLOGY': ['technology', 'teknologi', 'charger', 'adapter', 'remote', 'cable'],
-                          'FLOWERS': ['flower', 'bunga', 'decor', 'dekorasi', 'sajadah', 'mukena', 'quran', 'al-quran', 'mushaf', 'kiblat', 'kompas']
-                        };
-
-                        const keywords = categoryKeywords[categoryName] || [];
-                        return keywords.some(keyword => itemName.includes(keyword));
+                        return item.category === parseInt(formData.category);
                       })
                       .map((item) => (
                         <option key={item.id} value={item.id}>
@@ -1026,25 +1012,7 @@ export default function AmenitiesPage() {
                     {inventoryItems
                       .filter((item) => {
                         if (!formData.category) return true; // Show all if no category selected
-
-                        const selectedCategory = categories.find((cat) => cat.id === parseInt(formData.category));
-                        if (!selectedCategory) return true;
-
-                        const itemName = item.name.toLowerCase();
-                        const categoryName = selectedCategory.name;
-
-                        // Map category to keywords
-                        const categoryKeywords: Record<string, string[]> = {
-                          'TOILETRIES': ['towel', 'handuk', 'shampoo', 'soap', 'sabun', 'pasta', 'sikat', 'sisir', 'shower', 'bath', 'tangan', 'kaki', 'mandi'],
-                          'FOOD_BEVERAGE': ['food', 'beverage', 'makanan', 'minuman', 'snack', 'drink'],
-                          'BEVERAGE': ['beverage', 'minuman', 'drink', 'coffee', 'tea', 'kopi', 'teh'],
-                          'LAUNDRY': ['laundry', 'sprei', 'bed', 'sheet', 'pillow', 'sarung', 'bantal', 'selimut', 'blanket'],
-                          'TECHNOLOGY': ['technology', 'teknologi', 'charger', 'adapter', 'remote', 'cable'],
-                          'FLOWERS': ['flower', 'bunga', 'decor', 'dekorasi', 'sajadah', 'mukena', 'quran', 'al-quran', 'mushaf', 'kiblat', 'kompas']
-                        };
-
-                        const keywords = categoryKeywords[categoryName] || [];
-                        return keywords.some(keyword => itemName.includes(keyword));
+                        return item.category === parseInt(formData.category);
                       })
                       .map((item) => (
                         <option key={item.id} value={item.id}>
