@@ -169,7 +169,7 @@ interface IndividualRoom {
   number: string;
   room_type_name: string;
   floor: number;
-  status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'MAINTENANCE' | 'OUT_OF_ORDER';
+  status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'MAINTENANCE' | 'CLEANING' | 'OUT_OF_ORDER';
   status_display: string;
   base_price: string;
   max_occupancy: number;
@@ -1644,7 +1644,12 @@ const RoomsPage = () => {
                                   {room.status !== 'AVAILABLE' && (
                                     <button
                                       onClick={() => handleCheckOut(room)}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                                      disabled={!room.current_guest && !room.current_staff}
+                                      className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center space-x-2 ${
+                                        !room.current_guest && !room.current_staff
+                                          ? 'text-gray-400 cursor-not-allowed bg-gray-50'
+                                          : 'text-gray-700 hover:bg-gray-50'
+                                      }`}
                                     >
                                       <UserCheckIcon className="h-4 w-4" />
                                       <span>Check Out</span>

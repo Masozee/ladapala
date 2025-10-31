@@ -59,6 +59,7 @@ class Room(models.Model):
         ('OCCUPIED', 'Occupied'),
         ('RESERVED', 'Reserved'),
         ('MAINTENANCE', 'Under Maintenance'),
+        ('CLEANING', 'Cleaning'),
         ('OUT_OF_ORDER', 'Out of Order'),
     ]
 
