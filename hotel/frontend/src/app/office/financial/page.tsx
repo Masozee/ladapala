@@ -99,7 +99,9 @@ export default function FinancialPage() {
 
       try {
         const url = buildApiUrl(`hotel/financial/overview/?period=${selectedPeriod}`);
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          credentials: 'include',
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch financial overview');
@@ -137,7 +139,9 @@ export default function FinancialPage() {
         }
 
         const url = buildApiUrl(`hotel/financial/transactions/?${params.toString()}`);
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          credentials: 'include',
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch transactions');
