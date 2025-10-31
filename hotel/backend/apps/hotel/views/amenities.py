@@ -16,9 +16,9 @@ class AmenityCategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['name', 'is_active']
-    search_fields = ['display_name', 'description']
-    ordering_fields = ['display_name', 'created_at']
-    ordering = ['display_name']
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']
 
 
 class AmenityRequestViewSet(viewsets.ModelViewSet):

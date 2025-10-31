@@ -86,9 +86,12 @@ export default function WarehousePage() {
 
   useEffect(() => {
     fetchCSRFToken();
-    fetchInventory();
     fetchSuppliers();
     fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    fetchInventory();
   }, [categoryFilter, statusFilter, currentPage]);
 
   useEffect(() => {
