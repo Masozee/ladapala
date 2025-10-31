@@ -604,7 +604,7 @@ const RoomsPage = () => {
     try {
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/rooms/${roomId}/update_status/`), {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
