@@ -251,6 +251,20 @@ const RoomsPage = () => {
     notes: ''
   });
 
+  // Room actions states
+  const [activeRoomMenu, setActiveRoomMenu] = useState<number | null>(null);
+  const [showAmenityModal, setShowAmenityModal] = useState(false);
+  const [selectedRoomForAction, setSelectedRoomForAction] = useState<IndividualRoom | null>(null);
+  const [amenityFormData, setAmenityFormData] = useState({
+    category: '',
+    item: '',
+    quantity: '1',
+    priority: 'MEDIUM',
+    delivery_time: '',
+    special_instructions: ''
+  });
+  const [categories, setCategories] = useState<any[]>([]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -548,6 +562,146 @@ const RoomsPage = () => {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [activeDropdown]);
+
+  // Fetch amenity categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(buildApiUrl('hotel/amenity-categories/'), {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.results || data);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Room action handlers
+  const handleUpdateRoomStatus = async (roomId: number, newStatus: string) => {
+    try {
+      const csrfToken = getCsrfToken();
+      const response = await fetch(buildApiUrl(`hotel/rooms/${roomId}/update_status/`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        // Refresh rooms list
+        const updatedRoomsResponse = await fetch(buildApiUrl('hotel/rooms/'), {
+          credentials: 'include',
+        });
+        if (updatedRoomsResponse.ok) {
+          const data = await updatedRoomsResponse.json();
+          const mappedRooms = (data.results || data).map((room: any) => ({
+            id: room.id,
+            number: room.number,
+            room_type_name: room.room_type_name,
+            status: room.status,
+            status_display: room.status_display || room.status,
+            floor: room.floor,
+            notes: room.notes,
+            last_checkout: room.last_checkout,
+            next_reservation: room.next_reservation,
+          }));
+          setRooms(mappedRooms);
+        }
+        alert('Room status updated successfully!');
+      } else {
+        const error = await response.json();
+        alert(`Failed to update room status: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error updating room status:', error);
+      alert('Failed to update room status');
+    } finally {
+      setActiveRoomMenu(null);
+    }
+  };
+
+  const handleCheckOut = (room: IndividualRoom) => {
+    if (confirm(`Check out Room ${room.number}?`)) {
+      handleUpdateRoomStatus(room.id, 'AVAILABLE');
+    }
+  };
+
+  const handleSetMaintenance = (room: IndividualRoom) => {
+    if (confirm(`Set Room ${room.number} to Maintenance?`)) {
+      handleUpdateRoomStatus(room.id, 'MAINTENANCE');
+    }
+  };
+
+  const handleSetCleaning = (room: IndividualRoom) => {
+    if (confirm(`Set Room ${room.number} to Cleaning?`)) {
+      handleUpdateRoomStatus(room.id, 'CLEANING');
+    }
+  };
+
+  const openAmenityModal = (room: IndividualRoom) => {
+    setSelectedRoomForAction(room);
+    setShowAmenityModal(true);
+    setActiveRoomMenu(null);
+  };
+
+  const handleCreateAmenityRequest = async () => {
+    if (!selectedRoomForAction || !amenityFormData.category || !amenityFormData.item) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const csrfToken = getCsrfToken();
+      const response = await fetch(buildApiUrl('hotel/amenity-requests/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          guest_name: 'Guest',  // You can update this to get actual guest name
+          room_number: selectedRoomForAction.number,
+          category: parseInt(amenityFormData.category),
+          item: amenityFormData.item,
+          quantity: parseInt(amenityFormData.quantity),
+          priority: amenityFormData.priority,
+          delivery_time: amenityFormData.delivery_time || null,
+          special_instructions: amenityFormData.special_instructions || null,
+          assigned_to_department: 'Room Service',
+          estimated_cost: 0,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Amenity request created successfully!');
+        setShowAmenityModal(false);
+        setSelectedRoomForAction(null);
+        setAmenityFormData({
+          category: '',
+          item: '',
+          quantity: '1',
+          priority: 'MEDIUM',
+          delivery_time: '',
+          special_instructions: ''
+        });
+      } else {
+        const error = await response.json();
+        alert(`Failed to create request: ${JSON.stringify(error)}`);
+      }
+    } catch (error) {
+      console.error('Error creating amenity request:', error);
+      alert('Failed to create amenity request');
+    }
+  };
 
   const breadcrumb = [
     { label: 'Home', href: '/' },
@@ -1444,13 +1598,55 @@ const RoomsPage = () => {
                             <span className="text-sm text-gray-600">{room.notes || '-'}</span>
                           </td>
                           <td className="border border-gray-200 px-6 py-4">
-                            <button
-                              onClick={() => setSelectedRoom(room)}
-                              className="text-xs bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors rounded"
-                            >
-                              <EyeIcon className="h-3 w-3 inline mr-1" />
-                              View Details
-                            </button>
+                            <div className="flex items-center justify-center relative">
+                              <button
+                                onClick={() => setActiveRoomMenu(activeRoomMenu === room.id ? null : room.id)}
+                                className="p-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                              >
+                                <MoreHorizontalIcon className="h-4 w-4 text-gray-600" />
+                              </button>
+                              {activeRoomMenu === room.id && (
+                                <div className="absolute right-0 top-12 mt-2 w-56 bg-white border border-gray-200 shadow-lg z-10 rounded">
+                                  <button
+                                    onClick={() => setSelectedRoom(room)}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                                  >
+                                    <EyeIcon className="h-4 w-4" />
+                                    <span>View Details</span>
+                                  </button>
+                                  <button
+                                    onClick={() => openAmenityModal(room)}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                                  >
+                                    <PackageIcon className="h-4 w-4" />
+                                    <span>Request Amenities</span>
+                                  </button>
+                                  {room.status !== 'AVAILABLE' && (
+                                    <button
+                                      onClick={() => handleCheckOut(room)}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                                    >
+                                      <UserCheckIcon className="h-4 w-4" />
+                                      <span>Check Out</span>
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => handleSetMaintenance(room)}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                                  >
+                                    <Settings02Icon className="h-4 w-4" />
+                                    <span>Set Maintenance</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleSetCleaning(room)}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2 border-t border-gray-200"
+                                  >
+                                    <SparklesIcon className="h-4 w-4" />
+                                    <span>Set Cleaning</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1834,6 +2030,123 @@ const RoomsPage = () => {
                     {formLoading ? 'Creating...' : 'Create Room'}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Request Amenities Modal */}
+        {showAmenityModal && selectedRoomForAction && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold mb-4">Request Amenities - Room {selectedRoomForAction.number}</h2>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={amenityFormData.category}
+                      onChange={(e) => setAmenityFormData({ ...amenityFormData, category: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((cat: any) => (
+                        <option key={cat.id} value={cat.id}>{cat.display_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Priority
+                    </label>
+                    <select
+                      value={amenityFormData.priority}
+                      onChange={(e) => setAmenityFormData({ ...amenityFormData, priority: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                    >
+                      <option value="LOW">Low</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HIGH">High</option>
+                      <option value="URGENT">Urgent</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Item/Service <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={amenityFormData.item}
+                    onChange={(e) => setAmenityFormData({ ...amenityFormData, item: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                    placeholder="e.g., Extra Towels, Room Service, etc."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                    <input
+                      type="number"
+                      value={amenityFormData.quantity}
+                      onChange={(e) => setAmenityFormData({ ...amenityFormData, quantity: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Time</label>
+                    <input
+                      type="text"
+                      placeholder="ASAP or HH:MM"
+                      value={amenityFormData.delivery_time}
+                      onChange={(e) => setAmenityFormData({ ...amenityFormData, delivery_time: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Special Instructions</label>
+                  <textarea
+                    value={amenityFormData.special_instructions}
+                    onChange={(e) => setAmenityFormData({ ...amenityFormData, special_instructions: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                    placeholder="Any special requirements or notes..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowAmenityModal(false);
+                    setSelectedRoomForAction(null);
+                    setAmenityFormData({
+                      category: '',
+                      item: '',
+                      quantity: '1',
+                      priority: 'MEDIUM',
+                      delivery_time: '',
+                      special_instructions: ''
+                    });
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateAmenityRequest}
+                  className="flex-1 px-4 py-2 bg-[#005357] text-white rounded hover:bg-[#004147] transition-colors"
+                >
+                  Create Request
+                </button>
               </div>
             </div>
           </div>
