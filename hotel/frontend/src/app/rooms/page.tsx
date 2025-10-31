@@ -636,7 +636,18 @@ const RoomsPage = () => {
         alert('Room status updated successfully!');
       } else {
         const error = await response.json();
-        alert(`Failed to update room status: ${error.error || 'Unknown error'}`);
+
+        // Special handling for payment validation error
+        if (error.reservation_number && error.is_fully_paid === false) {
+          const goToPayment = confirm(
+            `${error.message}\n\nWould you like to go to the payment page for ${error.reservation_number}?`
+          );
+          if (goToPayment) {
+            window.location.href = `/bookings`;
+          }
+        } else {
+          alert(`Failed to update room status: ${error.error || error.message || 'Unknown error'}`);
+        }
       }
     } catch (error) {
       console.error('Error updating room status:', error);
