@@ -58,6 +58,8 @@ const Sidebar = () => {
         }
       } catch (error) {
         console.error('Error fetching pending count:', error);
+        // Silently fail - don't break the sidebar
+        setPendingCount(0);
       }
     };
 
@@ -97,6 +99,8 @@ const Sidebar = () => {
         setUncompletedComplaintsCount(totalCount);
       } catch (error) {
         console.error('Error fetching complaints count:', error);
+        // Silently fail - don't break the sidebar
+        setUncompletedComplaintsCount(0);
       }
     };
 
