@@ -72,7 +72,7 @@ interface Stats {
 }
 
 export default function AmenitiesPage() {
-  const [activeTab, setActiveTab] = useState('pending');
+  const [activeTab, setActiveTab] = useState('active'); // 'active' or 'history'
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -407,11 +407,10 @@ export default function AmenitiesPage() {
   };
 
   const filteredRequests = requests.filter(request => {
-    const matchesTab = activeTab === 'all' ||
-                      (activeTab === 'pending' && request.status === 'PENDING') ||
-                      (activeTab === 'in_progress' && request.status === 'IN_PROGRESS') ||
-                      (activeTab === 'completed' && request.status === 'COMPLETED') ||
-                      (activeTab === 'urgent' && request.is_urgent);
+    // Tab filtering: 'active' = PENDING + IN_PROGRESS, 'history' = COMPLETED + CANCELLED
+    const matchesTab = activeTab === 'active'
+      ? ['PENDING', 'IN_PROGRESS'].includes(request.status)
+      : ['COMPLETED', 'CANCELLED'].includes(request.status);
 
     const matchesSearch = request.guest_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          request.room_number.includes(searchQuery) ||
@@ -500,18 +499,32 @@ export default function AmenitiesPage() {
                 <option key={cat.id} value={cat.id}>{cat.display_name}</option>
               ))}
             </select>
-            <select
-              value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value)}
-              className="px-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] rounded"
-            >
-              <option value="all">All ({stats.total})</option>
-              <option value="pending">Pending ({stats.pending})</option>
-              <option value="in_progress">In Progress ({stats.in_progress})</option>
-              <option value="completed">Completed ({stats.completed})</option>
-              <option value="urgent">Urgent ({stats.urgent})</option>
-            </select>
           </div>
+
+          {/* Tab Buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`px-6 py-2 text-sm font-medium rounded transition-colors ${
+                activeTab === 'active'
+                  ? 'bg-[#F87B1B] text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Active Requests ({stats.pending + stats.in_progress})
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-6 py-2 text-sm font-medium rounded transition-colors ${
+                activeTab === 'history'
+                  ? 'bg-[#F87B1B] text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              History ({stats.completed})
+            </button>
+          </div>
+
           <button
             onClick={() => setShowNewRequestModal(true)}
             className="bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E06A0A] transition-colors flex items-center space-x-2 rounded"
