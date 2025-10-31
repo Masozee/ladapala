@@ -148,6 +148,11 @@ export const ChevronRightIcon = createIconComponent(HugeArrowRight01);
 // TrendingUpIcon using ArrowUp as alternative (trending icons not in free package)
 export const TrendingUpIcon = ArrowUp01Icon;
 
+// Aliases for common icon names
+export const ArrowRightIcon = ArrowRight01Icon;
+export const FileTextIcon = File01Icon;
+export const TruckDeliveryIcon = PackageIcon; // Using Package as truck delivery alternative
+
 // Set display names for debugging
 Building03Icon.displayName = 'Building03Icon';
 UserMultiple02Icon.displayName = 'UserMultiple02Icon';

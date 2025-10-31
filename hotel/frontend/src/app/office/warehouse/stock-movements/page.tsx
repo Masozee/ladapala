@@ -175,6 +175,13 @@ export default function StockMovementsPage() {
 
   return (
     <OfficeLayout>
+      {/* Breadcrumb */}
+      <div className="mb-4 text-sm text-gray-600">
+        <a href="/office/warehouse" className="hover:text-[#4E61D3]">Warehouse</a>
+        <span className="mx-2">/</span>
+        <span className="text-gray-900 font-medium">Stock Movements</span>
+      </div>
+
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
