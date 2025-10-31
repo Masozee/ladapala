@@ -721,19 +721,6 @@ export default function AmenitiesPage() {
                   <p className="text-xs text-gray-500 mt-1">Stock will be automatically deducted when delivered</p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Item Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.item}
-                    readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-700"
-                    placeholder="Auto-filled from selection above"
-                  />
-                </div>
-
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
@@ -1001,19 +988,6 @@ export default function AmenitiesPage() {
                     ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">Stock will be automatically deducted when delivered</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Item Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.item}
-                    readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-700"
-                    placeholder="Auto-filled from selection above"
-                  />
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
