@@ -389,7 +389,6 @@ class HolidaySerializer(serializers.ModelSerializer):
 class InventoryItemSerializer(serializers.ModelSerializer):
     """Serializer for inventory items"""
     category_name = serializers.CharField(source='category.name', read_only=True)
-    category_display = serializers.CharField(source='category.display_name', read_only=True)
     stock_status = serializers.CharField(read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
     unit_of_measurement = serializers.CharField(default='pieces')
@@ -398,12 +397,12 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = InventoryItem
         fields = [
-            'id', 'name', 'description', 'category', 'category_name', 'category_display',
+            'id', 'name', 'description', 'category', 'category_name',
             'current_stock', 'minimum_stock', 'maximum_stock', 'unit_price',
             'unit_of_measurement', 'supplier', 'supplier_name', 'last_restocked', 'stock_status',
             'is_low_stock', 'is_active', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'stock_status', 'is_low_stock', 'supplier_name', 'category_name', 'category_display']
+        read_only_fields = ['created_at', 'updated_at', 'stock_status', 'is_low_stock', 'supplier_name', 'category_name']
 
 
 class PurchaseOrderItemSerializer(serializers.ModelSerializer):
@@ -792,13 +791,13 @@ class AmenityCategorySerializer(serializers.ModelSerializer):
     """Serializer for amenity categories"""
     class Meta:
         model = AmenityCategory
-        fields = ['id', 'name', 'display_name', 'description', 'is_active', 'created_at']
+        fields = ['id', 'name', 'description', 'is_active', 'created_at']
         read_only_fields = ['created_at']
 
 
 class AmenityRequestSerializer(serializers.ModelSerializer):
     """Serializer for amenity requests"""
-    category_name = serializers.CharField(source='category.display_name', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
     inventory_item_name = serializers.CharField(source='inventory_item.name', read_only=True)
     inventory_item_stock = serializers.IntegerField(source='inventory_item.current_stock', read_only=True)
     assigned_to_name = serializers.SerializerMethodField()

@@ -8,19 +8,18 @@ import random
 
 class AmenityCategory(models.Model):
     """Categories for amenity items - fully manageable through Django admin"""
-    name = models.CharField(max_length=50, unique=True, help_text='Unique category identifier (e.g., TOILETRIES, FOOD_BEVERAGE)')
-    display_name = models.CharField(max_length=100, help_text='Display name shown to users')
+    name = models.CharField(max_length=100, unique=True, help_text='Category name (e.g., Toiletries & Bath, Food & Beverage)')
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['display_name']
+        ordering = ['name']
         verbose_name = 'Amenity Category'
         verbose_name_plural = 'Amenity Categories'
 
     def __str__(self):
-        return self.display_name
+        return self.name
 
 
 class AmenityRequest(models.Model):

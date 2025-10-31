@@ -46,7 +46,6 @@ interface Supplier {
 interface AmenityCategory {
   id: number;
   name: string;
-  display_name: string;
   is_active: boolean;
 }
 
@@ -364,7 +363,7 @@ export default function WarehousePage() {
   // Client-side search filtering (after server-side pagination)
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                 (item.category_display && item.category_display.toLowerCase().includes(searchQuery.toLowerCase()));
+                 (item.category_name && item.category_name.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesSearch;
   });
 
@@ -507,7 +506,7 @@ export default function WarehousePage() {
             <option value="All">Kategori</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
-                {cat.display_name}
+                {cat.name}
               </option>
             ))}
           </select>
@@ -638,7 +637,7 @@ export default function WarehousePage() {
                         )}
                       </td>
                       <td className="border border-gray-200 px-4 py-3">
-                        <span className="text-sm text-gray-600">{item.category_display}</span>
+                        <span className="text-sm text-gray-600">{item.category_name}</span>
                       </td>
                       <td className="border border-gray-200 px-4 py-3">
                         <div className="space-y-2">
