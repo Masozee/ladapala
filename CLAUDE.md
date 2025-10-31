@@ -524,6 +524,148 @@ await api.updateOrderStatus(orderId, 'COMPLETED') // Delivered to table
    - **Icons not updating**: Clear cache with `rm -rf .next` and restart dev server
    - **Build fails but dev works**: Check all pages, not just the one you're testing
 
+## Proper Table/Page Structure (CRUD Pages)
+
+**CORRECT EXAMPLE**: `/office/warehouse/master-data` - Inventory Master Data
+
+This page demonstrates the proper way to build CRUD (Create, Read, Update, Delete) pages:
+
+### ✅ What Makes It Correct:
+
+1. **Real API Data - No Mock Data**
+   ```typescript
+   // ✅ CORRECT: Fetch from backend API
+   const [items, setItems] = useState<InventoryItem[]>([]);
+
+   const fetchInventory = async () => {
+     const response = await fetch(buildApiUrl('hotel/inventory/'));
+     const data = await response.json();
+     setItems(data.results || data);
+   };
+
+   // ❌ WRONG: Hardcoded mock data
+   const items = [
+     { id: 1, name: 'Item 1', ... },  // Never do this!
+     { id: 2, name: 'Item 2', ... }
+   ];
+   ```
+
+2. **TypeScript Interfaces Matching Backend**
+   ```typescript
+   // ✅ Interface matches Django model fields
+   interface InventoryItem {
+     id: number;
+     name: string;
+     category: string;
+     current_stock: number;
+     supplier: number | null;
+     supplier_name?: string;  // From serializer read-only field
+   }
+   ```
+
+3. **Category Mapping (Backend Value → Display Label)**
+   ```typescript
+   // ✅ Use backend enum values in dropdowns
+   <option value="AMENITIES">Guest Amenities</option>
+   <option value="FOOD">Food & Beverage</option>
+
+   // ✅ Helper function for display
+   const getCategoryLabel = (category: string): string => {
+     const categoryMap: Record<string, string> = {
+       'AMENITIES': 'Guest Amenities',
+       'FOOD': 'Food & Beverage',
+       // ...
+     };
+     return categoryMap[category] || category;
+   };
+   ```
+
+4. **Proper CRUD Operations**
+   ```typescript
+   // ✅ CREATE: POST with proper type conversion
+   const response = await fetch(buildApiUrl('hotel/inventory/'), {
+     method: 'POST',
+     headers: { 'X-CSRFToken': csrfToken },
+     credentials: 'include',
+     body: JSON.stringify({
+       name: formData.name,
+       category: formData.category,  // Backend enum value
+       supplier: formData.supplier ? parseInt(formData.supplier) : null
+     })
+   });
+
+   // ✅ UPDATE: PATCH/PUT with ID
+   await fetch(buildApiUrl(`hotel/inventory/${id}/`), {
+     method: 'PATCH',
+     // ...
+   });
+
+   // ✅ DELETE: DELETE with ID
+   await fetch(buildApiUrl(`hotel/inventory/${id}/`), {
+     method: 'DELETE',
+     // ...
+   });
+   ```
+
+5. **Related Data (Foreign Keys)**
+   ```typescript
+   // ✅ Fetch related data (suppliers) separately
+   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+   const fetchSuppliers = async () => {
+     const response = await fetch(buildApiUrl('hotel/suppliers/?status=ACTIVE'));
+     const data = await response.json();
+     setSuppliers(data.results || data);
+   };
+
+   // ✅ Dropdown with proper ID conversion
+   <select value={formData.supplier} onChange={...}>
+     <option value="">Pilih Supplier (Opsional)</option>
+     {suppliers.map((supplier) => (
+       <option key={supplier.id} value={supplier.id}>
+         {supplier.name}
+       </option>
+     ))}
+   </select>
+
+   // ✅ On submit: convert to integer
+   supplier: formData.supplier ? parseInt(formData.supplier) : null
+   ```
+
+6. **Filters & Search**
+   ```typescript
+   // ✅ Filter using backend values
+   const filteredItems = items.filter(item => {
+     const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
+     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+     return matchesCategory && matchesSearch;
+   });
+   ```
+
+### ❌ WRONG EXAMPLE: `/support/amenities` (Contains Mock Data)
+
+This page violates our "No Mock Data" policy:
+
+```typescript
+// ❌ WRONG: Hardcoded sample data
+const amenityRequests = [
+  {
+    id: 'AMN-001',
+    guestName: 'Maria Santos',
+    roomNumber: '205',
+    // ... hardcoded data
+  }
+];
+```
+
+**How to Fix Pages Like This:**
+1. Create Django models for the data
+2. Create serializers and viewsets
+3. Update frontend to fetch from API
+4. Remove all hardcoded arrays
+5. Use `useState` with empty initial values
+6. Populate via `useEffect` + API calls
+
 ## Important Notes
 
 - **Language**: All UI text must be in Indonesian
