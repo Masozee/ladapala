@@ -1627,6 +1627,7 @@ const RoomsPage = () => {
                               </button>
                               {activeRoomMenu === room.id && (
                                 <div className="absolute right-0 top-12 mt-2 w-56 bg-white border border-gray-200 shadow-lg z-10 rounded">
+                                  {/* View Details - Always available */}
                                   <button
                                     onClick={() => setSelectedRoom(room)}
                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
@@ -1634,14 +1635,20 @@ const RoomsPage = () => {
                                     <EyeIcon className="h-4 w-4" />
                                     <span>View Details</span>
                                   </button>
-                                  <button
-                                    onClick={() => openAmenityModal(room)}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                                  >
-                                    <PackageIcon className="h-4 w-4" />
-                                    <span>Request Amenities</span>
-                                  </button>
-                                  {room.status !== 'AVAILABLE' && (
+
+                                  {/* Request Amenities - Not for MAINTENANCE or OUT_OF_ORDER */}
+                                  {!['MAINTENANCE', 'OUT_OF_ORDER'].includes(room.status) && (
+                                    <button
+                                      onClick={() => openAmenityModal(room)}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                                    >
+                                      <PackageIcon className="h-4 w-4" />
+                                      <span>Request Amenities</span>
+                                    </button>
+                                  )}
+
+                                  {/* Check Out - Only for OCCUPIED rooms with guest/staff */}
+                                  {room.status === 'OCCUPIED' && (
                                     <button
                                       onClick={() => handleCheckOut(room)}
                                       disabled={!room.current_guest && !room.current_staff}
@@ -1655,20 +1662,50 @@ const RoomsPage = () => {
                                       <span>Check Out</span>
                                     </button>
                                   )}
-                                  <button
-                                    onClick={() => handleSetMaintenance(room)}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                                  >
-                                    <Settings02Icon className="h-4 w-4" />
-                                    <span>Set Maintenance</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleSetCleaning(room)}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2 border-t border-gray-200"
-                                  >
-                                    <SparklesIcon className="h-4 w-4" />
-                                    <span>Set Cleaning</span>
-                                  </button>
+
+                                  {/* Finish Cleaning - Only for CLEANING status */}
+                                  {room.status === 'CLEANING' && (
+                                    <button
+                                      onClick={() => handleUpdateRoomStatus(room.id, 'AVAILABLE')}
+                                      className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 transition-colors flex items-center space-x-2 font-medium"
+                                    >
+                                      <UserCheckIcon className="h-4 w-4" />
+                                      <span>Finish Cleaning</span>
+                                    </button>
+                                  )}
+
+                                  {/* Finish Maintenance - Only for MAINTENANCE status */}
+                                  {room.status === 'MAINTENANCE' && (
+                                    <button
+                                      onClick={() => handleUpdateRoomStatus(room.id, 'AVAILABLE')}
+                                      className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 transition-colors flex items-center space-x-2 font-medium"
+                                    >
+                                      <UserCheckIcon className="h-4 w-4" />
+                                      <span>Finish Maintenance</span>
+                                    </button>
+                                  )}
+
+                                  {/* Set Maintenance - Not for already in MAINTENANCE */}
+                                  {room.status !== 'MAINTENANCE' && room.status !== 'OUT_OF_ORDER' && (
+                                    <button
+                                      onClick={() => handleSetMaintenance(room)}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2 border-t border-gray-200"
+                                    >
+                                      <Settings02Icon className="h-4 w-4" />
+                                      <span>Set Maintenance</span>
+                                    </button>
+                                  )}
+
+                                  {/* Set Cleaning - Not for already in CLEANING */}
+                                  {room.status !== 'CLEANING' && room.status !== 'OUT_OF_ORDER' && (
+                                    <button
+                                      onClick={() => handleSetCleaning(room)}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                                    >
+                                      <SparklesIcon className="h-4 w-4" />
+                                      <span>Set Cleaning</span>
+                                    </button>
+                                  )}
                                 </div>
                               )}
                             </div>
