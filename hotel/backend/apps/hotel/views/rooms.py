@@ -148,21 +148,30 @@ class RoomViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'])
     def update_status(self, request, pk=None):
         """Update room status"""
+        from ..models import Reservation
+
         room = self.get_object()
         new_status = request.data.get('status')
-        
+
         if not new_status:
-            return Response({'error': 'status field is required'}, 
+            return Response({'error': 'status field is required'},
                           status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Validate status choice
         valid_statuses = [choice[0] for choice in Room.STATUS_CHOICES]
         if new_status not in valid_statuses:
-            return Response({'error': 'Invalid status'}, 
+            return Response({'error': 'Invalid status'},
                           status=status.HTTP_400_BAD_REQUEST)
-        
+
+        # If changing to AVAILABLE, checkout any checked-in guests
+        if new_status == 'AVAILABLE':
+            Reservation.objects.filter(
+                room=room,
+                status='CHECKED_IN'
+            ).update(status='CHECKED_OUT')
+
         room.status = new_status
         room.save(update_fields=['status', 'updated_at'])
-        
+
         serializer = RoomListSerializer(room)
         return Response(serializer.data)
