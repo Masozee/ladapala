@@ -32,6 +32,14 @@ interface InventoryItem {
   unit_price: string;
 }
 
+interface Room {
+  id: number;
+  number: string;
+  room_type: string;
+  status: string;
+  floor: number;
+}
+
 interface AmenityRequest {
   id: number;
   request_number: string;
@@ -81,6 +89,7 @@ export default function AmenitiesPage() {
   const [requests, setRequests] = useState<AmenityRequest[]>([]);
   const [categories, setCategories] = useState<AmenityCategory[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [stats, setStats] = useState<Stats>({ pending: 0, in_progress: 0, completed: 0, urgent: 0, total: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -100,9 +109,7 @@ export default function AmenitiesPage() {
     quantity: '1',
     priority: 'MEDIUM',
     delivery_time: '',
-    special_instructions: '',
-    assigned_to_department: '',
-    estimated_cost: '0'
+    special_instructions: ''
   });
 
   const [csrfToken, setCsrfToken] = useState('');
@@ -112,6 +119,7 @@ export default function AmenitiesPage() {
     fetchRequests();
     fetchCategories();
     fetchInventoryItems();
+    fetchRooms();
     fetchStats();
   }, []);
 
@@ -178,6 +186,20 @@ export default function AmenitiesPage() {
     }
   };
 
+  const fetchRooms = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/rooms/?page_size=1000'), {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setRooms(data.results || data);
+      }
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+    }
+  };
+
   const fetchStats = async () => {
     try {
       const response = await fetch(buildApiUrl('hotel/amenity-requests/stats/'), {
@@ -216,8 +238,6 @@ export default function AmenitiesPage() {
           priority: formData.priority,
           delivery_time: formData.delivery_time || null,
           special_instructions: formData.special_instructions || null,
-          assigned_to_department: formData.assigned_to_department || null,
-          estimated_cost: parseFloat(formData.estimated_cost),
         }),
       });
 
@@ -261,8 +281,6 @@ export default function AmenitiesPage() {
           priority: formData.priority,
           delivery_time: formData.delivery_time || null,
           special_instructions: formData.special_instructions || null,
-          assigned_to_department: formData.assigned_to_department || null,
-          estimated_cost: parseFloat(formData.estimated_cost),
         }),
       });
 
@@ -355,8 +373,6 @@ export default function AmenitiesPage() {
       priority: request.priority,
       delivery_time: request.delivery_time || '',
       special_instructions: request.special_instructions || '',
-      assigned_to_department: request.assigned_to_department || '',
-      estimated_cost: request.estimated_cost,
     });
     setShowEditModal(true);
     setOpenMenuId(null);
@@ -372,9 +388,7 @@ export default function AmenitiesPage() {
       quantity: '1',
       priority: 'MEDIUM',
       delivery_time: '',
-      special_instructions: '',
-      assigned_to_department: '',
-      estimated_cost: '0'
+      special_instructions: ''
     });
   };
 
@@ -666,12 +680,18 @@ export default function AmenitiesPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Room Number <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.room_number}
                       onChange={(e) => setFormData({ ...formData, room_number: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
-                    />
+                    >
+                      <option value="">Select Room</option>
+                      {rooms.map((room) => (
+                        <option key={room.id} value={room.number}>
+                          Room {room.number} - {room.room_type} ({room.status})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -759,7 +779,7 @@ export default function AmenitiesPage() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
                     <input
@@ -780,27 +800,6 @@ export default function AmenitiesPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Cost</label>
-                    <input
-                      type="number"
-                      value={formData.estimated_cost}
-                      onChange={(e) => setFormData({ ...formData, estimated_cost: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
-                      min="0"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Department</label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Room Service, Housekeeping"
-                    value={formData.assigned_to_department}
-                    onChange={(e) => setFormData({ ...formData, assigned_to_department: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
-                  />
                 </div>
 
                 <div>
@@ -960,12 +959,18 @@ export default function AmenitiesPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Room Number <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.room_number}
                       onChange={(e) => setFormData({ ...formData, room_number: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
-                    />
+                    >
+                      <option value="">Select Room</option>
+                      {rooms.map((room) => (
+                        <option key={room.id} value={room.number}>
+                          Room {room.number} - {room.room_type} ({room.status})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -1053,7 +1058,7 @@ export default function AmenitiesPage() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
                     <input
@@ -1074,27 +1079,6 @@ export default function AmenitiesPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Cost</label>
-                    <input
-                      type="number"
-                      value={formData.estimated_cost}
-                      onChange={(e) => setFormData({ ...formData, estimated_cost: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
-                      min="0"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Department</label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Room Service, Housekeeping"
-                    value={formData.assigned_to_department}
-                    onChange={(e) => setFormData({ ...formData, assigned_to_department: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
-                  />
                 </div>
 
                 <div>

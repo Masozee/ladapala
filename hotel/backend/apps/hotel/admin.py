@@ -4,6 +4,7 @@ from .models import (
     CheckIn, Holiday, InventoryItem, FinancialTransaction, Invoice, InvoiceItem
 )
 from .models.inventory import PurchaseOrder, PurchaseOrderItem, StockMovement
+from .models.amenities import AmenityCategory, AmenityRequest
 
 
 @admin.register(RoomType)
@@ -113,3 +114,19 @@ class InvoiceAdmin(admin.ModelAdmin):
 class InvoiceItemAdmin(admin.ModelAdmin):
     list_display = ['invoice', 'description', 'quantity', 'rate', 'amount']
     search_fields = ['invoice__invoice_number', 'description']
+
+
+@admin.register(AmenityCategory)
+class AmenityCategoryAdmin(admin.ModelAdmin):
+    list_display = ['display_name', 'name', 'is_active', 'created_at']
+    list_filter = ['is_active', 'name']
+    search_fields = ['display_name', 'description']
+
+
+@admin.register(AmenityRequest)
+class AmenityRequestAdmin(admin.ModelAdmin):
+    list_display = ['request_number', 'guest_name', 'room_number', 'item', 'category', 'quantity', 'status', 'priority', 'requested_at']
+    list_filter = ['status', 'priority', 'category', 'requested_at']
+    search_fields = ['request_number', 'guest_name', 'room_number', 'item']
+    readonly_fields = ['request_number', 'created_at', 'updated_at', 'delivered_at']
+    date_hierarchy = 'requested_at'
