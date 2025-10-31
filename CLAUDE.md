@@ -526,11 +526,108 @@ await api.updateOrderStatus(orderId, 'COMPLETED') // Delivered to table
 
 ## Proper Table/Page Structure (CRUD Pages)
 
-**CORRECT EXAMPLE**: `/office/warehouse/master-data` - Inventory Master Data
+### Two Correct Examples:
 
-This page demonstrates the proper way to build CRUD (Create, Read, Update, Delete) pages:
+1. **UI/Table Design**: `/support/amenities` - Excellent table structure, filters, and responsive design
+2. **API Integration**: `/office/warehouse/master-data` - Proper backend integration with real data
 
-### ✅ What Makes It Correct:
+---
+
+**CORRECT EXAMPLE for UI/Table Design**: `/support/amenities`
+
+### ✅ What Makes the UI/Table Design Excellent:
+
+1. **Clean Table Structure**
+   ```typescript
+   // ✅ Proper table with header styling
+   <table className="w-full border-collapse bg-white border border-gray-200">
+     <thead>
+       <tr className="bg-[#F87B1B] text-white">
+         <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium">
+           Guest
+         </th>
+       </tr>
+     </thead>
+     <tbody>
+       {filteredRequests.map((request) => (
+         <tr key={request.id} className="hover:bg-gray-50">
+           <td className="border border-gray-200 px-6 py-4">{request.guestName}</td>
+         </tr>
+       ))}
+     </tbody>
+   </table>
+   ```
+
+2. **Search & Filter Bar**
+   ```typescript
+   // ✅ Search with icon
+   <div className="relative w-80">
+     <Search02Icon className="h-4 w-4 text-gray-400" />
+     <input
+       type="text"
+       placeholder="Cari tamu, kamar, atau item..."
+       value={searchQuery}
+       onChange={(e) => setSearchQuery(e.target.value)}
+       className="pl-10 pr-4 py-2 text-sm border focus:ring-2 focus:ring-[#F87B1B]"
+     />
+   </div>
+   ```
+
+3. **Status Badges with Color Coding**
+   ```typescript
+   const getStatusColor = (status: string) => {
+     switch (status) {
+       case 'completed': return 'bg-green-100 text-green-800';
+       case 'in_progress': return 'bg-blue-100 text-blue-800';
+       case 'pending': return 'bg-yellow-100 text-yellow-800';
+       default: return 'bg-gray-100 text-gray-800';
+     }
+   };
+
+   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getStatusColor(status)}`}>
+     {getStatusLabel(status)}
+   </span>
+   ```
+
+4. **Stats Cards**
+   ```typescript
+   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+     <div className="bg-white border p-6">
+       <div className="p-3 bg-yellow-100 rounded">
+         <Clock01Icon className="h-6 w-6 text-yellow-600" />
+       </div>
+       <div className="text-3xl font-bold">{pendingCount}</div>
+       <div className="text-sm text-gray-600">Pending Requests</div>
+     </div>
+   </div>
+   ```
+
+5. **Dropdown Actions Menu**
+   ```typescript
+   <button onClick={() => setOpenMenuId(openMenuId === request.id ? null : request.id)}>
+     <MoreHorizontalIcon className="h-4 w-4" />
+   </button>
+   {openMenuId === request.id && (
+     <div className="absolute right-0 top-12 w-48 bg-white border shadow-lg rounded">
+       <button className="w-full px-4 py-2 hover:bg-gray-50 flex items-center space-x-2">
+         <EyeIcon className="h-4 w-4" />
+         <span>View Details</span>
+       </button>
+     </div>
+   )}
+   ```
+
+6. **Dynamic Tab Counts**
+   ```typescript
+   const pendingCount = requests.filter(r => r.status === 'pending').length;
+   <option value="pending">Pending ({pendingCount})</option>
+   ```
+
+---
+
+**CORRECT EXAMPLE for API Integration**: `/office/warehouse/master-data`
+
+### ✅ What Makes API Integration Correct:
 
 1. **Real API Data - No Mock Data**
    ```typescript
@@ -642,29 +739,13 @@ This page demonstrates the proper way to build CRUD (Create, Read, Update, Delet
    });
    ```
 
-### ❌ WRONG EXAMPLE: `/support/amenities` (Contains Mock Data)
+### 🎯 Best Practice: Combine Both Examples
 
-This page violates our "No Mock Data" policy:
+For the best CRUD pages, combine:
+- **UI patterns** from `/support/amenities` (table design, filters, badges, stats cards)
+- **API integration** from `/office/warehouse/master-data` (real backend data, proper CRUD operations)
 
-```typescript
-// ❌ WRONG: Hardcoded sample data
-const amenityRequests = [
-  {
-    id: 'AMN-001',
-    guestName: 'Maria Santos',
-    roomNumber: '205',
-    // ... hardcoded data
-  }
-];
-```
-
-**How to Fix Pages Like This:**
-1. Create Django models for the data
-2. Create serializers and viewsets
-3. Update frontend to fetch from API
-4. Remove all hardcoded arrays
-5. Use `useState` with empty initial values
-6. Populate via `useEffect` + API calls
+**Note**: The amenities page currently uses sample data for demonstration purposes. When implementing production features, always replace sample data with real API calls following the warehouse/master-data pattern.
 
 ## Important Notes
 
