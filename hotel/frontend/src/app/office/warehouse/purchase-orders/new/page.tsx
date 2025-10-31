@@ -186,14 +186,18 @@ export default function NewPurchaseOrderPage() {
             },
             credentials: 'include',
             body: JSON.stringify({
-              inventory_item: item.inventory_item,
-              quantity_ordered: item.quantity_ordered,
-              unit_price: item.unit_price,
+              inventory_item: parseInt(String(item.inventory_item)),
+              quantity_ordered: parseInt(String(item.quantity_ordered)),
+              unit_price: parseFloat(String(item.unit_price)),
             }),
           }
         );
 
-        if (!itemResponse.ok) throw new Error('Failed to add item');
+        if (!itemResponse.ok) {
+          const errorData = await itemResponse.json();
+          console.error('Failed to add item:', errorData);
+          throw new Error(`Failed to add item: ${JSON.stringify(errorData)}`);
+        }
       }
 
       // Submit if requested
@@ -221,7 +225,8 @@ export default function NewPurchaseOrderPage() {
       router.push('/office/warehouse/purchase-orders');
     } catch (error) {
       console.error('Error creating purchase order:', error);
-      alert('Gagal membuat purchase order');
+      const errorMessage = error instanceof Error ? error.message : 'Gagal membuat purchase order';
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }

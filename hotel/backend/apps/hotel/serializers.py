@@ -412,6 +412,10 @@ class PurchaseOrderItemSerializer(serializers.ModelSerializer):
     subtotal = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     is_fully_received = serializers.BooleanField(read_only=True)
     quantity_pending = serializers.IntegerField(read_only=True)
+    purchase_order = serializers.PrimaryKeyRelatedField(
+        queryset=PurchaseOrder.objects.all(),
+        required=False  # Make optional for add_item action
+    )
 
     class Meta:
         model = PurchaseOrderItem
