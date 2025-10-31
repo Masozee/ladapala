@@ -7,19 +7,9 @@ import random
 
 
 class AmenityCategory(models.Model):
-    """Categories for amenity items"""
-    CATEGORY_CHOICES = [
-        ('FOOD_BEVERAGE', 'Food & Beverage'),
-        ('TOILETRIES', 'Toiletries & Bath'),
-        ('BEVERAGE', 'Beverages'),
-        ('LAUNDRY', 'Laundry & Cleaning'),
-        ('TECHNOLOGY', 'Technology'),
-        ('FLOWERS', 'Flowers & Decor'),
-        ('OTHER', 'Other'),
-    ]
-
-    name = models.CharField(max_length=50, choices=CATEGORY_CHOICES, unique=True)
-    display_name = models.CharField(max_length=100)
+    """Categories for amenity items - fully manageable through Django admin"""
+    name = models.CharField(max_length=50, unique=True, help_text='Unique category identifier (e.g., TOILETRIES, FOOD_BEVERAGE)')
+    display_name = models.CharField(max_length=100, help_text='Display name shown to users')
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
