@@ -4,7 +4,7 @@ from .models import (
     RoomType, Room, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
     CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, Supplier,
     MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
-    FinancialTransaction, Invoice, InvoiceItem
+    FinancialTransaction, Invoice, InvoiceItem, AmenityRequest, AmenityCategory
 )
 
 
@@ -785,3 +785,53 @@ class SupplierSerializer(serializers.ModelSerializer):
             return obj.created_by.get_full_name() or obj.created_by.username
         return None
 
+
+
+class AmenityCategorySerializer(serializers.ModelSerializer):
+    """Serializer for amenity categories"""
+    class Meta:
+        model = AmenityCategory
+        fields = ['id', 'name', 'display_name', 'description', 'is_active', 'created_at']
+        read_only_fields = ['created_at']
+
+
+class AmenityRequestSerializer(serializers.ModelSerializer):
+    """Serializer for amenity requests"""
+    category_name = serializers.CharField(source='category.display_name', read_only=True)
+    assigned_to_name = serializers.SerializerMethodField()
+    created_by_name = serializers.SerializerMethodField()
+    completed_by_name = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    priority_display = serializers.CharField(source='get_priority_display', read_only=True)
+    is_urgent = serializers.BooleanField(read_only=True)
+    is_overdue = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = AmenityRequest
+        fields = [
+            'id', 'request_number', 'guest', 'guest_name', 'room', 'room_number',
+            'category', 'category_name', 'item', 'quantity',
+            'status', 'status_display', 'priority', 'priority_display',
+            'requested_at', 'delivery_time', 'delivered_at',
+            'assigned_to', 'assigned_to_name', 'assigned_to_department',
+            'special_instructions', 'notes', 'estimated_cost',
+            'guest_rating', 'guest_feedback', 'is_urgent', 'is_overdue',
+            'created_at', 'updated_at', 'created_by', 'created_by_name',
+            'completed_by', 'completed_by_name'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'request_number', 'delivered_at', 'is_urgent', 'is_overdue']
+
+    def get_assigned_to_name(self, obj):
+        if obj.assigned_to:
+            return obj.assigned_to.get_full_name() or obj.assigned_to.username
+        return None
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.get_full_name() or obj.created_by.username
+        return None
+
+    def get_completed_by_name(self, obj):
+        if obj.completed_by:
+            return obj.completed_by.get_full_name() or obj.completed_by.username
+        return None

@@ -11,6 +11,7 @@ from .suppliers import SupplierViewSet
 from .dashboard import hotel_dashboard
 from .financial_new import FinancialViewSet, FinancialTransactionViewSet, InvoiceViewSet
 from .system_monitoring import system_resources, system_stats, process_list
+from .amenities import AmenityRequestViewSet, AmenityCategoryViewSet
 
 # Make all ViewSets available for import
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     'PaymentViewSet', 'ComplaintViewSet', 'CheckInViewSet', 'HolidayViewSet',
     'InventoryItemViewSet', 'SupplierViewSet', 'hotel_dashboard',
     'FinancialViewSet', 'FinancialTransactionViewSet', 'InvoiceViewSet',
-    'system_resources', 'system_stats', 'process_list'
+    'system_resources', 'system_stats', 'process_list',
+    'AmenityRequestViewSet', 'AmenityCategoryViewSet'
 ]
