@@ -23,6 +23,15 @@ interface AmenityCategory {
   display_name: string;
 }
 
+interface InventoryItem {
+  id: number;
+  name: string;
+  category: string;
+  current_stock: number;
+  unit_of_measurement: string;
+  unit_price: string;
+}
+
 interface AmenityRequest {
   id: number;
   request_number: string;
@@ -30,6 +39,9 @@ interface AmenityRequest {
   room_number: string;
   category: number;
   category_name: string;
+  inventory_item: number | null;
+  inventory_item_name: string | null;
+  inventory_item_stock: number | null;
   item: string;
   quantity: number;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
@@ -68,6 +80,7 @@ export default function AmenitiesPage() {
   // Data states
   const [requests, setRequests] = useState<AmenityRequest[]>([]);
   const [categories, setCategories] = useState<AmenityCategory[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [stats, setStats] = useState<Stats>({ pending: 0, in_progress: 0, completed: 0, urgent: 0, total: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -82,6 +95,7 @@ export default function AmenitiesPage() {
     guest_name: '',
     room_number: '',
     category: '',
+    inventory_item: '',
     item: '',
     quantity: '1',
     priority: 'MEDIUM',
@@ -97,6 +111,7 @@ export default function AmenitiesPage() {
     fetchCSRFToken();
     fetchRequests();
     fetchCategories();
+    fetchInventoryItems();
     fetchStats();
   }, []);
 
@@ -149,6 +164,20 @@ export default function AmenitiesPage() {
     }
   };
 
+  const fetchInventoryItems = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/amenity-requests/inventory_items/'), {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setInventoryItems(data);
+      }
+    } catch (error) {
+      console.error('Error fetching inventory items:', error);
+    }
+  };
+
   const fetchStats = async () => {
     try {
       const response = await fetch(buildApiUrl('hotel/amenity-requests/stats/'), {
@@ -181,6 +210,7 @@ export default function AmenitiesPage() {
           guest_name: formData.guest_name,
           room_number: formData.room_number,
           category: parseInt(formData.category),
+          inventory_item: formData.inventory_item ? parseInt(formData.inventory_item) : null,
           item: formData.item,
           quantity: parseInt(formData.quantity),
           priority: formData.priority,
@@ -225,6 +255,7 @@ export default function AmenitiesPage() {
           guest_name: formData.guest_name,
           room_number: formData.room_number,
           category: parseInt(formData.category),
+          inventory_item: formData.inventory_item ? parseInt(formData.inventory_item) : null,
           item: formData.item,
           quantity: parseInt(formData.quantity),
           priority: formData.priority,
@@ -318,6 +349,7 @@ export default function AmenitiesPage() {
       guest_name: request.guest_name,
       room_number: request.room_number,
       category: request.category.toString(),
+      inventory_item: request.inventory_item ? request.inventory_item.toString() : '',
       item: request.item,
       quantity: request.quantity.toString(),
       priority: request.priority,
@@ -335,6 +367,7 @@ export default function AmenitiesPage() {
       guest_name: '',
       room_number: '',
       category: '',
+      inventory_item: '',
       item: '',
       quantity: '1',
       priority: 'MEDIUM',
@@ -664,6 +697,32 @@ export default function AmenitiesPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Inventory Item (Opsional)
+                  </label>
+                  <select
+                    value={formData.inventory_item}
+                    onChange={(e) => {
+                      const selectedItem = inventoryItems.find(item => item.id === parseInt(e.target.value));
+                      setFormData({
+                        ...formData,
+                        inventory_item: e.target.value,
+                        item: selectedItem ? selectedItem.name : formData.item
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
+                  >
+                    <option value="">Pilih dari Warehouse atau ketik manual</option>
+                    {inventoryItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} (Stock: {item.current_stock} {item.unit_of_measurement})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Pilih item dari warehouse untuk auto-deduct stock saat deliver</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Item <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -671,6 +730,7 @@ export default function AmenitiesPage() {
                     value={formData.item}
                     onChange={(e) => setFormData({ ...formData, item: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
+                    placeholder="Nama item (otomatis terisi jika pilih dari inventory)"
                   />
                 </div>
 
@@ -919,6 +979,32 @@ export default function AmenitiesPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Inventory Item (Opsional)
+                  </label>
+                  <select
+                    value={formData.inventory_item}
+                    onChange={(e) => {
+                      const selectedItem = inventoryItems.find(item => item.id === parseInt(e.target.value));
+                      setFormData({
+                        ...formData,
+                        inventory_item: e.target.value,
+                        item: selectedItem ? selectedItem.name : formData.item
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
+                  >
+                    <option value="">Pilih dari Warehouse atau ketik manual</option>
+                    {inventoryItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} (Stock: {item.current_stock} {item.unit_of_measurement})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Pilih item dari warehouse untuk auto-deduct stock saat deliver</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Item <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -926,6 +1012,7 @@ export default function AmenitiesPage() {
                     value={formData.item}
                     onChange={(e) => setFormData({ ...formData, item: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
+                    placeholder="Nama item (otomatis terisi jika pilih dari inventory)"
                   />
                 </div>
 

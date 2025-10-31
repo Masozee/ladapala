@@ -257,6 +257,7 @@ const RoomsPage = () => {
   const [selectedRoomForAction, setSelectedRoomForAction] = useState<IndividualRoom | null>(null);
   const [amenityFormData, setAmenityFormData] = useState({
     category: '',
+    inventory_item: '',
     item: '',
     quantity: '1',
     priority: 'MEDIUM',
@@ -264,6 +265,7 @@ const RoomsPage = () => {
     special_instructions: ''
   });
   const [categories, setCategories] = useState<any[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<any[]>([]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -578,7 +580,23 @@ const RoomsPage = () => {
         console.error('Error fetching categories:', error);
       }
     };
+
+    const fetchInventoryItems = async () => {
+      try {
+        const response = await fetch(buildApiUrl('hotel/amenity-requests/inventory_items/'), {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setInventoryItems(data);
+        }
+      } catch (error) {
+        console.error('Error fetching inventory items:', error);
+      }
+    };
+
     fetchCategories();
+    fetchInventoryItems();
   }, []);
 
   // Room action handlers
@@ -671,6 +689,7 @@ const RoomsPage = () => {
           guest_name: 'Guest',  // You can update this to get actual guest name
           room_number: selectedRoomForAction.number,
           category: parseInt(amenityFormData.category),
+          inventory_item: amenityFormData.inventory_item ? parseInt(amenityFormData.inventory_item) : null,
           item: amenityFormData.item,
           quantity: parseInt(amenityFormData.quantity),
           priority: amenityFormData.priority,
@@ -687,6 +706,7 @@ const RoomsPage = () => {
         setSelectedRoomForAction(null);
         setAmenityFormData({
           category: '',
+          inventory_item: '',
           item: '',
           quantity: '1',
           priority: 'MEDIUM',
@@ -2077,6 +2097,32 @@ const RoomsPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Inventory Item (Opsional)
+                  </label>
+                  <select
+                    value={amenityFormData.inventory_item}
+                    onChange={(e) => {
+                      const selectedItem = inventoryItems.find((item: any) => item.id === parseInt(e.target.value));
+                      setAmenityFormData({
+                        ...amenityFormData,
+                        inventory_item: e.target.value,
+                        item: selectedItem ? selectedItem.name : amenityFormData.item
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
+                  >
+                    <option value="">Pilih dari Warehouse atau ketik manual</option>
+                    {inventoryItems.map((item: any) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} (Stock: {item.current_stock} {item.unit_of_measurement})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Pilih item dari warehouse untuk auto-deduct stock saat deliver</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Item/Service <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -2084,7 +2130,7 @@ const RoomsPage = () => {
                     value={amenityFormData.item}
                     onChange={(e) => setAmenityFormData({ ...amenityFormData, item: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#005357]"
-                    placeholder="e.g., Extra Towels, Room Service, etc."
+                    placeholder="Nama item (otomatis terisi jika pilih dari inventory)"
                   />
                 </div>
 
@@ -2130,6 +2176,7 @@ const RoomsPage = () => {
                     setSelectedRoomForAction(null);
                     setAmenityFormData({
                       category: '',
+                      inventory_item: '',
                       item: '',
                       quantity: '1',
                       priority: 'MEDIUM',

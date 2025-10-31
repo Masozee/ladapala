@@ -77,6 +77,14 @@ class AmenityRequest(models.Model):
         null=True,
         related_name='requests'
     )
+    inventory_item = models.ForeignKey(
+        'InventoryItem',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='amenity_requests',
+        help_text='Link to warehouse inventory item for automatic stock deduction'
+    )
     item = models.CharField(max_length=200)
     quantity = models.PositiveIntegerField(default=1)
 
@@ -193,12 +201,36 @@ class AmenityRequest(models.Model):
         self.save()
 
     def mark_completed(self, user=None):
-        """Mark request as completed"""
+        """Mark request as completed and deduct stock if linked to inventory"""
+        from .inventory import StockMovement
+
         self.status = 'COMPLETED'
         self.delivered_at = timezone.now()
         if user:
             self.completed_by = user
         self.save()
+
+        # Auto-deduct stock if linked to inventory item
+        if self.inventory_item:
+            inventory_item = self.inventory_item
+
+            # Check if sufficient stock
+            if inventory_item.current_stock >= self.quantity:
+                # Deduct stock
+                inventory_item.current_stock -= self.quantity
+                inventory_item.save(update_fields=['current_stock', 'updated_at'])
+
+                # Create stock movement record
+                StockMovement.objects.create(
+                    inventory_item=inventory_item,
+                    movement_type='USAGE',
+                    quantity=-self.quantity,  # Negative for deduction
+                    balance_after=inventory_item.current_stock,
+                    reference=self.request_number,
+                    notes=f'Amenity request delivered: {self.item} to Room {self.room_number}',
+                    movement_date=timezone.now(),
+                    created_by=user
+                )
 
     def mark_cancelled(self):
         """Mark request as cancelled"""

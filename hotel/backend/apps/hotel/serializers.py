@@ -798,6 +798,8 @@ class AmenityCategorySerializer(serializers.ModelSerializer):
 class AmenityRequestSerializer(serializers.ModelSerializer):
     """Serializer for amenity requests"""
     category_name = serializers.CharField(source='category.display_name', read_only=True)
+    inventory_item_name = serializers.CharField(source='inventory_item.name', read_only=True)
+    inventory_item_stock = serializers.IntegerField(source='inventory_item.current_stock', read_only=True)
     assigned_to_name = serializers.SerializerMethodField()
     created_by_name = serializers.SerializerMethodField()
     completed_by_name = serializers.SerializerMethodField()
@@ -810,7 +812,8 @@ class AmenityRequestSerializer(serializers.ModelSerializer):
         model = AmenityRequest
         fields = [
             'id', 'request_number', 'guest', 'guest_name', 'room', 'room_number',
-            'category', 'category_name', 'item', 'quantity',
+            'category', 'category_name', 'inventory_item', 'inventory_item_name', 'inventory_item_stock',
+            'item', 'quantity',
             'status', 'status_display', 'priority', 'priority_display',
             'requested_at', 'delivery_time', 'delivered_at',
             'assigned_to', 'assigned_to_name', 'assigned_to_department',

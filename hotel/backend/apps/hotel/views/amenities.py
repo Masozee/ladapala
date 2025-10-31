@@ -5,8 +5,8 @@ from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
-from ..models import AmenityRequest, AmenityCategory
-from ..serializers import AmenityRequestSerializer, AmenityCategorySerializer
+from ..models import AmenityRequest, AmenityCategory, InventoryItem
+from ..serializers import AmenityRequestSerializer, AmenityCategorySerializer, InventoryItemSerializer
 
 
 class AmenityCategoryViewSet(viewsets.ModelViewSet):
@@ -24,7 +24,7 @@ class AmenityCategoryViewSet(viewsets.ModelViewSet):
 class AmenityRequestViewSet(viewsets.ModelViewSet):
     """ViewSet for managing amenity requests"""
     queryset = AmenityRequest.objects.all().select_related(
-        'category', 'guest', 'room', 'assigned_to', 'created_by', 'completed_by'
+        'category', 'guest', 'room', 'assigned_to', 'created_by', 'completed_by', 'inventory_item'
     )
     serializer_class = AmenityRequestSerializer
     permission_classes = [AllowAny]
@@ -59,7 +59,7 @@ class AmenityRequestViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def mark_completed(self, request, pk=None):
-        """Mark request as completed"""
+        """Mark request as completed and auto-deduct stock"""
         amenity_request = self.get_object()
 
         if amenity_request.status not in ['PENDING', 'IN_PROGRESS']:
@@ -67,6 +67,18 @@ class AmenityRequestViewSet(viewsets.ModelViewSet):
                 {'error': 'Can only mark pending or in-progress requests as completed'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        # Check stock availability if linked to inventory
+        if amenity_request.inventory_item:
+            if amenity_request.inventory_item.current_stock < amenity_request.quantity:
+                return Response(
+                    {
+                        'error': f'Insufficient stock. Available: {amenity_request.inventory_item.current_stock}, Required: {amenity_request.quantity}',
+                        'available_stock': amenity_request.inventory_item.current_stock,
+                        'required_quantity': amenity_request.quantity
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         amenity_request.mark_completed(user=request.user if request.user.is_authenticated else None)
 
@@ -104,3 +116,14 @@ class AmenityRequestViewSet(viewsets.ModelViewSet):
             'urgent': urgent_count,
             'total': AmenityRequest.objects.count(),
         })
+
+    @action(detail=False, methods=['get'])
+    def inventory_items(self, request):
+        """Get inventory items categorized as AMENITIES"""
+        amenities = InventoryItem.objects.filter(
+            category='AMENITIES',
+            is_active=True
+        ).order_by('name')
+
+        serializer = InventoryItemSerializer(amenities, many=True)
+        return Response(serializer.data)
