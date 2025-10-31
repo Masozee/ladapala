@@ -166,26 +166,23 @@ class RoomViewSet(viewsets.ModelViewSet):
         # If changing to AVAILABLE, validate payment and checkout any checked-in guests
         if new_status == 'AVAILABLE':
             # Check if there are any unpaid checked-in reservations
-            unpaid_reservations = Reservation.objects.filter(
-                room=room,
-                status='CHECKED_IN',
-                is_fully_paid=False
-            )
-
-            if unpaid_reservations.exists():
-                unpaid = unpaid_reservations.first()
-                return Response({
-                    'error': 'Cannot check out: Payment not completed',
-                    'message': f'Reservation {unpaid.reservation_number} must be fully paid before checkout',
-                    'reservation_number': unpaid.reservation_number,
-                    'is_fully_paid': False
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # All reservations are paid, proceed with checkout
-            Reservation.objects.filter(
+            checked_in_reservations = Reservation.objects.filter(
                 room=room,
                 status='CHECKED_IN'
-            ).update(status='CHECKED_OUT')
+            )
+
+            # Check each reservation's payment status
+            for reservation in checked_in_reservations:
+                if not reservation.is_fully_paid():
+                    return Response({
+                        'error': 'Cannot check out: Payment not completed',
+                        'message': f'Reservation {reservation.reservation_number} must be fully paid before checkout',
+                        'reservation_number': reservation.reservation_number,
+                        'is_fully_paid': False
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+            # All reservations are paid, proceed with checkout
+            checked_in_reservations.update(status='CHECKED_OUT')
 
         room.status = new_status
         room.save(update_fields=['status', 'updated_at'])
