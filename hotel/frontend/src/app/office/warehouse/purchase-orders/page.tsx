@@ -11,15 +11,16 @@ import {
   EyeIcon,
   FilterIcon,
   Cancel01Icon,
-  InboxIcon,
-  CheckmarkCircle02Icon,
+  File01Icon,
+  UserCheckIcon,
   AlertCircleIcon,
 } from '@/lib/icons';
 
 interface PurchaseOrder {
   id: number;
   po_number: string;
-  supplier: string;
+  supplier: number;
+  supplier_name: string;
   order_date: string;
   expected_delivery: string | null;
   status: 'DRAFT' | 'SUBMITTED' | 'RECEIVED' | 'CANCELLED';
@@ -79,11 +80,11 @@ export default function PurchaseOrdersPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'DRAFT':
-        return InboxIcon;
+        return File01Icon;
       case 'SUBMITTED':
         return PackageIcon;
       case 'RECEIVED':
-        return CheckmarkCircle02Icon;
+        return UserCheckIcon;
       case 'CANCELLED':
         return AlertCircleIcon;
       default:
@@ -111,7 +112,7 @@ export default function PurchaseOrdersPage() {
   const filteredOrders = purchaseOrders.filter((po) => {
     const matchesSearch =
       po.po_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      po.supplier.toLowerCase().includes(searchQuery.toLowerCase());
+      po.supplier_name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === 'All' || po.status === statusFilter;
 
@@ -261,7 +262,7 @@ export default function PurchaseOrdersPage() {
                           </div>
                         </td>
                         <td className="border border-gray-200 px-4 py-3">
-                          <div className="font-medium text-gray-900">{po.supplier}</div>
+                          <div className="font-medium text-gray-900">{po.supplier_name}</div>
                           {po.created_by_name && (
                             <div className="text-xs text-gray-500">oleh {po.created_by_name}</div>
                           )}

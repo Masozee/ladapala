@@ -22,7 +22,7 @@ class InventoryItem(models.Model):
     minimum_stock = models.PositiveIntegerField(default=0)
     maximum_stock = models.PositiveIntegerField(null=True, blank=True)
     unit_of_measurement = models.CharField(max_length=20, default='pieces')
-    supplier = models.CharField(max_length=100, blank=True, null=True)
+    supplier = models.ForeignKey('Supplier', on_delete=models.SET_NULL, null=True, blank=True, related_name='inventory_items')
     last_restocked = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -57,7 +57,7 @@ class PurchaseOrder(models.Model):
     ]
 
     po_number = models.CharField(max_length=20, unique=True, editable=False)
-    supplier = models.CharField(max_length=100)
+    supplier = models.ForeignKey('Supplier', on_delete=models.PROTECT, related_name='purchase_orders')
     order_date = models.DateField(default=timezone.now)
     expected_delivery = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')

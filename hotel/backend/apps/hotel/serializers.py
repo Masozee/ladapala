@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
     RoomType, Room, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
-    CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement,
+    CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, Supplier,
     MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
     FinancialTransaction, Invoice, InvoiceItem
 )
@@ -392,16 +392,17 @@ class InventoryItemSerializer(serializers.ModelSerializer):
     stock_status = serializers.CharField(read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
     unit_of_measurement = serializers.CharField(default='pieces')
+    supplier_name = serializers.CharField(source='supplier.name', read_only=True)
 
     class Meta:
         model = InventoryItem
         fields = [
             'id', 'name', 'description', 'category', 'category_display',
             'current_stock', 'minimum_stock', 'maximum_stock', 'unit_price',
-            'unit_of_measurement', 'supplier', 'last_restocked', 'stock_status',
+            'unit_of_measurement', 'supplier', 'supplier_name', 'last_restocked', 'stock_status',
             'is_low_stock', 'is_active', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'stock_status', 'is_low_stock']
+        read_only_fields = ['created_at', 'updated_at', 'stock_status', 'is_low_stock', 'supplier_name']
 
 
 class PurchaseOrderItemSerializer(serializers.ModelSerializer):
@@ -427,6 +428,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     """Serializer for purchase orders"""
     items = PurchaseOrderItemSerializer(many=True, read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     created_by_name = serializers.SerializerMethodField()
     received_by_name = serializers.SerializerMethodField()
     items_count = serializers.SerializerMethodField()
@@ -434,14 +436,14 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = [
-            'id', 'po_number', 'supplier', 'order_date', 'expected_delivery',
+            'id', 'po_number', 'supplier', 'supplier_name', 'order_date', 'expected_delivery',
             'status', 'status_display', 'notes', 'total_amount', 'items',
             'items_count', 'created_by', 'created_by_name', 'received_by',
             'received_by_name', 'received_date', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'po_number', 'created_at', 'updated_at', 'received_date',
-            'status_display', 'created_by_name', 'received_by_name', 'items_count'
+            'status_display', 'supplier_name', 'created_by_name', 'received_by_name', 'items_count'
         ]
 
     def get_created_by_name(self, obj):
@@ -758,3 +760,24 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'invoice_number', 'balance']
+
+
+class SupplierSerializer(serializers.ModelSerializer):
+    """Serializer for suppliers"""
+    created_by_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Supplier
+        fields = [
+            "id", "name", "contact_person", "email", "phone",
+            "address", "city", "province", "postal_code", "country",
+            "tax_id", "payment_terms", "status", "notes",
+            "created_at", "updated_at", "created_by", "created_by_name"
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+    
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.get_full_name() or obj.created_by.username
+        return None
+

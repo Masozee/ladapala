@@ -61,17 +61,18 @@ export const getDefaultHeaders = (): HeadersInit => {
 export const apiFetch = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
   const url = buildApiUrl(endpoint);
   const defaultHeaders = getDefaultHeaders();
-  
+
   const config: RequestInit = {
     ...options,
     headers: {
       ...defaultHeaders,
       ...options.headers,
     },
+    credentials: 'include', // Include cookies for session authentication
     // Explicitly set referrer policy for cross-origin requests
     referrerPolicy: 'no-referrer-when-downgrade',
   };
-  
+
   return fetch(url, config);
 };
 

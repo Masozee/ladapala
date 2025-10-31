@@ -19,7 +19,13 @@ interface InventoryItem {
   unit_price: string;
   unit_of_measurement: string;
   current_stock: number;
-  supplier: string | null;
+  supplier: number | null;
+}
+
+interface Supplier {
+  id: number;
+  name: string;
+  status: string;
 }
 
 interface POItem {
@@ -34,6 +40,7 @@ export default function NewPurchaseOrderPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showItemSearch, setShowItemSearch] = useState(false);
 
@@ -46,6 +53,7 @@ export default function NewPurchaseOrderPage() {
 
   useEffect(() => {
     fetchInventoryItems();
+    fetchSuppliers();
   }, []);
 
   const fetchInventoryItems = async () => {
@@ -59,6 +67,20 @@ export default function NewPurchaseOrderPage() {
       }
     } catch (error) {
       console.error('Error fetching inventory:', error);
+    }
+  };
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/suppliers/?status=ACTIVE'), {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSuppliers(data.results || data);
+      }
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
     }
   };
 
@@ -140,7 +162,7 @@ export default function NewPurchaseOrderPage() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          supplier,
+          supplier: parseInt(supplier),
           order_date: orderDate,
           expected_delivery: expectedDelivery || null,
           notes,
@@ -235,14 +257,19 @@ export default function NewPurchaseOrderPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Supplier <span className="text-red-600">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   value={supplier}
                   onChange={(e) => setSupplier(e.target.value)}
-                  placeholder="Nama supplier"
-                  className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] bg-white"
                   required
-                />
+                >
+                  <option value="">Pilih Supplier</option>
+                  {suppliers.map((sup) => (
+                    <option key={sup.id} value={sup.id}>
+                      {sup.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

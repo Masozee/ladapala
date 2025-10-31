@@ -3,6 +3,7 @@ from .models import (
     RoomType, Room, Guest, Reservation, Payment, Complaint,
     CheckIn, Holiday, InventoryItem, FinancialTransaction, Invoice, InvoiceItem
 )
+from .models.inventory import PurchaseOrder, PurchaseOrderItem, StockMovement
 
 
 @admin.register(RoomType)
@@ -70,7 +71,7 @@ class InventoryItemAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description', 'supplier']
 
 
-@admin.register(models.PurchaseOrder)
+@admin.register(PurchaseOrder)
 class PurchaseOrderAdmin(admin.ModelAdmin):
     list_display = ['po_number', 'supplier', 'order_date', 'status', 'total_amount', 'created_by']
     list_filter = ['status', 'order_date', 'supplier']
@@ -79,12 +80,12 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
 
 
 class PurchaseOrderItemInline(admin.TabularInline):
-    model = models.PurchaseOrderItem
+    model = PurchaseOrderItem
     extra = 1
     fields = ['inventory_item', 'quantity_ordered', 'unit_price', 'quantity_received', 'notes']
 
 
-@admin.register(models.StockMovement)
+@admin.register(StockMovement)
 class StockMovementAdmin(admin.ModelAdmin):
     list_display = ['inventory_item', 'movement_type', 'quantity', 'balance_after', 'reference', 'movement_date', 'created_by']
     list_filter = ['movement_type', 'movement_date']

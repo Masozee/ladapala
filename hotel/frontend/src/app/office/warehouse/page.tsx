@@ -31,7 +31,14 @@ interface InventoryItem {
   is_low_stock: boolean;
   stock_status: string;
   unit_price: string;
-  supplier: string | null;
+  supplier: number | null;
+  supplier_name?: string;
+}
+
+interface Supplier {
+  id: number;
+  name: string;
+  status: string;
 }
 
 type SortField = 'name' | 'current_stock' | 'status';
@@ -41,15 +48,31 @@ export default function WarehousePage() {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [csrfToken, setCsrfToken] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    category: 'Guest Amenities',
+    minimum_stock: '10',
+    maximum_stock: '',
+    unit_of_measurement: '',
+    unit_price: '0',
+    supplier: ''
+  });
 
   useEffect(() => {
+    fetchCSRFToken();
     fetchInventory();
+    fetchSuppliers();
   }, []);
 
   useEffect(() => {
@@ -64,6 +87,24 @@ export default function WarehousePage() {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [openMenuId]);
+
+  const fetchCSRFToken = async () => {
+    try {
+      const response = await fetch(buildApiUrl('user/csrf/'), {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const csrfCookie = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('csrftoken='));
+        if (csrfCookie) {
+          setCsrfToken(csrfCookie.split('=')[1]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching CSRF token:', error);
+    }
+  };
 
   const fetchInventory = async () => {
     try {
@@ -88,6 +129,125 @@ export default function WarehousePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/suppliers/?status=ACTIVE'), {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch suppliers');
+      }
+
+      const data = await response.json();
+      setSuppliers(data.results || data);
+    } catch (err) {
+      console.error('Error fetching suppliers:', err);
+    }
+  };
+
+  const handleAddItem = async () => {
+    if (!formData.name || !formData.unit_of_measurement) {
+      alert('Nama item dan satuan harus diisi');
+      return;
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('hotel/inventory/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: formData.name,
+          category: formData.category,
+          current_stock: 0, // Always start at 0, will be filled via Purchase Orders
+          minimum_stock: parseInt(formData.minimum_stock),
+          maximum_stock: formData.maximum_stock ? parseInt(formData.maximum_stock) : null,
+          unit_of_measurement: formData.unit_of_measurement,
+          unit_price: parseFloat(formData.unit_price),
+          supplier: formData.supplier ? parseInt(formData.supplier) : null,
+        }),
+      });
+
+      if (response.ok) {
+        setShowAddModal(false);
+        setFormData({
+          name: '',
+          category: 'Guest Amenities',
+          minimum_stock: '10',
+          maximum_stock: '',
+          unit_of_measurement: '',
+          unit_price: '0',
+          supplier: ''
+        });
+        fetchInventory();
+      } else {
+        const error = await response.json();
+        alert(`Gagal menambah item: ${JSON.stringify(error)}`);
+      }
+    } catch (err) {
+      console.error('Error adding item:', err);
+      alert('Gagal menambah item');
+    }
+  };
+
+  const handleEditItem = async () => {
+    if (!editingItem || !formData.name || !formData.unit_of_measurement) {
+      alert('Nama item dan satuan harus diisi');
+      return;
+    }
+
+    try {
+      const response = await fetch(buildApiUrl(`hotel/inventory/${editingItem.id}/`), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: formData.name,
+          category: formData.category,
+          minimum_stock: parseInt(formData.minimum_stock),
+          maximum_stock: formData.maximum_stock ? parseInt(formData.maximum_stock) : null,
+          unit_of_measurement: formData.unit_of_measurement,
+          unit_price: parseFloat(formData.unit_price),
+          supplier: formData.supplier ? parseInt(formData.supplier) : null,
+        }),
+      });
+
+      if (response.ok) {
+        setShowEditModal(false);
+        setEditingItem(null);
+        fetchInventory();
+      } else {
+        const error = await response.json();
+        alert(`Gagal mengubah item: ${JSON.stringify(error)}`);
+      }
+    } catch (err) {
+      console.error('Error editing item:', err);
+      alert('Gagal mengubah item');
+    }
+  };
+
+  const openEditModal = (item: InventoryItem) => {
+    setEditingItem(item);
+    setFormData({
+      name: item.name,
+      category: item.category,
+      minimum_stock: item.minimum_stock.toString(),
+      maximum_stock: item.maximum_stock?.toString() || '',
+      unit_of_measurement: item.unit_of_measurement,
+      unit_price: item.unit_price,
+      supplier: item.supplier ? item.supplier.toString() : ''
+    });
+    setShowEditModal(true);
+    setOpenMenuId(null);
   };
 
   const getStockStatusColor = (item: InventoryItem) => {
@@ -395,7 +555,10 @@ export default function WarehousePage() {
                 <h3 className="text-xl font-bold text-white">Daftar Inventaris</h3>
                 <p className="text-sm text-gray-100 mt-1">Manajemen stok barang hotel</p>
               </div>
-              <button className="bg-white text-[#4E61D3] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2">
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-white text-[#4E61D3] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2"
+              >
                 <Add01Icon className="h-4 w-4" />
                 <span>Tambah Item</span>
               </button>
@@ -470,8 +633,8 @@ export default function WarehousePage() {
                     <tr key={item.id} className={`hover:bg-gray-100 transition-colors ${rowHighlight}`}>
                       <td className="border border-gray-200 px-4 py-3">
                         <div className="font-medium text-gray-900 text-sm">{item.name}</div>
-                        {item.supplier && (
-                          <div className="text-xs text-gray-500 mt-0.5">Supplier: {item.supplier}</div>
+                        {item.supplier_name && (
+                          <div className="text-xs text-gray-500 mt-0.5">Supplier: {item.supplier_name}</div>
                         )}
                       </td>
                       <td className="border border-gray-200 px-4 py-3">
@@ -545,19 +708,8 @@ export default function WarehousePage() {
                           {openMenuId === item.id && (
                             <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 shadow-lg z-10 rounded">
                               <button
-                                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors first:rounded-t last:rounded-b"
-                              >
-                                <EyeIcon className="h-4 w-4 mr-2 text-gray-400" />
-                                Lihat Detail
-                              </button>
-                              <button
-                                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                <PencilEdit02Icon className="h-4 w-4 mr-2 text-gray-400" />
-                                Update Stok
-                              </button>
-                              <button
-                                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors last:rounded-b"
+                                onClick={() => openEditModal(item)}
+                                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors rounded"
                               >
                                 <PencilEdit02Icon className="h-4 w-4 mr-2 text-gray-400" />
                                 Edit Item
@@ -581,6 +733,293 @@ export default function WarehousePage() {
               <p className="text-gray-600">Coba ubah kata kunci pencarian atau filter Anda.</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Add Item Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Tambah Item Baru</h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Master data item warehouse. Stok awal 0, akan diisi melalui Purchase Order.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nama Item <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Kategori <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  >
+                    <option value="Guest Amenities">Guest Amenities</option>
+                    <option value="Food & Beverage">F&B</option>
+                    <option value="Cleaning Supplies">Cleaning</option>
+                    <option value="Room Supplies">Room</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Office Supplies">Office</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Satuan <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="pcs, box, kg, liter, dll"
+                    value={formData.unit_of_measurement}
+                    onChange={(e) => setFormData({ ...formData, unit_of_measurement: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Harga Satuan <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.unit_price}
+                    onChange={(e) => setFormData({ ...formData, unit_price: e.target.value })}
+                    placeholder="0"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Stok Minimum <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.minimum_stock}
+                    onChange={(e) => setFormData({ ...formData, minimum_stock: e.target.value })}
+                    placeholder="10"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Stok Maksimum
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.maximum_stock}
+                    onChange={(e) => setFormData({ ...formData, maximum_stock: e.target.value })}
+                    placeholder="Opsional"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supplier
+                  </label>
+                  <select
+                    value={formData.supplier}
+                    onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3] bg-white"
+                  >
+                    <option value="">Pilih Supplier (Opsional)</option>
+                    {suppliers.map((supplier) => (
+                      <option key={supplier.id} value={supplier.id}>
+                        {supplier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setFormData({
+                      name: '',
+                      category: 'Guest Amenities',
+                      current_stock: '0',
+                      minimum_stock: '0',
+                      maximum_stock: '',
+                      unit_of_measurement: '',
+                      unit_price: '0',
+                      supplier: ''
+                    });
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleAddItem}
+                  className="flex-1 px-4 py-2 bg-[#4E61D3] text-white hover:bg-[#3d4fa8] transition-colors"
+                >
+                  Simpan Item
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Item Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Edit Item</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nama Item <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Kategori <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  >
+                    <option value="Guest Amenities">Guest Amenities</option>
+                    <option value="Food & Beverage">F&B</option>
+                    <option value="Cleaning Supplies">Cleaning</option>
+                    <option value="Room Supplies">Room</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Office Supplies">Office</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Stok Saat Ini
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.current_stock}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 bg-gray-100 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Gunakan Purchase Order untuk mengubah stok</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Satuan <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="pcs, box, kg, liter, dll"
+                    value={formData.unit_of_measurement}
+                    onChange={(e) => setFormData({ ...formData, unit_of_measurement: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Stok Minimum <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.minimum_stock}
+                    onChange={(e) => setFormData({ ...formData, minimum_stock: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Stok Maksimum
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.maximum_stock}
+                    onChange={(e) => setFormData({ ...formData, maximum_stock: e.target.value })}
+                    placeholder="Opsional"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Harga Satuan <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.unit_price}
+                    onChange={(e) => setFormData({ ...formData, unit_price: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supplier
+                  </label>
+                  <select
+                    value={formData.supplier}
+                    onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#4E61D3] focus:border-[#4E61D3] bg-white"
+                  >
+                    <option value="">Pilih Supplier (Opsional)</option>
+                    {suppliers.map((supplier) => (
+                      <option key={supplier.id} value={supplier.id}>
+                        {supplier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingItem(null);
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleEditItem}
+                  className="flex-1 px-4 py-2 bg-[#4E61D3] text-white hover:bg-[#3d4fa8] transition-colors"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </OfficeLayout>

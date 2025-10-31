@@ -9,7 +9,7 @@ try:
     from .views import (
         RoomTypeViewSet, RoomViewSet, GuestViewSet, ReservationViewSet,
         PaymentViewSet, ComplaintViewSet, CheckInViewSet, HolidayViewSet,
-        InventoryItemViewSet, hotel_dashboard
+        InventoryItemViewSet, SupplierViewSet, hotel_dashboard
     )
     from .views.complaints import ComplaintImageViewSet
     from .views.housekeeping import HousekeepingTaskViewSet, AmenityUsageViewSet
@@ -50,6 +50,7 @@ if LEGACY_VIEWS:
     router.register(r'purchase-orders', PurchaseOrderViewSet, basename='hotel-purchase-orders')
     router.register(r'purchase-order-items', PurchaseOrderItemViewSet, basename='hotel-purchase-order-items')
     router.register(r'stock-movements', StockMovementViewSet, basename='hotel-stock-movements')
+    router.register(r'suppliers', SupplierViewSet, basename='hotel-suppliers')
     router.register(r'housekeeping-tasks', HousekeepingTaskViewSet, basename='hotel-housekeeping-tasks')
     router.register(r'amenity-usages', AmenityUsageViewSet, basename='hotel-amenity-usages')
 
