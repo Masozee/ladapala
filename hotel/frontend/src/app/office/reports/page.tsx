@@ -178,18 +178,15 @@ export default function ReportsPage() {
     return report.category === selectedReportType;
   });
 
-  // Handle report generation
-  const handleGenerateReport = async (reportId: string) => {
-    setGeneratingReports(prev => new Set(prev).add(reportId));
+  // Handle report generation with format
+  const handleGenerateReport = async (reportId: string, format: 'json' | 'pdf' | 'xlsx' = 'pdf') => {
+    setGeneratingReports(prev => new Set(prev).add(`${reportId}-${format}`));
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}`,
+        `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}&format=${format}`,
         {
           credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
         }
       );
 
@@ -197,18 +194,30 @@ export default function ReportsPage() {
         throw new Error(`Gagal generate laporan ${reportId}`);
       }
 
-      const data = await response.json();
-
-      // Create and download JSON file
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${reportId}-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      if (format === 'json') {
+        const data = await response.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${reportId}-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        // For PDF and Excel, response is already a blob
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const extension = format === 'pdf' ? 'pdf' : 'xlsx';
+        a.download = `${reportId}-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
 
       // Update report status
       setAvailableReports(prev =>
@@ -224,46 +233,12 @@ export default function ReportsPage() {
     } finally {
       setGeneratingReports(prev => {
         const newSet = new Set(prev);
-        newSet.delete(reportId);
+        newSet.delete(`${reportId}-${format}`);
         return newSet;
       });
     }
   };
 
-  // Handle report download (for already generated reports)
-  const handleDownloadReport = async (reportId: string) => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Gagal download laporan ${reportId}`);
-      }
-
-      const data = await response.json();
-
-      // Create and download JSON file
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${reportId}-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error('Error downloading report:', err);
-      alert(err instanceof Error ? err.message : 'Terjadi kesalahan saat download laporan');
-    }
-  };
 
   // Quick action: Generate daily report
   const handleDailyReport = async () => {
@@ -571,22 +546,27 @@ export default function ReportsPage() {
                           </div>
                         </div>
 
-                        <div className="mt-4 flex space-x-2">
-                          <button
-                            className="flex-1 bg-[#4E61D3] text-white px-3 py-2 text-sm font-medium hover:bg-[#3D4EA8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={generatingReports.has(report.id)}
-                            onClick={() => handleGenerateReport(report.id)}
-                          >
-                            {generatingReports.has(report.id) ? 'Generating...' : 'Generate'}
-                          </button>
-                          <button
-                            className="px-3 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={report.status !== 'ready'}
-                            onClick={() => handleDownloadReport(report.id)}
-                            title="Download Report"
-                          >
-                            <ChevronDownIcon className="h-4 w-4" />
-                          </button>
+                        <div className="mt-4 space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              className="bg-red-600 text-white px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
+                              disabled={generatingReports.has(`${report.id}-pdf`)}
+                              onClick={() => handleGenerateReport(report.id, 'pdf')}
+                              title="Download as PDF"
+                            >
+                              <File01Icon className="h-4 w-4" />
+                              <span>{generatingReports.has(`${report.id}-pdf`) ? 'PDF...' : 'PDF'}</span>
+                            </button>
+                            <button
+                              className="bg-green-600 text-white px-3 py-2 text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
+                              disabled={generatingReports.has(`${report.id}-xlsx`)}
+                              onClick={() => handleGenerateReport(report.id, 'xlsx')}
+                              title="Download as Excel"
+                            >
+                              <File01Icon className="h-4 w-4" />
+                              <span>{generatingReports.has(`${report.id}-xlsx`) ? 'Excel...' : 'Excel'}</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

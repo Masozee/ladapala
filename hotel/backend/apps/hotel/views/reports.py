@@ -1,6 +1,7 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from django.http import HttpResponse
 from django.db.models import Count, Avg, Sum, Q
 from django.utils import timezone
 from datetime import datetime, timedelta, date
@@ -11,6 +12,40 @@ from ..models import (
     Reservation, Payment, Room, Guest,
     InventoryItem, Expense, Complaint
 )
+from ..utils.report_formatters import get_formatter
+
+
+def format_response(data, report_type, request):
+    """
+    Format response based on requested format (json/pdf/xlsx)
+    """
+    format_type = request.GET.get('format', 'json').lower()
+
+    if format_type == 'json':
+        return Response(data)
+
+    formatter = get_formatter(report_type, format_type)
+    if not formatter:
+        return Response({'error': f'Format {format_type} not supported'}, status=400)
+
+    try:
+        buffer = formatter(data)
+
+        if format_type == 'pdf':
+            response = HttpResponse(buffer.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{report_type}-report.pdf"'
+        elif format_type == 'xlsx':
+            response = HttpResponse(
+                buffer.read(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = f'attachment; filename="{report_type}-report.xlsx"'
+        else:
+            return Response({'error': 'Invalid format'}, status=400)
+
+        return response
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 
 @api_view(['GET'])
@@ -519,12 +554,14 @@ def occupancy_report(request):
     # Calculate average occupancy
     avg_occupancy = sum(day['occupancy_rate'] for day in daily_data) / len(daily_data) if daily_data else 0
 
-    return Response({
+    data = {
         'period': period,
         'average_occupancy': round(avg_occupancy, 1),
         'total_rooms': total_rooms,
         'daily_data': daily_data
-    })
+    }
+
+    return format_response(data, 'occupancy', request)
 
 
 @api_view(['GET'])
@@ -593,7 +630,7 @@ def revenue_report(request):
 
         current_date += timedelta(days=1)
 
-    return Response({
+    data = {
         'period': period,
         'total_revenue': float(total_revenue),
         'room_revenue': float(room_revenue),
@@ -607,7 +644,9 @@ def revenue_report(request):
             for item in revenue_by_method
         ],
         'daily_revenue': daily_revenue
-    })
+    }
+
+    return format_response(data, 'revenue', request)
 
 
 @api_view(['GET'])
@@ -677,7 +716,7 @@ def guest_analytics_report(request):
     else:
         avg_stay = 0
 
-    return Response({
+    data = {
         'period': period,
         'total_guests': total_guests,
         'repeat_guests': repeat_guests,
@@ -692,7 +731,9 @@ def guest_analytics_report(request):
             for item in nationality_breakdown
         ],
         'booking_by_day': booking_by_day
-    })
+    }
+
+    return format_response(data, 'guest-analytics', request)
 
 
 @api_view(['GET'])
@@ -752,11 +793,13 @@ def staff_performance_report(request):
             'is_active': tech.is_active
         })
 
-    return Response({
+    data = {
         'period': period,
         'total_staff': len(staff_data),
         'staff': staff_data
-    })
+    }
+
+    return format_response(data, 'staff-performance', request)
 
 
 @api_view(['GET'])
@@ -810,7 +853,7 @@ def satisfaction_report(request):
     else:
         satisfaction_score = 4.5
 
-    return Response({
+    data = {
         'period': period,
         'total_complaints': total_complaints,
         'resolved_complaints': resolved_complaints,
@@ -825,7 +868,9 @@ def satisfaction_report(request):
             }
             for item in complaints_by_category
         ]
-    })
+    }
+
+    return format_response(data, 'satisfaction', request)
 
 
 @api_view(['GET'])
@@ -859,7 +904,7 @@ def inventory_report(request):
         total_quantity=Sum('current_stock')
     ).order_by('-count')
 
-    return Response({
+    data = {
         'total_items': total_items,
         'low_stock_items': low_stock_items,
         'out_of_stock': out_of_stock,
@@ -872,7 +917,9 @@ def inventory_report(request):
             }
             for item in items_by_category
         ]
-    })
+    }
+
+    return format_response(data, 'inventory', request)
 
 
 @api_view(['GET'])
@@ -938,7 +985,7 @@ def maintenance_report(request):
     else:
         avg_resolution_time = 0
 
-    return Response({
+    data = {
         'period': period,
         'total_requests': total_requests,
         'completed': completed,
@@ -960,7 +1007,9 @@ def maintenance_report(request):
             }
             for item in by_category
         ]
-    })
+    }
+
+    return format_response(data, 'maintenance', request)
 
 
 @api_view(['GET'])
@@ -1002,7 +1051,7 @@ def tax_report(request):
 
     total_tax = vat_amount + hotel_tax
 
-    return Response({
+    data = {
         'period': period,
         'total_revenue': float(total_revenue),
         'vat_rate': float(vat_rate * 100),
@@ -1010,4 +1059,6 @@ def tax_report(request):
         'hotel_tax_rate': float(hotel_tax_rate * 100),
         'hotel_tax': float(hotel_tax),
         'total_tax': float(total_tax)
-    })
+    }
+
+    return format_response(data, 'tax', request)
