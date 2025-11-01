@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   Shield01Icon,
   UserMultipleIcon,
@@ -35,7 +35,9 @@ import {
   HardDrive,
   Delete02Icon,
   Location01Icon,
-  DatabaseIcon
+  DatabaseIcon,
+  Building03Icon,
+  Call02Icon
 } from '@/lib/icons';
 
 interface ApiUser {
@@ -56,11 +58,24 @@ interface ApiUser {
 
 export default function AdminPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('info');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserRole, setSelectedUserRole] = useState('all');
   const [apiUsers, setApiUsers] = useState<ApiUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [hotelInfo, setHotelInfo] = useState({
+    hotelName: '',
+    hotelDescription: '',
+    address: '',
+    phone: '',
+    email: '',
+    website: '',
+    timezone: 'Asia/Jakarta',
+    currency: 'IDR',
+    language: 'id',
+  });
 
   // System stats state
   const [systemStats, setSystemStats] = useState({
@@ -282,6 +297,79 @@ export default function AdminPage() {
     fetchUsers();
   }, [activeTab]);
 
+  // Fetch hotel information settings
+  useEffect(() => {
+    const fetchHotelInfo = async () => {
+      if (activeTab !== 'info') return;
+
+      try {
+        setLoadingSettings(true);
+        const response = await fetch(buildApiUrl('hotel/settings/'), {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setHotelInfo({
+            hotelName: data.hotel_name || '',
+            hotelDescription: data.hotel_description || '',
+            address: data.address || '',
+            phone: data.phone || '',
+            email: data.email || '',
+            website: data.website || '',
+            timezone: data.timezone || 'Asia/Jakarta',
+            currency: data.currency || 'IDR',
+            language: data.language || 'id',
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching hotel info:', error);
+      } finally {
+        setLoadingSettings(false);
+      }
+    };
+
+    fetchHotelInfo();
+  }, [activeTab]);
+
+  // Save hotel information
+  const handleSaveHotelInfo = async () => {
+    try {
+      setSavingSettings(true);
+      const csrfToken = getCsrfToken();
+
+      const response = await fetch(buildApiUrl('hotel/settings/1/'), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          hotel_name: hotelInfo.hotelName,
+          hotel_description: hotelInfo.hotelDescription,
+          address: hotelInfo.address,
+          phone: hotelInfo.phone,
+          email: hotelInfo.email,
+          website: hotelInfo.website,
+          timezone: hotelInfo.timezone,
+          currency: hotelInfo.currency,
+          language: hotelInfo.language,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Hotel information saved successfully!');
+      } else {
+        alert('Failed to save hotel information');
+      }
+    } catch (error) {
+      console.error('Error saving hotel info:', error);
+      alert('Error saving hotel information');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   // Transform API users to match the UI format
   const transformedUsers = apiUsers.map(user => ({
     id: user.id,
@@ -326,12 +414,147 @@ export default function AdminPage() {
 
         {/* Tab Navigation */}
         <div className="flex space-x-1 bg-gray-50">
+          <TabButton tabId="info" label="Info Hotel" icon={Building03Icon} />
           <TabButton tabId="dashboard" label="Dashboard" icon={ViewIcon} />
           <TabButton tabId="users" label="Pengguna" icon={UserMultipleIcon} />
           <TabButton tabId="system" label="Sistem" icon={PackageIcon} />
           <TabButton tabId="security" label="Keamanan" icon={Shield01Icon} />
           <TabButton tabId="logs" label="Log Aktivitas" icon={PieChartIcon} />
         </div>
+
+        {/* Info Hotel Tab */}
+        {activeTab === 'info' && (
+          <div>
+            {loadingSettings ? (
+              <div className="flex items-center justify-center py-12 bg-white">
+                <div className="text-center">
+                  <Loading03Icon className="h-12 w-12 text-[#4E61D3] mx-auto animate-spin mb-4" />
+                  <p className="text-gray-600">Loading hotel information...</p>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white border border-gray-200">
+                <div className="p-6 bg-[#4E61D3] text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold">Informasi Hotel</h3>
+                      <p className="text-sm mt-1 text-white/90">Konfigurasi informasi dasar hotel</p>
+                    </div>
+                    <div className="w-10 h-10 bg-white/10 flex items-center justify-center">
+                      <Building03Icon className="h-5 w-5 text-white" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Nama Hotel</label>
+                      <input
+                        type="text"
+                        value={hotelInfo.hotelName}
+                        onChange={(e) => setHotelInfo({...hotelInfo, hotelName: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                        placeholder="Kapulaga Hotel"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={hotelInfo.email}
+                        onChange={(e) => setHotelInfo({...hotelInfo, email: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                        placeholder="info@kapulaga.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Telepon</label>
+                      <input
+                        type="tel"
+                        value={hotelInfo.phone}
+                        onChange={(e) => setHotelInfo({...hotelInfo, phone: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                        placeholder="+62-21-5555-0123"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                      <input
+                        type="url"
+                        value={hotelInfo.website}
+                        onChange={(e) => setHotelInfo({...hotelInfo, website: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                        placeholder="https://kapulaga.com"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+                      <textarea
+                        value={hotelInfo.address}
+                        onChange={(e) => setHotelInfo({...hotelInfo, address: e.target.value})}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                        placeholder="Jl. Sudirman No. 123, Jakarta 10220"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi Hotel</label>
+                      <textarea
+                        value={hotelInfo.hotelDescription}
+                        onChange={(e) => setHotelInfo({...hotelInfo, hotelDescription: e.target.value})}
+                        rows={4}
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                        placeholder="Premium hospitality experience in the heart of the city"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
+                      <select
+                        value={hotelInfo.timezone}
+                        onChange={(e) => setHotelInfo({...hotelInfo, timezone: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                      >
+                        <option value="Asia/Jakarta">Asia/Jakarta (WIB)</option>
+                        <option value="Asia/Makassar">Asia/Makassar (WITA)</option>
+                        <option value="Asia/Jayapura">Asia/Jayapura (WIT)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Mata Uang</label>
+                      <select
+                        value={hotelInfo.currency}
+                        onChange={(e) => setHotelInfo({...hotelInfo, currency: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                      >
+                        <option value="IDR">IDR (Rupiah)</option>
+                        <option value="USD">USD (Dollar)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      onClick={handleSaveHotelInfo}
+                      disabled={savingSettings}
+                      className="flex items-center space-x-2 px-6 py-3 bg-[#4E61D3] text-white hover:bg-[#3d4da8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                    >
+                      {savingSettings ? (
+                        <>
+                          <Loading03Icon className="h-4 w-4 animate-spin" />
+                          <span>Menyimpan...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Settings02Icon className="h-4 w-4" />
+                          <span>Simpan Perubahan</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
