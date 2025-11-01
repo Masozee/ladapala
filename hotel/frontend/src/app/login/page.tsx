@@ -25,15 +25,24 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hotelInfo, setHotelInfo] = useState<any>(null);
 
   // Get redirect path from query params
   const redirectPath = searchParams.get('redirect') || '/';
 
-  // Fetch CSRF token on mount
+  // Fetch CSRF token and hotel info on mount
   useEffect(() => {
     fetch(buildApiUrl('user/csrf/'), {
       credentials: 'include'
     }).catch(err => console.error('Error fetching CSRF token:', err));
+
+    // Fetch hotel public information
+    fetch(buildApiUrl('hotel/settings/public_info/'), {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => setHotelInfo(data))
+      .catch(err => console.error('Error fetching hotel info:', err));
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,23 +149,25 @@ const LoginPage = () => {
             <div className="flex items-center space-x-3 mb-8">
               <div className="w-12 h-12 bg-gray-50 flex items-center justify-center p-1">
                 <Image
-                  src="/logo.png"
-                  alt="Kapulaga Hotel Logo"
+                  src={hotelInfo?.logo_url || '/logo.png'}
+                  alt={`${hotelInfo?.hotel_name || 'Hotel'} Logo`}
                   width={40}
                   height={40}
                   className="object-contain"
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Kapulaga</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {hotelInfo?.hotel_name || 'Kapulaga'}
+                </h1>
                 <p className="text-sm text-gray-600">Hotel Management System</p>
               </div>
             </div>
-            
+
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-gray-900">Welcome back</h2>
               <p className="mt-2 text-gray-600">
-                Sign in to your account to continue managing your hotel operations.
+                {hotelInfo?.hotel_description || 'Sign in to your account to continue managing your hotel operations.'}
               </p>
             </div>
           </div>
@@ -285,13 +296,64 @@ const LoginPage = () => {
                 <div><strong>Admin:</strong> admin@gmail.com / 687654</div>
               </div>
             </div>
+
+            {/* Hotel Contact Information */}
+            {hotelInfo && (hotelInfo.phone || hotelInfo.email || hotelInfo.address) && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Need Help?</h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  {hotelInfo.phone && (
+                    <div className="flex items-center space-x-2">
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      <span>{hotelInfo.phone}</span>
+                    </div>
+                  )}
+                  {hotelInfo.email && (
+                    <div className="flex items-center space-x-2">
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span>{hotelInfo.email}</span>
+                    </div>
+                  )}
+                  {hotelInfo.address && (
+                    <div className="flex items-start space-x-2">
+                      <svg className="h-4 w-4 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="flex-1">{hotelInfo.address}</span>
+                    </div>
+                  )}
+                  {hotelInfo.website && (
+                    <div className="flex items-center space-x-2">
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                      </svg>
+                      <a href={hotelInfo.website} target="_blank" rel="noopener noreferrer" className="text-[#005357] hover:text-[#004147]">
+                        {hotelInfo.website.replace(/^https?:\/\//, '')}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Right Side - Image and Features */}
       <div className="hidden lg:block relative w-0 flex-1">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#005357] to-[#2baf6a]">
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-[#005357] to-[#2baf6a]"
+          style={{
+            background: hotelInfo?.primary_color
+              ? `linear-gradient(to bottom right, ${hotelInfo.primary_color}, ${hotelInfo.secondary_color || hotelInfo.primary_color})`
+              : undefined
+          }}
+        >
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-10" 
                style={{
@@ -304,11 +366,10 @@ const LoginPage = () => {
           <div className="relative h-full flex flex-col justify-center p-12 text-white">
             <div className="max-w-lg">
               <h2 className="text-4xl font-bold mb-6">
-                Streamline Your Hotel Operations
+                {hotelInfo?.hotel_name || 'Streamline Your Hotel Operations'}
               </h2>
               <p className="text-xl text-gray-100 mb-12">
-                Experience the power of modern hotel management with Kapulaga - 
-                where efficiency meets excellence in hospitality.
+                {hotelInfo?.hotel_description || 'Experience the power of modern hotel management - where efficiency meets excellence in hospitality.'}
               </p>
 
               {/* Features List */}
