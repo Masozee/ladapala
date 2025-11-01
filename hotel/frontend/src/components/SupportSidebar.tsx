@@ -74,7 +74,6 @@ const SupportSidebar = () => {
 
   const bottomActions: MenuItem[] = [
     { name: 'Calendar', icon: Calendar01Icon, href: '/calendar' },
-    { name: 'Support Settings', icon: Settings02Icon, href: '/support/settings' },
     { name: 'Profile', icon: UserIcon, href: '/profile' },
   ];
 

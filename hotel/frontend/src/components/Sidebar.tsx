@@ -83,7 +83,6 @@ const Sidebar = () => {
 
   const bottomActions: MenuItem[] = [
     { name: 'Calendar', icon: Calendar01Icon, href: '/calendar' },
-    { name: 'Settings', icon: Settings02Icon, href: '/office/settings' },
     { name: 'Profile', icon: UserIcon, href: '/profile' },
   ];
 
