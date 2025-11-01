@@ -228,7 +228,7 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
         ).first()
 
         if current_reservation:
-            guest_count = current_reservation.number_of_guests or current_reservation.room.room_type.max_occupancy
+            guest_count = (current_reservation.adults + current_reservation.children) or current_reservation.room.room_type.max_occupancy
 
         # For STAYOVER: Get previous usage from this room's recent tasks
         if task.task_type == 'STAYOVER_CLEANING':
