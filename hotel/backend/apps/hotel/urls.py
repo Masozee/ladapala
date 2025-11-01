@@ -24,7 +24,7 @@ try:
         daily_reports, daily_reports_range, monthly_reports,
         report_summary, available_reports, occupancy_report,
         revenue_report, guest_analytics_report, staff_performance_report,
-        satisfaction_report, inventory_report, tax_report
+        satisfaction_report, inventory_report, tax_report, maintenance_report
     )
     from .views.analytics import dashboard_analytics, monthly_comparison
     from .views.financial import financial_overview, financial_transactions
@@ -88,6 +88,7 @@ if LEGACY_VIEWS:
         path('reports/guest-analytics/', guest_analytics_report, name='guest-analytics-report'),
         path('reports/staff-performance/', staff_performance_report, name='staff-performance-report'),
         path('reports/satisfaction/', satisfaction_report, name='satisfaction-report'),
+        path('reports/maintenance/', maintenance_report, name='maintenance-report'),
         path('reports/inventory/', inventory_report, name='inventory-report'),
         path('reports/tax/', tax_report, name='tax-report'),
         path('analytics/dashboard/', dashboard_analytics, name='dashboard-analytics'),

@@ -837,19 +837,26 @@ def inventory_report(request):
     items = InventoryItem.objects.all()
 
     total_items = items.count()
-    low_stock_items = items.filter(quantity__lte=10).count()
-    out_of_stock = items.filter(quantity=0).count()
+
+    # Low stock items (current_stock <= minimum_stock OR current_stock <= 10 if no minimum_stock)
+    from django.db.models import F
+    low_stock_items = items.filter(
+        Q(current_stock__lte=F('minimum_stock')) |
+        Q(minimum_stock__isnull=True, current_stock__lte=10)
+    ).count()
+
+    out_of_stock = items.filter(current_stock=0).count()
 
     # Total inventory value
     total_value = sum(
-        float(item.quantity * item.unit_price)
+        float(item.current_stock * item.unit_price)
         for item in items
     )
 
-    # Items by category
-    items_by_category = items.values('category').annotate(
+    # Items by category (category is ForeignKey, so get category name)
+    items_by_category = items.values('category__name').annotate(
         count=Count('id'),
-        total_quantity=Sum('quantity')
+        total_quantity=Sum('current_stock')
     ).order_by('-count')
 
     return Response({
@@ -859,11 +866,99 @@ def inventory_report(request):
         'total_value': total_value,
         'items_by_category': [
             {
-                'category': item['category'],
+                'category': item['category__name'] or 'Uncategorized',
                 'count': item['count'],
-                'total_quantity': item['total_quantity']
+                'total_quantity': item['total_quantity'] or 0
             }
             for item in items_by_category
+        ]
+    })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def maintenance_report(request):
+    """Generate maintenance report"""
+    period = request.GET.get('period', 'thisMonth')
+
+    # Calculate date range
+    today = date.today()
+    if period == 'thisMonth':
+        start_date = date(today.year, today.month, 1)
+        end_date = today
+    elif period == 'lastMonth':
+        last_month = today.replace(day=1) - timedelta(days=1)
+        start_date = date(last_month.year, last_month.month, 1)
+        end_date = date(last_month.year, last_month.month, 1) + timedelta(days=32)
+        end_date = end_date.replace(day=1) - timedelta(days=1)
+    else:
+        start_date = date(today.year, today.month, 1)
+        end_date = today
+
+    start_datetime = datetime.combine(start_date, datetime.min.time())
+    end_datetime = datetime.combine(end_date, datetime.max.time())
+
+    # Get maintenance requests for the period
+    requests = MaintenanceRequest.objects.filter(
+        requested_date__range=[start_datetime, end_datetime]
+    )
+
+    total_requests = requests.count()
+    completed = requests.filter(status='COMPLETED').count()
+    in_progress = requests.filter(status='IN_PROGRESS').count()
+    pending = requests.filter(status__in=['SUBMITTED', 'ACKNOWLEDGED']).count()
+
+    # Calculate costs
+    total_cost = requests.aggregate(
+        total=Sum('actual_cost')
+    )['total'] or Decimal('0')
+
+    # By priority
+    by_priority = requests.values('priority').annotate(
+        count=Count('id')
+    ).order_by('-count')
+
+    # By category
+    by_category = requests.values('category').annotate(
+        count=Count('id')
+    ).order_by('-count')
+
+    # Average resolution time
+    completed_requests = requests.filter(
+        status='COMPLETED',
+        completed_date__isnull=False
+    )
+
+    if completed_requests.exists():
+        total_hours = sum(
+            req.resolution_time_hours for req in completed_requests
+            if req.resolution_time_hours
+        )
+        avg_resolution_time = round(total_hours / completed_requests.count(), 1) if completed_requests.count() > 0 else 0
+    else:
+        avg_resolution_time = 0
+
+    return Response({
+        'period': period,
+        'total_requests': total_requests,
+        'completed': completed,
+        'in_progress': in_progress,
+        'pending': pending,
+        'total_cost': float(total_cost),
+        'average_resolution_time': avg_resolution_time,
+        'by_priority': [
+            {
+                'priority': item['priority'],
+                'count': item['count']
+            }
+            for item in by_priority
+        ],
+        'by_category': [
+            {
+                'category': item['category'],
+                'count': item['count']
+            }
+            for item in by_category
         ]
     })
 
