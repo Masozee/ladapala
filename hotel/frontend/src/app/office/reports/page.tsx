@@ -182,9 +182,9 @@ export default function ReportsPage() {
   const handleGenerateReport = async (reportId: string, format: 'json' | 'pdf' | 'xlsx' = 'pdf') => {
     setGeneratingReports(prev => new Set(prev).add(`${reportId}-${format}`));
 
-    try {
+    try:
       const response = await fetch(
-        `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}&format=${format}`,
+        `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}&download_format=${format}`,
         {
           credentials: 'include',
         }

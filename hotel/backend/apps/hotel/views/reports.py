@@ -17,24 +17,25 @@ from ..utils.report_formatters import get_formatter
 
 def format_response(data, report_type, request):
     """
-    Format response based on requested format (json/pdf/xlsx)
+    Format response based on requested download format (json/pdf/xlsx)
+    Use 'download_format' parameter to avoid conflict with DRF's built-in 'format' parameter
     """
-    format_type = request.GET.get('format', 'json').lower()
+    download_format = request.GET.get('download_format', 'json').lower()
 
-    if format_type == 'json':
+    if download_format == 'json':
         return Response(data)
 
-    formatter = get_formatter(report_type, format_type)
+    formatter = get_formatter(report_type, download_format)
     if not formatter:
-        return Response({'error': f'Format {format_type} not supported'}, status=400)
+        return Response({'error': f'Format {download_format} not supported'}, status=400)
 
     try:
         buffer = formatter(data)
 
-        if format_type == 'pdf':
+        if download_format == 'pdf':
             response = HttpResponse(buffer.read(), content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="{report_type}-report.pdf"'
-        elif format_type == 'xlsx':
+        elif download_format == 'xlsx':
             response = HttpResponse(
                 buffer.read(),
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
