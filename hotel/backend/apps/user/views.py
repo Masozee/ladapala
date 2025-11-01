@@ -11,6 +11,7 @@ from .serializers import (
     ShiftSerializer, EmployeeSerializer, DepartmentSerializer
 )
 from .models import Shift, User, Employee, Department
+from .permissions import get_user_access_level
 from django.db import transaction
 from datetime import date
 
@@ -70,6 +71,9 @@ class LoginView(APIView):
                 } if employee.department else None
             }
 
+        # Get access level based on department
+        access_level = get_user_access_level(user)
+
         return Response({
             'message': 'Login successful',
             'user': {
@@ -84,6 +88,7 @@ class LoginView(APIView):
                 'is_superuser': user.is_superuser,
             },
             'employee': employee_info,
+            'access': access_level,
         }, status=status.HTTP_200_OK)
 
 
@@ -132,6 +137,9 @@ def check_session(request):
                 } if employee.department else None
             }
 
+        # Get access level based on department
+        access_level = get_user_access_level(request.user)
+
         return Response({
             'authenticated': True,
             'user': {
@@ -146,6 +154,7 @@ def check_session(request):
                 'is_superuser': request.is_superuser,
             },
             'employee': employee_info,
+            'access': access_level,
         })
     else:
         return Response({

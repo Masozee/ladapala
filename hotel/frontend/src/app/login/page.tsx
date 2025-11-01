@@ -81,9 +81,30 @@ const LoginPage = () => {
       if (data.employee) {
         localStorage.setItem('authEmployee', JSON.stringify(data.employee));
       }
+      if (data.access) {
+        localStorage.setItem('authAccess', JSON.stringify(data.access));
+      }
 
-      // Redirect to the original page or dashboard
-      router.push(redirectPath);
+      // Redirect based on access level or original page
+      if (redirectPath !== '/') {
+        router.push(redirectPath);
+      } else {
+        // Redirect to appropriate default route based on department
+        const access = data.access;
+        if (access) {
+          if (access.can_access_main) {
+            router.push('/');
+          } else if (access.can_access_office) {
+            router.push('/office');
+          } else if (access.can_access_support) {
+            router.push('/support');
+          } else {
+            router.push('/');
+          }
+        } else {
+          router.push('/');
+        }
+      }
     } catch (err) {
       setError('Login failed. Please check your credentials.');
       console.error('Login error:', err);

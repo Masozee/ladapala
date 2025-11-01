@@ -4,6 +4,7 @@ import { useState, createContext, useContext, ReactNode, useEffect } from 'react
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
+import DepartmentGuard from './DepartmentGuard';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   Search02Icon,
@@ -349,9 +350,10 @@ const AppLayout = ({ children, breadcrumb }: AppLayoutProps) => {
   const breadcrumbItems = breadcrumb || defaultBreadcrumb();
 
   return (
-    <HeaderContext.Provider value={contextValue}>
-      <div className={`flex h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-        <Sidebar />
+    <DepartmentGuard requiredAccess="main">
+      <HeaderContext.Provider value={contextValue}>
+        <div className={`flex h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+          <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Navbar */}
           <header className="sticky top-0 z-10 bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/50 h-16 flex items-center justify-between px-6">
@@ -415,6 +417,7 @@ const AppLayout = ({ children, breadcrumb }: AppLayoutProps) => {
         </div>
       </div>
     </HeaderContext.Provider>
+    </DepartmentGuard>
   );
 };
 

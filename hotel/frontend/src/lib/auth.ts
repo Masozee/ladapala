@@ -20,6 +20,14 @@ export interface AuthEmployee {
   } | null;
 }
 
+export interface AccessLevel {
+  can_access_office: boolean;   // Management/Admin pages (/office)
+  can_access_main: boolean;      // Front desk pages (/)
+  can_access_support: boolean;   // Support staff pages (/support)
+  department: string | null;
+  department_id: number | null;
+}
+
 export function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('authToken');
@@ -37,8 +45,41 @@ export function getAuthEmployee(): AuthEmployee | null {
   return employeeStr ? JSON.parse(employeeStr) : null;
 }
 
+export function getAccessLevel(): AccessLevel | null {
+  if (typeof window === 'undefined') return null;
+  const accessStr = localStorage.getItem('authAccess');
+  return accessStr ? JSON.parse(accessStr) : null;
+}
+
 export function isAuthenticated(): boolean {
   return getAuthToken() !== null;
+}
+
+export function canAccessOffice(): boolean {
+  const access = getAccessLevel();
+  return access?.can_access_office ?? false;
+}
+
+export function canAccessMain(): boolean {
+  const access = getAccessLevel();
+  return access?.can_access_main ?? false;
+}
+
+export function canAccessSupport(): boolean {
+  const access = getAccessLevel();
+  return access?.can_access_support ?? false;
+}
+
+export function getDefaultRoute(): string {
+  const access = getAccessLevel();
+  if (!access) return '/login';
+
+  // Priority: main > office > support
+  if (access.can_access_main) return '/';
+  if (access.can_access_office) return '/office';
+  if (access.can_access_support) return '/support';
+
+  return '/login';
 }
 
 export function logout(): void {
@@ -46,6 +87,7 @@ export function logout(): void {
   localStorage.removeItem('authToken');
   localStorage.removeItem('authUser');
   localStorage.removeItem('authEmployee');
+  localStorage.removeItem('authAccess');
 }
 
 export function getAuthHeaders(): HeadersInit {

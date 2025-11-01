@@ -4,6 +4,7 @@ import { useState, createContext, useContext, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import OfficeSidebar from './OfficeSidebar';
+import DepartmentGuard from './DepartmentGuard';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   Search02Icon,
@@ -230,9 +231,10 @@ const OfficeLayout = ({ children, breadcrumb }: OfficeLayoutProps) => {
   const breadcrumbItems = breadcrumb || defaultBreadcrumb();
 
   return (
-    <HeaderContext.Provider value={contextValue}>
-      <div className={`flex h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-        <OfficeSidebar />
+    <DepartmentGuard requiredAccess="office">
+      <HeaderContext.Provider value={contextValue}>
+        <div className={`flex h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+          <OfficeSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Navbar */}
           <header className="sticky top-0 z-10 bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/50 h-16 flex items-center justify-between px-6">
@@ -296,6 +298,7 @@ const OfficeLayout = ({ children, breadcrumb }: OfficeLayoutProps) => {
         </div>
       </div>
     </HeaderContext.Provider>
+    </DepartmentGuard>
   );
 };
 

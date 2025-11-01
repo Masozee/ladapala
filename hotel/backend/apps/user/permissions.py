@@ -140,3 +140,126 @@ def permission_required(permission_method):
             return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
+
+
+# ============================================================================
+# Department-Based Access Control (RBAC)
+# ============================================================================
+"""
+Access levels by department:
+- Management: Access to /office (admin/management pages)
+- Front Office: Access to main pages (reservations, check-in/out, guest management)
+- Housekeeping: Access to /support (housekeeping tasks)
+- Maintenance: Access to /support (maintenance tasks)
+- Food & Beverage: Access to /support (restaurant/F&B operations)
+"""
+
+
+def get_user_access_level(user):
+    """
+    Get user's access level based on their department
+    Returns dict with access permissions
+    """
+    # Default: no access
+    access = {
+        'can_access_office': False,  # Management/Admin pages
+        'can_access_main': False,    # Front desk/reception pages
+        'can_access_support': False, # Support staff pages (housekeeping, maintenance, F&B)
+        'department': None,
+        'department_id': None,
+    }
+
+    # Superuser has full access
+    if user.is_superuser:
+        access['can_access_office'] = True
+        access['can_access_main'] = True
+        access['can_access_support'] = True
+        return access
+
+    # Check if user has employee record
+    if not hasattr(user, 'employee'):
+        return access
+
+    employee = user.employee
+    if not employee.department:
+        return access
+
+    department_name = employee.department.name.lower()
+    access['department'] = employee.department.name
+    access['department_id'] = employee.department.id
+
+    # Management department: Access to office (admin pages)
+    if 'management' in department_name or 'admin' in department_name:
+        access['can_access_office'] = True
+        access['can_access_main'] = True  # Management can also access main pages
+        access['can_access_support'] = True  # Management can also access support pages
+
+    # Front Office: Access to main pages (front desk, reservations, guests)
+    elif 'front' in department_name or 'reception' in department_name or 'desk' in department_name:
+        access['can_access_main'] = True
+
+    # Housekeeping: Access to support pages
+    elif 'housekeeping' in department_name or 'house keeping' in department_name:
+        access['can_access_support'] = True
+
+    # Maintenance: Access to support pages
+    elif 'maintenance' in department_name or 'engineering' in department_name:
+        access['can_access_support'] = True
+
+    # Food & Beverage: Access to support pages
+    elif 'food' in department_name or 'beverage' in department_name or 'f&b' in department_name or 'restaurant' in department_name:
+        access['can_access_support'] = True
+
+    return access
+
+
+def can_access_office(user):
+    """Check if user can access office (management/admin) pages"""
+    access = get_user_access_level(user)
+    return access['can_access_office']
+
+
+def can_access_main(user):
+    """Check if user can access main (front desk) pages"""
+    access = get_user_access_level(user)
+    return access['can_access_main']
+
+
+def can_access_support(user):
+    """Check if user can access support (housekeeping/maintenance/F&B) pages"""
+    access = get_user_access_level(user)
+    return access['can_access_support']
+
+
+class HasDepartmentAccess(permissions.BasePermission):
+    """
+    Permission class to check if user's department has access to requested resource
+    Usage: Set required_access = 'office' or 'main' or 'support' in view
+    """
+
+    def has_permission(self, request, view):
+        # Allow superusers full access
+        if request.user and request.user.is_superuser:
+            return True
+
+        # Check if user is authenticated
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        # Get required access level from view
+        required_access = getattr(view, 'required_access', None)
+        if not required_access:
+            return True  # No specific access required
+
+        # Get user's access level
+        access = get_user_access_level(request.user)
+
+        # Check if user has required access
+        if required_access == 'office':
+            return access['can_access_office']
+        elif required_access == 'main':
+            return access['can_access_main']
+        elif required_access == 'support':
+            return access['can_access_support']
+
+        return False
