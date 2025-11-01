@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, DateFilter
 from django.utils import timezone
 from datetime import timedelta
@@ -12,7 +13,7 @@ from ..serializers import ReservationSerializer, ReservationListSerializer
 
 class LargeResultsSetPagination(PageNumberPagination):
     """Pagination class that allows larger page sizes for calendar view"""
-    page_size = 20
+    page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 5000
 
@@ -36,9 +37,9 @@ class ReservationViewSet(viewsets.ModelViewSet):
     queryset = Reservation.objects.select_related('guest', 'room', 'room__room_type')
     serializer_class = ReservationSerializer
     pagination_class = LargeResultsSetPagination
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ReservationFilter
-    search_fields = ['reservation_number', 'guest__first_name', 'guest__last_name']
+    search_fields = ['reservation_number', 'guest__first_name', 'guest__last_name', 'guest__email', 'guest__phone']
     ordering_fields = ['check_in_date', 'check_out_date', 'created_at']
     ordering = ['check_in_date']  # Closest dates first
     lookup_field = 'reservation_number'

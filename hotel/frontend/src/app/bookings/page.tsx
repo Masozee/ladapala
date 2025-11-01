@@ -415,7 +415,7 @@ const BookingsPage = () => {
       
       // Handle paginated response
       if (data.results) {
-        setTotalPages(data.total_pages || Math.ceil(data.count / 20)); // Use API total_pages or fallback
+        setTotalPages(data.total_pages || Math.ceil(data.count / itemsPerPage)); // Use API total_pages or fallback
         setTotalCount(data.count);
         return data.results;
       }
@@ -965,9 +965,7 @@ const BookingsPage = () => {
   // Debounced search effect
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchQuery !== '') {
-        loadReservations(1);
-      }
+      loadReservations(1);
     }, 500);
 
     return () => clearTimeout(timer);
@@ -2268,10 +2266,10 @@ const BookingsPage = () => {
                     <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>
                     {' '}to{' '}
                     <span className="font-medium">
-                      {Math.min(currentPage * itemsPerPage, reservations.length)}
+                      {Math.min(currentPage * itemsPerPage, totalCount)}
                     </span>
                     {' '}of{' '}
-                    <span className="font-medium">{reservations.length}</span>
+                    <span className="font-medium">{totalCount}</span>
                     {' '}results
                   </p>
                 </div>

@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 from .rooms import Room
 from .inventory import InventoryItem
+from .complaints import Complaint
 import random
 
 
@@ -29,6 +30,7 @@ class HousekeepingTask(models.Model):
         ('DEEP_CLEANING', 'Deep Cleaning'),
         ('TURNDOWN_SERVICE', 'Turndown Service'),
         ('MAINTENANCE', 'Maintenance'),
+        ('COMPLAINT', 'Guest Complaint'),
     ]
 
     task_number = models.CharField(max_length=20, unique=True, editable=False)
@@ -36,6 +38,9 @@ class HousekeepingTask(models.Model):
     task_type = models.CharField(max_length=30, choices=TASK_TYPE_CHOICES, default='CHECKOUT_CLEANING')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DIRTY')
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='MEDIUM')
+
+    # Link to complaint if task is created from complaint
+    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, null=True, blank=True, related_name='housekeeping_tasks')
 
     # Staff assignment
     assigned_to = models.ForeignKey(

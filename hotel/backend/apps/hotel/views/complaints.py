@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
-from ..models import Complaint, ComplaintImage
+from ..models import Complaint, ComplaintImage, HousekeepingTask
 from ..serializers import ComplaintSerializer, ComplaintImageSerializer
 
 User = get_user_model()
@@ -18,7 +18,7 @@ class ComplaintViewSet(viewsets.ModelViewSet):
     serializer_class = ComplaintSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['category', 'priority', 'status', 'incident_date']
+    filterset_fields = ['category', 'priority', 'status', 'incident_date', 'assigned_team']
     search_fields = ['complaint_number', 'title', 'description']
     ordering_fields = ['incident_date', 'priority', 'created_at']
     ordering = ['-incident_date']
@@ -141,6 +141,54 @@ class ComplaintViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(complaint)
         return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        """Override update to create housekeeping task when assigned to HOUSEKEEPING team"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        # Check if assigned_team is being changed to HOUSEKEEPING
+        old_team = instance.assigned_team
+        new_team = request.data.get('assigned_team')
+
+        # Perform the update
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Create housekeeping task if assigned to HOUSEKEEPING and task doesn't exist yet
+        response_data = serializer.data
+        if new_team == 'HOUSEKEEPING' and old_team != 'HOUSEKEEPING':
+            if instance.room:
+                if not instance.housekeeping_tasks.exists():
+                    # Map complaint status to housekeeping status
+                    housekeeping_status = 'DIRTY'  # Default
+                    if instance.status == 'IN_PROGRESS':
+                        housekeeping_status = 'CLEANING'
+                    elif instance.status in ['RESOLVED', 'CLOSED']:
+                        housekeeping_status = 'CLEAN'
+
+                    task = HousekeepingTask.objects.create(
+                        room=instance.room,
+                        complaint=instance,
+                        task_type='COMPLAINT',
+                        status=housekeeping_status,
+                        priority=instance.priority,
+                        notes=f"From complaint #{instance.complaint_number}: {instance.title}\n\n{instance.description}",
+                        created_by=request.user if request.user.is_authenticated else None
+                    )
+                    response_data['housekeeping_task_created'] = True
+                    response_data['housekeeping_task_number'] = task.task_number
+            else:
+                # Warning: No room assigned, cannot create housekeeping task
+                response_data['warning'] = 'Complaint assigned to Housekeeping team but no room is specified. Please assign a room to create a housekeeping task.'
+
+        return Response(response_data)
+
+    def partial_update(self, request, *args, **kwargs):
+        """Override partial_update to use the same logic as update"""
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
 
 
 class ComplaintImageViewSet(viewsets.ModelViewSet):

@@ -47,6 +47,9 @@ interface HousekeepingTask {
   duration_minutes: number;
   is_overdue: boolean;
   time_until_deadline: number | null;
+  complaint: number | null;
+  complaint_number: string | null;
+  complaint_title: string | null;
   created_at: string;
   updated_at: string;
 }

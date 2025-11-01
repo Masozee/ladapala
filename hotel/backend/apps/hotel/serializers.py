@@ -317,6 +317,7 @@ class ComplaintSerializer(serializers.ModelSerializer):
     category_display = serializers.CharField(source='get_category_display', read_only=True)
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    assigned_team_display = serializers.CharField(source='get_assigned_team_display', read_only=True)
     images = ComplaintImageSerializer(many=True, read_only=True)
     image_count = serializers.SerializerMethodField()
     assigned_to_name = serializers.SerializerMethodField()
@@ -327,10 +328,10 @@ class ComplaintSerializer(serializers.ModelSerializer):
             'id', 'complaint_number', 'title', 'description', 'category',
             'category_display', 'priority', 'priority_display', 'status',
             'status_display', 'guest', 'guest_name', 'guest_details', 'room', 'room_number',
-            'incident_date', 'assigned_to', 'assigned_to_name', 'resolution', 'resolved_at',
-            'images', 'image_count', 'created_at', 'updated_at'
+            'incident_date', 'assigned_to', 'assigned_to_name', 'assigned_team', 'assigned_team_display',
+            'resolution', 'resolved_at', 'images', 'image_count', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'complaint_number', 'image_count', 'assigned_to_name']
+        read_only_fields = ['created_at', 'updated_at', 'complaint_number', 'image_count', 'assigned_to_name', 'assigned_team_display']
 
     def get_image_count(self, obj):
         """Get count of images for this complaint"""
@@ -696,6 +697,8 @@ class HousekeepingTaskSerializer(serializers.ModelSerializer):
     time_until_deadline = serializers.ReadOnlyField()
     is_overdue = serializers.ReadOnlyField()
     amenity_usages = AmenityUsageSerializer(many=True, read_only=True)
+    complaint_number = serializers.CharField(source='complaint.complaint_number', read_only=True, allow_null=True)
+    complaint_title = serializers.CharField(source='complaint.title', read_only=True, allow_null=True)
 
     class Meta:
         model = HousekeepingTask
@@ -708,7 +711,8 @@ class HousekeepingTaskSerializer(serializers.ModelSerializer):
             'guest_checkout', 'next_guest_checkin', 'notes', 'guest_requests',
             'maintenance_issues', 'inspection_passed', 'inspection_notes',
             'inspection_time', 'duration_minutes', 'time_until_deadline',
-            'is_overdue', 'amenity_usages', 'created_at', 'updated_at'
+            'is_overdue', 'amenity_usages', 'complaint', 'complaint_number',
+            'complaint_title', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'task_number', 'duration_minutes', 'time_until_deadline', 'is_overdue']
 
@@ -838,3 +842,49 @@ class AmenityRequestSerializer(serializers.ModelSerializer):
         if obj.completed_by:
             return obj.completed_by.get_full_name() or obj.completed_by.username
         return None
+
+class MaintenanceRequestSerializer(serializers.ModelSerializer):
+    """Serializer for maintenance requests"""
+    room_number = serializers.CharField(source='room.number', read_only=True)
+    guest_name = serializers.CharField(source='guest.full_name', read_only=True)
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    priority_display = serializers.CharField(source='get_priority_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    source_display = serializers.CharField(source='get_source_display', read_only=True)
+    resolution_time_hours = serializers.ReadOnlyField()
+    efficiency_score = serializers.ReadOnlyField()
+
+    class Meta:
+        model = MaintenanceRequest
+        fields = [
+            'id', 'request_number', 'room', 'room_number', 'guest', 'guest_name',
+            'category', 'category_display', 'priority', 'priority_display',
+            'status', 'status_display', 'source', 'source_display',
+            'title', 'description', 'assigned_technician', 'technician_notes',
+            'requested_date', 'acknowledged_date', 'started_date', 'completed_date',
+            'estimated_cost', 'actual_cost', 'customer_satisfaction',
+            'resolution_time_hours', 'efficiency_score',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'created_at', 'updated_at', 'request_number',
+            'resolution_time_hours', 'efficiency_score'
+        ]
+
+
+class MaintenanceTechnicianSerializer(serializers.ModelSerializer):
+    """Serializer for maintenance technicians"""
+    total_requests_completed = serializers.ReadOnlyField()
+    average_resolution_time = serializers.ReadOnlyField()
+    average_efficiency_score = serializers.ReadOnlyField()
+    average_customer_satisfaction = serializers.ReadOnlyField()
+
+    class Meta:
+        model = MaintenanceTechnician
+        fields = [
+            'id', 'name', 'specializations', 'contact_number', 'email', 'is_active',
+            'total_requests_completed', 'average_resolution_time',
+            'average_efficiency_score', 'average_customer_satisfaction',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']

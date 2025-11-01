@@ -16,6 +16,7 @@ try:
     from .views.housekeeping import HousekeepingTaskViewSet, AmenityUsageViewSet
     from .views.payments import AdditionalChargeViewSet
     from .views.warehouse import PurchaseOrderViewSet, PurchaseOrderItemViewSet, StockMovementViewSet
+    from .views.maintenance import MaintenanceRequestViewSet, MaintenanceTechnicianViewSet
     from .views.reports import (
         daily_reports, daily_reports_range, monthly_reports,
         report_summary, available_reports, occupancy_report,
@@ -56,6 +57,8 @@ if LEGACY_VIEWS:
     router.register(r'amenity-usages', AmenityUsageViewSet, basename='hotel-amenity-usages')
     router.register(r'amenity-requests', AmenityRequestViewSet, basename='hotel-amenity-requests')
     router.register(r'amenity-categories', AmenityCategoryViewSet, basename='hotel-amenity-categories')
+    router.register(r'maintenance-requests', MaintenanceRequestViewSet, basename='hotel-maintenance-requests')
+    router.register(r'maintenance-technicians', MaintenanceTechnicianViewSet, basename='hotel-maintenance-technicians')
 
 urlpatterns = [
     path('', include(router.urls)),

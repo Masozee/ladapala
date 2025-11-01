@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import SupportLayout from '@/components/SupportLayout';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   Wrench01Icon,
   Search02Icon,
@@ -13,6 +14,7 @@ import {
   AlertCircleIcon,
   UserCheckIcon,
   CancelCircleIcon,
+  Cancel01Icon,
   EyeIcon,
   PencilEdit02Icon,
   Add01Icon,
@@ -35,44 +37,34 @@ import {
 
 interface MaintenanceRequest {
   id: number;
-  ticket_number: string;
+  request_number: string;
   title: string;
   description: string;
-  category: 'hvac' | 'plumbing' | 'electrical' | 'general' | 'elevator' | 'security' | 'it_network' | 'furniture' | 'appliances';
-  priority: 'low' | 'medium' | 'high' | 'urgent' | 'emergency';
-  status: 'open' | 'assigned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
-  location: string;
+  category: string;
+  category_display?: string;
+  priority: string;
+  priority_display?: string;
+  status: string;
+  status_display?: string;
+  source: string;
+  source_display?: string;
+  room?: number;
   room_number?: string;
-  floor?: number;
-  building_section?: string;
-  reported_by: string;
-  reporter_role: string;
-  reporter_contact: string;
-  created_at: string;
-  updated_at: string;
-  assigned_to?: string;
-  technician_id?: number;
-  estimated_completion?: string;
-  actual_completion?: string;
+  guest?: number;
+  guest_name?: string;
+  assigned_technician?: string;
+  technician_notes?: string;
+  requested_date: string;
+  acknowledged_date?: string;
+  started_date?: string;
+  completed_date?: string;
   estimated_cost?: number;
   actual_cost?: number;
-  parts_needed: string[];
-  parts_cost?: number;
-  labor_hours?: number;
-  labor_cost?: number;
-  guest_impact: boolean;
-  downtime_start?: string;
-  downtime_end?: string;
-  safety_issue: boolean;
-  warranty_covered: boolean;
-  vendor_required: boolean;
-  vendor_name?: string;
-  notes: string;
-  photos?: string[];
-  completion_notes?: string;
-  guest_satisfaction?: number;
-  preventive_maintenance: boolean;
-  next_service_date?: string;
+  customer_satisfaction?: number;
+  resolution_time_hours?: number;
+  efficiency_score?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Technician {
@@ -352,9 +344,168 @@ const MOCK_TECHNICIANS: Technician[] = [
 ];
 
 const MaintenancePage = () => {
+  const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [showNewRequestDialog, setShowNewRequestDialog] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [rooms, setRooms] = useState<any[]>([]);
+
+  // Form state for new request
+  const [newRequest, setNewRequest] = useState({
+    title: '',
+    description: '',
+    category: 'General',
+    priority: 'MEDIUM',
+    source: 'STAFF_REPORT',
+    room: '',
+    estimated_cost: ''
+  });
+
+  // Fetch maintenance requests
+  useEffect(() => {
+    const fetchMaintenanceRequests = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(buildApiUrl('hotel/maintenance-requests/'));
+        if (response.ok) {
+          const data = await response.json();
+          setRequests(data.results || data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching maintenance requests:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMaintenanceRequests();
+  }, []);
+
+  // Fetch rooms for dropdown
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const response = await fetch(buildApiUrl('hotel/rooms/'));
+        if (response.ok) {
+          const data = await response.json();
+          setRooms(data.results || data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+      }
+    };
+    fetchRooms();
+  }, []);
+
+  // Refresh requests
+  const refreshRequests = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/maintenance-requests/'));
+      if (response.ok) {
+        const data = await response.json();
+        setRequests(data.results || data || []);
+      }
+    } catch (error) {
+      console.error('Error refreshing requests:', error);
+    }
+  };
+
+  // Handle create new request
+  const handleCreateRequest = async () => {
+    if (!newRequest.title || !newRequest.description) {
+      alert('Title and description are required');
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      const csrfToken = getCsrfToken();
+
+      const requestData: any = {
+        title: newRequest.title,
+        description: newRequest.description,
+        category: newRequest.category,
+        priority: newRequest.priority,
+        source: newRequest.source,
+      };
+
+      if (newRequest.room) {
+        requestData.room = parseInt(newRequest.room);
+      }
+
+      if (newRequest.estimated_cost) {
+        requestData.estimated_cost = parseFloat(newRequest.estimated_cost);
+      }
+
+      const response = await fetch(buildApiUrl('hotel/maintenance-requests/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestData),
+      });
+
+      if (response.ok) {
+        setShowNewRequestDialog(false);
+        setNewRequest({
+          title: '',
+          description: '',
+          category: 'General',
+          priority: 'MEDIUM',
+          source: 'STAFF_REPORT',
+          room: '',
+          estimated_cost: ''
+        });
+        await refreshRequests();
+        alert('Maintenance request created successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to create request');
+      }
+    } catch (error) {
+      console.error('Error creating request:', error);
+      alert('Failed to create request. Please try again.');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  // Handle update status
+  const handleUpdateStatus = async (requestId: number, action: string) => {
+    try {
+      const csrfToken = getCsrfToken();
+      const response = await fetch(
+        buildApiUrl(`hotel/maintenance-requests/${requestId}/${action}/`),
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+          },
+          credentials: 'include',
+        }
+      );
+
+      if (response.ok) {
+        await refreshRequests();
+        setOpenMenuId(null);
+        alert(`Request ${action.replace('_', ' ')} successfully!`);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || `Failed to ${action.replace('_', ' ')}`);
+      }
+    } catch (error) {
+      console.error(`Error ${action}:`, error);
+      alert(`Failed to ${action.replace('_', ' ')}. Please try again.`);
+    }
+  };
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -374,24 +525,24 @@ const MaintenancePage = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open': return 'bg-blue-100 text-blue-800';
-      case 'assigned': return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress': return 'bg-orange-100 text-orange-800';
-      case 'on_hold': return 'bg-purple-100 text-purple-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
+    const normalizedStatus = status?.toUpperCase();
+    switch (normalizedStatus) {
+      case 'SUBMITTED': return 'bg-blue-100 text-blue-800';
+      case 'ACKNOWLEDGED': return 'bg-yellow-100 text-yellow-800';
+      case 'IN_PROGRESS': return 'bg-orange-100 text-orange-800';
+      case 'COMPLETED': return 'bg-green-100 text-green-800';
+      case 'CANCELLED': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'low': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'emergency': return 'bg-red-200 text-red-900';
+    const normalizedPriority = priority?.toUpperCase();
+    switch (normalizedPriority) {
+      case 'LOW': return 'bg-green-100 text-green-800';
+      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
+      case 'HIGH': return 'bg-orange-100 text-orange-800';
+      case 'URGENT': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -426,18 +577,18 @@ const MaintenancePage = () => {
     }
   };
 
-  const filteredRequests = MOCK_MAINTENANCE_REQUESTS.filter(request => {
+  const filteredRequests = requests.filter(request => {
     if (searchTerm &&
-        !request.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !request.ticket_number.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !request.location.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !request.room_number?.includes(searchTerm)) {
+        !request.title?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !request.request_number?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !request.room_number?.includes(searchTerm) &&
+        !request.description?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
-    if (filterStatus !== 'all' && request.status !== filterStatus) {
+    if (filterStatus !== 'all' && request.status?.toUpperCase() !== filterStatus.toUpperCase()) {
       return false;
     }
-    if (filterCategory !== 'all' && request.category !== filterCategory) {
+    if (filterCategory !== 'all' && request.category?.toUpperCase() !== filterCategory.toUpperCase()) {
       return false;
     }
     return true;
@@ -445,13 +596,11 @@ const MaintenancePage = () => {
 
   const getStatusStats = () => {
     return {
-      open: MOCK_MAINTENANCE_REQUESTS.filter(r => r.status === 'open').length,
-      assigned: MOCK_MAINTENANCE_REQUESTS.filter(r => r.status === 'assigned').length,
-      in_progress: MOCK_MAINTENANCE_REQUESTS.filter(r => r.status === 'in_progress').length,
-      on_hold: MOCK_MAINTENANCE_REQUESTS.filter(r => r.status === 'on_hold').length,
-      completed: MOCK_MAINTENANCE_REQUESTS.filter(r => r.status === 'completed').length,
-      urgent: MOCK_MAINTENANCE_REQUESTS.filter(r => r.priority === 'urgent' || r.priority === 'emergency').length,
-      total: MOCK_MAINTENANCE_REQUESTS.length
+      submitted: requests.filter(r => r.status?.toUpperCase() === 'SUBMITTED').length,
+      in_progress: requests.filter(r => r.status?.toUpperCase() === 'IN_PROGRESS').length,
+      completed: requests.filter(r => r.status?.toUpperCase() === 'COMPLETED').length,
+      urgent: requests.filter(r => r.priority?.toUpperCase() === 'URGENT').length,
+      total: requests.length
     };
   };
 
@@ -486,8 +635,8 @@ const MaintenancePage = () => {
                 <AlertCircleIcon className="h-6 w-6 text-red-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">{stats.open}</div>
-            <div className="text-sm font-medium text-gray-600">Open Requests</div>
+            <div className="text-3xl font-bold text-gray-900 mb-2">{stats.submitted}</div>
+            <div className="text-sm font-medium text-gray-600">Submitted Requests</div>
           </div>
 
           <div className="bg-white border border-gray-200 p-6">
@@ -542,15 +691,13 @@ const MaintenancePage = () => {
               className="px-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] rounded"
             >
               <option value="all">All Categories</option>
-              <option value="hvac">HVAC</option>
-              <option value="plumbing">Plumbing</option>
-              <option value="electrical">Electrical</option>
-              <option value="general">General</option>
-              <option value="elevator">Elevator</option>
-              <option value="security">Security</option>
-              <option value="it_network">IT/Network</option>
-              <option value="furniture">Furniture</option>
-              <option value="appliances">Appliances</option>
+              <option value="HVAC">HVAC</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Plumbing">Plumbing</option>
+              <option value="Elevator">Elevator</option>
+              <option value="IT/Network">IT/Network</option>
+              <option value="General">General</option>
+              <option value="Security">Security</option>
             </select>
             <select
               value={filterStatus}
@@ -558,41 +705,48 @@ const MaintenancePage = () => {
               className="px-4 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B] rounded"
             >
               <option value="all">All Status</option>
-              <option value="open">Open</option>
-              <option value="assigned">Assigned</option>
-              <option value="in_progress">In Progress</option>
-              <option value="on_hold">On Hold</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="SUBMITTED">Submitted</option>
+              <option value="ACKNOWLEDGED">Acknowledged</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
             </select>
           </div>
-          <button className="bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E06A0A] transition-colors flex items-center space-x-2 rounded">
+          <button
+            onClick={() => setShowNewRequestDialog(true)}
+            className="bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E06A0A] transition-colors flex items-center space-x-2 rounded"
+          >
             <Add01Icon className="h-4 w-4" />
             <span>New Request</span>
           </button>
         </div>
 
         {/* Maintenance Requests Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse bg-white border border-gray-200">
+        <table className="w-full border-collapse bg-white border border-gray-200">
             <thead className="bg-[#F87B1B]">
               <tr>
                 <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Request</th>
                 <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Category</th>
                 <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Status</th>
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Priority</th>
-                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Assigned To</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Source</th>
+                <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Technician</th>
                 <th className="border border-gray-200 px-6 py-4 text-left text-sm font-medium text-white">Timeline</th>
                 <th className="border border-gray-200 px-6 py-4 text-center text-sm font-medium text-white">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white">
-              {filteredRequests.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="border border-gray-200 px-6 py-12 text-center">
+                    <div className="text-gray-500">Loading complaints...</div>
+                  </td>
+                </tr>
+              ) : filteredRequests.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="border border-gray-200 px-6 py-12 text-center">
                     <Wrench01Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No maintenance requests found</h3>
-                    <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
+                    <p className="text-gray-600">No maintenance requests yet. Click "New Request" to create one.</p>
                   </td>
                 </tr>
               ) : (
@@ -604,59 +758,45 @@ const MaintenancePage = () => {
                       <td className="border border-gray-200 px-6 py-4">
                         <div className="flex items-center space-x-2 mb-1">
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getPriorityColor(request.priority)}`}>
-                            {request.priority.toUpperCase()}
+                            {request.priority_display || request.priority}
                           </span>
                         </div>
-                        <div className="font-bold text-sm text-gray-900">{request.ticket_number}</div>
+                        <div className="font-bold text-sm text-gray-900">{request.request_number}</div>
                         <div className="text-sm text-gray-900 font-medium">{request.title}</div>
-                        <div className="text-xs text-gray-600">{request.location}</div>
-                        <div className="text-xs text-gray-500">by {request.reported_by}</div>
+                        {request.room_number && (
+                          <div className="text-xs text-gray-600">Room {request.room_number}</div>
+                        )}
+                        {request.guest_name && (
+                          <div className="text-xs text-gray-500">Guest: {request.guest_name}</div>
+                        )}
                       </td>
 
                       {/* Category */}
                       <td className="border border-gray-200 px-6 py-4">
                         <div className="flex items-center space-x-2">
-                          {getCategoryIcon(request.category)}
-                          <span className="text-sm text-gray-700">{getCategoryName(request.category)}</span>
+                          <span className="text-sm text-gray-700">{request.category_display || request.category}</span>
                         </div>
                       </td>
 
                       {/* Status */}
                       <td className="border border-gray-200 px-6 py-4">
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
-                          {request.status.replace('_', ' ').toUpperCase()}
+                          {request.status_display || request.status}
                         </span>
                       </td>
 
-                      {/* Priority */}
+                      {/* Source */}
                       <td className="border border-gray-200 px-6 py-4">
-                        <div className="space-y-2">
-                          {request.guest_impact && (
-                            <div className="flex items-center space-x-1 text-xs text-orange-600">
-                              <Alert01Icon className="h-3 w-3" />
-                              <span>Guest Impact</span>
-                            </div>
-                          )}
-                          {request.safety_issue && (
-                            <div className="flex items-center space-x-1 text-xs text-red-600">
-                              <Shield01Icon className="h-3 w-3" />
-                              <span>Safety</span>
-                            </div>
-                          )}
-                          {request.vendor_required && (
-                            <div className="flex items-center space-x-1 text-xs text-purple-600">
-                              <UserMultipleIcon className="h-3 w-3" />
-                              <span>Vendor</span>
-                            </div>
-                          )}
+                        <div className="text-sm text-gray-700">
+                          {request.source_display || request.source}
                         </div>
                       </td>
 
-                      {/* Assigned To */}
+                      {/* Technician */}
                       <td className="border border-gray-200 px-6 py-4">
                         <div className="text-sm">
-                          {request.assigned_to ? (
-                            <div className="text-gray-900 font-medium">{request.assigned_to}</div>
+                          {request.assigned_technician ? (
+                            <div className="text-gray-900 font-medium">{request.assigned_technician}</div>
                           ) : (
                             <span className="text-gray-500">Unassigned</span>
                           )}
@@ -667,16 +807,11 @@ const MaintenancePage = () => {
                       <td className="border border-gray-200 px-6 py-4">
                         <div className="space-y-1 text-xs">
                           <div className="text-gray-600">
-                            Created: {formatDateTime(request.created_at)}
+                            Requested: {formatDateTime(request.requested_date)}
                           </div>
-                          {request.estimated_completion && (
-                            <div className={`font-medium ${timeDeadline?.color}`}>
-                              {timeDeadline?.text}
-                            </div>
-                          )}
-                          {request.actual_completion && (
+                          {request.completed_date && (
                             <div className="text-green-600">
-                              Completed: {formatDateTime(request.actual_completion)}
+                              Completed: {formatDateTime(request.completed_date)}
                             </div>
                           )}
                         </div>
@@ -684,9 +819,54 @@ const MaintenancePage = () => {
 
                       {/* Actions */}
                       <td className="border border-gray-200 px-6 py-4 text-center">
-                        <button className="p-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors">
-                          <MoreHorizontalIcon className="h-4 w-4 text-gray-600" />
-                        </button>
+                        <div className="flex items-center justify-center relative">
+                          <button
+                            onClick={() => {
+                              setOpenMenuId(openMenuId === request.id ? null : request.id);
+                              setSelectedRequest(request);
+                            }}
+                            className="p-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                          >
+                            <MoreHorizontalIcon className="h-4 w-4 text-gray-600" />
+                          </button>
+                          {openMenuId === request.id && (
+                            <div className="absolute right-0 top-12 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-10 rounded">
+                              {request.status === 'SUBMITTED' && (
+                                <button
+                                  onClick={() => handleUpdateStatus(request.id, 'acknowledge')}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                                >
+                                  Acknowledge
+                                </button>
+                              )}
+                              {(request.status === 'SUBMITTED' || request.status === 'ACKNOWLEDGED') && (
+                                <button
+                                  onClick={() => handleUpdateStatus(request.id, 'start_work')}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                                >
+                                  Start Work
+                                </button>
+                              )}
+                              {request.status === 'IN_PROGRESS' && (
+                                <button
+                                  onClick={() => handleUpdateStatus(request.id, 'complete')}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                                >
+                                  Mark Complete
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  // Could add view details functionality here
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                View Details
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -694,7 +874,175 @@ const MaintenancePage = () => {
               )}
             </tbody>
           </table>
-        </div>
+
+        {/* New Request Dialog */}
+        {showNewRequestDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Dialog Header */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-gray-900">New Maintenance Request</h3>
+                  <button
+                    onClick={() => {
+                      setShowNewRequestDialog(false);
+                      setNewRequest({
+                        title: '',
+                        description: '',
+                        category: 'General',
+                        priority: 'MEDIUM',
+                        source: 'STAFF_REPORT',
+                        room: '',
+                        estimated_cost: ''
+                      });
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <Cancel01Icon className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Dialog Content */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newRequest.title}
+                    onChange={(e) => setNewRequest({ ...newRequest, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                    placeholder="e.g., AC not working in room 301"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={newRequest.description}
+                    onChange={(e) => setNewRequest({ ...newRequest, description: e.target.value })}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                    placeholder="Provide detailed description of the issue..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select
+                      value={newRequest.category}
+                      onChange={(e) => setNewRequest({ ...newRequest, category: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                    >
+                      <option value="HVAC">HVAC</option>
+                      <option value="Electrical">Electrical</option>
+                      <option value="Plumbing">Plumbing</option>
+                      <option value="Elevator">Elevator</option>
+                      <option value="IT/Network">IT/Network</option>
+                      <option value="General">General</option>
+                      <option value="Security">Security</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select
+                      value={newRequest.priority}
+                      onChange={(e) => setNewRequest({ ...newRequest, priority: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                    >
+                      <option value="LOW">Low</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HIGH">High</option>
+                      <option value="URGENT">Urgent</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                    <select
+                      value={newRequest.source}
+                      onChange={(e) => setNewRequest({ ...newRequest, source: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                    >
+                      <option value="STAFF_REPORT">Staff Report</option>
+                      <option value="GUEST_REQUEST">Guest Request</option>
+                      <option value="PREVENTIVE">Preventive Maintenance</option>
+                      <option value="INSPECTION">Inspection</option>
+                      <option value="EMERGENCY">Emergency</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Room (Optional)</label>
+                    <select
+                      value={newRequest.room}
+                      onChange={(e) => setNewRequest({ ...newRequest, room: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                    >
+                      <option value="">-- Select Room --</option>
+                      {rooms.map((room) => (
+                        <option key={room.id} value={room.id}>
+                          {room.number} - {room.room_type_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Estimated Cost (Optional)
+                  </label>
+                  <input
+                    type="number"
+                    value={newRequest.estimated_cost}
+                    onChange={(e) => setNewRequest({ ...newRequest, estimated_cost: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                    placeholder="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              {/* Dialog Footer */}
+              <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowNewRequestDialog(false);
+                    setNewRequest({
+                      title: '',
+                      description: '',
+                      category: 'General',
+                      priority: 'MEDIUM',
+                      source: 'STAFF_REPORT',
+                      room: '',
+                      estimated_cost: ''
+                    });
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
+                  disabled={formLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateRequest}
+                  className="px-4 py-2 bg-[#F87B1B] text-white text-sm hover:bg-[#E06A0A] disabled:opacity-50"
+                  disabled={formLoading || !newRequest.title || !newRequest.description}
+                >
+                  {formLoading ? 'Creating...' : 'Create Request'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </SupportLayout>
   );
