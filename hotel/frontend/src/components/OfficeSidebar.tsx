@@ -76,7 +76,6 @@ const OfficeSidebar = () => {
     { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse', badge: lowStockCount > 0 ? lowStockCount.toString() : undefined },
     { name: 'Suppliers', icon: Archive03Icon, href: '/office/suppliers' },
     { name: 'Reports', icon: File01Icon, href: '/office/reports' },
-    { name: 'Administration', icon: Shield01Icon, href: '/office/settings' },
   ];
 
   const bottomActions: MenuItem[] = [
