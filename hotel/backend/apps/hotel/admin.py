@@ -5,6 +5,7 @@ from .models import (
 )
 from .models.inventory import PurchaseOrder, PurchaseOrderItem, StockMovement
 from .models.amenities import AmenityCategory, AmenityRequest
+from .models.housekeeping import CleaningTemplate, CleaningTemplateItem, HousekeepingTask, AmenityUsage
 
 
 @admin.register(RoomType)
@@ -130,3 +131,45 @@ class AmenityRequestAdmin(admin.ModelAdmin):
     search_fields = ['request_number', 'guest_name', 'room_number', 'item']
     readonly_fields = ['request_number', 'created_at', 'updated_at', 'delivered_at']
     date_hierarchy = 'requested_at'
+
+
+class CleaningTemplateItemInline(admin.TabularInline):
+    model = CleaningTemplateItem
+    extra = 1
+    fields = ['inventory_item', 'quantity', 'is_optional', 'notes', 'sort_order']
+    autocomplete_fields = ['inventory_item']
+
+
+@admin.register(CleaningTemplate)
+class CleaningTemplateAdmin(admin.ModelAdmin):
+    list_display = ['name', 'task_type', 'room_type', 'is_active', 'created_at']
+    list_filter = ['task_type', 'room_type', 'is_active']
+    search_fields = ['name', 'description']
+    inlines = [CleaningTemplateItemInline]
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(CleaningTemplateItem)
+class CleaningTemplateItemAdmin(admin.ModelAdmin):
+    list_display = ['template', 'inventory_item', 'quantity', 'is_optional', 'sort_order']
+    list_filter = ['template__task_type', 'is_optional']
+    search_fields = ['template__name', 'inventory_item__name']
+    autocomplete_fields = ['template', 'inventory_item']
+
+
+@admin.register(HousekeepingTask)
+class HousekeepingTaskAdmin(admin.ModelAdmin):
+    list_display = ['task_number', 'room', 'task_type', 'status', 'priority', 'assigned_to', 'scheduled_date']
+    list_filter = ['task_type', 'status', 'priority', 'scheduled_date']
+    search_fields = ['task_number', 'room__number']
+    readonly_fields = ['task_number', 'created_at', 'updated_at']
+    date_hierarchy = 'scheduled_date'
+
+
+@admin.register(AmenityUsage)
+class AmenityUsageAdmin(admin.ModelAdmin):
+    list_display = ['housekeeping_task', 'inventory_item', 'quantity_used', 'stock_deducted', 'recorded_by', 'recorded_at']
+    list_filter = ['stock_deducted', 'recorded_at']
+    search_fields = ['housekeeping_task__task_number', 'inventory_item__name']
+    readonly_fields = ['recorded_at', 'stock_deducted']
+    date_hierarchy = 'recorded_at'

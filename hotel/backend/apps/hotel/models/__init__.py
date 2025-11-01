@@ -11,7 +11,7 @@ from .calendars import Holiday, CalendarEvent
 from .inventory import InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement
 from .supplier import Supplier
 from .maintenance import MaintenanceRequest, MaintenanceTechnician
-from .housekeeping import HousekeepingTask, AmenityUsage
+from .housekeeping import HousekeepingTask, AmenityUsage, CleaningTemplate, CleaningTemplateItem
 from .financial import FinancialTransaction, Invoice, InvoiceItem
 from .amenities import AmenityRequest, AmenityCategory
 from .settings import HotelSettings
@@ -22,5 +22,6 @@ __all__ = [
     'Complaint', 'ComplaintImage', 'CheckIn', 'Holiday', 'CalendarEvent', 'InventoryItem',
     'PurchaseOrder', 'PurchaseOrderItem', 'StockMovement', 'Supplier',
     'MaintenanceRequest', 'MaintenanceTechnician', 'HousekeepingTask', 'AmenityUsage',
+    'CleaningTemplate', 'CleaningTemplateItem',
     'FinancialTransaction', 'Invoice', 'InvoiceItem', 'AmenityRequest', 'AmenityCategory', 'HotelSettings'
 ]

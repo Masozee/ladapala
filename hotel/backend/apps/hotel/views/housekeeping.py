@@ -189,36 +189,17 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def suggested_items(self, request, pk=None):
         """
-        Get suggested amenity items based on task type and previous usage.
-        For stayover: uses previous usage for this room
-        For checkout: uses base template
+        Get suggested amenity items based on CleaningTemplate and previous usage.
+        Priority:
+        1. For stayover: uses previous usage for this room
+        2. CleaningTemplate matching task_type + room_type
+        3. CleaningTemplate matching task_type only (generic)
         """
-        from apps.hotel.models import AmenityUsage, InventoryItem, Reservation
-        from django.db.models import Sum, Avg
-        from collections import defaultdict
+        from apps.hotel.models import AmenityUsage, Reservation, CleaningTemplate
+        from django.db.models import Avg
 
         task = self.get_object()
         suggestions = []
-
-        # Base templates for different task types (standard room = 2 guests)
-        BASE_TEMPLATES = {
-            'CHECKOUT_CLEANING': [
-                {'name': 'Bed Sheet', 'quantity': 2, 'category': 'Toiletries & Bath'},
-                {'name': 'Bath Towel', 'quantity': 2, 'category': 'Toiletries & Bath'},
-                {'name': 'Hand Towel', 'quantity': 2, 'category': 'Toiletries & Bath'},
-                {'name': 'Shampoo', 'quantity': 2, 'category': 'Toiletries & Bath'},
-                {'name': 'Soap', 'quantity': 4, 'category': 'Toiletries & Bath'},
-                {'name': 'Toothbrush', 'quantity': 2, 'category': 'Toiletries & Bath'},
-                {'name': 'Tissue', 'quantity': 2, 'category': 'Toiletries & Bath'},
-            ],
-            'STAYOVER_CLEANING': [],  # Will be based on previous usage
-            'DEEP_CLEANING': [
-                {'name': 'Bed Sheet', 'quantity': 2, 'category': 'Toiletries & Bath'},
-                {'name': 'Bath Towel', 'quantity': 2, 'category': 'Toiletries & Bath'},
-                {'name': 'Hand Towel', 'quantity': 2, 'category': 'Toiletries & Bath'},
-                {'name': 'Detergent', 'quantity': 1, 'category': 'Laundry & Cleaning'},
-            ],
-        }
 
         # Get guest count from current reservation
         guest_count = 2  # Default
@@ -243,48 +224,53 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
                 # Aggregate usage from previous tasks
                 usage_aggregate = AmenityUsage.objects.filter(
                     housekeeping_task__in=previous_tasks
-                ).values('inventory_item', 'inventory_item__name', 'inventory_item__id')\
+                ).values('inventory_item', 'inventory_item__name', 'inventory_item__id',
+                        'inventory_item__category__name', 'inventory_item__current_stock',
+                        'inventory_item__unit_of_measurement')\
                  .annotate(avg_quantity=Avg('quantity_used'))\
                  .order_by('-avg_quantity')
 
                 for usage in usage_aggregate:
-                    try:
-                        inventory_item = InventoryItem.objects.get(id=usage['inventory_item__id'])
-                        suggestions.append({
-                            'inventory_item': inventory_item.id,
-                            'name': inventory_item.name,
-                            'category': inventory_item.category.name,
-                            'suggested_quantity': round(usage['avg_quantity']),
-                            'current_stock': inventory_item.current_stock,
-                            'unit': inventory_item.unit_of_measurement,
-                            'reason': 'Based on previous usage for this room'
-                        })
-                    except InventoryItem.DoesNotExist:
-                        continue
-
-        # Use base template if no previous usage or for other task types
-        if not suggestions and task.task_type in BASE_TEMPLATES:
-            template = BASE_TEMPLATES[task.task_type]
-
-            for item_template in template:
-                # Try to find matching item (fuzzy match on name)
-                inventory_items = InventoryItem.objects.filter(
-                    name__icontains=item_template['name'].split()[0],  # Match first word
-                    category__name__icontains=item_template['category'].split()[0],
-                    is_active=True
-                ).order_by('current_stock')  # Prefer items with stock
-
-                if inventory_items.exists():
-                    inventory_item = inventory_items.first()
-
                     suggestions.append({
-                        'inventory_item': inventory_item.id,
-                        'name': inventory_item.name,
-                        'category': inventory_item.category.name,
-                        'suggested_quantity': item_template['quantity'],
-                        'current_stock': inventory_item.current_stock,
-                        'unit': inventory_item.unit_of_measurement,
-                        'reason': f'Standard template for {task.get_task_type_display()}'
+                        'inventory_item': usage['inventory_item__id'],
+                        'name': usage['inventory_item__name'],
+                        'category': usage['inventory_item__category__name'],
+                        'suggested_quantity': round(usage['avg_quantity']),
+                        'current_stock': usage['inventory_item__current_stock'],
+                        'unit': usage['inventory_item__unit_of_measurement'],
+                        'reason': 'Based on previous usage for this room',
+                        'is_optional': False
+                    })
+
+        # Use CleaningTemplate if no previous usage or for other task types
+        if not suggestions:
+            # Try to find template for specific room type first
+            template = CleaningTemplate.objects.filter(
+                task_type=task.task_type,
+                room_type=task.room.room_type,
+                is_active=True
+            ).prefetch_related('items__inventory_item__category').first()
+
+            # Fallback to generic template (no specific room type)
+            if not template:
+                template = CleaningTemplate.objects.filter(
+                    task_type=task.task_type,
+                    room_type__isnull=True,
+                    is_active=True
+                ).prefetch_related('items__inventory_item__category').first()
+
+            if template:
+                for template_item in template.items.all():
+                    suggestions.append({
+                        'inventory_item': template_item.inventory_item.id,
+                        'name': template_item.inventory_item.name,
+                        'category': template_item.inventory_item.category.name,
+                        'suggested_quantity': template_item.quantity,
+                        'current_stock': template_item.inventory_item.current_stock,
+                        'unit': template_item.inventory_item.unit_of_measurement,
+                        'reason': f'From template: {template.name}',
+                        'is_optional': template_item.is_optional,
+                        'notes': template_item.notes or ''
                     })
 
         return Response({
@@ -292,6 +278,7 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
             'task_type': task.task_type,
             'task_type_display': task.get_task_type_display(),
             'room': task.room.number,
+            'room_type': task.room.room_type.name,
             'guest_count': guest_count,
             'suggestions': suggestions
         })

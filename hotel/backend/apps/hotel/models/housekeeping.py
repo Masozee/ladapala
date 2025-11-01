@@ -244,3 +244,66 @@ class AmenityUsage(models.Model):
     def total_cost(self):
         """Calculate total cost of amenities used"""
         return self.inventory_item.unit_price * self.quantity_used
+
+
+class CleaningTemplate(models.Model):
+    """Template defining standard items needed for different cleaning task types"""
+
+    name = models.CharField(max_length=100, help_text='Template name (e.g., Standard Checkout Cleaning)')
+    task_type = models.CharField(
+        max_length=30,
+        choices=HousekeepingTask.TASK_TYPE_CHOICES,
+        help_text='Task type this template applies to'
+    )
+    room_type = models.ForeignKey(
+        'RoomType',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='Specific room type (optional - leave blank for all room types)'
+    )
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['task_type', 'room_type']
+        verbose_name = 'Cleaning Template'
+        verbose_name_plural = 'Cleaning Templates'
+        indexes = [
+            models.Index(fields=['task_type', 'is_active']),
+        ]
+
+    def __str__(self):
+        room_info = f" - {self.room_type.name}" if self.room_type else ""
+        return f"{self.name} ({self.get_task_type_display()}{room_info})"
+
+
+class CleaningTemplateItem(models.Model):
+    """Individual items in a cleaning template"""
+
+    template = models.ForeignKey(
+        CleaningTemplate,
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
+    inventory_item = models.ForeignKey(
+        InventoryItem,
+        on_delete=models.CASCADE,
+        help_text='The exact inventory item needed'
+    )
+    quantity = models.PositiveIntegerField(default=1, help_text='Standard quantity needed')
+    is_optional = models.BooleanField(default=False, help_text='Whether this item is optional')
+    notes = models.TextField(blank=True, null=True, help_text='Special instructions for this item')
+    sort_order = models.PositiveIntegerField(default=0, help_text='Display order')
+
+    class Meta:
+        ordering = ['sort_order', 'inventory_item__name']
+        verbose_name = 'Template Item'
+        verbose_name_plural = 'Template Items'
+        unique_together = ['template', 'inventory_item']
+
+    def __str__(self):
+        optional = " (Optional)" if self.is_optional else ""
+        return f"{self.inventory_item.name} x{self.quantity}{optional}"
