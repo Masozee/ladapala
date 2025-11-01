@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import RouteGuard from "@/components/RouteGuard";
 import "./globals.css";
 
 const geist = Geist({
@@ -32,7 +33,9 @@ export default function RootLayout({
       <body
         className={`${geist.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <RouteGuard>
+          {children}
+        </RouteGuard>
       </body>
     </html>
   );

@@ -30,7 +30,7 @@ export default function DepartmentGuard({
   useEffect(() => {
     // Check if user is authenticated
     if (!isAuthenticated()) {
-      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
 
@@ -39,7 +39,7 @@ export default function DepartmentGuard({
 
     if (!access) {
       // No access info, redirect to login
-      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
 
@@ -65,9 +65,14 @@ export default function DepartmentGuard({
     }
 
     if (!hasAccess) {
-      // User doesn't have required access, redirect to fallback or default route
+      // User doesn't have required access, redirect to their default route
       const redirectTo = fallbackPath || getDefaultRoute();
-      router.push(redirectTo);
+
+      // Prevent redirect loop - only redirect if not already at the target
+      if (pathname !== redirectTo) {
+        console.log(`[DepartmentGuard] Access denied to ${pathname}. Redirecting to ${redirectTo}`);
+        router.replace(redirectTo);
+      }
       return;
     }
 

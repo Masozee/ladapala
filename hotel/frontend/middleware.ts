@@ -13,11 +13,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Get access level from cookies or localStorage (stored during login)
-  // Note: In middleware, we can't access localStorage, so we'll redirect to a check page
-  // that will handle client-side access verification
+  // Check for session cookie (Django session)
+  const sessionCookie = request.cookies.get('sessionid');
 
-  // For now, we'll add a header that client components can check
+  // If no session cookie, redirect to login
+  if (!sessionCookie) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Session exists - client-side DepartmentGuard will handle fine-grained access control
   const response = NextResponse.next();
   response.headers.set('x-pathname', pathname);
 
