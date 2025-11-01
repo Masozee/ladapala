@@ -80,6 +80,12 @@ const HousekeepingPage = () => {
     notes: ''
   });
 
+  // Amenity selection state
+  const [showAmenityDialog, setShowAmenityDialog] = useState(false);
+  const [completingTask, setCompletingTask] = useState<HousekeepingTask | null>(null);
+  const [amenityItems, setAmenityItems] = useState<any[]>([]);
+  const [amenityLoading, setAmenityLoading] = useState(false);
+
   // Fetch tasks
   const fetchTasks = async () => {
     try {
@@ -244,38 +250,85 @@ const HousekeepingPage = () => {
     }
   };
 
-  // Complete task
-  const handleCompleteTask = async (taskId: number) => {
+  // Show amenity dialog when completing task
+  const handleCompleteTask = async (task: HousekeepingTask) => {
+    setCompletingTask(task);
+    setShowAmenityDialog(true);
+    setAmenityLoading(true);
+
     try {
+      // Fetch suggested items
+      const response = await fetch(
+        buildApiUrl(`hotel/housekeeping-tasks/${task.id}/suggested_items/`),
+        { credentials: 'include' }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setAmenityItems(data.suggestions || []);
+      } else {
+        console.error('Failed to fetch suggestions');
+        setAmenityItems([]);
+      }
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      setAmenityItems([]);
+    } finally {
+      setAmenityLoading(false);
+    }
+  };
+
+  // Submit task completion with amenity items
+  const submitTaskCompletion = async () => {
+    if (!completingTask) return;
+
+    // Filter out items with 0 quantity
+    const selectedItems = amenityItems.filter(item => item.quantity_used > 0);
+
+    if (selectedItems.length === 0) {
+      alert('Please select at least one item before completing the task');
+      return;
+    }
+
+    try {
+      setFormLoading(true);
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/housekeeping-tasks/${taskId}/complete_task/`), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken && { 'X-CSRFToken': csrfToken })
+
+      const response = await fetch(
+        buildApiUrl(`hotel/housekeeping-tasks/${completingTask.id}/complete_task/`),
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrfToken && { 'X-CSRFToken': csrfToken })
+          },
+          body: JSON.stringify({
+            amenity_items: selectedItems.map(item => ({
+              inventory_item: item.inventory_item,
+              quantity_used: item.quantity_used,
+              notes: item.notes || ''
+            }))
+          })
         }
-      });
+      );
 
       if (response.ok) {
         alert('Task completed! Ready for inspection.');
+        setShowAmenityDialog(false);
+        setCompletingTask(null);
+        setAmenityItems([]);
         fetchTasks();
         fetchStatistics();
       } else {
-        let errorMessage = 'Failed to complete task';
-        try {
-          const error = await response.json();
-          errorMessage = error.error || error.detail || errorMessage;
-        } catch (parseError) {
-          const errorText = await response.text();
-          console.error('API Error Response:', errorText);
-          errorMessage = `Server error (${response.status})`;
-        }
-        alert(`Error: ${errorMessage}`);
+        const error = await response.json();
+        alert(`Error: ${error.error || 'Failed to complete task'}`);
       }
     } catch (error) {
       console.error('Error completing task:', error);
       alert('Failed to complete task. Check console for details.');
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -609,7 +662,7 @@ const HousekeepingPage = () => {
                             )}
                             {task.status === 'CLEANING' && (
                               <button
-                                onClick={() => handleCompleteTask(task.id)}
+                                onClick={() => handleCompleteTask(task)}
                                 className="text-xs bg-blue-500 text-white px-3 py-1 hover:bg-blue-600 transition-colors"
                               >
                                 Mark Complete
@@ -890,6 +943,165 @@ const HousekeepingPage = () => {
                   >
                     {formLoading ? 'Creating...' : 'Create Task'}
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Amenity Selection Dialog */}
+          {showAmenityDialog && completingTask && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                {/* Dialog Header */}
+                <div className="p-6 border-b border-gray-200 bg-[#F87B1B]">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Record Items Used</h3>
+                      <p className="text-sm text-gray-100 mt-1">
+                        Task: {completingTask.task_number} - Room {completingTask.room_number}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowAmenityDialog(false);
+                        setCompletingTask(null);
+                        setAmenityItems([]);
+                      }}
+                      className="text-white hover:text-gray-200"
+                    >
+                      <Cancel01Icon className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Dialog Content */}
+                <div className="p-6">
+                  {amenityLoading ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F87B1B] mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading suggestions...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                        <p className="text-sm text-blue-800">
+                          <strong>Instructions:</strong> Adjust quantities for items used during cleaning.
+                          Items with 0 quantity will not be recorded.
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        {amenityItems.map((item, index) => (
+                          <div key={index} className="border border-gray-200 p-4 rounded bg-gray-50">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900">{item.name}</h4>
+                                <p className="text-xs text-gray-600">{item.category}</p>
+                                <p className="text-xs text-gray-500 mt-1">{item.reason}</p>
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                Stock: {item.current_stock} {item.unit}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => {
+                                    const newItems = [...amenityItems];
+                                    newItems[index].quantity_used = Math.max(0, (newItems[index].quantity_used || item.suggested_quantity) - 1);
+                                    setAmenityItems(newItems);
+                                  }}
+                                  className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center rounded"
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="number"
+                                  value={item.quantity_used ?? item.suggested_quantity}
+                                  onChange={(e) => {
+                                    const newItems = [...amenityItems];
+                                    newItems[index].quantity_used = Math.max(0, parseInt(e.target.value) || 0);
+                                    setAmenityItems(newItems);
+                                  }}
+                                  className="w-20 px-3 py-2 border border-gray-300 text-center focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                                  min="0"
+                                  max={item.current_stock}
+                                />
+                                <button
+                                  onClick={() => {
+                                    const newItems = [...amenityItems];
+                                    const currentQty = newItems[index].quantity_used ?? item.suggested_quantity;
+                                    if (currentQty < item.current_stock) {
+                                      newItems[index].quantity_used = currentQty + 1;
+                                      setAmenityItems(newItems);
+                                    }
+                                  }}
+                                  className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center rounded"
+                                  disabled={(item.quantity_used ?? item.suggested_quantity) >= item.current_stock}
+                                >
+                                  +
+                                </button>
+                              </div>
+                              <div className="flex-1">
+                                <input
+                                  type="text"
+                                  placeholder="Notes (optional)"
+                                  value={item.notes || ''}
+                                  onChange={(e) => {
+                                    const newItems = [...amenityItems];
+                                    newItems[index].notes = e.target.value;
+                                    setAmenityItems(newItems);
+                                  }}
+                                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                                />
+                              </div>
+                            </div>
+
+                            {(item.quantity_used ?? item.suggested_quantity) > item.current_stock && (
+                              <p className="text-xs text-red-600 mt-2">
+                                ⚠ Insufficient stock! Available: {item.current_stock}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {amenityItems.length === 0 && (
+                        <div className="text-center py-12">
+                          <AlertCircleIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No suggestions available</h3>
+                          <p className="text-gray-600">Please contact administrator to set up inventory items.</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Dialog Footer */}
+                <div className="p-6 border-t border-gray-200 flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    {amenityItems.filter(item => (item.quantity_used ?? item.suggested_quantity) > 0).length} items selected
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => {
+                        setShowAmenityDialog(false);
+                        setCompletingTask(null);
+                        setAmenityItems([]);
+                      }}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={submitTaskCompletion}
+                      className="px-4 py-2 bg-[#F87B1B] text-white text-sm hover:bg-[#E06A0A] disabled:opacity-50"
+                      disabled={formLoading || amenityItems.filter(item => (item.quantity_used ?? item.suggested_quantity) > 0).length === 0}
+                    >
+                      {formLoading ? 'Completing...' : 'Complete Task'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
