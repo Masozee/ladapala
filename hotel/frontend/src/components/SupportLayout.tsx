@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, createContext, useContext } from 'react';
+import { useState, createContext, useContext, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import SupportSidebar from './SupportSidebar';
@@ -12,7 +12,9 @@ import {
   Sun03Icon,
   Moon02Icon,
   Cancel01Icon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  Calendar01Icon,
+  Clock01Icon
 } from '@/lib/icons';
 
 interface SupportLayoutProps {
@@ -120,7 +122,17 @@ const SupportLayout = ({ children, breadcrumb }: SupportLayoutProps) => {
   const [darkMode, setDarkMode] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
   const pathname = usePathname();
+
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +175,7 @@ const SupportLayout = ({ children, breadcrumb }: SupportLayoutProps) => {
           <SupportSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Navbar */}
-          <header className="bg-white border border-gray-200 h-16 flex items-center justify-between px-6">
+          <header className="sticky top-0 z-10 bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/50 h-16 flex items-center justify-between px-6">
             {/* Breadcrumb */}
             <nav className="flex items-center space-x-2 text-sm">
               {breadcrumbItems.map((item, index) => (
@@ -182,8 +194,35 @@ const SupportLayout = ({ children, breadcrumb }: SupportLayoutProps) => {
               ))}
             </nav>
 
-            {/* Header Actions */}
-            <SupportHeaderActions />
+            {/* Right Side: Date/Time & Header Actions */}
+            <div className="flex items-center space-x-6">
+              {/* Today's Date & Time */}
+              <div className="flex items-center space-x-3 text-sm text-gray-600 border-r border-gray-300 pr-6">
+                <Calendar01Icon className="h-4 w-4" />
+                <div className="flex flex-col">
+                  <span className="font-medium">
+                    {currentTime.toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </span>
+                  <div className="flex items-center space-x-1 text-xs text-gray-500">
+                    <Clock01Icon className="h-3 w-3" />
+                    <span>
+                      {currentTime.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Header Actions */}
+              <SupportHeaderActions />
+            </div>
           </header>
 
           {/* Main Content */}
