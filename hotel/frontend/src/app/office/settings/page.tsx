@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AppLayout from '@/components/AppLayout';
+import OfficeLayout from '@/components/OfficeLayout';
 import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   Settings02Icon,
@@ -137,7 +137,7 @@ const SettingsPage = () => {
     // Appearance
     appearance: {
       theme: 'light',
-      primaryColor: '#005357',
+      primaryColor: '#4E61D3',
       secondaryColor: '#2baf6a',
       fontFamily: 'Inter',
       logoUrl: '/logo.png',
@@ -376,14 +376,14 @@ const SettingsPage = () => {
   const renderGeneralSettings = () => (
     <div className="space-y-6">
       <div className="bg-white border border-gray-200">
-        <div className="p-6 bg-[#005357] text-white">
+        <div className="p-6 bg-[#4E61D3] text-white">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-white">Hotel Information</h3>
               <p className="text-sm text-gray-100 mt-1">Basic details about your hotel</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <Building03Icon className="h-4 w-4 text-[#005357]" />
+              <Building03Icon className="h-4 w-4 text-[#4E61D3]" />
             </div>
           </div>
         </div>
@@ -395,7 +395,7 @@ const SettingsPage = () => {
                 type="text"
                 value={settings.general.hotelName}
                 onChange={(e) => handleSettingChange('general', 'hotelName', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
               />
             </div>
             <div>
@@ -404,7 +404,7 @@ const SettingsPage = () => {
                 type="email"
                 value={settings.general.email}
                 onChange={(e) => handleSettingChange('general', 'email', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
               />
             </div>
             <div className="md:col-span-2">
@@ -413,7 +413,7 @@ const SettingsPage = () => {
                 value={settings.general.hotelDescription}
                 onChange={(e) => handleSettingChange('general', 'hotelDescription', e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
               />
             </div>
             <div className="md:col-span-2">
@@ -422,7 +422,7 @@ const SettingsPage = () => {
                 value={settings.general.address}
                 onChange={(e) => handleSettingChange('general', 'address', e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
               />
             </div>
             <div>
@@ -431,7 +431,7 @@ const SettingsPage = () => {
                 type="tel"
                 value={settings.general.phone}
                 onChange={(e) => handleSettingChange('general', 'phone', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
               />
             </div>
             <div>
@@ -440,7 +440,7 @@ const SettingsPage = () => {
                 type="url"
                 value={settings.general.website}
                 onChange={(e) => handleSettingChange('general', 'website', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
               />
             </div>
           </div>
@@ -448,14 +448,14 @@ const SettingsPage = () => {
       </div>
 
       <div className="bg-white border border-gray-200">
-        <div className="p-6 bg-[#005357] text-white">
+        <div className="p-6 bg-[#4E61D3] text-white">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-white">Regional Settings</h3>
               <p className="text-sm text-gray-100 mt-1">Localization and format preferences</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <Location01Icon className="h-4 w-4 text-[#005357]" />
+              <Location01Icon className="h-4 w-4 text-[#4E61D3]" />
             </div>
           </div>
         </div>
@@ -466,7 +466,7 @@ const SettingsPage = () => {
               <select
                 value={settings.general.timezone}
                 onChange={(e) => handleSettingChange('general', 'timezone', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
               >
                 <option value="Asia/Jakarta">Asia/Jakarta (WIB)</option>
                 <option value="Asia/Makassar">Asia/Makassar (WITA)</option>
@@ -478,7 +478,7 @@ const SettingsPage = () => {
               <select
                 value={settings.general.currency}
                 onChange={(e) => handleSettingChange('general', 'currency', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
               >
                 <option value="IDR">Indonesian Rupiah (IDR)</option>
                 <option value="USD">US Dollar (USD)</option>
@@ -490,7 +490,7 @@ const SettingsPage = () => {
               <select
                 value={settings.general.language}
                 onChange={(e) => handleSettingChange('general', 'language', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
               >
                 <option value="en">English</option>
                 <option value="id">Bahasa Indonesia</option>
@@ -501,7 +501,7 @@ const SettingsPage = () => {
               <select
                 value={settings.general.dateFormat}
                 onChange={(e) => handleSettingChange('general', 'dateFormat', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
               >
                 <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                 <option value="MM/DD/YYYY">MM/DD/YYYY</option>
@@ -517,14 +517,14 @@ const SettingsPage = () => {
   const renderUserSettings = () => (
     <div className="space-y-6">
       <div className="bg-white border border-gray-200">
-        <div className="p-6 bg-[#005357] text-white">
+        <div className="p-6 bg-[#4E61D3] text-white">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-white">Authentication Settings</h3>
               <p className="text-sm text-gray-100 mt-1">User registration and login policies</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <UserIcon className="h-4 w-4 text-[#005357]" />
+              <UserIcon className="h-4 w-4 text-[#4E61D3]" />
             </div>
           </div>
         </div>
@@ -542,7 +542,7 @@ const SettingsPage = () => {
                   onChange={(e) => handleSettingChange('users', 'allowSelfRegistration', e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#005357]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#005357]"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#4E61D3]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4E61D3]"></div>
               </label>
             </div>
 
@@ -558,7 +558,7 @@ const SettingsPage = () => {
                   onChange={(e) => handleSettingChange('users', 'requireEmailVerification', e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#005357]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#005357]"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#4E61D3]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4E61D3]"></div>
               </label>
             </div>
 
@@ -574,7 +574,7 @@ const SettingsPage = () => {
                   onChange={(e) => handleSettingChange('users', 'twoFactorAuth', e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#005357]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#005357]"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#4E61D3]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4E61D3]"></div>
               </label>
             </div>
 
@@ -585,7 +585,7 @@ const SettingsPage = () => {
                   type="number"
                   value={settings.users.passwordMinLength}
                   onChange={(e) => handleSettingChange('users', 'passwordMinLength', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
                   min="6"
                   max="32"
                 />
@@ -596,7 +596,7 @@ const SettingsPage = () => {
                   type="number"
                   value={settings.users.sessionTimeout}
                   onChange={(e) => handleSettingChange('users', 'sessionTimeout', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
                   min="15"
                   max="480"
                 />
@@ -607,7 +607,7 @@ const SettingsPage = () => {
                   type="number"
                   value={settings.users.maxLoginAttempts}
                   onChange={(e) => handleSettingChange('users', 'maxLoginAttempts', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#005357] focus:border-[#005357]"
+                  className="w-full px-3 py-2 border border-gray-300 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
                   min="3"
                   max="10"
                 />
@@ -622,14 +622,14 @@ const SettingsPage = () => {
   const renderNotificationSettings = () => (
     <div className="space-y-6">
       <div className="bg-white border border-gray-200">
-        <div className="p-6 bg-[#005357] text-white">
+        <div className="p-6 bg-[#4E61D3] text-white">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-white">Notification Channels</h3>
               <p className="text-sm text-gray-100 mt-1">Choose how you want to receive notifications</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <Notification02Icon className="h-4 w-4 text-[#005357]" />
+              <Notification02Icon className="h-4 w-4 text-[#4E61D3]" />
             </div>
           </div>
         </div>
@@ -638,7 +638,7 @@ const SettingsPage = () => {
             <div className="flex items-center justify-between p-4 bg-white border">
               <div>
                 <div className="flex items-center space-x-2">
-                  <Mail01Icon className="h-5 w-5 text-[#005357]" />
+                  <Mail01Icon className="h-5 w-5 text-[#4E61D3]" />
                   <label className="text-sm font-medium text-gray-700">Email Notifications</label>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Receive notifications via email</p>
@@ -650,14 +650,14 @@ const SettingsPage = () => {
                   onChange={(e) => handleSettingChange('notifications', 'emailNotifications', e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#005357]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#005357]"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#4E61D3]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4E61D3]"></div>
               </label>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-white border">
               <div>
                 <div className="flex items-center space-x-2">
-                  <Call02Icon className="h-5 w-5 text-[#005357]" />
+                  <Call02Icon className="h-5 w-5 text-[#4E61D3]" />
                   <label className="text-sm font-medium text-gray-700">SMS Notifications</label>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Receive notifications via SMS</p>
@@ -669,14 +669,14 @@ const SettingsPage = () => {
                   onChange={(e) => handleSettingChange('notifications', 'smsNotifications', e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#005357]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#005357]"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#4E61D3]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4E61D3]"></div>
               </label>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-white border">
               <div>
                 <div className="flex items-center space-x-2">
-                  <Notification02Icon className="h-5 w-5 text-[#005357]" />
+                  <Notification02Icon className="h-5 w-5 text-[#4E61D3]" />
                   <label className="text-sm font-medium text-gray-700">Push Notifications</label>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Browser push notifications</p>
@@ -688,14 +688,14 @@ const SettingsPage = () => {
                   onChange={(e) => handleSettingChange('notifications', 'pushNotifications', e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#005357]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#005357]"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#4E61D3]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4E61D3]"></div>
               </label>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-white border">
               <div>
                 <div className="flex items-center space-x-2">
-                  <UserCheckIcon className="h-5 w-5 text-[#005357]" />
+                  <UserCheckIcon className="h-5 w-5 text-[#4E61D3]" />
                   <label className="text-sm font-medium text-gray-700">Notification Sound</label>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Play sound for notifications</p>
@@ -707,7 +707,7 @@ const SettingsPage = () => {
                   onChange={(e) => handleSettingChange('notifications', 'notificationSound', e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#005357]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#005357]"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#4E61D3]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4E61D3]"></div>
               </label>
             </div>
           </div>
@@ -715,14 +715,14 @@ const SettingsPage = () => {
       </div>
 
       <div className="bg-white border border-gray-200">
-        <div className="p-6 bg-[#005357] text-white">
+        <div className="p-6 bg-[#4E61D3] text-white">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-white">Alert Types</h3>
               <p className="text-sm text-gray-100 mt-1">Choose which events trigger notifications</p>
             </div>
             <div className="w-8 h-8 bg-white flex items-center justify-center">
-              <AlertCircleIcon className="h-4 w-4 text-[#005357]" />
+              <AlertCircleIcon className="h-4 w-4 text-[#4E61D3]" />
             </div>
           </div>
         </div>
@@ -737,7 +737,7 @@ const SettingsPage = () => {
             ].map((item) => (
               <div key={item.key} className="flex items-center justify-between p-3 bg-white border">
                 <div className="flex items-center space-x-3">
-                  <item.icon className="h-5 w-5 text-[#005357]" />
+                  <item.icon className="h-5 w-5 text-[#4E61D3]" />
                   <label className="text-sm font-medium text-gray-700">{item.label}</label>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -747,7 +747,7 @@ const SettingsPage = () => {
                     onChange={(e) => handleSettingChange('notifications', item.key, e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#005357]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#005357]"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#4E61D3]/25 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4E61D3]"></div>
                 </label>
               </div>
             ))}
@@ -768,14 +768,14 @@ const SettingsPage = () => {
       default:
         return (
           <div className="bg-white border border-gray-200">
-            <div className="p-6 bg-[#005357] text-white">
+            <div className="p-6 bg-[#4E61D3] text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Coming Soon</h3>
                   <p className="text-sm text-gray-100 mt-1">This section is under development</p>
                 </div>
                 <div className="w-8 h-8 bg-white flex items-center justify-center">
-                  <Settings02Icon className="h-4 w-4 text-[#005357]" />
+                  <Settings02Icon className="h-4 w-4 text-[#4E61D3]" />
                 </div>
               </div>
             </div>
@@ -793,19 +793,19 @@ const SettingsPage = () => {
 
   if (loading) {
     return (
-      <AppLayout>
+      <OfficeLayout>
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
-            <Loading03Icon className="h-12 w-12 text-[#005357] mx-auto animate-spin mb-4" />
+            <Loading03Icon className="h-12 w-12 text-[#4E61D3] mx-auto animate-spin mb-4" />
             <p className="text-gray-600">Loading settings...</p>
           </div>
         </div>
-      </AppLayout>
+      </OfficeLayout>
     );
   }
 
   return (
-    <AppLayout>
+    <OfficeLayout>
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -822,7 +822,7 @@ const SettingsPage = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center space-x-2 py-3 px-4 font-bold text-sm transition-colors whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'bg-[#005357] text-white'
+                    ? 'bg-[#4E61D3] text-white'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -860,14 +860,14 @@ const SettingsPage = () => {
           <button
             onClick={handleSaveSettings}
             disabled={saving}
-            className="flex items-center space-x-2 px-6 py-3 bg-[#005357] text-white hover:bg-[#004147] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-2 px-6 py-3 bg-[#4E61D3] text-white hover:bg-[#004147] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? <Loading03Icon className="h-4 w-4 animate-spin" /> : <PackageIcon className="h-4 w-4" />}
             <span>{saving ? 'Saving...' : 'Save Changes'}</span>
           </button>
         </div>
       </div>
-    </AppLayout>
+    </OfficeLayout>
   );
 };
 
