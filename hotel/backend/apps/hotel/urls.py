@@ -17,6 +17,8 @@ try:
     from .views.payments import AdditionalChargeViewSet
     from .views.warehouse import PurchaseOrderViewSet, PurchaseOrderItemViewSet, StockMovementViewSet
     from .views.maintenance import MaintenanceRequestViewSet, MaintenanceTechnicianViewSet
+    from .views.settings import HotelSettingsViewSet
+    from .views.sidebar_counts import sidebar_counts
     from .views.reports import (
         daily_reports, daily_reports_range, monthly_reports,
         report_summary, available_reports, occupancy_report,
@@ -59,6 +61,7 @@ if LEGACY_VIEWS:
     router.register(r'amenity-categories', AmenityCategoryViewSet, basename='hotel-amenity-categories')
     router.register(r'maintenance-requests', MaintenanceRequestViewSet, basename='hotel-maintenance-requests')
     router.register(r'maintenance-technicians', MaintenanceTechnicianViewSet, basename='hotel-maintenance-technicians')
+    router.register(r'settings', HotelSettingsViewSet, basename='hotel-settings')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -72,6 +75,7 @@ urlpatterns = [
 if LEGACY_VIEWS:
     urlpatterns += [
         path('main/', hotel_dashboard, name='hotel-dashboard'),
+        path('sidebar-counts/', sidebar_counts, name='sidebar-counts'),
         path('reports/daily/', daily_reports, name='daily-reports'),
         path('reports/daily-range/', daily_reports_range, name='daily-reports-range'),
         path('reports/monthly/', monthly_reports, name='monthly-reports'),

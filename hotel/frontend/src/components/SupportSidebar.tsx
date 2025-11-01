@@ -31,67 +31,33 @@ const SupportSidebar = () => {
   const [amenitiesCount, setAmenitiesCount] = useState<number>(0);
 
   useEffect(() => {
-    // Fetch unfinished housekeeping tasks count
-    // Unfinished = all tasks except CLEAN status
-    const fetchHousekeepingCount = async () => {
-      try {
-        // Fetch all tasks and count those that are not CLEAN
-        const response = await fetch(
-          buildApiUrl('hotel/housekeeping-tasks/?page_size=1000'),
-          {
-            credentials: 'include', // Include session cookie for authentication
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          const results = data.results || [];
-          // Count tasks that are not CLEAN (unfinished)
-          const unfinishedCount = results.filter(
-            (task: any) => task.status !== 'CLEAN'
-          ).length;
-          setHousekeepingCount(unfinishedCount);
-        } else {
-          console.error('Failed to fetch housekeeping count:', response.status);
-        }
-      } catch (error) {
-        console.error('Error fetching housekeeping count:', error);
-      }
-    };
-
-    // Fetch unfinished amenities requests count
-    // Unfinished = pending + in_progress status
-    const fetchAmenitiesCount = async () => {
+    // Fetch all sidebar counts from centralized API
+    const fetchSidebarCounts = async () => {
       try {
         const response = await fetch(
-          buildApiUrl('hotel/amenity-requests/?page_size=1000'),
+          buildApiUrl('hotel/sidebar-counts/'),
           {
             credentials: 'include',
           }
         );
         if (response.ok) {
           const data = await response.json();
-          const results = data.results || [];
-          // Count requests that are pending or in_progress (unfinished)
-          const unfinishedCount = results.filter(
-            (request: any) => request.status === 'pending' || request.status === 'in_progress'
-          ).length;
-          setAmenitiesCount(unfinishedCount);
+          setHousekeepingCount(data.support_sidebar?.unfinished_housekeeping || 0);
+          setAmenitiesCount(data.support_sidebar?.unfinished_amenities || 0);
         } else {
-          console.error('Failed to fetch amenities count:', response.status);
+          console.error('Failed to fetch sidebar counts:', response.status);
         }
       } catch (error) {
-        console.error('Error fetching amenities count:', error);
+        console.error('Error fetching sidebar counts:', error);
+        setHousekeepingCount(0);
+        setAmenitiesCount(0);
       }
     };
 
-    fetchHousekeepingCount();
-    fetchAmenitiesCount();
+    fetchSidebarCounts();
 
     // Refresh count every 30 seconds
-    const interval = setInterval(() => {
-      fetchHousekeepingCount();
-      fetchAmenitiesCount();
-    }, 30000);
+    const interval = setInterval(fetchSidebarCounts, 30000);
     return () => clearInterval(interval);
   }, []);
 

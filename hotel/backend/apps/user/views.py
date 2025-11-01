@@ -691,6 +691,85 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             'new_this_month': new_this_month,
         })
 
+    @action(detail=False, methods=['get'])
+    def team_status(self, request):
+        """Get employees with current shift status and active job counts"""
+        from django.utils import timezone
+        from django.db.models import Q, Count
+        from apps.hotel.models import MaintenanceRequest, HousekeepingTask
+
+        now = timezone.now()
+        today = now.date()
+        current_time = now.time()
+
+        # Get active employees
+        employees = Employee.objects.filter(
+            is_active=True,
+            employment_status='ACTIVE'
+        ).select_related('user', 'department').order_by('employee_id')
+
+        team_data = []
+
+        for employee in employees:
+            # Get today's shift for this employee
+            today_shift = Shift.objects.filter(
+                employee=employee,
+                shift_date=today
+            ).first()
+
+            # Determine status based on shift
+            status = 'off_duty'
+            shift_info = None
+
+            if today_shift:
+                shift_info = {
+                    'shift_type': today_shift.shift_type,
+                    'start_time': str(today_shift.start_time),
+                    'end_time': str(today_shift.end_time),
+                }
+
+                # Check if currently on shift
+                if today_shift.start_time <= current_time <= today_shift.end_time:
+                    status = 'on_shift'
+                elif current_time < today_shift.start_time:
+                    status = 'scheduled'
+                else:
+                    status = 'off_duty'
+
+            # Count active jobs assigned to this employee
+            # MaintenanceRequest uses assigned_technician (CharField, employee name)
+            active_maintenance = MaintenanceRequest.objects.filter(
+                assigned_technician=employee.full_name,
+                status__in=['SUBMITTED', 'ACKNOWLEDGED', 'IN_PROGRESS']
+            ).count()
+
+            # HousekeepingTask uses assigned_to (ForeignKey to User)
+            active_housekeeping = HousekeepingTask.objects.filter(
+                assigned_to=employee.user,
+                status__in=['DIRTY', 'CLEANING', 'INSPECTING']
+            ).count()
+
+            total_active_jobs = active_maintenance + active_housekeeping
+
+            team_data.append({
+                'id': employee.id,
+                'employee_id': employee.employee_id,
+                'name': employee.full_name,
+                'position': employee.position,
+                'department': employee.department.name if employee.department else None,
+                'department_id': employee.department.id if employee.department else None,
+                'status': status,
+                'shift': shift_info,
+                'active_jobs': total_active_jobs,
+                'active_maintenance': active_maintenance,
+                'active_housekeeping': active_housekeeping,
+                'phone': employee.phone,
+                'email': employee.email,
+                'avatar_url': request.build_absolute_uri(employee.user.avatar.url) if employee.user.avatar else None,
+            })
+
+        return Response(team_data)
+
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     """ViewSet for Department management"""

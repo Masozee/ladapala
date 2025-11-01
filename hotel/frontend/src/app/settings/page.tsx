@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   Settings02Icon,
   Building03Icon,
@@ -159,6 +160,138 @@ const SettingsPage = () => {
   });
 
   const [showPasswords, setShowPasswords] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Fetch settings from API on mount
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(buildApiUrl('hotel/settings/'), {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const apiSettings = await response.json();
+        // Map snake_case API response to camelCase frontend state
+        if (apiSettings) {
+          setSettings({
+            general: {
+              hotelName: apiSettings.hotel_name || '',
+              hotelDescription: apiSettings.hotel_description || '',
+              address: apiSettings.address || '',
+              phone: apiSettings.phone || '',
+              email: apiSettings.email || '',
+              website: apiSettings.website || '',
+              timezone: apiSettings.timezone || 'Asia/Jakarta',
+              currency: apiSettings.currency || 'IDR',
+              language: apiSettings.language || 'en',
+              dateFormat: apiSettings.date_format || 'DD/MM/YYYY',
+              timeFormat: apiSettings.time_format || '24',
+            },
+            users: {
+              allowSelfRegistration: apiSettings.allow_self_registration || false,
+              requireEmailVerification: apiSettings.require_email_verification || true,
+              passwordMinLength: apiSettings.password_min_length || 8,
+              sessionTimeout: apiSettings.session_timeout || 120,
+              maxLoginAttempts: apiSettings.max_login_attempts || 5,
+              twoFactorAuth: apiSettings.two_factor_auth || false,
+              passwordExpiry: apiSettings.password_expiry || 90,
+              enforceStrongPassword: apiSettings.enforce_strong_password || true,
+            },
+            notifications: {
+              emailNotifications: apiSettings.email_notifications || true,
+              smsNotifications: apiSettings.sms_notifications || false,
+              pushNotifications: apiSettings.push_notifications || true,
+              bookingNotifications: apiSettings.booking_notifications || true,
+              maintenanceAlerts: apiSettings.maintenance_alerts || true,
+              paymentAlerts: apiSettings.payment_alerts || true,
+              guestRequestAlerts: apiSettings.guest_request_alerts || true,
+              systemAlerts: apiSettings.system_alerts || true,
+              notificationSound: apiSettings.notification_sound || true,
+            },
+            security: settings.security,
+            payment: settings.payment,
+            rooms: settings.rooms,
+            booking: settings.booking,
+            integrations: settings.integrations,
+            appearance: settings.appearance,
+            backup: settings.backup,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      setSaving(true);
+      const csrfToken = getCsrfToken();
+
+      // Map camelCase frontend state to snake_case API format
+      const apiData = {
+        hotel_name: settings.general.hotelName,
+        hotel_description: settings.general.hotelDescription,
+        address: settings.general.address,
+        phone: settings.general.phone,
+        email: settings.general.email,
+        website: settings.general.website,
+        timezone: settings.general.timezone,
+        currency: settings.general.currency,
+        language: settings.general.language,
+        date_format: settings.general.dateFormat,
+        time_format: settings.general.timeFormat,
+        allow_self_registration: settings.users.allowSelfRegistration,
+        require_email_verification: settings.users.requireEmailVerification,
+        password_min_length: settings.users.passwordMinLength,
+        session_timeout: settings.users.sessionTimeout,
+        max_login_attempts: settings.users.maxLoginAttempts,
+        two_factor_auth: settings.users.twoFactorAuth,
+        password_expiry: settings.users.passwordExpiry,
+        enforce_strong_password: settings.users.enforceStrongPassword,
+        email_notifications: settings.notifications.emailNotifications,
+        sms_notifications: settings.notifications.smsNotifications,
+        push_notifications: settings.notifications.pushNotifications,
+        booking_notifications: settings.notifications.bookingNotifications,
+        maintenance_alerts: settings.notifications.maintenanceAlerts,
+        payment_alerts: settings.notifications.paymentAlerts,
+        guest_request_alerts: settings.notifications.guestRequestAlerts,
+        system_alerts: settings.notifications.systemAlerts,
+        notification_sound: settings.notifications.notificationSound,
+      };
+
+      const response = await fetch(buildApiUrl('hotel/settings/1/'), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+        },
+        credentials: 'include',
+        body: JSON.stringify(apiData),
+      });
+
+      if (response.ok) {
+        alert('Settings saved successfully!');
+      } else {
+        const error = await response.json();
+        console.error('Error saving settings:', error);
+        alert('Failed to save settings. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSettingChange = (category: string, key: string, value: any) => {
     setSettings(prev => ({
@@ -658,6 +791,19 @@ const SettingsPage = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <Loading03Icon className="h-12 w-12 text-[#005357] mx-auto animate-spin mb-4" />
+            <p className="text-gray-600">Loading settings...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -711,9 +857,13 @@ const SettingsPage = () => {
             <Loading03Icon className="h-4 w-4" />
             <span>Reset</span>
           </button>
-          <button className="flex items-center space-x-2 px-6 py-3 bg-[#005357] text-white hover:bg-[#004147] transition-colors">
-            <PackageIcon className="h-4 w-4" />
-            <span>Save Changes</span>
+          <button
+            onClick={handleSaveSettings}
+            disabled={saving}
+            className="flex items-center space-x-2 px-6 py-3 bg-[#005357] text-white hover:bg-[#004147] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? <Loading03Icon className="h-4 w-4 animate-spin" /> : <PackageIcon className="h-4 w-4" />}
+            <span>{saving ? 'Saving...' : 'Save Changes'}</span>
           </button>
         </div>
       </div>

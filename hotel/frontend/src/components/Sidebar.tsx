@@ -44,70 +44,31 @@ const Sidebar = () => {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [uncompletedComplaintsCount, setUncompletedComplaintsCount] = useState<number>(0);
 
-  // Fetch pending reservations count
+  // Fetch all sidebar counts from centralized API
   useEffect(() => {
-    const fetchPendingCount = async () => {
+    const fetchSidebarCounts = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/hotel/reservations/?status=PENDING`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/hotel/sidebar-counts/`, {
           credentials: 'include',
         });
 
         if (response.ok) {
           const data = await response.json();
-          setPendingCount(data.count || 0);
+          setPendingCount(data.main_sidebar?.pending_bookings || 0);
+          setUncompletedComplaintsCount(data.main_sidebar?.uncompleted_complaints || 0);
         }
       } catch (error) {
-        console.error('Error fetching pending count:', error);
+        console.error('Error fetching sidebar counts:', error);
         // Silently fail - don't break the sidebar
         setPendingCount(0);
-      }
-    };
-
-    fetchPendingCount();
-
-    // Refresh count every 30 seconds
-    const interval = setInterval(fetchPendingCount, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Fetch uncompleted complaints count (OPEN + IN_PROGRESS)
-  useEffect(() => {
-    const fetchComplaintsCount = async () => {
-      try {
-        // Fetch OPEN complaints
-        const openResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/hotel/complaints/?status=OPEN`, {
-          credentials: 'include',
-        });
-
-        // Fetch IN_PROGRESS complaints
-        const inProgressResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/hotel/complaints/?status=IN_PROGRESS`, {
-          credentials: 'include',
-        });
-
-        let totalCount = 0;
-
-        if (openResponse.ok) {
-          const openData = await openResponse.json();
-          totalCount += openData.count || 0;
-        }
-
-        if (inProgressResponse.ok) {
-          const inProgressData = await inProgressResponse.json();
-          totalCount += inProgressData.count || 0;
-        }
-
-        setUncompletedComplaintsCount(totalCount);
-      } catch (error) {
-        console.error('Error fetching complaints count:', error);
-        // Silently fail - don't break the sidebar
         setUncompletedComplaintsCount(0);
       }
     };
 
-    fetchComplaintsCount();
+    fetchSidebarCounts();
 
     // Refresh count every 30 seconds
-    const interval = setInterval(fetchComplaintsCount, 30000);
+    const interval = setInterval(fetchSidebarCounts, 30000);
     return () => clearInterval(interval);
   }, []);
 

@@ -14,6 +14,7 @@ from .maintenance import MaintenanceRequest, MaintenanceTechnician
 from .housekeeping import HousekeepingTask, AmenityUsage
 from .financial import FinancialTransaction, Invoice, InvoiceItem
 from .amenities import AmenityRequest, AmenityCategory
+from .settings import HotelSettings
 
 # Make all models available for import
 __all__ = [
@@ -21,5 +22,5 @@ __all__ = [
     'Complaint', 'ComplaintImage', 'CheckIn', 'Holiday', 'CalendarEvent', 'InventoryItem',
     'PurchaseOrder', 'PurchaseOrderItem', 'StockMovement', 'Supplier',
     'MaintenanceRequest', 'MaintenanceTechnician', 'HousekeepingTask', 'AmenityUsage',
-    'FinancialTransaction', 'Invoice', 'InvoiceItem', 'AmenityRequest', 'AmenityCategory'
+    'FinancialTransaction', 'Invoice', 'InvoiceItem', 'AmenityRequest', 'AmenityCategory', 'HotelSettings'
 ]

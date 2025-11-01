@@ -4,7 +4,7 @@ from .models import (
     RoomType, Room, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
     CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, Supplier,
     MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
-    FinancialTransaction, Invoice, InvoiceItem, AmenityRequest, AmenityCategory
+    FinancialTransaction, Invoice, InvoiceItem, AmenityRequest, AmenityCategory, HotelSettings
 )
 
 
@@ -888,3 +888,13 @@ class MaintenanceTechnicianSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
+
+
+class HotelSettingsSerializer(serializers.ModelSerializer):
+    """Serializer for hotel settings (singleton)"""
+
+    class Meta:
+        model = HotelSettings
+        exclude = ["id", "created_at"]
+        read_only_fields = ["updated_at"]
+

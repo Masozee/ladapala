@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -34,6 +34,35 @@ interface MenuItem {
 
 const OfficeSidebar = () => {
   const pathname = usePathname();
+  const [housekeepingCount, setHousekeepingCount] = useState<number>(0);
+  const [lowStockCount, setLowStockCount] = useState<number>(0);
+
+  // Fetch sidebar counts
+  useEffect(() => {
+    const fetchSidebarCounts = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/hotel/sidebar-counts/`, {
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setHousekeepingCount(data.office_sidebar?.unfinished_housekeeping || 0);
+          setLowStockCount(data.office_sidebar?.low_stock_items || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching sidebar counts:', error);
+        setHousekeepingCount(0);
+        setLowStockCount(0);
+      }
+    };
+
+    fetchSidebarCounts();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchSidebarCounts, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const mainNavItems: MenuItem[] = [
     { name: 'Office Dashboard', icon: Building03Icon, href: '/office' },
@@ -42,9 +71,9 @@ const OfficeSidebar = () => {
   const officeActions: MenuItem[] = [
     { name: 'Guest Database', icon: UserMultipleIcon, href: '/office/guests' },
     { name: 'Employees', icon: UserSettings01Icon, href: '/office/employees' },
-    { name: 'Housekeeping', icon: CircleArrowReload01Icon, href: '/office/housekeeping' },
+    { name: 'Housekeeping', icon: CircleArrowReload01Icon, href: '/office/housekeeping', badge: housekeepingCount > 0 ? housekeepingCount.toString() : undefined },
     { name: 'Financial', icon: CreditCardIcon, href: '/office/financial' },
-    { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse' },
+    { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse', badge: lowStockCount > 0 ? lowStockCount.toString() : undefined },
     { name: 'Suppliers', icon: Archive03Icon, href: '/office/suppliers' },
     { name: 'Reports', icon: File01Icon, href: '/office/reports' },
     { name: 'Administration', icon: Shield01Icon, href: '/office/admin' },

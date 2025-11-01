@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SupportLayout from '@/components/SupportLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   Wrench01Icon,
   BedIcon,
@@ -26,124 +27,222 @@ import {
 
 export default function SupportDashboard() {
   const [selectedFilter, setSelectedFilter] = useState('all');
-
-  // Sample support data
-  const supportStats = {
-    activeMaintenance: 3,
-    pendingHousekeeping: 7,
-    amenitiesRequests: 2,
+  const [loading, setLoading] = useState(true);
+  const [supportStats, setSupportStats] = useState({
+    activeMaintenance: 0,
+    pendingHousekeeping: 0,
+    amenitiesRequests: 0,
     emergencyAlerts: 0,
-    completedToday: 12,
-    averageResponseTime: 15, // minutes
-    teamMembers: 18,
-    satisfaction: 4.6
+    completedToday: 0,
+    averageResponseTime: 0,
+    teamMembers: 0,
+    satisfaction: 0
+  });
+  const [recentRequests, setRecentRequests] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    await Promise.all([
+      fetchMaintenanceData(),
+      fetchHousekeepingData(),
+      fetchAmenityData(),
+      fetchTeamMembers(),
+    ]);
+    setLoading(false);
   };
 
-  const recentRequests = [
-    {
-      id: 'MNT-001',
-      type: 'maintenance',
-      title: 'AC Unit Not Working',
-      location: 'Room 205',
-      priority: 'high',
-      status: 'in_progress',
-      assignedTo: 'Ahmad Rahman',
-      createdAt: '2024-08-28 08:30',
-      estimatedTime: '2 hours',
-      description: 'AC unit in room 205 is not cooling properly'
-    },
-    {
-      id: 'HSK-012',
-      type: 'housekeeping',
-      title: 'Deep Cleaning Required',
-      location: 'Suite 501',
-      priority: 'medium',
-      status: 'pending',
-      assignedTo: 'Maria Santos',
-      createdAt: '2024-08-28 09:15',
-      estimatedTime: '3 hours',
-      description: 'Guest requested deep cleaning after checkout'
-    },
-    {
-      id: 'AMN-005',
-      type: 'amenities',
-      title: 'Extra Towels Request',
-      location: 'Room 312',
-      priority: 'low',
-      status: 'completed',
-      assignedTo: 'Sarah Johnson',
-      createdAt: '2024-08-28 10:00',
-      estimatedTime: '30 minutes',
-      description: 'Guest requested additional bath towels'
-    },
-    {
-      id: 'MNT-002',
-      type: 'maintenance',
-      title: 'Leaking Faucet',
-      location: 'Room 108',
-      priority: 'medium',
-      status: 'pending',
-      assignedTo: 'David Chen',
-      createdAt: '2024-08-28 07:45',
-      estimatedTime: '1 hour',
-      description: 'Bathroom faucet is dripping continuously'
-    },
-    {
-      id: 'EMR-001',
-      type: 'emergency',
-      title: 'Power Outage',
-      location: 'Floor 3',
-      priority: 'urgent',
-      status: 'completed',
-      assignedTo: 'Emergency Team',
-      createdAt: '2024-08-27 22:30',
-      estimatedTime: '4 hours',
-      description: 'Power outage affecting entire floor 3'
-    }
-  ];
+  const fetchMaintenanceData = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/maintenance-requests/'), {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const requests = data.results || data;
 
-  const teamMembers = [
-    {
-      id: 1,
-      name: 'Ahmad Rahman',
-      role: 'Maintenance Lead',
-      department: 'Maintenance',
-      status: 'available',
-      activeJobs: 2,
-      phone: '+62-812-3456-7890',
-      location: 'Floor 2'
-    },
-    {
-      id: 2,
-      name: 'Maria Santos',
-      role: 'Housekeeping Supervisor',
-      department: 'Housekeeping',
-      status: 'busy',
-      activeJobs: 3,
-      phone: '+62-813-4567-8901',
-      location: 'Floor 5'
-    },
-    {
-      id: 3,
-      name: 'Sarah Johnson',
-      role: 'Room Attendant',
-      department: 'Housekeeping',
-      status: 'available',
-      activeJobs: 1,
-      phone: '+62-814-5678-9012',
-      location: 'Floor 3'
-    },
-    {
-      id: 4,
-      name: 'David Chen',
-      role: 'Technician',
-      department: 'Maintenance',
-      status: 'on_break',
-      activeJobs: 0,
-      phone: '+62-815-6789-0123',
-      location: 'Workshop'
+        // Count active maintenance (not completed or cancelled)
+        const activeCount = requests.filter((r: any) =>
+          r.status !== 'COMPLETED' && r.status !== 'CANCELLED'
+        ).length;
+
+        // Count completed today
+        const today = new Date().toISOString().split('T')[0];
+        const completedToday = requests.filter((r: any) =>
+          r.status === 'COMPLETED' && r.completed_date?.startsWith(today)
+        ).length;
+
+        setSupportStats(prev => ({
+          ...prev,
+          activeMaintenance: activeCount,
+          completedToday: prev.completedToday + completedToday,
+        }));
+
+        // Map to recent requests format
+        const maintenanceRequests = requests.slice(0, 10).map((r: any) => ({
+          id: r.request_number,
+          type: 'maintenance',
+          title: r.title,
+          location: r.room_number ? `Room ${r.room_number}` : 'N/A',
+          priority: r.priority?.toLowerCase() || 'medium',
+          status: r.status === 'IN_PROGRESS' ? 'in_progress' :
+                  r.status === 'COMPLETED' ? 'completed' :
+                  r.status === 'SUBMITTED' ? 'pending' : 'pending',
+          assignedTo: r.assigned_technician || 'Unassigned',
+          createdAt: r.requested_date || r.created_at,
+          estimatedTime: 'N/A',
+          description: r.description || '',
+        }));
+
+        setRecentRequests(prev => [...prev, ...maintenanceRequests]);
+      }
+    } catch (error) {
+      console.error('Error fetching maintenance data:', error);
     }
-  ];
+  };
+
+  const fetchHousekeepingData = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/housekeeping-tasks/'), {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const tasks = data.results || data;
+
+        // Count pending housekeeping (not CLEAN status)
+        const pendingCount = tasks.filter((t: any) =>
+          t.status !== 'CLEAN' && t.status !== 'INSPECTED'
+        ).length;
+
+        // Count completed today
+        const today = new Date().toISOString().split('T')[0];
+        const completedToday = tasks.filter((t: any) =>
+          t.status === 'CLEAN' && t.completion_time?.startsWith(today)
+        ).length;
+
+        setSupportStats(prev => ({
+          ...prev,
+          pendingHousekeeping: pendingCount,
+          completedToday: prev.completedToday + completedToday,
+        }));
+
+        // Map to recent requests format
+        const housekeepingRequests = tasks.slice(0, 10).map((t: any) => ({
+          id: t.task_number,
+          type: 'housekeeping',
+          title: t.task_type_display || 'Housekeeping Task',
+          location: t.room_number ? `Room ${t.room_number}` : 'N/A',
+          priority: t.priority?.toLowerCase() || 'medium',
+          status: t.status === 'CLEANING' || t.status === 'DIRTY' ? 'in_progress' :
+                  t.status === 'CLEAN' ? 'completed' : 'pending',
+          assignedTo: t.assigned_to_name || 'Unassigned',
+          createdAt: t.created_at,
+          estimatedTime: t.estimated_duration_minutes ? `${t.estimated_duration_minutes} min` : 'N/A',
+          description: t.notes || t.guest_requests?.join(', ') || '',
+        }));
+
+        setRecentRequests(prev => [...prev, ...housekeepingRequests]);
+      }
+    } catch (error) {
+      console.error('Error fetching housekeeping data:', error);
+    }
+  };
+
+  const fetchAmenityData = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/amenity-requests/'), {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const requests = data.results || data;
+
+        // Count pending amenity requests
+        const pendingCount = requests.filter((r: any) =>
+          r.status === 'pending' || r.status === 'in_progress'
+        ).length;
+
+        // Count completed today
+        const today = new Date().toISOString().split('T')[0];
+        const completedToday = requests.filter((r: any) =>
+          r.status === 'completed' && r.updated_at?.startsWith(today)
+        ).length;
+
+        setSupportStats(prev => ({
+          ...prev,
+          amenitiesRequests: pendingCount,
+          completedToday: prev.completedToday + completedToday,
+        }));
+
+        // Map to recent requests format
+        const amenityRequests = requests.slice(0, 10).map((r: any) => ({
+          id: r.id,
+          type: 'amenities',
+          title: r.item_name || 'Amenity Request',
+          location: r.room_number ? `Room ${r.room_number}` : 'N/A',
+          priority: r.priority?.toLowerCase() || 'low',
+          status: r.status,
+          assignedTo: r.staff_name || 'Unassigned',
+          createdAt: r.request_date || r.created_at,
+          estimatedTime: 'N/A',
+          description: r.notes || `${r.quantity} x ${r.item_name}`,
+        }));
+
+        setRecentRequests(prev => [...prev, ...amenityRequests]);
+      }
+    } catch (error) {
+      console.error('Error fetching amenity data:', error);
+    }
+  };
+
+  const fetchTeamMembers = async () => {
+    try {
+      const response = await fetch(buildApiUrl('user/employees/team_status/'), {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+
+        // Map API data to UI format
+        const mappedTeam = data.map((member: any) => ({
+          id: member.id,
+          employeeId: member.employee_id,
+          name: member.name,
+          role: member.position,
+          department: member.department,
+          status: member.status, // on_shift, scheduled, off_duty
+          activeJobs: member.active_jobs,
+          activeMaintenance: member.active_maintenance,
+          activeHousekeeping: member.active_housekeeping,
+          location: member.department || 'N/A',
+          phone: member.phone,
+          email: member.email,
+          avatar: member.avatar_url,
+          shift: member.shift,
+        }));
+
+        setTeamMembers(mappedTeam);
+        setSupportStats(prev => ({
+          ...prev,
+          teamMembers: mappedTeam.filter((m: any) => m.status === 'on_shift').length,
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+    }
+  };
+
+  // Sort recent requests by date (newest first)
+  const sortedRecentRequests = [...recentRequests].sort((a, b) => {
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+    return dateB - dateA;
+  }).slice(0, 10); // Show only 10 most recent
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -216,18 +315,18 @@ export default function SupportDashboard() {
 
   const getTeamStatusColor = (status: string) => {
     switch (status) {
-      case 'available': return 'bg-green-100 text-green-800';
-      case 'busy': return 'bg-red-100 text-red-800';
-      case 'on_break': return 'bg-yellow-100 text-yellow-800';
+      case 'on_shift': return 'bg-green-100 text-green-800';
+      case 'scheduled': return 'bg-blue-100 text-blue-800';
+      case 'off_duty': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getTeamStatusLabel = (status: string) => {
     switch (status) {
-      case 'available': return 'Tersedia';
-      case 'busy': return 'Sibuk';
-      case 'on_break': return 'Istirahat';
+      case 'on_shift': return 'Sedang Bertugas';
+      case 'scheduled': return 'Terjadwal';
+      case 'off_duty': return 'Off Duty';
       default: return status;
     }
   };
@@ -347,8 +446,20 @@ export default function SupportDashboard() {
             </div>
             
             <div className="p-4 bg-gray-50">
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {recentRequests.map((request) => (
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <SparklesIcon className="h-12 w-12 text-[#F87B1B] mx-auto animate-spin mb-4" />
+                    <p className="text-gray-600">Loading requests...</p>
+                  </div>
+                </div>
+              ) : sortedRecentRequests.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No recent requests found</p>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {sortedRecentRequests.map((request) => (
                   <div key={request.id} className="bg-white p-4 border border-gray-200">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -391,8 +502,9 @@ export default function SupportDashboard() {
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -411,14 +523,30 @@ export default function SupportDashboard() {
             </div>
             
             <div className="p-4 bg-gray-50">
-              <div className="space-y-4">
-                {teamMembers.map((member) => (
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <SparklesIcon className="h-12 w-12 text-[#F87B1B] mx-auto animate-spin mb-4" />
+                    <p className="text-gray-600">Loading team...</p>
+                  </div>
+                </div>
+              ) : teamMembers.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No team members available</p>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {teamMembers.map((member) => (
                   <div key={member.id} className="bg-white p-4 border border-gray-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-[#F87B1B] flex items-center justify-center text-white font-bold">
-                          {member.name.split(' ').map(n => n[0]).join('')}
-                        </div>
+                        {member.avatar ? (
+                          <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 bg-[#F87B1B] flex items-center justify-center text-white font-bold rounded-full">
+                            {member.name.split(' ').map((n: string) => n[0]).join('')}
+                          </div>
+                        )}
                         <div>
                           <h4 className="font-semibold text-gray-900">{member.name}</h4>
                           <p className="text-sm text-gray-600">{member.role}</p>
@@ -426,25 +554,39 @@ export default function SupportDashboard() {
                             <span className={`inline-flex px-2 py-1 text-xs font-medium ${getTeamStatusColor(member.status)}`}>
                               {getTeamStatusLabel(member.status)}
                             </span>
-                            <span className="text-xs text-gray-500">{member.activeJobs} active jobs</span>
+                            {member.activeJobs > 0 && (
+                              <span className="text-xs text-gray-500">
+                                {member.activeJobs} tugas aktif
+                              </span>
+                            )}
                           </div>
+                          {member.shift && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              Shift: {member.shift.start_time} - {member.shift.end_time}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs text-gray-500">{member.location}</div>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <button className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors rounded">
-                            <Call02Icon className="h-4 w-4" />
-                          </button>
-                          <button className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
-                            <Mail01Icon className="h-4 w-4" />
-                          </button>
-                        </div>
+                        <div className="text-xs text-gray-500">{member.department || member.location}</div>
+                        {member.phone && (
+                          <div className="flex items-center space-x-2 mt-2">
+                            <a href={`tel:${member.phone}`} className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors rounded">
+                              <Call02Icon className="h-4 w-4" />
+                            </a>
+                            {member.email && (
+                              <a href={`mailto:${member.email}`} className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded">
+                                <Mail01Icon className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
