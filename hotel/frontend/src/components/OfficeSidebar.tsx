@@ -81,7 +81,7 @@ const OfficeSidebar = () => {
 
   const bottomActions: MenuItem[] = [
     { name: 'Calendar', icon: Calendar01Icon, href: '/calendar' },
-    { name: 'Office Settings', icon: Settings02Icon, href: '/office/settings' },
+    { name: 'Office Settings', icon: Settings02Icon, href: '/office/admin' },
     { name: 'Profile', icon: UserIcon, href: '/profile' },
   ];
 
