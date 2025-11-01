@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import OfficeLayout from '@/components/OfficeLayout';
 import {
   PieChartIcon,
@@ -18,8 +19,22 @@ import {
   PackageIcon,
   SparklesIcon,
   Call02Icon,
-  Mail01Icon
+  Mail01Icon,
+  Cancel01Icon,
+  EyeIcon
 } from '@/lib/icons';
+
+// Dynamically import PDF components (client-side only)
+const PDFDownloadLink = dynamic(
+  () => import('@react-pdf/renderer').then((mod) => mod.PDFDownloadLink),
+  { ssr: false }
+);
+const PDFViewer = dynamic(
+  () => import('@react-pdf/renderer').then((mod) => mod.PDFViewer),
+  { ssr: false }
+);
+
+import { OccupancyReportPDF, RevenueReportPDF, GenericReportPDF } from '@/components/reports';
 
 // TypeScript interfaces for API responses
 interface ReportSummary {
@@ -49,6 +64,10 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generatingReports, setGeneratingReports] = useState<Set<string>>(new Set());
+
+  // PDF Preview Modal state
+  const [pdfPreviewData, setPdfPreviewData] = useState<{reportId: string; data: any} | null>(null);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_HOTEL_API_URL || 'http://localhost:8000/api/hotel';
 
@@ -178,13 +197,13 @@ export default function ReportsPage() {
     return report.category === selectedReportType;
   });
 
-  // Handle report generation with format
-  const handleGenerateReport = async (reportId: string, format: 'json' | 'pdf' | 'xlsx' = 'pdf') => {
-    setGeneratingReports(prev => new Set(prev).add(`${reportId}-${format}`));
+  // Handle PDF preview - fetch data and show modal
+  const handlePDFPreview = async (reportId: string) => {
+    setGeneratingReports(prev => new Set(prev).add(`${reportId}-pdf`));
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}&download_format=${format}`,
+        `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}`,
         {
           credentials: 'include',
         }
@@ -194,30 +213,9 @@ export default function ReportsPage() {
         throw new Error(`Gagal generate laporan ${reportId}`);
       }
 
-      if (format === 'json') {
-        const data = await response.json();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${reportId}-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        // For PDF and Excel, response is already a blob
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const extension = format === 'pdf' ? 'pdf' : 'xlsx';
-        a.download = `${reportId}-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.${extension}`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
+      const data = await response.json();
+      setPdfPreviewData({ reportId, data });
+      setShowPdfPreview(true);
 
       // Update report status
       setAvailableReports(prev =>
@@ -233,9 +231,69 @@ export default function ReportsPage() {
     } finally {
       setGeneratingReports(prev => {
         const newSet = new Set(prev);
-        newSet.delete(`${reportId}-${format}`);
+        newSet.delete(`${reportId}-pdf`);
         return newSet;
       });
+    }
+  };
+
+  // Handle Excel download (keep server-side generation for Excel)
+  const handleExcelDownload = async (reportId: string) => {
+    setGeneratingReports(prev => new Set(prev).add(`${reportId}-xlsx`));
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}&download_format=xlsx`,
+        {
+          credentials: 'include',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Gagal generate laporan ${reportId}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportId}-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Error downloading Excel:', err);
+      alert(err instanceof Error ? err.message : 'Terjadi kesalahan saat download Excel');
+    } finally {
+      setGeneratingReports(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(`${reportId}-xlsx`);
+        return newSet;
+      });
+    }
+  };
+
+  // Get PDF component for report type
+  const getPDFComponent = (reportId: string, data: any) => {
+    const reportTitles: Record<string, string> = {
+      'occupancy': 'Laporan Okupansi',
+      'revenue': 'Laporan Pendapatan',
+      'guest-analytics': 'Analisis Tamu',
+      'staff-performance': 'Performa Karyawan',
+      'satisfaction': 'Survei Kepuasan',
+      'maintenance': 'Laporan Maintenance',
+      'inventory': 'Laporan Inventaris',
+      'tax': 'Laporan Pajak',
+    };
+
+    switch (reportId) {
+      case 'occupancy':
+        return <OccupancyReportPDF data={data} />;
+      case 'revenue':
+        return <RevenueReportPDF data={data} />;
+      default:
+        return <GenericReportPDF data={data} title={reportTitles[reportId] || 'Laporan'} />;
     }
   };
 
@@ -551,16 +609,16 @@ export default function ReportsPage() {
                             <button
                               className="bg-red-600 text-white px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
                               disabled={generatingReports.has(`${report.id}-pdf`)}
-                              onClick={() => handleGenerateReport(report.id, 'pdf')}
-                              title="Download as PDF"
+                              onClick={() => handlePDFPreview(report.id)}
+                              title="Preview & Download PDF"
                             >
-                              <File01Icon className="h-4 w-4" />
-                              <span>{generatingReports.has(`${report.id}-pdf`) ? 'PDF...' : 'PDF'}</span>
+                              <EyeIcon className="h-4 w-4" />
+                              <span>{generatingReports.has(`${report.id}-pdf`) ? 'Loading...' : 'Preview PDF'}</span>
                             </button>
                             <button
                               className="bg-green-600 text-white px-3 py-2 text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
                               disabled={generatingReports.has(`${report.id}-xlsx`)}
-                              onClick={() => handleGenerateReport(report.id, 'xlsx')}
+                              onClick={() => handleExcelDownload(report.id)}
                               title="Download as Excel"
                             >
                               <File01Icon className="h-4 w-4" />
@@ -647,6 +705,53 @@ export default function ReportsPage() {
             </div>
           </div>
         </div>
+
+        {/* PDF Preview Modal */}
+        {showPdfPreview && pdfPreviewData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white w-[90vw] h-[90vh] flex flex-col">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#4E61D3]">
+                <h2 className="text-xl font-bold text-white">Preview Laporan PDF</h2>
+                <div className="flex space-x-2">
+                  {PDFDownloadLink && (
+                    <PDFDownloadLink
+                      document={getPDFComponent(pdfPreviewData.reportId, pdfPreviewData.data)}
+                      fileName={`${pdfPreviewData.reportId}-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.pdf`}
+                      className="bg-white text-[#4E61D3] px-4 py-2 text-sm font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2"
+                    >
+                      {({ loading }) => (
+                        <>
+                          <File01Icon className="h-4 w-4" />
+                          <span>{loading ? 'Generating...' : 'Download PDF'}</span>
+                        </>
+                      )}
+                    </PDFDownloadLink>
+                  )}
+                  <button
+                    onClick={() => {
+                      setShowPdfPreview(false);
+                      setPdfPreviewData(null);
+                    }}
+                    className="bg-red-600 text-white px-4 py-2 text-sm font-medium hover:bg-red-700 transition-colors flex items-center space-x-2"
+                  >
+                    <Cancel01Icon className="h-4 w-4" />
+                    <span>Close</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* PDF Viewer */}
+              <div className="flex-1 overflow-hidden">
+                {PDFViewer && (
+                  <PDFViewer className="w-full h-full">
+                    {getPDFComponent(pdfPreviewData.reportId, pdfPreviewData.data)}
+                  </PDFViewer>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </OfficeLayout>
   );
