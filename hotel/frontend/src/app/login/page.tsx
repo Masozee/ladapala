@@ -190,7 +190,7 @@ const LoginPage = () => {
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-gray-900">Welcome back</h2>
               <p className="mt-2 text-gray-600">
-                {hotelInfo?.hotel_description || 'Sign in to your account to continue managing your hotel operations.'}
+                Sign in to your account to continue managing your hotel operations.
               </p>
             </div>
           </div>
@@ -309,14 +309,6 @@ const LoginPage = () => {
                     Contact your administrator
                   </Link>
                 </p>
-              </div>
-            </div>
-
-            {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</h4>
-              <div className="space-y-1 text-xs text-blue-800">
-                <div><strong>Admin:</strong> admin@gmail.com / 687654</div>
               </div>
             </div>
           </div>
