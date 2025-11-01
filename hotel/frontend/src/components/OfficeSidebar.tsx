@@ -76,12 +76,12 @@ const OfficeSidebar = () => {
     { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse', badge: lowStockCount > 0 ? lowStockCount.toString() : undefined },
     { name: 'Suppliers', icon: Archive03Icon, href: '/office/suppliers' },
     { name: 'Reports', icon: File01Icon, href: '/office/reports' },
-    { name: 'Administration', icon: Shield01Icon, href: '/office/admin' },
+    { name: 'Administration', icon: Shield01Icon, href: '/office/settings' },
   ];
 
   const bottomActions: MenuItem[] = [
     { name: 'Calendar', icon: Calendar01Icon, href: '/calendar' },
-    { name: 'Office Settings', icon: Settings02Icon, href: '/office/admin' },
+    { name: 'Office Settings', icon: Settings02Icon, href: '/office/settings' },
     { name: 'Profile', icon: UserIcon, href: '/profile' },
   ];
 
