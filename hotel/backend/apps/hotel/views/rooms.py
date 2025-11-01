@@ -163,8 +163,23 @@ class RoomViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Invalid status'},
                           status=status.HTTP_400_BAD_REQUEST)
 
-        # If changing to AVAILABLE, validate payment and checkout any checked-in guests
-        if new_status == 'AVAILABLE':
+        # Get current status before changing
+        old_status = room.status
+
+        # If changing to AVAILABLE from CLEANING or MAINTENANCE, restore to OCCUPIED if there are checked-in guests
+        if new_status == 'AVAILABLE' and old_status in ['CLEANING', 'MAINTENANCE']:
+            # Check if there are checked-in reservations
+            checked_in_reservations = Reservation.objects.filter(
+                room=room,
+                status='CHECKED_IN'
+            )
+
+            if checked_in_reservations.exists():
+                # Room should return to OCCUPIED, not AVAILABLE
+                new_status = 'OCCUPIED'
+
+        # If explicitly changing to AVAILABLE (checkout scenario), validate payment and checkout guests
+        if new_status == 'AVAILABLE' and old_status not in ['CLEANING', 'MAINTENANCE']:
             # Check if there are any unpaid checked-in reservations
             checked_in_reservations = Reservation.objects.filter(
                 room=room,

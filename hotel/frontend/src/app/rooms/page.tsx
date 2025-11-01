@@ -614,25 +614,9 @@ const RoomsPage = () => {
       });
 
       if (response.ok) {
-        // Refresh rooms list
-        const updatedRoomsResponse = await fetch(buildApiUrl('hotel/rooms/'), {
-          credentials: 'include',
-        });
-        if (updatedRoomsResponse.ok) {
-          const data = await updatedRoomsResponse.json();
-          const mappedRooms = (data.results || data).map((room: any) => ({
-            id: room.id,
-            number: room.number,
-            room_type_name: room.room_type_name,
-            status: room.status,
-            status_display: room.status_display || room.status,
-            floor: room.floor,
-            notes: room.notes,
-            last_checkout: room.last_checkout,
-            next_reservation: room.next_reservation,
-          }));
-          setRooms(mappedRooms);
-        }
+        // Refresh rooms list - fetch all rooms to preserve guest/staff data
+        const allRooms = await fetchRooms();
+        setRooms(allRooms);
         alert('Room status updated successfully!');
       } else {
         // Try to parse JSON error, fallback to text if not JSON

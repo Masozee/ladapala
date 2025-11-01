@@ -11,15 +11,9 @@ import {
   Wrench01Icon,
   CircleArrowReload01Icon,
   PackageIcon,
-  Mail01Icon,
-  UserCheckIcon,
-  AlertCircleIcon,
-  Clock01Icon,
   Settings02Icon,
   UserIcon,
-  ChevronLeftIcon,
   HeadphonesIcon,
-  Notification02Icon,
   File01Icon,
   Calendar01Icon
 } from '@/lib/icons';
@@ -109,8 +103,6 @@ const SupportSidebar = () => {
     { name: 'Maintenance', icon: Wrench01Icon, href: '/support/maintenance' },
     { name: 'Housekeeping', icon: CircleArrowReload01Icon, href: '/support/housekeeping', badge: housekeepingCount > 0 ? housekeepingCount : undefined },
     { name: 'Amenities Request', icon: PackageIcon, href: '/support/amenities', badge: amenitiesCount > 0 ? amenitiesCount : undefined },
-    { name: 'Work Orders', icon: UserCheckIcon, href: '/support/workorders' },
-    { name: 'Emergency', icon: AlertCircleIcon, href: '/support/emergency' },
     { name: 'Reports', icon: File01Icon, href: '/support/reports' },
   ];
 
