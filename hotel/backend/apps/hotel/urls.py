@@ -19,6 +19,7 @@ try:
     from .views.maintenance import MaintenanceRequestViewSet, MaintenanceTechnicianViewSet
     from .views.settings import HotelSettingsViewSet
     from .views.sidebar_counts import sidebar_counts
+    from .views.support_reports import support_analytics
     from .views.reports import (
         daily_reports, daily_reports_range, monthly_reports,
         report_summary, available_reports, occupancy_report,
@@ -76,6 +77,7 @@ if LEGACY_VIEWS:
     urlpatterns += [
         path('main/', hotel_dashboard, name='hotel-dashboard'),
         path('sidebar-counts/', sidebar_counts, name='sidebar-counts'),
+        path('support/analytics/', support_analytics, name='support-analytics'),
         path('reports/daily/', daily_reports, name='daily-reports'),
         path('reports/daily-range/', daily_reports_range, name='daily-reports-range'),
         path('reports/monthly/', monthly_reports, name='monthly-reports'),
