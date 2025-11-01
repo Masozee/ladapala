@@ -14,8 +14,8 @@ import {
   FilterIcon,
   Cancel01Icon,
   EyeIcon,
-  Add01Icon,
-  Search02Icon
+  Search02Icon,
+  Add01Icon
 } from '@/lib/icons';
 
 interface HousekeepingTask {
@@ -70,7 +70,15 @@ const HousekeepingPage = () => {
   const [selectedTask, setSelectedTask] = useState<HousekeepingTask | null>(null);
   const [filterStatus, setFilterStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAddTaskForm, setShowAddTaskForm] = useState(false);
+  const [showNewTaskDialog, setShowNewTaskDialog] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [newTask, setNewTask] = useState({
+    room: '',
+    task_type: 'CHECKOUT_CLEANING',
+    priority: 'MEDIUM',
+    notes: ''
+  });
 
   // Fetch tasks
   const fetchTasks = async () => {
@@ -111,9 +119,72 @@ const HousekeepingPage = () => {
     }
   };
 
+  // Fetch rooms
+  const fetchRooms = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/rooms/'), { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        setRooms(Array.isArray(data) ? data : (data.results || []));
+      }
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+    }
+  };
+
+  // Handle create task
+  const handleCreateTask = async () => {
+    if (!newTask.room) {
+      alert('Please select a room');
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      const csrfToken = getCsrfToken();
+
+      const response = await fetch(buildApiUrl('hotel/housekeeping-tasks/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          room: parseInt(newTask.room),
+          task_type: newTask.task_type,
+          priority: newTask.priority,
+          notes: newTask.notes || undefined
+        }),
+      });
+
+      if (response.ok) {
+        setShowNewTaskDialog(false);
+        setNewTask({
+          room: '',
+          task_type: 'CHECKOUT_CLEANING',
+          priority: 'MEDIUM',
+          notes: ''
+        });
+        fetchTasks();
+        fetchStatistics();
+        alert('Task created successfully!');
+      } else {
+        const error = await response.json();
+        alert(`Failed to create task: ${JSON.stringify(error)}`);
+      }
+    } catch (error) {
+      console.error('Error creating task:', error);
+      alert('An error occurred while creating the task');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
     fetchStatistics();
+    fetchRooms();
   }, [filterStatus]);
 
   const getStatusColor = (status: string) => {
@@ -324,11 +395,11 @@ const HousekeepingPage = () => {
               <p className="text-gray-600 mt-2">Manage room cleaning tasks and track staff performance</p>
             </div>
             <button
-              onClick={() => router.push('/support/housekeeping/new')}
+              onClick={() => setShowNewTaskDialog(true)}
               className="flex items-center space-x-2 bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium hover:bg-[#E66A0A] transition-colors"
             >
               <Add01Icon className="h-4 w-4" />
-              <span>Create Task</span>
+              <span>New Task</span>
             </button>
           </div>
 
@@ -701,6 +772,123 @@ const HousekeepingPage = () => {
                     className="px-6 py-3 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
                   >
                     Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* New Task Dialog */}
+          {showNewTaskDialog && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                {/* Dialog Header */}
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-gray-900">New Housekeeping Task</h3>
+                    <button
+                      onClick={() => {
+                        setShowNewTaskDialog(false);
+                        setNewTask({
+                          room: '',
+                          task_type: 'CHECKOUT_CLEANING',
+                          priority: 'MEDIUM',
+                          notes: ''
+                        });
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <Cancel01Icon className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Dialog Content */}
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Room <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={newTask.room}
+                      onChange={(e) => setNewTask({ ...newTask, room: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                    >
+                      <option value="">-- Select Room --</option>
+                      {rooms.map((room) => (
+                        <option key={room.id} value={room.id}>
+                          Room {room.number} - {room.room_type_name} (Floor {room.floor})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Task Type</label>
+                    <select
+                      value={newTask.task_type}
+                      onChange={(e) => setNewTask({ ...newTask, task_type: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                    >
+                      <option value="CHECKOUT_CLEANING">Checkout Cleaning</option>
+                      <option value="STAYOVER_CLEANING">Stayover Cleaning</option>
+                      <option value="DEEP_CLEANING">Deep Cleaning</option>
+                      <option value="TURNDOWN_SERVICE">Turndown Service</option>
+                      <option value="MAINTENANCE">Maintenance</option>
+                      <option value="COMPLAINT">Guest Complaint</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select
+                      value={newTask.priority}
+                      onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                    >
+                      <option value="LOW">Low</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HIGH">High</option>
+                      <option value="URGENT">Urgent</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Notes (Optional)
+                    </label>
+                    <textarea
+                      value={newTask.notes}
+                      onChange={(e) => setNewTask({ ...newTask, notes: e.target.value })}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
+                      placeholder="Any special instructions or notes..."
+                    />
+                  </div>
+                </div>
+
+                {/* Dialog Footer */}
+                <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowNewTaskDialog(false);
+                      setNewTask({
+                        room: '',
+                        task_type: 'CHECKOUT_CLEANING',
+                        priority: 'MEDIUM',
+                        notes: ''
+                      });
+                    }}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateTask}
+                    className="px-4 py-2 bg-[#F87B1B] text-white text-sm hover:bg-[#E06A0A] disabled:opacity-50"
+                    disabled={formLoading || !newTask.room}
+                  >
+                    {formLoading ? 'Creating...' : 'Create Task'}
                   </button>
                 </div>
               </div>

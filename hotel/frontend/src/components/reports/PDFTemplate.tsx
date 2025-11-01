@@ -83,14 +83,16 @@ export const pdfStyles = StyleSheet.create({
     alignItems: 'center',
   },
   tableHeader: {
-    backgroundColor: COLORS.primary,
-    color: COLORS.white,
+    backgroundColor: COLORS.lightGray,
+    color: COLORS.primary,
     fontWeight: 'bold',
-    fontSize: 10,
+    fontSize: 9,
+    borderBottom: `2 solid ${COLORS.primary}`,
   },
   tableCell: {
     padding: 6,
     fontSize: 9,
+    color: COLORS.gray,
   },
   footer: {
     position: 'absolute',

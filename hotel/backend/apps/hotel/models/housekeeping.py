@@ -7,6 +7,11 @@ from .complaints import Complaint
 import random
 
 
+def get_today():
+    """Return today's date for default value"""
+    return timezone.now().date()
+
+
 class HousekeepingTask(models.Model):
     STATUS_CHOICES = [
         ('DIRTY', 'Needs Cleaning'),
@@ -59,7 +64,7 @@ class HousekeepingTask(models.Model):
     )
 
     # Timeline
-    scheduled_date = models.DateField(default=timezone.now)
+    scheduled_date = models.DateField(default=get_today)
     estimated_duration_minutes = models.PositiveIntegerField(default=60)
     actual_start_time = models.DateTimeField(null=True, blank=True)
     completion_time = models.DateTimeField(null=True, blank=True)

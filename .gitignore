@@ -67,3 +67,29 @@ backup_*
 !README.md
 *.sh
 *.bat
+
+# Temporary files and backups
+*.backup
+*.bak
+*.tmp
+*.swp
+*~
+
+# Tokens and sensitive data
+*token*.txt
+*token*.json
+access_token*
+refresh_token*
+*.key
+*.pem
+
+# JSON exports and reports
+*-thisMonth-*.json
+*-thisYear-*.json
+tax-*.json
+report-*.json
+
+# Temporary directories
+hotelpro/
+temp/
+tmp/

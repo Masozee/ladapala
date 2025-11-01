@@ -75,7 +75,10 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def complete_task(self, request, pk=None):
-        """Mark a task as completed and ready for inspection"""
+        """Mark a task as completed and ready for inspection with amenity usage recording"""
+        from apps.hotel.models import AmenityUsage, InventoryItem
+        from django.db import transaction
+
         task = self.get_object()
 
         if task.status != 'CLEANING':
@@ -84,7 +87,58 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        task.complete_task()
+        # Get amenity items from request (required)
+        amenity_items = request.data.get('amenity_items', [])
+
+        if not amenity_items:
+            return Response(
+                {'error': 'Please record items used before completing the task'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate amenity items format
+        for item in amenity_items:
+            if 'inventory_item' not in item or 'quantity_used' not in item:
+                return Response(
+                    {'error': 'Each item must have inventory_item and quantity_used'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if item['quantity_used'] <= 0:
+                return Response(
+                    {'error': 'Quantity must be greater than 0'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Use transaction to ensure atomicity
+        with transaction.atomic():
+            # Complete the task
+            task.complete_task()
+
+            # Create amenity usage records
+            for item in amenity_items:
+                try:
+                    inventory_item = InventoryItem.objects.get(id=item['inventory_item'])
+
+                    # Check stock availability
+                    if inventory_item.current_stock < item['quantity_used']:
+                        return Response(
+                            {'error': f'Insufficient stock for {inventory_item.name}. Available: {inventory_item.current_stock}'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    AmenityUsage.objects.create(
+                        housekeeping_task=task,
+                        inventory_item=inventory_item,
+                        quantity_used=item['quantity_used'],
+                        notes=item.get('notes', ''),
+                        recorded_by=request.user
+                    )
+                except InventoryItem.DoesNotExist:
+                    return Response(
+                        {'error': f'Inventory item {item["inventory_item"]} not found'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
         serializer = self.get_serializer(task)
         return Response(serializer.data)
 
@@ -131,6 +185,116 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
         task.fail_inspection(inspector=request.user, notes=notes)
         serializer = self.get_serializer(task)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def suggested_items(self, request, pk=None):
+        """
+        Get suggested amenity items based on task type and previous usage.
+        For stayover: uses previous usage for this room
+        For checkout: uses base template
+        """
+        from apps.hotel.models import AmenityUsage, InventoryItem, Reservation
+        from django.db.models import Sum, Avg
+        from collections import defaultdict
+
+        task = self.get_object()
+        suggestions = []
+
+        # Base templates for different task types (standard room = 2 guests)
+        BASE_TEMPLATES = {
+            'CHECKOUT_CLEANING': [
+                {'name': 'Bed Sheet', 'quantity': 2, 'category': 'Toiletries & Bath'},
+                {'name': 'Bath Towel', 'quantity': 2, 'category': 'Toiletries & Bath'},
+                {'name': 'Hand Towel', 'quantity': 2, 'category': 'Toiletries & Bath'},
+                {'name': 'Shampoo', 'quantity': 2, 'category': 'Toiletries & Bath'},
+                {'name': 'Soap', 'quantity': 4, 'category': 'Toiletries & Bath'},
+                {'name': 'Toothbrush', 'quantity': 2, 'category': 'Toiletries & Bath'},
+                {'name': 'Tissue', 'quantity': 2, 'category': 'Toiletries & Bath'},
+            ],
+            'STAYOVER_CLEANING': [],  # Will be based on previous usage
+            'DEEP_CLEANING': [
+                {'name': 'Bed Sheet', 'quantity': 2, 'category': 'Toiletries & Bath'},
+                {'name': 'Bath Towel', 'quantity': 2, 'category': 'Toiletries & Bath'},
+                {'name': 'Hand Towel', 'quantity': 2, 'category': 'Toiletries & Bath'},
+                {'name': 'Detergent', 'quantity': 1, 'category': 'Laundry & Cleaning'},
+            ],
+        }
+
+        # Get guest count from current reservation
+        guest_count = 2  # Default
+        current_reservation = Reservation.objects.filter(
+            room=task.room,
+            status__in=['CONFIRMED', 'CHECKED_IN']
+        ).first()
+
+        if current_reservation:
+            guest_count = current_reservation.number_of_guests or current_reservation.room.room_type.max_occupancy
+
+        # For STAYOVER: Get previous usage from this room's recent tasks
+        if task.task_type == 'STAYOVER_CLEANING':
+            # Get last 3 completed tasks for this room
+            previous_tasks = HousekeepingTask.objects.filter(
+                room=task.room,
+                status='CLEAN',
+                task_type__in=['CHECKOUT_CLEANING', 'STAYOVER_CLEANING']
+            ).exclude(id=task.id).order_by('-completion_time')[:3]
+
+            if previous_tasks.exists():
+                # Aggregate usage from previous tasks
+                usage_aggregate = AmenityUsage.objects.filter(
+                    housekeeping_task__in=previous_tasks
+                ).values('inventory_item', 'inventory_item__name', 'inventory_item__id')\
+                 .annotate(avg_quantity=Avg('quantity_used'))\
+                 .order_by('-avg_quantity')
+
+                for usage in usage_aggregate:
+                    try:
+                        inventory_item = InventoryItem.objects.get(id=usage['inventory_item__id'])
+                        suggestions.append({
+                            'inventory_item': inventory_item.id,
+                            'name': inventory_item.name,
+                            'category': inventory_item.category.name,
+                            'suggested_quantity': round(usage['avg_quantity']),
+                            'current_stock': inventory_item.current_stock,
+                            'unit': inventory_item.unit_of_measurement,
+                            'reason': 'Based on previous usage for this room'
+                        })
+                    except InventoryItem.DoesNotExist:
+                        continue
+
+        # Use base template if no previous usage or for other task types
+        if not suggestions and task.task_type in BASE_TEMPLATES:
+            template = BASE_TEMPLATES[task.task_type]
+
+            for item_template in template:
+                # Try to find matching item (fuzzy match on name)
+                inventory_items = InventoryItem.objects.filter(
+                    name__icontains=item_template['name'].split()[0],  # Match first word
+                    category__name__icontains=item_template['category'].split()[0],
+                    is_active=True
+                ).order_by('current_stock')  # Prefer items with stock
+
+                if inventory_items.exists():
+                    inventory_item = inventory_items.first()
+
+                    suggestions.append({
+                        'inventory_item': inventory_item.id,
+                        'name': inventory_item.name,
+                        'category': inventory_item.category.name,
+                        'suggested_quantity': item_template['quantity'],
+                        'current_stock': inventory_item.current_stock,
+                        'unit': inventory_item.unit_of_measurement,
+                        'reason': f'Standard template for {task.get_task_type_display()}'
+                    })
+
+        return Response({
+            'task_id': task.id,
+            'task_type': task.task_type,
+            'task_type_display': task.get_task_type_display(),
+            'room': task.room.number,
+            'guest_count': guest_count,
+            'suggestions': suggestions
+        })
 
     @action(detail=True, methods=['post'])
     def add_amenities(self, request, pk=None):
