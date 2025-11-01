@@ -48,6 +48,7 @@ export default function ReportsPage() {
   const [availableReports, setAvailableReports] = useState<AvailableReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [generatingReports, setGeneratingReports] = useState<Set<string>>(new Set());
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_HOTEL_API_URL || 'http://localhost:8000/api/hotel';
 
@@ -176,6 +177,172 @@ export default function ReportsPage() {
     if (selectedReportType === 'all') return true;
     return report.category === selectedReportType;
   });
+
+  // Handle report generation
+  const handleGenerateReport = async (reportId: string) => {
+    setGeneratingReports(prev => new Set(prev).add(reportId));
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}`,
+        {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Gagal generate laporan ${reportId}`);
+      }
+
+      const data = await response.json();
+
+      // Create and download JSON file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportId}-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      // Update report status
+      setAvailableReports(prev =>
+        prev.map(report =>
+          report.id === reportId
+            ? { ...report, lastGenerated: new Date().toISOString().split('T')[0], status: 'ready' }
+            : report
+        )
+      );
+    } catch (err) {
+      console.error('Error generating report:', err);
+      alert(err instanceof Error ? err.message : 'Terjadi kesalahan saat generate laporan');
+    } finally {
+      setGeneratingReports(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(reportId);
+        return newSet;
+      });
+    }
+  };
+
+  // Handle report download (for already generated reports)
+  const handleDownloadReport = async (reportId: string) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}`,
+        {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Gagal download laporan ${reportId}`);
+      }
+
+      const data = await response.json();
+
+      // Create and download JSON file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportId}-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Error downloading report:', err);
+      alert(err instanceof Error ? err.message : 'Terjadi kesalahan saat download laporan');
+    }
+  };
+
+  // Quick action: Generate daily report
+  const handleDailyReport = async () => {
+    setGeneratingReports(prev => new Set(prev).add('daily'));
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/reports/daily/`,
+        {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error('Gagal generate laporan harian');
+
+      const data = await response.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `daily-report-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Error:', err);
+      alert(err instanceof Error ? err.message : 'Terjadi kesalahan');
+    } finally {
+      setGeneratingReports(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('daily');
+        return newSet;
+      });
+    }
+  };
+
+  // Quick action: Generate executive dashboard (comprehensive summary)
+  const handleExecutiveDashboard = async () => {
+    setGeneratingReports(prev => new Set(prev).add('executive'));
+    try {
+      // Fetch multiple reports in parallel
+      const [occupancy, revenue, guestAnalytics, satisfaction] = await Promise.all([
+        fetch(`${API_BASE_URL}/reports/occupancy/?period=${selectedPeriod}`, { credentials: 'include' }),
+        fetch(`${API_BASE_URL}/reports/revenue/?period=${selectedPeriod}`, { credentials: 'include' }),
+        fetch(`${API_BASE_URL}/reports/guest-analytics/?period=${selectedPeriod}`, { credentials: 'include' }),
+        fetch(`${API_BASE_URL}/reports/satisfaction/?period=${selectedPeriod}`, { credentials: 'include' })
+      ]);
+
+      const executiveData = {
+        occupancy: await occupancy.json(),
+        revenue: await revenue.json(),
+        guestAnalytics: await guestAnalytics.json(),
+        satisfaction: await satisfaction.json(),
+        generatedAt: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(executiveData, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `executive-dashboard-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Error:', err);
+      alert(err instanceof Error ? err.message : 'Terjadi kesalahan');
+    } finally {
+      setGeneratingReports(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('executive');
+        return newSet;
+      });
+    }
+  };
 
   // Loading state
   if (loading) {
@@ -406,14 +573,17 @@ export default function ReportsPage() {
 
                         <div className="mt-4 flex space-x-2">
                           <button
-                            className="flex-1 bg-[#4E61D3] text-white px-3 py-2 text-sm font-medium hover:bg-[#3D4EA8] transition-colors disabled:opacity-50"
-                            disabled={report.status === 'generating'}
+                            className="flex-1 bg-[#4E61D3] text-white px-3 py-2 text-sm font-medium hover:bg-[#3D4EA8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={generatingReports.has(report.id)}
+                            onClick={() => handleGenerateReport(report.id)}
                           >
-                            Generate
+                            {generatingReports.has(report.id) ? 'Generating...' : 'Generate'}
                           </button>
                           <button
-                            className="px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            className="px-3 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={report.status !== 'ready'}
+                            onClick={() => handleDownloadReport(report.id)}
+                            title="Download Report"
                           >
                             <ChevronDownIcon className="h-4 w-4" />
                           </button>
@@ -447,25 +617,37 @@ export default function ReportsPage() {
           
           <div className="p-4 bg-gray-50">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button className="p-4 bg-white hover:bg-gray-50 transition-colors text-left">
+              <button
+                onClick={handleDailyReport}
+                disabled={generatingReports.has('daily')}
+                className="p-4 bg-white hover:bg-gray-50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-blue-100 flex items-center justify-center">
                     <Calendar01Icon className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">Laporan Harian</h3>
+                    <h3 className="font-medium text-gray-900">
+                      {generatingReports.has('daily') ? 'Generating...' : 'Laporan Harian'}
+                    </h3>
                     <p className="text-sm text-gray-600">Generate laporan operasional hari ini</p>
                   </div>
                 </div>
               </button>
 
-              <button className="p-4 bg-white hover:bg-gray-50 transition-colors text-left">
+              <button
+                onClick={handleExecutiveDashboard}
+                disabled={generatingReports.has('executive')}
+                className="p-4 bg-white hover:bg-gray-50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-green-100 flex items-center justify-center">
                     <PieChartIcon className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">Dashboard Executive</h3>
+                    <h3 className="font-medium text-gray-900">
+                      {generatingReports.has('executive') ? 'Generating...' : 'Dashboard Executive'}
+                    </h3>
                     <p className="text-sm text-gray-600">Ringkasan untuk manajemen</p>
                   </div>
                 </div>
