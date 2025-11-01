@@ -143,8 +143,8 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left Side - Login Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
-        <div className="mx-auto w-full max-w-sm lg:w-96">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24 bg-white">
+        <div className="mx-auto w-full max-w-md">
           <div>
             <div className="flex items-center space-x-3 mb-8">
               <div className="w-12 h-12 bg-gray-50 flex items-center justify-center p-1">
@@ -296,56 +296,12 @@ const LoginPage = () => {
                 <div><strong>Admin:</strong> admin@gmail.com / 687654</div>
               </div>
             </div>
-
-            {/* Hotel Contact Information */}
-            {hotelInfo && (hotelInfo.phone || hotelInfo.email || hotelInfo.address) && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Need Help?</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                  {hotelInfo.phone && (
-                    <div className="flex items-center space-x-2">
-                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      <span>{hotelInfo.phone}</span>
-                    </div>
-                  )}
-                  {hotelInfo.email && (
-                    <div className="flex items-center space-x-2">
-                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      <span>{hotelInfo.email}</span>
-                    </div>
-                  )}
-                  {hotelInfo.address && (
-                    <div className="flex items-start space-x-2">
-                      <svg className="h-4 w-4 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="flex-1">{hotelInfo.address}</span>
-                    </div>
-                  )}
-                  {hotelInfo.website && (
-                    <div className="flex items-center space-x-2">
-                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                      </svg>
-                      <a href={hotelInfo.website} target="_blank" rel="noopener noreferrer" className="text-[#005357] hover:text-[#004147]">
-                        {hotelInfo.website.replace(/^https?:\/\//, '')}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Right Side - Image and Features */}
-      <div className="hidden lg:block relative w-0 flex-1">
+      {/* Right Side - Hotel Information */}
+      <div className="hidden lg:flex lg:w-1/2 relative">
         <div
           className="absolute inset-0 bg-gradient-to-br from-[#005357] to-[#2baf6a]"
           style={{
@@ -364,46 +320,98 @@ const LoginPage = () => {
 
           {/* Content */}
           <div className="relative h-full flex flex-col justify-center p-12 text-white">
-            <div className="max-w-lg">
-              <h2 className="text-4xl font-bold mb-6">
-                {hotelInfo?.hotel_name || 'Streamline Your Hotel Operations'}
-              </h2>
-              <p className="text-xl text-gray-100 mb-12">
-                {hotelInfo?.hotel_description || 'Experience the power of modern hotel management - where efficiency meets excellence in hospitality.'}
-              </p>
-
-              {/* Features List */}
-              <div className="space-y-6">
-                {features.map((feature, index) => (
-                  <div key={index} className="flex items-start space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-white/20 flex items-center justify-center">
-                        <feature.icon className="h-6 w-6 text-white" />
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold mb-1">{feature.title}</h3>
-                      <p className="text-gray-100 text-sm">{feature.description}</p>
-                    </div>
-                  </div>
-                ))}
+            <div className="max-w-lg mx-auto w-full">
+              {/* Hotel Logo */}
+              <div className="mb-8 flex justify-center">
+                <div className="w-24 h-24 bg-white/20 backdrop-blur-sm flex items-center justify-center p-4">
+                  <Image
+                    src={hotelInfo?.logo_url || '/logo.png'}
+                    alt={`${hotelInfo?.hotel_name || 'Hotel'} Logo`}
+                    width={80}
+                    height={80}
+                    className="object-contain"
+                  />
+                </div>
               </div>
 
-              {/* Stats */}
-              <div className="mt-12 pt-8 border-t border-white/20">
-                <div className="grid grid-cols-3 gap-8 text-center">
-                  <div>
-                    <div className="text-3xl font-bold">500+</div>
-                    <div className="text-sm text-gray-100">Hotels</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold">99.9%</div>
-                    <div className="text-sm text-gray-100">Uptime</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold">24/7</div>
-                    <div className="text-sm text-gray-100">Support</div>
-                  </div>
+              {/* Hotel Name and Description */}
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold mb-4">
+                  {hotelInfo?.hotel_name || 'Kapulaga Hotel'}
+                </h2>
+                <p className="text-xl text-gray-100">
+                  {hotelInfo?.hotel_description || 'Premium hospitality experience in the heart of the city'}
+                </p>
+              </div>
+
+              {/* Hotel Contact Information */}
+              <div className="bg-white/10 backdrop-blur-sm p-8 space-y-6">
+                <h3 className="text-2xl font-semibold mb-6 text-center">Need Help?</h3>
+
+                <div className="space-y-4">
+                  {(hotelInfo?.phone || '+62-21-5555-0123') && (
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0 w-10 h-10 bg-white/20 flex items-center justify-center">
+                        <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-200">Phone</div>
+                        <div className="text-base font-medium">{hotelInfo?.phone || '+62-21-5555-0123'}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(hotelInfo?.email || 'admin@gmail.com') && (
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0 w-10 h-10 bg-white/20 flex items-center justify-center">
+                        <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-200">Email</div>
+                        <div className="text-base font-medium">{hotelInfo?.email || 'admin@gmail.com'}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(hotelInfo?.address || 'Jl. Sudirman No. 123, Jakarta 10220') && (
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0 w-10 h-10 bg-white/20 flex items-center justify-center">
+                        <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-200">Address</div>
+                        <div className="text-base font-medium">{hotelInfo?.address || 'Jl. Sudirman No. 123, Jakarta 10220'}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(hotelInfo?.website || 'kapulaga.com') && (
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0 w-10 h-10 bg-white/20 flex items-center justify-center">
+                        <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-200">Website</div>
+                        <a
+                          href={hotelInfo?.website?.startsWith('http') ? hotelInfo.website : `https://${hotelInfo?.website || 'kapulaga.com'}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-base font-medium hover:underline"
+                        >
+                          {hotelInfo?.website?.replace(/^https?:\/\//, '') || 'kapulaga.com'}
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
