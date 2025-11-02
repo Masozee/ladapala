@@ -632,9 +632,9 @@ const ProfilePage = () => {
           <div className="bg-white border border-gray-200">
             <div className="p-6 bg-[#005357] text-white">
               <div className="flex items-center space-x-4">
-                {user.avatar_url ? (
+                {user.profile.avatar_url ? (
                   <img
-                    src={user.avatar_url}
+                    src={user.profile.avatar_url}
                     alt={user.full_name}
                     className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
                   />
@@ -645,7 +645,7 @@ const ProfilePage = () => {
                 )}
                 <div>
                   <h2 className="text-2xl font-bold text-white">{user.full_name}</h2>
-                  <p className="text-gray-100">{employee?.position || user.role_display || 'Staff'}</p>
+                  <p className="text-gray-100">{employee?.position || user.profile.role || 'Staff'}</p>
                   <div className="flex items-center space-x-4 mt-2 text-sm text-gray-200">
                     {employee?.department && (
                       <>

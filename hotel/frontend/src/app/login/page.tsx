@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -14,7 +14,7 @@ import {
 } from '@/lib/icons';
 import { buildApiUrl } from '@/lib/config';
 
-const LoginPage = () => {
+const LoginPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
@@ -372,6 +372,14 @@ const LoginPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const LoginPage = () => {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 };
 

@@ -84,6 +84,7 @@ export default function WarehousePage() {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
+    current_stock: '0',
     minimum_stock: '10',
     maximum_stock: '',
     unit_of_measurement: '',
@@ -250,7 +251,8 @@ export default function WarehousePage() {
         setShowAddModal(false);
         setFormData({
           name: '',
-          category: 'AMENITIES',
+          category: '',
+          current_stock: '0',
           minimum_stock: '10',
           maximum_stock: '',
           unit_of_measurement: '',
@@ -312,6 +314,7 @@ export default function WarehousePage() {
     setFormData({
       name: item.name,
       category: item.category.toString(),
+      current_stock: item.current_stock.toString(),
       minimum_stock: item.minimum_stock.toString(),
       maximum_stock: item.maximum_stock?.toString() || '',
       unit_of_measurement: item.unit_of_measurement,

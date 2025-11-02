@@ -48,6 +48,7 @@ interface Employee {
   role: string;
   role_display: string;
   is_active: boolean;
+  attendanceRate?: number;
 }
 
 export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) {

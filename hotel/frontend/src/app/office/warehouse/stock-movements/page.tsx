@@ -28,11 +28,11 @@ interface StockMovement {
   created_by_name: string | null
 }
 
-interface PaginatedResponse {
+interface PaginatedResponse<T = any> {
   count: number
   next: string | null
   previous: string | null
-  results: StockMovement[]
+  results: T[]
 }
 
 export default function StockMovementsPage() {
@@ -73,8 +73,8 @@ export default function StockMovementsPage() {
       ])
 
       if (movementsRes.ok && itemsRes.ok) {
-        const movementsData: PaginatedResponse = await movementsRes.json()
-        const itemsData: PaginatedResponse = await itemsRes.json()
+        const movementsData: PaginatedResponse<StockMovement> = await movementsRes.json()
+        const itemsData: PaginatedResponse<InventoryItem> = await itemsRes.json()
         setMovements(movementsData.results || [])
         setInventoryItems(itemsData.results || [])
         setTotalCount(movementsData.count || 0)

@@ -2,8 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import OfficeLayout from '@/components/OfficeLayout';
 import { buildApiUrl, getCsrfToken } from '@/lib/config';
+
+// Dynamically import PDF button (client-side only)
+const InvoiceDownloadButton = dynamic(() => import('@/components/InvoiceDownloadButton'), {
+  ssr: false,
+  loading: () => (
+    <button className="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded space-x-2">
+      <span>Memuat...</span>
+    </button>
+  )
+});
 import {
   ChevronLeftIcon,
   Calendar01Icon,
@@ -320,10 +331,7 @@ export default function EventBookingDetailPage() {
               </button>
             )}
 
-            <button className="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded hover:bg-gray-50 transition space-x-2">
-              <PrinterIcon className="h-5 w-5" />
-              <span>Cetak Invoice</span>
-            </button>
+            {booking && <InvoiceDownloadButton booking={booking} />}
           </div>
         </div>
 

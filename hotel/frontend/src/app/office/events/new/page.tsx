@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   ChevronLeftIcon,
   Calendar01Icon,
@@ -26,11 +26,12 @@ interface Guest {
 interface Room {
   id: number;
   room_number: string;
-  room_type: {
+  room_type?: {
     id: number;
     name: string;
     room_category: string;
   };
+  room_type_name?: string;
 }
 
 interface EventPackage {
@@ -98,6 +99,16 @@ export default function NewEventBookingPage() {
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showNewGuestModal, setShowNewGuestModal] = useState(false);
+  const [guestSearch, setGuestSearch] = useState('');
+  const [newGuestData, setNewGuestData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    nationality: 'Indonesia',
+    gender: 'MALE'
+  });
 
   useEffect(() => {
     fetchData();
@@ -107,25 +118,82 @@ export default function NewEventBookingPage() {
     calculatePrices();
   }, [formData, selectedVenuePackage, selectedFoodPackage]);
 
+  // Debounce guest search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (guestSearch.trim().length >= 2) {
+        searchGuests(guestSearch);
+      } else if (guestSearch.trim().length === 0) {
+        // Reset to initial guests when search is cleared
+        fetchInitialGuests();
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [guestSearch]);
+
+  const fetchInitialGuests = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/guests/?page_size=1000'), { credentials: 'include' });
+      const data = await response.json();
+      setGuests(data.results || data);
+    } catch (error) {
+      console.error('Error fetching initial guests:', error);
+    }
+  };
+
+  const searchGuests = async (query: string) => {
+    try {
+      // Use Django REST framework search parameter - searches ALL guests in database
+      const response = await fetch(
+        buildApiUrl(`hotel/guests/?search=${encodeURIComponent(query)}&page_size=1000`),
+        { credentials: 'include' }
+      );
+      const data = await response.json();
+      setGuests(data.results || data);
+    } catch (error) {
+      console.error('Error searching guests:', error);
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [guestsRes, venuesRes, packagesRes, foodRes] = await Promise.all([
-        fetch(buildApiUrl('hotel/guests/'), { credentials: 'include' }),
-        fetch(buildApiUrl('hotel/rooms/?room_type__room_category=MEETING_ROOM'), { credentials: 'include' }),
+      const [venuesRes, packagesRes, foodRes] = await Promise.all([
+        fetch(buildApiUrl('hotel/rooms/?page_size=100'), { credentials: 'include' }),
         fetch(buildApiUrl('hotel/event-packages/?is_active=true'), { credentials: 'include' }),
         fetch(buildApiUrl('hotel/food-packages/?is_active=true'), { credentials: 'include' }),
       ]);
 
-      const [guestsData, venuesData, packagesData, foodData] = await Promise.all([
-        guestsRes.json(),
+      const [venuesData, packagesData, foodData] = await Promise.all([
         venuesRes.json(),
         packagesRes.json(),
         foodRes.json(),
       ]);
 
-      setGuests(guestsData.results || guestsData);
-      setVenues(venuesData.results || venuesData);
+      // Fetch initial guests separately
+      await fetchInitialGuests();
+
+      // Filter rooms with 'ballroom' or 'meeting' in room type name (case insensitive)
+      const allRooms = venuesData.results || venuesData;
+
+      // Debug: Log all rooms to see what we have
+      console.log('All rooms:', allRooms);
+      console.log('Room types:', allRooms.map((r: any) => ({
+        room_number: r.room_number,
+        type_name: r.room_type?.name || r.room_type_name,
+        category: r.room_type?.room_category
+      })));
+
+      const ballroomRooms = allRooms.filter((room: any) => {
+        const roomTypeName = room.room_type?.name || room.room_type_name || '';
+        const lowerName = roomTypeName.toLowerCase();
+        return lowerName.includes('ballroom') ||
+               lowerName.includes('meeting');
+      });
+
+      console.log('Filtered ballroom/meeting rooms:', ballroomRooms);
+      setVenues(ballroomRooms);
       setEventPackages(packagesData.results || packagesData);
       setFoodPackages(foodData.results || foodData);
     } catch (error) {
@@ -184,6 +252,48 @@ export default function NewEventBookingPage() {
     }
   };
 
+  const handleCreateGuest = async () => {
+    if (!newGuestData.first_name || !newGuestData.last_name || !newGuestData.email || !newGuestData.phone) {
+      alert('Mohon isi semua field yang wajib');
+      return;
+    }
+
+    try {
+      const csrfToken = getCsrfToken();
+      const response = await fetch(buildApiUrl('hotel/guests/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify(newGuestData),
+      });
+
+      if (response.ok) {
+        const newGuest = await response.json();
+        setGuests([...guests, newGuest]);
+        setFormData({ ...formData, guest: newGuest.id.toString() });
+        setShowNewGuestModal(false);
+        setNewGuestData({
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone: '',
+          nationality: 'Indonesia',
+          gender: 'MALE'
+        });
+        alert('Tamu baru berhasil ditambahkan!');
+      } else {
+        const error = await response.json();
+        alert('Gagal menambahkan tamu: ' + JSON.stringify(error));
+      }
+    } catch (error) {
+      console.error('Error creating guest:', error);
+      alert('Terjadi kesalahan saat menambahkan tamu');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -197,8 +307,8 @@ export default function NewEventBookingPage() {
         event_type: formData.event_type,
         event_name: formData.event_name,
         event_date: formData.event_date,
-        event_start_time: formData.event_start_time,
-        event_end_time: formData.event_end_time,
+        start_time: formData.event_start_time,
+        end_time: formData.event_end_time,
         expected_pax: parseInt(formData.expected_pax),
         confirmed_pax: 0,
         venue_price: venuePrice,
@@ -212,17 +322,17 @@ export default function NewEventBookingPage() {
         remaining_amount: remaining,
         down_payment_paid: false,
         full_payment_paid: false,
-        booking_status: 'PENDING',
-        payment_status: 'UNPAID',
+        status: 'PENDING',
         setup_notes: formData.setup_notes,
         special_requests: formData.special_requests,
       };
 
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl('hotel/event-bookings/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': getCsrfToken(),
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
         },
         credentials: 'include',
         body: JSON.stringify(payload),
@@ -286,21 +396,39 @@ export default function NewEventBookingPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Guest Information */}
           <div className="bg-white border border-gray-200 rounded p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-              <UserIcon className="h-5 w-5" />
-              <span>Informasi Tamu</span>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <UserIcon className="h-5 w-5" />
+                <span>Informasi Tamu</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowNewGuestModal(true)}
+                className="inline-flex items-center px-3 py-1.5 text-sm bg-[#4E61D3] text-white rounded hover:bg-[#3D4EA8] transition space-x-1"
+              >
+                <Add01Icon className="h-4 w-4" />
+                <span>Tamu Baru</span>
+              </button>
             </h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tamu <span className="text-red-500">*</span>
+                  Cari & Pilih Tamu <span className="text-red-500">*</span>
                 </label>
+                <input
+                  type="text"
+                  placeholder="Cari nama atau telepon tamu..."
+                  value={guestSearch}
+                  onChange={(e) => setGuestSearch(e.target.value)}
+                  className="w-full px-3 py-2 mb-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+                />
                 <select
                   name="guest"
                   value={formData.guest}
                   onChange={handleInputChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+                  size={5}
                 >
                   <option value="">Pilih Tamu</option>
                   {guests.map((guest) => (
@@ -309,6 +437,11 @@ export default function NewEventBookingPage() {
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {guestSearch.trim().length >= 2
+                    ? `Hasil pencarian: ${guests.length} tamu ditemukan`
+                    : 'Ketik minimal 2 karakter untuk mencari, atau klik "Tamu Baru" untuk menambah'}
+                </p>
               </div>
             </div>
           </div>
@@ -441,7 +574,7 @@ export default function NewEventBookingPage() {
                   <option value="">Pilih Venue</option>
                   {venues.map((venue) => (
                     <option key={venue.id} value={venue.id}>
-                      {venue.room_number} - {venue.room_type.name}
+                      {venue.room_number} - {venue.room_type?.name || venue.room_type_name || 'N/A'}
                     </option>
                   ))}
                 </select>
@@ -628,6 +761,107 @@ export default function NewEventBookingPage() {
         </div>
       </form>
       </div>
+
+      {/* New Guest Modal */}
+      {showNewGuestModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Tambah Tamu Baru</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama Depan <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newGuestData.first_name}
+                  onChange={(e) => setNewGuestData({ ...newGuestData, first_name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama Belakang <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newGuestData.last_name}
+                  onChange={(e) => setNewGuestData({ ...newGuestData, last_name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={newGuestData.email}
+                  onChange={(e) => setNewGuestData({ ...newGuestData, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Telepon <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  value={newGuestData.phone}
+                  onChange={(e) => setNewGuestData({ ...newGuestData, phone: e.target.value })}
+                  placeholder="+62..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Jenis Kelamin
+                </label>
+                <select
+                  value={newGuestData.gender}
+                  onChange={(e) => setNewGuestData({ ...newGuestData, gender: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+                >
+                  <option value="MALE">Laki-laki</option>
+                  <option value="FEMALE">Perempuan</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Kewarganegaraan
+                </label>
+                <input
+                  type="text"
+                  value={newGuestData.nationality}
+                  onChange={(e) => setNewGuestData({ ...newGuestData, nationality: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={handleCreateGuest}
+                className="flex-1 px-4 py-2 bg-[#4E61D3] text-white rounded hover:bg-[#3D4EA8] transition font-medium"
+              >
+                Simpan
+              </button>
+              <button
+                onClick={() => setShowNewGuestModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition font-medium"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </OfficeLayout>
   );
 }

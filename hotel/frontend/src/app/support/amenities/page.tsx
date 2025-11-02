@@ -513,7 +513,7 @@ export default function AmenitiesPage() {
             >
               <option value="all">Semua Kategori</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.display_name}</option>
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
           </div>

@@ -142,6 +142,7 @@ interface Complaint {
   follow_up_required: boolean;
   is_overdue: boolean;
   response_time?: number;
+  resolution?: string;
   image_count: number;
   response_count: number;
   responses: ComplaintResponse[];

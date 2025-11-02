@@ -63,6 +63,39 @@ class Command(BaseCommand):
                 'size_sqm': 75.0,
                 'amenities': 'AC Central, 3 Smart TV, WiFi Ultra, Jacuzzi, Bathtub Terpisah, Minibar Premium, Ruang Tamu Luas, Ruang Makan, Sajadah Premium, Mushaf Al-Quran, Kitchen',
             },
+            # Event & Meeting Rooms
+            {
+                'name': 'Ballroom Utama',
+                'description': 'Ballroom besar untuk acara pernikahan dan konferensi',
+                'base_price': Decimal('15000000.00'),
+                'max_occupancy': 500,
+                'size_sqm': 400.0,
+                'amenities': 'AC Central, Sound System Premium, Proyektor, Panggung, Lighting System, WiFi Ultra, Area VIP, Backstage',
+            },
+            {
+                'name': 'Ballroom Kecil',
+                'description': 'Ballroom untuk acara menengah',
+                'base_price': Decimal('8000000.00'),
+                'max_occupancy': 200,
+                'size_sqm': 200.0,
+                'amenities': 'AC Central, Sound System, Proyektor, Lighting, WiFi Premium',
+            },
+            {
+                'name': 'Ruang Meeting A',
+                'description': 'Ruang meeting untuk rapat dan seminar',
+                'base_price': Decimal('3000000.00'),
+                'max_occupancy': 50,
+                'size_sqm': 80.0,
+                'amenities': 'AC, Proyektor, Whiteboard, WiFi, Sound System, Meja Konferensi',
+            },
+            {
+                'name': 'Ruang Meeting B',
+                'description': 'Ruang meeting untuk diskusi kelompok',
+                'base_price': Decimal('2000000.00'),
+                'max_occupancy': 30,
+                'size_sqm': 50.0,
+                'amenities': 'AC, TV, Whiteboard, WiFi, Meja Meeting',
+            },
         ]
 
         room_types = {}
@@ -112,6 +145,12 @@ class Command(BaseCommand):
             # Suite Executive (Lantai 5)
             {'number': '501', 'type': 'Suite Executive', 'floor': 5, 'status': 'AVAILABLE'},
             {'number': '502', 'type': 'Suite Executive', 'floor': 5, 'status': 'AVAILABLE'},
+
+            # Ballrooms & Meeting Rooms (Ground Floor / Basement)
+            {'number': 'BALLROOM-1', 'type': 'Ballroom Utama', 'floor': 0, 'status': 'AVAILABLE'},
+            {'number': 'BALLROOM-2', 'type': 'Ballroom Kecil', 'floor': 0, 'status': 'AVAILABLE'},
+            {'number': 'MEETING-A', 'type': 'Ruang Meeting A', 'floor': 0, 'status': 'AVAILABLE'},
+            {'number': 'MEETING-B', 'type': 'Ruang Meeting B', 'floor': 0, 'status': 'AVAILABLE'},
         ]
 
         for room_data in rooms_data:
