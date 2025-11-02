@@ -496,64 +496,64 @@ export default function OfficePage() {
             </div>
             <div className="p-6">
               {(() => {
-                const chartHeight = 400;
-                const scaleMax = 100; // Percentage is always 0-100%
-                const step = 20; // 0, 20, 40, 60, 80, 100
+                const colors = ['#4E61D3', '#F87B1B', '#34D399', '#FBBF24', '#EF4444', '#8B5CF6'];
+                const total = analytics.charts.payment_methods.reduce((sum, m) => sum + m.percentage, 0);
+                let currentAngle = -90; // Start from top
 
                 return (
-                  <div className="flex" style={{ height: `${chartHeight}px` }}>
-                    {/* Y-axis */}
-                    <div className="flex flex-col justify-between mr-2 py-1">
-                      {[5, 4, 3, 2, 1, 0].map((i) => (
-                        <div key={i} className="text-xs text-gray-500 text-right w-10 leading-none">
-                          {step * i}%
-                        </div>
-                      ))}
+                  <div className="flex flex-col items-center">
+                    {/* Pie Chart */}
+                    <div className="relative" style={{ width: '240px', height: '240px' }}>
+                      <svg width="240" height="240" viewBox="0 0 240 240">
+                        {analytics.charts.payment_methods.map((method, index) => {
+                          const percentage = method.percentage;
+                          const angle = (percentage / 100) * 360;
+                          const startAngle = currentAngle;
+                          const endAngle = currentAngle + angle;
+
+                          // Calculate path for pie slice
+                          const startRad = (startAngle * Math.PI) / 180;
+                          const endRad = (endAngle * Math.PI) / 180;
+                          const x1 = 120 + 100 * Math.cos(startRad);
+                          const y1 = 120 + 100 * Math.sin(startRad);
+                          const x2 = 120 + 100 * Math.cos(endRad);
+                          const y2 = 120 + 100 * Math.sin(endRad);
+                          const largeArc = angle > 180 ? 1 : 0;
+
+                          currentAngle = endAngle;
+
+                          return (
+                            <g key={index}>
+                              <path
+                                d={`M 120 120 L ${x1} ${y1} A 100 100 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                fill={colors[index % colors.length]}
+                                stroke="white"
+                                strokeWidth="2"
+                                className="hover:opacity-80 transition-opacity cursor-pointer"
+                              />
+                            </g>
+                          );
+                        })}
+                      </svg>
                     </div>
 
-                    {/* Chart area */}
-                    <div className="flex-1 flex flex-col">
-                      {/* Grid and bars area */}
-                      <div className="flex-1 relative py-1">
-                        {/* Grid lines */}
-                        <div className="absolute inset-0 flex flex-col justify-between">
-                          {[0, 1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="border-t border-gray-200"></div>
-                          ))}
-                        </div>
-
-                        {/* Bars */}
-                        <div className="absolute inset-0 flex items-end justify-around gap-2 px-2">
-                          {analytics.charts.payment_methods.map((method, index) => {
-                            const barHeight = (method.percentage / scaleMax) * (chartHeight - 10);
-
-                            return (
-                              <div key={index} className="flex-1 flex flex-col items-center justify-end group max-w-[60px]">
-                                {/* Tooltip */}
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity mb-2 bg-gray-900 text-white text-xs py-2 px-3 rounded shadow-lg absolute -translate-y-full whitespace-nowrap z-10">
-                                  <div className="font-bold">{formatCurrency(method.total)}</div>
-                                  <div>{method.percentage.toFixed(1)}%</div>
-                                </div>
-
-                                {/* Bar */}
-                                <div
-                                  className="w-full bg-[#4E61D3] rounded-t transition-all duration-500 hover:opacity-80"
-                                  style={{ height: `${barHeight}px` }}
-                                ></div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* X-axis labels */}
-                      <div className="flex justify-around gap-2 px-2 mt-2">
-                        {analytics.charts.payment_methods.map((method, index) => (
-                          <div key={index} className="flex-1 max-w-[60px] text-center">
-                            <div className="text-[10px] font-medium text-gray-700 leading-tight">{method.method_display}</div>
+                    {/* Legend */}
+                    <div className="mt-6 w-full space-y-2">
+                      {analytics.charts.payment_methods.map((method, index) => (
+                        <div key={index} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-sm"
+                              style={{ backgroundColor: colors[index % colors.length] }}
+                            ></div>
+                            <span className="text-gray-700">{method.method_display}</span>
                           </div>
-                        ))}
-                      </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-gray-900">{method.percentage.toFixed(1)}%</span>
+                            <span className="text-gray-600 text-xs">{formatCurrency(method.total)}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );
@@ -571,65 +571,67 @@ export default function OfficePage() {
             </div>
             <div className="p-6">
               {(() => {
-                const maxCount = Math.max(...analytics.charts.booking_sources.map(s => s.count));
-                const scaleMax = getNiceMax(maxCount);
-                const step = scaleMax / 5;
-                const chartHeight = 400;
+                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+                const totalCount = analytics.charts.booking_sources.reduce((sum, s) => sum + s.count, 0);
+                let currentAngle = -90; // Start from top
 
                 return (
-                  <div className="flex" style={{ height: `${chartHeight}px` }}>
-                    {/* Y-axis */}
-                    <div className="flex flex-col justify-between mr-2 py-1">
-                      {[5, 4, 3, 2, 1, 0].map((i) => (
-                        <div key={i} className="text-xs text-gray-500 text-right w-10 leading-none">
-                          {Math.round(step * i)}
-                        </div>
-                      ))}
+                  <div className="flex flex-col items-center">
+                    {/* Pie Chart */}
+                    <div className="relative" style={{ width: '240px', height: '240px' }}>
+                      <svg width="240" height="240" viewBox="0 0 240 240">
+                        {analytics.charts.booking_sources.map((source, index) => {
+                          const percentage = totalCount > 0 ? (source.count / totalCount) * 100 : 0;
+                          const angle = (percentage / 100) * 360;
+                          const startAngle = currentAngle;
+                          const endAngle = currentAngle + angle;
+
+                          // Calculate path for pie slice
+                          const startRad = (startAngle * Math.PI) / 180;
+                          const endRad = (endAngle * Math.PI) / 180;
+                          const x1 = 120 + 100 * Math.cos(startRad);
+                          const y1 = 120 + 100 * Math.sin(startRad);
+                          const x2 = 120 + 100 * Math.cos(endRad);
+                          const y2 = 120 + 100 * Math.sin(endRad);
+                          const largeArc = angle > 180 ? 1 : 0;
+
+                          currentAngle = endAngle;
+
+                          return (
+                            <g key={index}>
+                              <path
+                                d={`M 120 120 L ${x1} ${y1} A 100 100 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                fill={colors[index % colors.length]}
+                                stroke="white"
+                                strokeWidth="2"
+                                className="hover:opacity-80 transition-opacity cursor-pointer"
+                              />
+                            </g>
+                          );
+                        })}
+                      </svg>
                     </div>
 
-                    {/* Chart area */}
-                    <div className="flex-1 flex flex-col">
-                      {/* Grid and bars area */}
-                      <div className="flex-1 relative py-1">
-                        {/* Grid lines */}
-                        <div className="absolute inset-0 flex flex-col justify-between">
-                          {[0, 1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="border-t border-gray-200"></div>
-                          ))}
-                        </div>
-
-                        {/* Bars */}
-                        <div className="absolute inset-0 flex items-end justify-around gap-2 px-2">
-                          {analytics.charts.booking_sources.map((source, index) => {
-                            const barHeight = scaleMax > 0 ? (source.count / scaleMax) * (chartHeight - 10) : 0;
-
-                            return (
-                              <div key={index} className="flex-1 flex flex-col items-center justify-end group max-w-[60px]">
-                                {/* Tooltip */}
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity mb-2 bg-gray-900 text-white text-xs py-2 px-3 rounded shadow-lg absolute -translate-y-full whitespace-nowrap z-10">
-                                  <div className="font-bold">{source.count} bookings</div>
-                                  <div>{formatCurrency(source.revenue)}</div>
-                                </div>
-
-                                {/* Bar */}
-                                <div
-                                  className="w-full bg-blue-500 rounded-t transition-all duration-500 hover:opacity-80"
-                                  style={{ height: `${barHeight}px` }}
-                                ></div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* X-axis labels */}
-                      <div className="flex justify-around gap-2 px-2 mt-2">
-                        {analytics.charts.booking_sources.map((source, index) => (
-                          <div key={index} className="flex-1 max-w-[60px] text-center">
-                            <div className="text-[10px] font-medium text-gray-700 leading-tight">{source.source_display}</div>
+                    {/* Legend */}
+                    <div className="mt-6 w-full space-y-2">
+                      {analytics.charts.booking_sources.map((source, index) => {
+                        const percentage = totalCount > 0 ? (source.count / totalCount) * 100 : 0;
+                        return (
+                          <div key={index} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-3 h-3 rounded-sm"
+                                style={{ backgroundColor: colors[index % colors.length] }}
+                              ></div>
+                              <span className="text-gray-700">{source.source_display}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-gray-900">{source.count} ({percentage.toFixed(1)}%)</span>
+                              <span className="text-gray-600 text-xs">{formatCurrency(source.revenue)}</span>
+                            </div>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );

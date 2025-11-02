@@ -6,6 +6,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
+from django.utils import timezone
+from datetime import date
 from apps.hotel.models import (
     Reservation, Complaint, HousekeepingTask, AmenityRequest,
     InventoryItem, PurchaseOrder
@@ -33,7 +35,12 @@ def sidebar_counts(request):
     """
 
     # Main Sidebar Counts
-    pending_reservations = Reservation.objects.filter(status='PENDING').count()
+    # Only show reservations with check_in_date = today and status = PENDING (not checked in yet)
+    today = date.today()
+    pending_reservations = Reservation.objects.filter(
+        status='PENDING',
+        check_in_date=today
+    ).count()
 
     uncompleted_complaints = Complaint.objects.filter(
         Q(status='OPEN') | Q(status='IN_PROGRESS')
