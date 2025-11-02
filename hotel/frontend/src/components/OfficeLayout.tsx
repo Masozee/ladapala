@@ -21,26 +21,7 @@ interface OfficeLayoutProps {
   breadcrumb?: { label: string; href?: string }[];
 }
 
-interface HeaderContextType {
-  darkMode: boolean;
-  setDarkMode: (darkMode: boolean) => void;
-  searchOpen: boolean;
-  setSearchOpen: (open: boolean) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  handleSearch: (e: React.FormEvent) => void;
-}
-
-export const useOfficeHeader = () => {
-  const context = useContext(HeaderContext);
-  if (!context) {
-    throw new Error('useOfficeHeader must be used within OfficeLayout');
-  }
-  return context;
-};
-
 export const OfficeHeaderActions = () => {
-  const { darkMode, setDarkMode, searchOpen, setSearchOpen, searchQuery, setSearchQuery, handleSearch } = useOfficeHeader();
   const router = useRouter();
 
   const handleLogout = async () => {

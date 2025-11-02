@@ -19,24 +19,6 @@ interface SupportLayoutProps {
   breadcrumb?: { label: string; href?: string }[];
 }
 
-interface HeaderContextType {
-  darkMode: boolean;
-  setDarkMode: (darkMode: boolean) => void;
-  searchOpen: boolean;
-  setSearchOpen: (open: boolean) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  handleSearch: (e: React.FormEvent) => void;
-}
-
-export const useSupportHeader = () => {
-  const context = useContext(HeaderContext);
-  if (!context) {
-    throw new Error('useSupportHeader must be used within SupportLayout');
-  }
-  return context;
-};
-
 export const SupportHeaderActions = () => {
   return (
     <div className="flex items-center space-x-4">
@@ -99,7 +81,7 @@ export const SupportHeaderActions = () => {
             window.location.href = '/login';
           }
         }}
-        className={`p-2 hover:bg-red-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-red-900' : 'text-red-600'}`}
+        className="p-2 hover:bg-red-100 transition-colors text-red-600"
         title="Logout"
       >
         <Logout01Icon className="h-5 w-5" />

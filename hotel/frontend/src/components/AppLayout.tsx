@@ -81,7 +81,7 @@ export const HeaderActions = () => {
             window.location.href = '/login';
           }
         }}
-        className={`p-2 hover:bg-red-100 transition-colors ${darkMode ? 'text-gray-300 hover:bg-red-900' : 'text-red-600'}`}
+        className="p-2 hover:bg-red-100 transition-colors text-red-600"
         title="Logout"
       >
         <Logout01Icon className="h-5 w-5" />
