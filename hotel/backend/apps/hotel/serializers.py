@@ -21,7 +21,7 @@ class RoomTypeSerializer(serializers.ModelSerializer):
         model = RoomType
         fields = [
             'id', 'name', 'description', 'base_price', 'max_occupancy',
-            'size_sqm', 'amenities', 'is_active', 'created_at', 'updated_at',
+            'size_sqm', 'amenities', 'room_category', 'is_active', 'created_at', 'updated_at',
             'total_rooms', 'available_rooms_count', 'occupied_rooms_count',
             'occupancy_percentage', 'bed_configuration', 'images'
         ]

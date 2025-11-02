@@ -28,6 +28,7 @@ interface RoomType {
   max_occupancy: number;
   room_size: number;
   bed_configuration: string;
+  room_category: string;
   amenities: string[];
   images: string[];
   room_count: number;
@@ -50,6 +51,7 @@ interface DjangoRoomType {
   occupied_rooms_count: number;
   occupancy_percentage: number;
   bed_configuration: string;
+  room_category: string;
   images: string[];
 }
 
@@ -78,6 +80,7 @@ const fetchRoomType = async (id: string): Promise<RoomType | null> => {
       max_occupancy: djangoRoom.max_occupancy,
       room_size: djangoRoom.size_sqm || 20,
       bed_configuration: djangoRoom.bed_configuration,
+      room_category: djangoRoom.room_category || 'GUEST_ROOM',
       amenities: parseAmenities(djangoRoom.amenities),
       images: djangoRoom.images,
       room_count: djangoRoom.total_rooms,
@@ -319,15 +322,21 @@ const RoomDetailPage = () => {
                     <div className="w-12 h-12 bg-[#005357] text-white rounded-full flex items-center justify-center mx-auto mb-2">
                       <UserMultipleIcon className="h-6 w-6" />
                     </div>
-                    <div className="text-sm font-medium text-gray-900">{roomType.max_occupancy} guests</div>
-                    <div className="text-xs text-gray-600">Max Occupancy</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {roomType.max_occupancy} {roomType.room_category === 'EVENT_SPACE' ? 'capacity' : 'guests'}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {roomType.room_category === 'EVENT_SPACE' ? 'Max Capacity' : 'Max Occupancy'}
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="w-12 h-12 bg-[#005357] text-white rounded-full flex items-center justify-center mx-auto mb-2">
                       <BedIcon className="h-6 w-6" />
                     </div>
                     <div className="text-sm font-medium text-gray-900">{roomType.bed_configuration}</div>
-                    <div className="text-xs text-gray-600">Bed Type</div>
+                    <div className="text-xs text-gray-600">
+                      {roomType.room_category === 'EVENT_SPACE' ? 'Seating Arrangement' : 'Bed Type'}
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="w-12 h-12 bg-[#005357] text-white rounded-full flex items-center justify-center mx-auto mb-2">
