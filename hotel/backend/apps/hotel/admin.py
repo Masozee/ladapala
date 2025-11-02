@@ -10,9 +10,28 @@ from .models.housekeeping import CleaningTemplate, CleaningTemplateItem, Houseke
 
 @admin.register(RoomType)
 class RoomTypeAdmin(admin.ModelAdmin):
-    list_display = ['name', 'base_price', 'max_occupancy', 'size_sqm', 'is_active']
-    list_filter = ['is_active', 'max_occupancy']
+    list_display = ['name', 'room_category', 'base_price', 'max_occupancy', 'size_sqm', 'is_active']
+    list_filter = ['is_active', 'room_category', 'max_occupancy']
     search_fields = ['name', 'description']
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'description', 'room_category', 'is_active')
+        }),
+        ('Pricing & Capacity', {
+            'fields': ('base_price', 'max_occupancy', 'size_sqm')
+        }),
+        ('Guest Room Configuration', {
+            'fields': ('bed_configuration',),
+            'description': 'Only applicable for Guest Rooms'
+        }),
+        ('Event Space Configuration', {
+            'fields': ('seating_arrangement',),
+            'description': 'Only applicable for Event Spaces (Ballrooms/Meeting Rooms)'
+        }),
+        ('Amenities', {
+            'fields': ('amenities',)
+        }),
+    )
 
 
 @admin.register(Room)

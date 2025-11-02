@@ -5,18 +5,71 @@ from decimal import Decimal
 
 
 class RoomType(models.Model):
+    ROOM_CATEGORY_CHOICES = [
+        ('GUEST_ROOM', 'Guest Room'),
+        ('EVENT_SPACE', 'Event Space (Ballroom/Meeting Room)'),
+    ]
+
+    BED_CONFIGURATION_CHOICES = [
+        ('1_KING', '1 King Bed'),
+        ('2_TWIN', '2 Twin Beds'),
+        ('1_KING_SOFA', '1 King Bed + Sofa Bed'),
+        ('1_KING_2_TWIN', '1 King Bed + 2 Twin Beds'),
+        ('2_QUEEN', '2 Queen Beds'),
+        ('1_QUEEN', '1 Queen Bed'),
+        ('1_QUEEN_SOFA', '1 Queen Bed + Sofa Bed'),
+        ('N/A', 'N/A (Event Space)'),
+    ]
+
+    SEATING_ARRANGEMENT_CHOICES = [
+        ('THEATER', 'Theater Style'),
+        ('CLASSROOM', 'Classroom Style'),
+        ('BANQUET', 'Banquet/Round Tables'),
+        ('U_SHAPE', 'U-Shape'),
+        ('BOARDROOM', 'Boardroom'),
+        ('COCKTAIL', 'Cocktail/Standing'),
+        ('MIXED', 'Mixed Arrangement'),
+    ]
+
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
+    room_category = models.CharField(
+        max_length=20,
+        choices=ROOM_CATEGORY_CHOICES,
+        default='GUEST_ROOM',
+        help_text='Type of room: Guest Room or Event Space'
+    )
     base_price = models.DecimalField(
-        max_digits=10, 
+        max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
     max_occupancy = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(1)],
+        help_text='Max guests for guest rooms, or max capacity for event spaces'
     )
     size_sqm = models.FloatField(null=True, blank=True)
     amenities = models.TextField(blank=True, null=True)
+
+    # For Guest Rooms
+    bed_configuration = models.CharField(
+        max_length=20,
+        choices=BED_CONFIGURATION_CHOICES,
+        default='1_KING',
+        blank=True,
+        null=True,
+        help_text='Bed type (only for Guest Rooms)'
+    )
+
+    # For Event Spaces (Ballrooms)
+    seating_arrangement = models.CharField(
+        max_length=20,
+        choices=SEATING_ARRANGEMENT_CHOICES,
+        blank=True,
+        null=True,
+        help_text='Seating arrangement (only for Event Spaces)'
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

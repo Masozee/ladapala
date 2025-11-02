@@ -136,7 +136,11 @@ export default function EditRoomTypePage() {
           formDataImages.append('images', file);
         });
 
-        const imageResponse = await fetch(buildApiUrl(`hotel/room-types/${id}/upload-images/`), {
+        console.log('Uploading images to:', buildApiUrl(`hotel/room-types/${id}/upload_images/`));
+        console.log('Number of files:', imageFiles.length);
+        console.log('CSRF Token:', csrfToken ? 'Present' : 'Missing');
+
+        const imageResponse = await fetch(buildApiUrl(`hotel/room-types/${id}/upload_images/`), {
           method: 'POST',
           headers: {
             ...(csrfToken && { 'X-CSRFToken': csrfToken }),
@@ -145,14 +149,33 @@ export default function EditRoomTypePage() {
           body: formDataImages,
         });
 
+        console.log('Image upload response status:', imageResponse.status);
+        console.log('Image upload response headers:', Object.fromEntries(imageResponse.headers.entries()));
+
         if (!imageResponse.ok) {
-          throw new Error('Failed to upload images');
+          // Try to get response text first
+          const responseText = await imageResponse.text();
+          console.error('Image upload error response (raw):', responseText);
+
+          // Try to parse as JSON
+          let errorData: any = {};
+          try {
+            errorData = JSON.parse(responseText);
+          } catch (e) {
+            console.error('Could not parse error response as JSON');
+          }
+
+          console.error('Image upload error:', errorData);
+          throw new Error(errorData.error || errorData.detail || responseText || `Failed to upload images: ${imageResponse.status}`);
         }
+
+        const successData = await imageResponse.json();
+        console.log('Images uploaded successfully:', successData);
       }
 
       // Delete removed images if any
       if (deletedImages.length > 0) {
-        await fetch(buildApiUrl(`hotel/room-types/${id}/delete-images/`), {
+        await fetch(buildApiUrl(`hotel/room-types/${id}/delete_images/`), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

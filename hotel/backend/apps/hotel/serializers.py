@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
-    RoomType, Room, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
+    RoomType, Room, RoomTypeImage, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
     CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, Supplier,
     MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
     FinancialTransaction, Invoice, InvoiceItem, AmenityRequest, AmenityCategory, HotelSettings
@@ -86,22 +86,36 @@ class RoomTypeSerializer(serializers.ModelSerializer):
         return round((occupied / total) * 100, 2)
 
     def get_bed_configuration(self, obj):
-        """Determine bed configuration based on room name and max occupancy"""
-        name = obj.name.lower()
-        if 'family' in name:
-            return '1 King Bed + 2 Twin Beds'
-        elif 'suite' in name and obj.max_occupancy >= 3:
-            return '1 King Bed + Sofa Bed'
-        elif 'twin' in name or obj.max_occupancy == 2:
-            return '2 Twin Beds'
-        elif obj.max_occupancy >= 3:
-            return '1 King Bed + Sofa Bed'
-        return '1 King Bed'
+        """Return bed configuration or seating arrangement based on room category"""
+        if obj.room_category == 'EVENT_SPACE':
+            # For event spaces, return seating arrangement
+            if obj.seating_arrangement:
+                return obj.get_seating_arrangement_display()
+            return 'Mixed Arrangement'
+        else:
+            # For guest rooms, return bed configuration
+            if obj.bed_configuration:
+                return obj.get_bed_configuration_display()
+            return '1 King Bed'
 
     def get_images(self, obj):
-        """Return room images - placeholder for now"""
-        # TODO: Implement actual image handling when ImageField is added to model
-        return ['/hotelroom.jpeg']
+        """Return room images from RoomTypeImage model"""
+        room_images = RoomTypeImage.objects.filter(room_type=obj)
+        request = self.context.get('request')
+
+        if not room_images.exists():
+            # Return placeholder if no images
+            return ['/hotelroom.jpeg']
+
+        # Return full URLs for images
+        image_urls = []
+        for room_image in room_images:
+            if room_image.image and request:
+                image_urls.append(request.build_absolute_uri(room_image.image.url))
+            elif room_image.image:
+                image_urls.append(room_image.image.url)
+
+        return image_urls if image_urls else ['/hotelroom.jpeg']
 
 
 class RoomSerializer(serializers.ModelSerializer):

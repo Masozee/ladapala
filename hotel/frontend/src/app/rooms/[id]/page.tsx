@@ -55,11 +55,12 @@ interface DjangoRoomType {
 
 const fetchRoomType = async (id: string): Promise<RoomType | null> => {
   try {
-    const response = await fetch(buildApiUrl(`room-types/${id}/`), {
+    const response = await fetch(buildApiUrl(`hotel/room-types/${id}/`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
     });
     
     if (!response.ok) {
