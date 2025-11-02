@@ -12,6 +12,7 @@ from .dashboard import hotel_dashboard
 from .financial_new import FinancialViewSet, FinancialTransactionViewSet, InvoiceViewSet
 from .system_monitoring import system_resources, system_stats, process_list
 from .amenities import AmenityRequestViewSet, AmenityCategoryViewSet
+from .events import EventPackageViewSet, FoodPackageViewSet, EventBookingViewSet, EventPaymentViewSet, EventAddOnViewSet
 
 # Make all ViewSets available for import
 __all__ = [
@@ -20,5 +21,6 @@ __all__ = [
     'InventoryItemViewSet', 'SupplierViewSet', 'hotel_dashboard',
     'FinancialViewSet', 'FinancialTransactionViewSet', 'InvoiceViewSet',
     'system_resources', 'system_stats', 'process_list',
-    'AmenityRequestViewSet', 'AmenityCategoryViewSet'
+    'AmenityRequestViewSet', 'AmenityCategoryViewSet',
+    'EventPackageViewSet', 'FoodPackageViewSet', 'EventBookingViewSet', 'EventPaymentViewSet', 'EventAddOnViewSet'
 ]

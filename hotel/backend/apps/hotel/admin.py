@@ -6,6 +6,7 @@ from .models import (
 from .models.inventory import PurchaseOrder, PurchaseOrderItem, StockMovement
 from .models.amenities import AmenityCategory, AmenityRequest
 from .models.housekeeping import CleaningTemplate, CleaningTemplateItem, HousekeepingTask, AmenityUsage
+from .models.events import EventBooking, EventPackage, FoodPackage, EventPayment, EventAddOn
 
 
 @admin.register(RoomType)
@@ -192,3 +193,90 @@ class AmenityUsageAdmin(admin.ModelAdmin):
     search_fields = ['housekeeping_task__task_number', 'inventory_item__name']
     readonly_fields = ['recorded_at', 'stock_deducted']
     date_hierarchy = 'recorded_at'
+
+
+# Event Booking Admin
+@admin.register(EventPackage)
+class EventPackageAdmin(admin.ModelAdmin):
+    list_display = ['name', 'package_type', 'base_price', 'max_hours', 'is_active']
+    list_filter = ['package_type', 'is_active']
+    search_fields = ['name', 'description']
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'package_type', 'description', 'base_price', 'is_active')
+        }),
+        ('Duration & Pricing', {
+            'fields': ('max_hours', 'additional_hour_price')
+        }),
+        ('Inclusions', {
+            'fields': (
+                'includes_venue', 'includes_sound_system', 'includes_projector',
+                'includes_led_screen', 'includes_lighting', 'includes_ac',
+                'includes_tables_chairs', 'includes_decoration', 'includes_parking'
+            )
+        }),
+    )
+
+
+@admin.register(FoodPackage)
+class FoodPackageAdmin(admin.ModelAdmin):
+    list_display = ['name', 'category', 'price_per_pax', 'minimum_pax', 'is_active']
+    list_filter = ['category', 'is_active']
+    search_fields = ['name', 'description', 'menu_items']
+
+
+@admin.register(EventBooking)
+class EventBookingAdmin(admin.ModelAdmin):
+    list_display = ['booking_number', 'event_name', 'event_type', 'venue', 'event_date', 'expected_pax', 'grand_total', 'status']
+    list_filter = ['event_type', 'status', 'event_date']
+    search_fields = ['booking_number', 'event_name', 'guest__full_name', 'organizer_name']
+    readonly_fields = ['booking_number', 'created_at', 'updated_at', 'subtotal', 'tax_amount', 'grand_total', 'down_payment_amount', 'remaining_amount']
+    date_hierarchy = 'event_date'
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('booking_number', 'event_name', 'event_type', 'status')
+        }),
+        ('Contact Information', {
+            'fields': ('guest', 'organizer_name', 'organizer_phone', 'organizer_email', 'organization')
+        }),
+        ('Venue & Time', {
+            'fields': ('venue', 'venue_package', 'event_date', 'start_time', 'end_time', 'setup_time')
+        }),
+        ('Guests & Catering', {
+            'fields': ('expected_pax', 'confirmed_pax', 'food_package')
+        }),
+        ('Pricing', {
+            'fields': (
+                'venue_price', 'food_price', 'equipment_price', 'other_charges',
+                'subtotal', 'tax_amount', 'grand_total'
+            )
+        }),
+        ('Payment Terms', {
+            'fields': (
+                'down_payment_percentage', 'down_payment_amount', 'remaining_amount',
+                'down_payment_paid', 'full_payment_paid'
+            )
+        }),
+        ('Additional Information', {
+            'fields': ('special_requests', 'notes', 'invoice_notes')
+        }),
+        ('Audit', {
+            'fields': ('created_by', 'created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(EventPayment)
+class EventPaymentAdmin(admin.ModelAdmin):
+    list_display = ['payment_number', 'event_booking', 'payment_type', 'amount', 'payment_method', 'status', 'payment_date']
+    list_filter = ['payment_type', 'payment_method', 'status', 'payment_date']
+    search_fields = ['payment_number', 'event_booking__booking_number', 'reference_number']
+    readonly_fields = ['payment_number', 'created_at', 'updated_at']
+    date_hierarchy = 'payment_date'
+
+
+@admin.register(EventAddOn)
+class EventAddOnAdmin(admin.ModelAdmin):
+    list_display = ['event_booking', 'addon_type', 'name', 'quantity', 'unit_price', 'total_price']
+    list_filter = ['addon_type']
+    search_fields = ['event_booking__booking_number', 'name']

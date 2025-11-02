@@ -4,7 +4,8 @@ from .models import (
     RoomType, Room, RoomTypeImage, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
     CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, Supplier,
     MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
-    FinancialTransaction, Invoice, InvoiceItem, AmenityRequest, AmenityCategory, HotelSettings
+    FinancialTransaction, Invoice, InvoiceItem, AmenityRequest, AmenityCategory, HotelSettings,
+    EventPackage, FoodPackage, EventBooking, EventPayment, EventAddOn
 )
 
 
@@ -927,4 +928,86 @@ class HotelSettingsSerializer(serializers.ModelSerializer):
         model = HotelSettings
         exclude = ["id", "created_at"]
         read_only_fields = ["updated_at"]
+
+
+# ============ EVENT BOOKING SERIALIZERS ============
+
+class EventPackageSerializer(serializers.ModelSerializer):
+    """Serializer for event packages (venue packages)"""
+
+    class Meta:
+        model = EventPackage
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class FoodPackageSerializer(serializers.ModelSerializer):
+    """Serializer for food packages"""
+
+    class Meta:
+        model = FoodPackage
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class EventAddOnSerializer(serializers.ModelSerializer):
+    """Serializer for event add-ons"""
+
+    class Meta:
+        model = EventAddOn
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class EventPaymentSerializer(serializers.ModelSerializer):
+    """Serializer for event payments"""
+
+    class Meta:
+        model = EventPayment
+        fields = '__all__'
+        read_only_fields = ['payment_number', 'created_at', 'updated_at']
+
+
+class EventBookingSerializer(serializers.ModelSerializer):
+    """Serializer for event bookings"""
+    venue_name = serializers.CharField(source='venue.room_number', read_only=True)
+    venue_type = serializers.CharField(source='venue.room_type.name', read_only=True)
+    package_name = serializers.CharField(source='venue_package.name', read_only=True)
+    food_package_name = serializers.CharField(source='food_package.name', read_only=True)
+    guest_name = serializers.CharField(source='guest.full_name', read_only=True)
+    guest_email = serializers.CharField(source='guest.email', read_only=True)
+    guest_phone = serializers.CharField(source='guest.phone', read_only=True)
+    payments = EventPaymentSerializer(many=True, read_only=True)
+    addons = EventAddOnSerializer(many=True, read_only=True)
+
+    # Computed fields for frontend compatibility
+    booking_status = serializers.CharField(source='status', read_only=True)
+    booking_status_display = serializers.CharField(source='get_status_display', read_only=True)
+    payment_status = serializers.SerializerMethodField(read_only=True)
+    payment_status_display = serializers.SerializerMethodField(read_only=True)
+    event_start_time = serializers.TimeField(source='start_time', read_only=True)
+    event_end_time = serializers.TimeField(source='end_time', read_only=True)
+
+    class Meta:
+        model = EventBooking
+        fields = '__all__'
+        read_only_fields = ['booking_number', 'created_by', 'created_at', 'updated_at']
+
+    def get_payment_status(self, obj):
+        """Calculate payment status based on payment flags"""
+        if obj.full_payment_paid:
+            return 'FULLY_PAID'
+        elif obj.down_payment_paid:
+            return 'PARTIALLY_PAID'
+        else:
+            return 'UNPAID'
+
+    def get_payment_status_display(self, obj):
+        """Human-readable payment status"""
+        if obj.full_payment_paid:
+            return 'Lunas'
+        elif obj.down_payment_paid:
+            return 'Sudah DP'
+        else:
+            return 'Belum Bayar'
 

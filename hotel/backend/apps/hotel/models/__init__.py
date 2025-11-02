@@ -15,6 +15,7 @@ from .housekeeping import HousekeepingTask, AmenityUsage, CleaningTemplate, Clea
 from .financial import FinancialTransaction, Invoice, InvoiceItem
 from .amenities import AmenityRequest, AmenityCategory
 from .settings import HotelSettings
+from .events import EventBooking, EventPackage, FoodPackage, EventPayment, EventAddOn
 
 # Make all models available for import
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     'PurchaseOrder', 'PurchaseOrderItem', 'StockMovement', 'Supplier',
     'MaintenanceRequest', 'MaintenanceTechnician', 'HousekeepingTask', 'AmenityUsage',
     'CleaningTemplate', 'CleaningTemplateItem',
-    'FinancialTransaction', 'Invoice', 'InvoiceItem', 'AmenityRequest', 'AmenityCategory', 'HotelSettings'
+    'FinancialTransaction', 'Invoice', 'InvoiceItem', 'AmenityRequest', 'AmenityCategory', 'HotelSettings',
+    'EventBooking', 'EventPackage', 'FoodPackage', 'EventPayment', 'EventAddOn'
 ]

@@ -10,7 +10,8 @@ try:
         RoomTypeViewSet, RoomViewSet, GuestViewSet, ReservationViewSet,
         PaymentViewSet, ComplaintViewSet, CheckInViewSet, HolidayViewSet,
         InventoryItemViewSet, SupplierViewSet, hotel_dashboard,
-        AmenityRequestViewSet, AmenityCategoryViewSet
+        AmenityRequestViewSet, AmenityCategoryViewSet,
+        EventPackageViewSet, FoodPackageViewSet, EventBookingViewSet, EventPaymentViewSet, EventAddOnViewSet
     )
     from .views.complaints import ComplaintImageViewSet
     from .views.housekeeping import HousekeepingTaskViewSet, AmenityUsageViewSet
@@ -63,6 +64,11 @@ if LEGACY_VIEWS:
     router.register(r'maintenance-requests', MaintenanceRequestViewSet, basename='hotel-maintenance-requests')
     router.register(r'maintenance-technicians', MaintenanceTechnicianViewSet, basename='hotel-maintenance-technicians')
     router.register(r'settings', HotelSettingsViewSet, basename='hotel-settings')
+    router.register(r'event-packages', EventPackageViewSet, basename='hotel-event-packages')
+    router.register(r'food-packages', FoodPackageViewSet, basename='hotel-food-packages')
+    router.register(r'event-bookings', EventBookingViewSet, basename='hotel-event-bookings')
+    router.register(r'event-payments', EventPaymentViewSet, basename='hotel-event-payments')
+    router.register(r'event-addons', EventAddOnViewSet, basename='hotel-event-addons')
 
 urlpatterns = [
     path('', include(router.urls)),
