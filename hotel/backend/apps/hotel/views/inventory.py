@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 
@@ -12,11 +13,34 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
     """ViewSet for managing inventory items"""
     queryset = InventoryItem.objects.all()
     serializer_class = InventoryItemSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['category', 'is_active']
-    search_fields = ['name', 'description', 'supplier']
+    search_fields = ['name', 'description']
     ordering_fields = ['name', 'current_stock', 'unit_price', 'created_at']
     ordering = ['name']
+
+    def list(self, request, *args, **kwargs):
+        """Override list to include statistics for all items"""
+        response = super().list(request, *args, **kwargs)
+
+        # Get all items (unfiltered, unpaginated) for statistics
+        all_items = InventoryItem.objects.filter(is_active=True)
+
+        # Calculate statistics
+        total_items = all_items.count()
+        empty_stock = all_items.filter(current_stock=0).count()
+        low_stock = sum(1 for item in all_items if item.is_low_stock and item.current_stock > 0)
+        normal_stock = total_items - empty_stock - low_stock
+
+        # Add statistics to response
+        response.data['statistics'] = {
+            'total_items': total_items,
+            'normal_stock': normal_stock,
+            'low_stock': low_stock,
+            'critical_stock': empty_stock,
+        }
+
+        return response
 
     @action(detail=False, methods=['get'])
     def low_stock(self, request):

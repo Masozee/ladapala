@@ -15,7 +15,8 @@ import {
   Cancel01Icon,
   EyeIcon,
   Search02Icon,
-  Add01Icon
+  Add01Icon,
+  Delete02Icon
 } from '@/lib/icons';
 
 interface HousekeepingTask {
@@ -85,6 +86,8 @@ const HousekeepingPage = () => {
   const [completingTask, setCompletingTask] = useState<HousekeepingTask | null>(null);
   const [amenityItems, setAmenityItems] = useState<any[]>([]);
   const [amenityLoading, setAmenityLoading] = useState(false);
+  const [allInventoryItems, setAllInventoryItems] = useState<any[]>([]);
+  const [showAddItemDropdown, setShowAddItemDropdown] = useState(false);
 
   // Fetch tasks
   const fetchTasks = async () => {
@@ -257,33 +260,84 @@ const HousekeepingPage = () => {
     setAmenityLoading(true);
 
     try {
-      // Fetch suggested items
-      const response = await fetch(
-        buildApiUrl(`hotel/housekeeping-tasks/${task.id}/suggested_items/`),
-        { credentials: 'include' }
-      );
+      // Fetch suggested items and all inventory items in parallel
+      const [suggestionsResponse, inventoryResponse] = await Promise.all([
+        fetch(
+          buildApiUrl(`hotel/housekeeping-tasks/${task.id}/suggested_items/`),
+          { credentials: 'include' }
+        ),
+        fetch(
+          buildApiUrl('hotel/inventory/?is_active=true'),
+          { credentials: 'include' }
+        )
+      ]);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (suggestionsResponse.ok) {
+        const data = await suggestionsResponse.json();
         setAmenityItems(data.suggestions || []);
       } else {
         console.error('Failed to fetch suggestions');
         setAmenityItems([]);
       }
+
+      if (inventoryResponse.ok) {
+        const data = await inventoryResponse.json();
+        setAllInventoryItems(data.results || data);
+      } else {
+        console.error('Failed to fetch inventory');
+        setAllInventoryItems([]);
+      }
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
+      console.error('Error fetching data:', error);
       setAmenityItems([]);
+      setAllInventoryItems([]);
     } finally {
       setAmenityLoading(false);
     }
+  };
+
+  // Add custom item to amenity list
+  const handleAddCustomItem = (inventoryItem: any) => {
+    // Check if item already exists
+    const exists = amenityItems.find(item => item.inventory_item === inventoryItem.id);
+    if (exists) {
+      alert('Item already in the list');
+      return;
+    }
+
+    // Add new item with default quantity 1
+    const newItem = {
+      inventory_item: inventoryItem.id,
+      name: inventoryItem.name,
+      category: inventoryItem.category_name || '',
+      current_stock: inventoryItem.current_stock,
+      unit: inventoryItem.unit_of_measurement,
+      suggested_quantity: 1,
+      quantity_used: 1,
+      notes: '',
+      reason: 'Manually added',
+      is_manual: true // Flag to identify manually added items
+    };
+
+    setAmenityItems([...amenityItems, newItem]);
+    setShowAddItemDropdown(false);
+  };
+
+  // Remove item from amenity list
+  const handleRemoveItem = (index: number) => {
+    const newItems = amenityItems.filter((_, i) => i !== index);
+    setAmenityItems(newItems);
   };
 
   // Submit task completion with amenity items
   const submitTaskCompletion = async () => {
     if (!completingTask) return;
 
-    // Filter out items with 0 quantity
-    const selectedItems = amenityItems.filter(item => item.quantity_used > 0);
+    // Filter out items with 0 quantity (use suggested_quantity if quantity_used is not set)
+    const selectedItems = amenityItems.filter(item => {
+      const qty = item.quantity_used ?? item.suggested_quantity;
+      return qty > 0;
+    });
 
     if (selectedItems.length === 0) {
       alert('Please select at least one item before completing the task');
@@ -306,7 +360,7 @@ const HousekeepingPage = () => {
           body: JSON.stringify({
             amenity_items: selectedItems.map(item => ({
               inventory_item: item.inventory_item,
-              quantity_used: item.quantity_used,
+              quantity_used: item.quantity_used ?? item.suggested_quantity,
               notes: item.notes || ''
             }))
           })
@@ -992,9 +1046,20 @@ const HousekeepingPage = () => {
 
                       <div className="space-y-3">
                         {amenityItems.map((item, index) => (
-                          <div key={index} className="border border-gray-200 p-4 rounded bg-gray-50">
+                          <div key={index} className="border border-gray-200 p-4 rounded bg-gray-50 relative">
+                            {/* Remove button for manually added items */}
+                            {item.is_manual && (
+                              <button
+                                onClick={() => handleRemoveItem(index)}
+                                className="absolute top-2 right-2 p-1 text-red-500 hover:bg-red-50 rounded"
+                                title="Remove item"
+                              >
+                                <Delete02Icon className="h-4 w-4" />
+                              </button>
+                            )}
+
                             <div className="flex items-center justify-between mb-2">
-                              <div className="flex-1">
+                              <div className="flex-1 pr-8">
                                 <h4 className="font-medium text-gray-900">{item.name}</h4>
                                 <p className="text-xs text-gray-600">{item.category}</p>
                                 <p className="text-xs text-gray-500 mt-1">{item.reason}</p>
@@ -1067,11 +1132,54 @@ const HousekeepingPage = () => {
                         ))}
                       </div>
 
+                      {/* Add More Items Button */}
+                      <div className="mt-4">
+                        <div className="relative add-item-dropdown-container">
+                          <button
+                            onClick={() => setShowAddItemDropdown(!showAddItemDropdown)}
+                            className="w-full px-4 py-2 border-2 border-dashed border-gray-300 text-gray-600 hover:border-[#4E61D3] hover:text-[#4E61D3] flex items-center justify-center space-x-2 transition-colors"
+                          >
+                            <Add01Icon className="h-4 w-4" />
+                            <span>Add More Items</span>
+                          </button>
+
+                          {/* Dropdown with all inventory items */}
+                          {showAddItemDropdown && (
+                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 shadow-lg max-h-60 overflow-y-auto">
+                              {allInventoryItems
+                                .filter(item => !amenityItems.find(a => a.inventory_item === item.id))
+                                .map((item) => (
+                                  <button
+                                    key={item.id}
+                                    onClick={() => handleAddCustomItem(item)}
+                                    className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <div className="font-medium text-gray-900">{item.name}</div>
+                                        <div className="text-xs text-gray-500">{item.category_name}</div>
+                                      </div>
+                                      <div className="text-xs text-gray-600">
+                                        Stock: {item.current_stock} {item.unit_of_measurement}
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                              {allInventoryItems.filter(item => !amenityItems.find(a => a.inventory_item === item.id)).length === 0 && (
+                                <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                  All items already added
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       {amenityItems.length === 0 && (
                         <div className="text-center py-12">
                           <AlertCircleIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                           <h3 className="text-lg font-medium text-gray-900 mb-2">No suggestions available</h3>
-                          <p className="text-gray-600">Please contact administrator to set up inventory items.</p>
+                          <p className="text-gray-600">Click "Add More Items" to manually select items.</p>
                         </div>
                       )}
                     </>

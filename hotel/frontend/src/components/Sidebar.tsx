@@ -78,7 +78,6 @@ const Sidebar = () => {
     { name: 'Room Status', icon: BedIcon, href: '/rooms' },
     { name: 'Complaints', icon: QuestionIcon, href: '/complaints', badge: uncompletedComplaintsCount > 0 ? uncompletedComplaintsCount.toString() : undefined },
     { name: 'Payments', icon: CreditCardIcon, href: '/payments' },
-    { name: 'Office', icon: Building03Icon, href: '/office' },
   ];
 
   const bottomActions: MenuItem[] = [

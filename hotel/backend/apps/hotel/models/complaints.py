@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 from .guests import Guest
 from .reservations import Reservation
 from .rooms import Room
@@ -60,6 +62,56 @@ class Complaint(models.Model):
 
     def __str__(self):
         return f'Complaint {self.complaint_number} - {self.title}'
+
+    @property
+    def is_escalated(self):
+        """Check if complaint is escalated (HIGH or URGENT priority and not resolved)"""
+        return self.priority in ['HIGH', 'URGENT'] and self.status not in ['RESOLVED', 'CLOSED']
+
+    @property
+    def is_overdue(self):
+        """
+        Check if complaint is overdue based on SLA:
+        - URGENT: 4 hours
+        - HIGH: 24 hours
+        - MEDIUM: 48 hours
+        - LOW: 72 hours
+        """
+        if self.status in ['RESOLVED', 'CLOSED']:
+            return False
+
+        sla_hours = {
+            'URGENT': 4,
+            'HIGH': 24,
+            'MEDIUM': 48,
+            'LOW': 72
+        }
+
+        hours = sla_hours.get(self.priority, 48)
+        deadline = self.created_at + timedelta(hours=hours)
+        return timezone.now() > deadline
+
+    @property
+    def follow_up_required(self):
+        """Check if follow-up is required (complaint is IN_PROGRESS for more than 24 hours)"""
+        if self.status != 'IN_PROGRESS':
+            return False
+
+        follow_up_threshold = self.created_at + timedelta(hours=24)
+        return timezone.now() > follow_up_threshold
+
+    @property
+    def response_time(self):
+        """Calculate response time in minutes (time from creation to first status change)"""
+        if self.status == 'OPEN':
+            return None
+
+        # This is a simplified version - in production you'd track status changes
+        if self.resolved_at:
+            delta = self.resolved_at - self.created_at
+            return int(delta.total_seconds() / 60)
+
+        return None
 
     def save(self, *args, **kwargs):
         if not self.complaint_number:

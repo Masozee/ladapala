@@ -59,6 +59,7 @@ const getCategoryLabel = (category: string): string => {
 export default function WarehousePage() {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<AmenityCategory[]>([]);
@@ -74,6 +75,12 @@ export default function WarehousePage() {
   const [totalCount, setTotalCount] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
+  const [statistics, setStatistics] = useState({
+    total_items: 0,
+    normal_stock: 0,
+    low_stock: 0,
+    critical_stock: 0
+  });
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -90,9 +97,19 @@ export default function WarehousePage() {
     fetchCategories();
   }, []);
 
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+      setCurrentPage(1); // Reset to page 1 when search changes
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   useEffect(() => {
     fetchInventory();
-  }, [categoryFilter, statusFilter, currentPage]);
+  }, [categoryFilter, statusFilter, currentPage, searchQuery]);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -136,6 +153,7 @@ export default function WarehousePage() {
         if (statusFilter === 'Low Stock') params.append('is_low_stock', 'true');
         if (statusFilter === 'Out of Stock') params.append('out_of_stock', 'true');
       }
+      if (searchQuery) params.append('search', searchQuery);
       params.append('page', currentPage.toString());
       params.append('ordering', 'name');
 
@@ -155,6 +173,11 @@ export default function WarehousePage() {
       setTotalCount(data.count || 0);
       setHasNext(!!data.next);
       setHasPrevious(!!data.previous);
+
+      // Update statistics if available
+      if (data.statistics) {
+        setStatistics(data.statistics);
+      }
     } catch (err) {
       console.error('Error fetching inventory:', err);
       setError('Gagal memuat data inventaris');
@@ -364,16 +387,10 @@ export default function WarehousePage() {
     return item.current_stock * unitPrice;
   };
 
-  // Client-side search filtering (after server-side pagination)
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                 (item.category_name && item.category_name.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesSearch;
-  });
-
   const activeFilters = [];
   if (categoryFilter !== 'All') activeFilters.push({ type: 'category', value: categoryFilter });
   if (statusFilter !== 'All') activeFilters.push({ type: 'status', value: statusFilter });
+  if (searchQuery) activeFilters.push({ type: 'search', value: `Pencarian: "${searchQuery}"` });
 
   const removeFilter = (type: string) => {
     if (type === 'category') {
@@ -382,6 +399,11 @@ export default function WarehousePage() {
     }
     if (type === 'status') {
       setStatusFilter('All');
+      setCurrentPage(1);
+    }
+    if (type === 'search') {
+      setSearchInput('');
+      setSearchQuery('');
       setCurrentPage(1);
     }
   };
@@ -403,10 +425,6 @@ export default function WarehousePage() {
   const pageSize = 20;
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  const lowStockCount = items.filter(item => item.is_low_stock && item.current_stock > 0).length;
-  const criticalStockCount = items.filter(item => item.current_stock === 0).length;
-  const normalStockCount = items.length - lowStockCount - criticalStockCount;
-
   return (
     <OfficeLayout>
       {/* Breadcrumb */}
@@ -423,13 +441,22 @@ export default function WarehousePage() {
             <h1 className="text-3xl font-bold text-gray-900">Master Data Item</h1>
             <p className="text-gray-600 mt-2">Kelola data barang inventory</p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-[#4E61D3] text-white px-4 py-2 text-sm font-medium hover:bg-[#3d4fa8] transition-colors flex items-center space-x-2"
-          >
-            <Add01Icon className="h-4 w-4" />
-            <span>Tambah Item Baru</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => window.location.href = '/office/warehouse/purchase-orders/new'}
+              className="bg-green-600 text-white px-4 py-2 text-sm font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+            >
+              <PackageIcon className="h-4 w-4" />
+              <span>Buat Purchase Order</span>
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-[#4E61D3] text-white px-4 py-2 text-sm font-medium hover:bg-[#3d4fa8] transition-colors flex items-center space-x-2"
+            >
+              <Add01Icon className="h-4 w-4" />
+              <span>Tambah Item Baru</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -439,7 +466,7 @@ export default function WarehousePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Items</p>
-                <p className="text-3xl font-bold text-[#4E61D3] mt-2">{items.length}</p>
+                <p className="text-3xl font-bold text-[#4E61D3] mt-2">{statistics.total_items}</p>
               </div>
               <PackageIcon className="h-8 w-8 text-[#4E61D3]" />
             </div>
@@ -450,7 +477,7 @@ export default function WarehousePage() {
               <div>
                 <p className="text-sm text-gray-600">Stok Normal</p>
                 <p className="text-3xl font-bold text-green-600 mt-2">
-                  {normalStockCount}
+                  {statistics.normal_stock}
                 </p>
               </div>
               <PackageIcon className="h-8 w-8 text-green-600" />
@@ -461,7 +488,7 @@ export default function WarehousePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Stok Rendah</p>
-                <p className="text-3xl font-bold text-yellow-600 mt-2">{lowStockCount}</p>
+                <p className="text-3xl font-bold text-yellow-600 mt-2">{statistics.low_stock}</p>
               </div>
               <Alert01Icon className="h-8 w-8 text-yellow-600" />
             </div>
@@ -471,7 +498,7 @@ export default function WarehousePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Kritis/Habis</p>
-                <p className="text-3xl font-bold text-red-600 mt-2">{criticalStockCount}</p>
+                <p className="text-3xl font-bold text-red-600 mt-2">{statistics.critical_stock}</p>
               </div>
               <AlertCircleIcon className="h-8 w-8 text-red-600" />
             </div>
@@ -488,8 +515,8 @@ export default function WarehousePage() {
           <input
             type="text"
             placeholder="Cari item..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-10 pr-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3] w-full"
           />
         </div>
@@ -626,7 +653,7 @@ export default function WarehousePage() {
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {filteredItems.map((item) => {
+                {items.map((item) => {
                   const StatusIcon = getStockStatusIcon(item);
                   const stockPercentage = getStockPercentage(item);
                   const progressColor = getProgressBarColor(stockPercentage);
@@ -709,14 +736,26 @@ export default function WarehousePage() {
                           </button>
 
                           {openMenuId === item.id && (
-                            <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 shadow-lg z-10 rounded">
+                            <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-gray-200 shadow-lg z-10 rounded">
                               <button
                                 onClick={() => openEditModal(item)}
-                                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors rounded"
+                                className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors rounded-t"
                               >
                                 <PencilEdit02Icon className="h-4 w-4 mr-2 text-gray-400" />
                                 Edit Item
                               </button>
+                              {(item.current_stock === 0 || item.is_low_stock) && (
+                                <>
+                                  <div className="border-t border-gray-200"></div>
+                                  <button
+                                    onClick={() => window.location.href = `/office/warehouse/purchase-orders/new?item=${item.id}`}
+                                    className="w-full flex items-center px-3 py-2 text-sm text-green-700 hover:bg-green-50 transition-colors rounded-b"
+                                  >
+                                    <PackageIcon className="h-4 w-4 mr-2 text-green-600" />
+                                    Buat PO untuk Item Ini
+                                  </button>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
@@ -729,7 +768,7 @@ export default function WarehousePage() {
             </div>
 
           {/* No Results */}
-          {filteredItems.length === 0 && (
+          {items.length === 0 && (
             <div className="text-center py-12 bg-gray-50">
               <PackageIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada item ditemukan</h3>
@@ -738,7 +777,7 @@ export default function WarehousePage() {
           )}
 
           {/* Pagination */}
-          {!loading && filteredItems.length > 0 && totalPages > 1 && (
+          {!loading && items.length > 0 && totalPages > 1 && (
             <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
               <div className="text-sm text-gray-600">
                 Menampilkan halaman {currentPage} dari {totalPages} ({totalCount} total item)

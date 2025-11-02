@@ -30,13 +30,22 @@ class ComplaintViewSet(viewsets.ModelViewSet):
         # Calculate statistics
         all_complaints = self.get_queryset()
 
+        # Count escalated complaints (HIGH or URGENT priority and not resolved)
+        escalated_count = all_complaints.filter(
+            priority__in=['HIGH', 'URGENT'],
+            status__in=['OPEN', 'IN_PROGRESS']
+        ).count()
+
+        # Count overdue complaints using model property
+        overdue_count = sum(1 for c in all_complaints if c.is_overdue)
+
         status_counters = {
             'in_progress': all_complaints.filter(status='IN_PROGRESS').count(),
             'completed': all_complaints.filter(status__in=['RESOLVED', 'CLOSED']).count(),
-            'escalated': 0,  # Will be used if escalation feature is added
+            'escalated': escalated_count,
             'urgent': all_complaints.filter(priority='URGENT', status__in=['OPEN', 'IN_PROGRESS']).count(),
             'high_priority': all_complaints.filter(priority='HIGH', status__in=['OPEN', 'IN_PROGRESS']).count(),
-            'overdue': 0,  # Will be calculated based on SLA
+            'overdue': overdue_count,
         }
 
         # Add counters to response

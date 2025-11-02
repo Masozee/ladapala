@@ -334,7 +334,12 @@ class ComplaintSerializer(serializers.ModelSerializer):
     assigned_team_display = serializers.CharField(source='get_assigned_team_display', read_only=True)
     images = ComplaintImageSerializer(many=True, read_only=True)
     image_count = serializers.SerializerMethodField()
+    response_count = serializers.SerializerMethodField()
     assigned_to_name = serializers.SerializerMethodField()
+    is_escalated = serializers.BooleanField(read_only=True)
+    is_overdue = serializers.BooleanField(read_only=True)
+    follow_up_required = serializers.BooleanField(read_only=True)
+    response_time = serializers.IntegerField(read_only=True, allow_null=True)
 
     class Meta:
         model = Complaint
@@ -343,13 +348,24 @@ class ComplaintSerializer(serializers.ModelSerializer):
             'category_display', 'priority', 'priority_display', 'status',
             'status_display', 'guest', 'guest_name', 'guest_details', 'room', 'room_number',
             'incident_date', 'assigned_to', 'assigned_to_name', 'assigned_team', 'assigned_team_display',
-            'resolution', 'resolved_at', 'images', 'image_count', 'created_at', 'updated_at'
+            'resolution', 'resolved_at', 'images', 'image_count', 'response_count',
+            'is_escalated', 'is_overdue', 'follow_up_required', 'response_time',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'complaint_number', 'image_count', 'assigned_to_name', 'assigned_team_display']
+        read_only_fields = [
+            'created_at', 'updated_at', 'complaint_number', 'image_count', 'response_count',
+            'assigned_to_name', 'assigned_team_display', 'is_escalated', 'is_overdue',
+            'follow_up_required', 'response_time'
+        ]
 
     def get_image_count(self, obj):
         """Get count of images for this complaint"""
         return obj.images.count()
+
+    def get_response_count(self, obj):
+        """Get count of responses for this complaint"""
+        # Simple implementation: count if resolution exists
+        return 1 if obj.resolution else 0
 
     def get_assigned_to_name(self, obj):
         """Get name of assigned staff member"""
