@@ -9,7 +9,9 @@ import {
   Notification02Icon,
   ChevronRightIcon,
   UserCheckIcon,
-  Logout01Icon
+  Logout01Icon,
+  Calendar01Icon,
+  Clock01Icon
 } from '@/lib/icons';
 
 interface AppLayoutProps {

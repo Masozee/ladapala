@@ -10,7 +10,8 @@ import {
   Cancel01Icon,
   ChevronRightIcon,
   Logout01Icon,
-  Clock01Icon
+  Clock01Icon,
+  Calendar01Icon
 } from '@/lib/icons';
 import { buildApiUrl } from '@/lib/config';
 import { useRouter } from 'next/navigation';
