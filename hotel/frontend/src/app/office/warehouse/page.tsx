@@ -8,7 +8,9 @@ import {
   Archive03Icon,
   FileTextIcon,
   TruckDeliveryIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  ClipboardCheckIcon,
+  Shield01Icon
 } from '@/lib/icons';
 
 export default function WarehouseDashboardPage() {
@@ -36,6 +38,22 @@ export default function WarehouseDashboardPage() {
       href: '/office/warehouse/stock-movements',
       color: 'bg-purple-500',
       stats: 'Lihat semua transaksi stok'
+    },
+    {
+      title: 'Stock Opname',
+      description: 'Perhitungan fisik persediaan',
+      icon: ClipboardCheckIcon,
+      href: '/office/warehouse/stock-opname',
+      color: 'bg-orange-500',
+      stats: 'Hitung & sesuaikan stok fisik'
+    },
+    {
+      title: 'Audit Trail',
+      description: 'Riwayat aktivitas warehouse',
+      icon: Shield01Icon,
+      href: '/office/warehouse/audit',
+      color: 'bg-indigo-500',
+      stats: 'Lacak semua perubahan data'
     }
   ];
 
