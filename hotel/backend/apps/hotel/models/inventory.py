@@ -208,9 +208,10 @@ class StockOpname(models.Model):
 
     def calculate_summary(self):
         """Calculate summary statistics"""
+        from django.db.models import Q
         items = self.items.all()
         self.total_items_counted = items.filter(counted_stock__isnull=False).count()
-        self.total_discrepancies = items.filter(difference__ne=0).count()
+        self.total_discrepancies = items.filter(~Q(difference=0)).count()
         self.save(update_fields=['total_items_counted', 'total_discrepancies'])
 
     def get_total_discrepancy_value(self):
