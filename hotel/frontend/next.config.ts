@@ -4,7 +4,7 @@ import path from "path";
 const nextConfig: NextConfig = {
   // Set the workspace root to the hotel directory to fix lockfile warning
   outputFileTracingRoot: path.join(__dirname),
-  
+
   // Configure headers for better security and API compatibility
   async headers() {
     return [
