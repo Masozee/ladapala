@@ -57,7 +57,9 @@ interface AvailableReport {
 }
 
 export default function ReportsPage() {
-  const [selectedPeriod, setSelectedPeriod] = useState('thisMonth');
+  // Default to current month in YYYY-MM format
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const [selectedPeriod, setSelectedPeriod] = useState(currentMonth);
   const [selectedReportType, setSelectedReportType] = useState('all');
   const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
   const [availableReports, setAvailableReports] = useState<AvailableReport[]>([]);
@@ -536,16 +538,21 @@ export default function ReportsPage() {
             {/* Filters */}
             <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
               <div className="flex items-center space-x-4">
-                <select 
+                <select
                   value={selectedPeriod}
                   onChange={(e) => setSelectedPeriod(e.target.value)}
                   className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4E61D3]"
                 >
-                  <option value="thisMonth">Bulan Ini</option>
-                  <option value="lastMonth">Bulan Lalu</option>
-                  <option value="thisQuarter">Kuartal Ini</option>
-                  <option value="thisYear">Tahun Ini</option>
-                  <option value="custom">Periode Kustom</option>
+                  {/* Generate last 12 months */}
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - i);
+                    const value = d.toISOString().slice(0, 7); // YYYY-MM
+                    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                                       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                    const label = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+                    return <option key={value} value={value}>{label}</option>;
+                  })}
                 </select>
                 <select 
                   value={selectedReportType}

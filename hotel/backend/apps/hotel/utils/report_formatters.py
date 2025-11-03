@@ -471,20 +471,113 @@ def format_tax_report_pdf(data):
 
 
 def format_tax_report_excel(data):
-    """Format tax report as Excel"""
+    """Format comprehensive tax report as Excel"""
     excel = ExcelReportGenerator("Laporan Pajak Hotel", data.get('period', ''))
-    excel.add_sheet("Pajak")
+    excel.add_sheet("Ringkasan Pajak")
     excel.add_header()
 
-    # Key metrics
-    excel.add_section("Ringkasan Pajak")
-    metrics = {
-        'Total Pendapatan': format_currency(data.get('total_revenue', 0)),
-        f"PPN ({data.get('vat_rate', 10)}%)": format_currency(data.get('vat_amount', 0)),
-        f"Pajak Hotel ({data.get('hotel_tax_rate', 10)}%)": format_currency(data.get('hotel_tax', 0)),
-        'Total Pajak': format_currency(data.get('total_tax', 0)),
+    # Report Information
+    excel.add_section("Informasi Laporan")
+    info_metrics = {
+        'Periode': f"{data.get('start_date', '')} s/d {data.get('end_date', '')}",
+        'Total Transaksi': data.get('statistics', {}).get('total_transactions', 0),
+        'Total Tamu': data.get('statistics', {}).get('total_guests', 0),
+        'Dibuat': data.get('generated_at', ''),
     }
-    excel.add_key_metrics(metrics)
+    excel.add_key_metrics(info_metrics)
+
+    # Tax Rates
+    excel.add_section("Tarif Pajak")
+    tax_rates = data.get('tax_rates', {})
+    rates_data = {
+        'PPN (Pajak Pertambahan Nilai)': f"{tax_rates.get('ppn', 0)}%",
+        'Pajak Hotel (Provincial)': f"{tax_rates.get('hotel_tax', 0)}%",
+        'Service Charge': f"{tax_rates.get('service_charge', 0)}%",
+        'PPh Final': f"{tax_rates.get('pph_final', 0)}%",
+    }
+    excel.add_key_metrics(rates_data)
+
+    # Revenue Breakdown
+    excel.add_section("Rincian Pendapatan Kena Pajak")
+    rev_breakdown = data.get('revenue_breakdown', {})
+    room_rev = rev_breakdown.get('room_revenue', {})
+    event_rev = rev_breakdown.get('event_revenue', {})
+    total_rev = rev_breakdown.get('total', {})
+
+    headers = ['Kategori', 'Subtotal', 'Pajak', 'Service', 'Grand Total', 'Jumlah Trx']
+    table_data = [
+        [
+            f"Kamar",
+            format_currency(room_rev.get('subtotal', 0)),
+            format_currency(room_rev.get('tax_amount', 0)),
+            format_currency(room_rev.get('service_charge', 0)),
+            format_currency(room_rev.get('grand_total', 0)),
+            room_rev.get('transaction_count', 0)
+        ],
+        [
+            f"Event",
+            format_currency(event_rev.get('subtotal', 0)),
+            format_currency(event_rev.get('tax_amount', 0)),
+            format_currency(event_rev.get('service_charge', 0)),
+            format_currency(event_rev.get('grand_total', 0)),
+            event_rev.get('transaction_count', 0)
+        ],
+        [
+            f"TOTAL",
+            format_currency(total_rev.get('subtotal', 0)),
+            format_currency(total_rev.get('tax_collected', 0)),
+            format_currency(total_rev.get('service_charge', 0)),
+            format_currency(total_rev.get('grand_total', 0)),
+            total_rev.get('transaction_count', 0)
+        ]
+    ]
+    excel.add_table(headers, table_data)
+
+    # Tax Obligations
+    excel.add_section("Kewajiban Pajak kepada Pemerintah")
+    tax_oblig = data.get('tax_obligations', {})
+    oblig_metrics = {
+        'PPN yang Dikumpulkan': format_currency(tax_oblig.get('ppn_collected', 0)),
+        'Pajak Hotel (Prov)': format_currency(tax_oblig.get('hotel_tax_payable', 0)),
+        'PPh Final (Pusat)': format_currency(tax_oblig.get('pph_final_payable', 0)),
+        'TOTAL KEWAJIBAN': format_currency(tax_oblig.get('total_payable', 0)),
+    }
+    excel.add_key_metrics(oblig_metrics)
+
+    # Payment Methods Sheet
+    excel.add_sheet("Metode Pembayaran")
+    excel.add_section("Distribusi Metode Pembayaran")
+    if data.get('payment_methods'):
+        headers = ['Metode', 'Jumlah Transaksi', 'Total', 'Persentase']
+        table_data = [
+            [
+                item['method'],
+                item['count'],
+                format_currency(item['total']),
+                f"{item['percentage']}%"
+            ]
+            for item in data['payment_methods']
+        ]
+        excel.add_table(headers, table_data)
+
+    # Daily Breakdown Sheet
+    excel.add_sheet("Rincian Harian")
+    excel.add_section("Breakdown Harian Pendapatan dan Pajak")
+    if data.get('daily_breakdown'):
+        headers = ['Tanggal', 'Pendapatan Kamar', 'Pendapatan Event', 'Total Pendapatan', 'Pajak Dikumpulkan', 'Service Charge', 'Grand Total']
+        table_data = [
+            [
+                item['date'],
+                format_currency(item['room_revenue']),
+                format_currency(item['event_revenue']),
+                format_currency(item['total_revenue']),
+                format_currency(item['tax_collected']),
+                format_currency(item['service_charge']),
+                format_currency(item['grand_total'])
+            ]
+            for item in data['daily_breakdown'] if item['total_revenue'] > 0
+        ]
+        excel.add_table(headers, table_data)
 
     return excel.generate()
 

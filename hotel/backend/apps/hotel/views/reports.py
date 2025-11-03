@@ -1020,26 +1020,27 @@ def tax_report(request):
     Comprehensive tax report for government submission
     Records all taxable transactions with detailed breakdown
     """
-    period = request.GET.get('period', 'thisMonth')
+    period = request.GET.get('period', '')
 
-    # Calculate date range
+    # Calculate date range based on year-month format (e.g., "2025-10" for Oktober 2025)
     today = date.today()
-    if period == 'thisMonth':
-        start_date = date(today.year, today.month, 1)
-        end_date = today
-    elif period == 'lastMonth':
-        last_month = today.replace(day=1) - timedelta(days=1)
-        start_date = date(last_month.year, last_month.month, 1)
-        end_date = date(last_month.year, last_month.month, 1) + timedelta(days=32)
-        end_date = end_date.replace(day=1) - timedelta(days=1)
-    elif period == 'thisQuarter':
-        quarter = (today.month - 1) // 3
-        start_date = date(today.year, quarter * 3 + 1, 1)
-        end_date = today
-    elif period == 'thisYear':
-        start_date = date(today.year, 1, 1)
-        end_date = today
+
+    if period and '-' in period:
+        # Format: "YYYY-MM" (e.g., "2025-10")
+        try:
+            year, month = map(int, period.split('-'))
+            start_date = date(year, month, 1)
+            # Last day of the month
+            if month == 12:
+                end_date = date(year, 12, 31)
+            else:
+                end_date = date(year, month + 1, 1) - timedelta(days=1)
+        except (ValueError, IndexError):
+            # Default to current month if parsing fails
+            start_date = date(today.year, today.month, 1)
+            end_date = today
     else:
+        # Default to current month
         start_date = date(today.year, today.month, 1)
         end_date = today
 
