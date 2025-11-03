@@ -314,34 +314,36 @@ export const TaxReportPDF: React.FC<TaxReportPDFProps> = ({ data }) => {
           </Text>
           <View style={pdfStyles.table}>
             <View style={[pdfStyles.tableRow, pdfStyles.tableHeader]}>
-              <Text style={[pdfStyles.tableCell, { width: '12%' }]}>No. Reservasi</Text>
-              <Text style={[pdfStyles.tableCell, { width: '15%' }]}>Tamu</Text>
-              <Text style={[pdfStyles.tableCell, { width: '8%' }]}>Kamar</Text>
-              <Text style={[pdfStyles.tableCell, { width: '10%' }]}>Check-in</Text>
-              <Text style={[pdfStyles.tableCell, { width: '10%', textAlign: 'right' }]}>Subtotal</Text>
-              <Text style={[pdfStyles.tableCell, { width: '10%', textAlign: 'right' }]}>Pajak</Text>
-              <Text style={[pdfStyles.tableCell, { width: '10%', textAlign: 'right' }]}>Service</Text>
-              <Text style={[pdfStyles.tableCell, { width: '12%', textAlign: 'right' }]}>Total</Text>
+              <Text style={[pdfStyles.tableCell, { width: '15%' }]}>No. Reservasi</Text>
+              <Text style={[pdfStyles.tableCell, { width: '10%' }]}>Kamar</Text>
+              <Text style={[pdfStyles.tableCell, { width: '12%' }]}>Check-in</Text>
+              <Text style={[pdfStyles.tableCell, { width: '8%', textAlign: 'center' }]}>Malam</Text>
+              <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right' }]}>Subtotal</Text>
+              <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right' }]}>Pajak</Text>
+              <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right' }]}>Service</Text>
+              <Text style={[pdfStyles.tableCell, { width: '14%', textAlign: 'right' }]}>Total</Text>
             </View>
             {data.room_transactions.slice(0, 50).map((trx, index) => (
               <View key={index} style={pdfStyles.tableRow}>
-                <Text style={[pdfStyles.tableCell, { width: '12%', fontSize: 6 }]}>{trx.transaction_id}</Text>
-                <Text style={[pdfStyles.tableCell, { width: '15%', fontSize: 6 }]}>{trx.guest_name}</Text>
-                <Text style={[pdfStyles.tableCell, { width: '8%', fontSize: 6 }]}>{trx.room_number}</Text>
-                <Text style={[pdfStyles.tableCell, { width: '10%', fontSize: 6 }]}>
+                <Text style={[pdfStyles.tableCell, { width: '15%', fontSize: 6 }]}>{trx.transaction_id}</Text>
+                <Text style={[pdfStyles.tableCell, { width: '10%', fontSize: 6 }]}>{trx.room_number}</Text>
+                <Text style={[pdfStyles.tableCell, { width: '12%', fontSize: 6 }]}>
                   {new Date(trx.check_in).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}
                 </Text>
-                <Text style={[pdfStyles.tableCell, { width: '10%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.subtotal).replace('Rp', '').replace(/\s/g, '').slice(0, 8)}
+                <Text style={[pdfStyles.tableCell, { width: '8%', textAlign: 'center', fontSize: 6 }]}>
+                  {trx.nights}
                 </Text>
-                <Text style={[pdfStyles.tableCell, { width: '10%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.tax_amount).replace('Rp', '').replace(/\s/g, '').slice(0, 8)}
+                <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right', fontSize: 6 }]}>
+                  {formatCurrency(trx.subtotal).replace('Rp', '').replace(/\s/g, '').slice(0, 10)}
                 </Text>
-                <Text style={[pdfStyles.tableCell, { width: '10%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.service_charge).replace('Rp', '').replace(/\s/g, '').slice(0, 8)}
+                <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right', fontSize: 6 }]}>
+                  {formatCurrency(trx.tax_amount).replace('Rp', '').replace(/\s/g, '').slice(0, 10)}
                 </Text>
-                <Text style={[pdfStyles.tableCell, { width: '12%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.grand_total).replace('Rp', '').replace(/\s/g, '').slice(0, 9)}
+                <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right', fontSize: 6 }]}>
+                  {formatCurrency(trx.service_charge).replace('Rp', '').replace(/\s/g, '').slice(0, 10)}
+                </Text>
+                <Text style={[pdfStyles.tableCell, { width: '14%', textAlign: 'right', fontSize: 6 }]}>
+                  {formatCurrency(trx.grand_total).replace('Rp', '').replace(/\s/g, '').slice(0, 11)}
                 </Text>
               </View>
             ))}

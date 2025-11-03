@@ -1148,14 +1148,13 @@ def tax_report(request):
     ]
 
     # === 4. DAILY TAX BREAKDOWN ===
+    # Use check-in date for rooms (when service is provided) and event_date for events
     daily_breakdown = []
     current_date = start_date
     while current_date <= end_date:
-        day_start = datetime.combine(current_date, datetime.min.time())
-        day_end = datetime.combine(current_date, datetime.max.time())
-
+        # Room revenue by check-in date
         day_reservations = Reservation.objects.filter(
-            created_at__range=[day_start, day_end],
+            check_in_date=current_date,
             status__in=['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT']
         )
 
@@ -1164,9 +1163,10 @@ def tax_report(request):
         day_room_service = day_room_subtotal * SERVICE_CHARGE_RATE
         day_room_total = day_room_subtotal + day_room_tax + day_room_service
 
+        # Event revenue by event date
         try:
             day_events = EventBooking.objects.filter(
-                created_at__range=[day_start, day_end],
+                event_date=current_date,
                 status__in=['CONFIRMED', 'ONGOING', 'COMPLETED']
             )
             day_event_subtotal = day_events.aggregate(total=Sum('subtotal'))['total'] or Decimal('0')
