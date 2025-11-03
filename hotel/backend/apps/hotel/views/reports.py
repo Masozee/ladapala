@@ -1080,7 +1080,7 @@ def tax_report(request):
             'transaction_date': res.created_at.strftime('%Y-%m-%d'),
             'guest_name': res.guest.full_name,
             'guest_id': res.guest.id_number,
-            'room_number': res.room.room_number,
+            'room_number': res.room.number,
             'check_in': res.check_in_date.strftime('%Y-%m-%d'),
             'check_out': res.check_out_date.strftime('%Y-%m-%d'),
             'nights': nights,
@@ -1115,7 +1115,7 @@ def tax_report(request):
                 'event_type': event.event_type,
                 'event_date': event.event_date.strftime('%Y-%m-%d'),
                 'pax': event.confirmed_pax or event.expected_pax,
-                'venue': event.venue.room_number if event.venue else '-',
+                'venue': event.venue.number if event.venue else '-',
                 'subtotal': float(event.subtotal),
                 'tax_amount': float(event.tax_amount),
                 'grand_total': float(event.grand_total)
