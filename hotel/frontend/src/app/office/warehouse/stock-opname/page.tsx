@@ -202,41 +202,40 @@ export default function StockOpnamePage() {
 
         {/* Filters */}
         <div className="bg-white border border-gray-200 rounded p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-4">
-            {/* Status Filter Dropdown */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 w-full md:w-48 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
-            >
-              {statuses.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label} ({status.count})
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {/* Left: Filters */}
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Status Filter Dropdown */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 w-full md:w-48 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+              >
+                {statuses.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label} ({status.count})
+                  </option>
+                ))}
+              </select>
 
-            {/* Date From */}
-            <div className="w-full md:w-40">
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="px-3 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
-              />
+              {/* Date Range */}
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="px-3 py-2 w-full md:w-36 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+                />
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="px-3 py-2 w-full md:w-36 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+                />
+              </div>
             </div>
 
-            {/* Date To */}
-            <div className="w-full md:w-40">
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="px-3 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
-              />
-            </div>
-
-            {/* Search */}
+            {/* Right: Search */}
             <div className="relative w-full md:w-80">
               <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input

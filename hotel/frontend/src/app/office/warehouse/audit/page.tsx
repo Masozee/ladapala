@@ -181,56 +181,55 @@ export default function WarehouseAuditPage() {
 
         {/* Filters */}
         <div className="bg-white border border-gray-200 rounded p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-4">
-            {/* Action Type Filter */}
-            <select
-              value={actionTypeFilter}
-              onChange={(e) => setActionTypeFilter(e.target.value)}
-              className="px-3 py-2 w-full md:w-48 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
-            >
-              <option value="ALL">Semua Aksi</option>
-              <option value="CREATE">Dibuat</option>
-              <option value="UPDATE">Diubah</option>
-              <option value="DELETE">Dihapus</option>
-              <option value="ADJUST">Penyesuaian</option>
-              <option value="COUNT">Perhitungan</option>
-              <option value="COMPLETE">Diselesaikan</option>
-              <option value="CANCEL">Dibatalkan</option>
-            </select>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {/* Left: Filters */}
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Action Type Filter */}
+              <select
+                value={actionTypeFilter}
+                onChange={(e) => setActionTypeFilter(e.target.value)}
+                className="px-3 py-2 w-full md:w-48 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
+              >
+                <option value="ALL">Semua Aksi</option>
+                <option value="CREATE">Dibuat</option>
+                <option value="UPDATE">Diubah</option>
+                <option value="DELETE">Dihapus</option>
+                <option value="ADJUST">Penyesuaian</option>
+                <option value="COUNT">Perhitungan</option>
+                <option value="COMPLETE">Diselesaikan</option>
+                <option value="CANCEL">Dibatalkan</option>
+              </select>
 
-            {/* Model Filter */}
-            <select
-              value={modelFilter}
-              onChange={(e) => setModelFilter(e.target.value)}
-              className="px-3 py-2 w-full md:w-48 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
-            >
-              <option value="ALL">Semua Model</option>
-              {uniqueModels.map((model) => (
-                <option key={model} value={model}>{model}</option>
-              ))}
-            </select>
+              {/* Model Filter */}
+              <select
+                value={modelFilter}
+                onChange={(e) => setModelFilter(e.target.value)}
+                className="px-3 py-2 w-full md:w-48 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
+              >
+                <option value="ALL">Semua Model</option>
+                {uniqueModels.map((model) => (
+                  <option key={model} value={model}>{model}</option>
+                ))}
+              </select>
 
-            {/* Date From */}
-            <div className="w-full md:w-40">
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="px-3 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
-              />
+              {/* Date Range */}
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="px-3 py-2 w-full md:w-36 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
+                />
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="px-3 py-2 w-full md:w-36 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
+                />
+              </div>
             </div>
 
-            {/* Date To */}
-            <div className="w-full md:w-40">
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="px-3 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
-              />
-            </div>
-
-            {/* Search */}
+            {/* Right: Search */}
             <div className="relative w-full md:w-80">
               <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
