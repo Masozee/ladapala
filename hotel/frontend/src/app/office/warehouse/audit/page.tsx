@@ -9,6 +9,8 @@ import {
   Calendar01Icon,
   UserIcon,
   FileTextIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@/lib/icons';
 
 interface AuditLog {
@@ -33,10 +35,14 @@ export default function WarehouseAuditPage() {
   const [modelFilter, setModelFilter] = useState('ALL');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 20;
 
   useEffect(() => {
     fetchLogs();
-  }, [actionTypeFilter, modelFilter, dateFrom, dateTo]);
+  }, [actionTypeFilter, modelFilter, dateFrom, dateTo, currentPage]);
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -60,6 +66,10 @@ export default function WarehouseAuditPage() {
         params.append('search', searchQuery);
       }
 
+      // Add pagination
+      params.append('page', currentPage.toString());
+      params.append('page_size', itemsPerPage.toString());
+
       if (params.toString()) {
         url += '?' + params.toString();
       }
@@ -71,6 +81,8 @@ export default function WarehouseAuditPage() {
       if (response.ok) {
         const data = await response.json();
         setLogs(data.results || data);
+        setTotalCount(data.count || 0);
+        setTotalPages(Math.ceil((data.count || 0) / itemsPerPage));
       }
     } catch (error) {
       console.error('Error fetching audit logs:', error);
@@ -245,77 +257,194 @@ export default function WarehouseAuditPage() {
         </div>
 
         {/* Audit Logs Table */}
-        <div className="bg-white border border-gray-200 rounded">
+        <div className="bg-white border border-gray-200 rounded overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="text-gray-500">Memuat data...</div>
+              <div className="animate-pulse text-gray-500">Memuat data...</div>
             </div>
           ) : logs.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64">
-              <FileTextIcon className="h-12 w-12 text-gray-400 mb-4" />
-              <div className="text-gray-500">Tidak ada log audit</div>
+              <FileTextIcon className="h-16 w-16 text-gray-300 mb-4" />
+              <div className="text-gray-500 font-medium">Tidak ada log audit</div>
+              <div className="text-gray-400 text-sm mt-1">Coba ubah filter pencarian</div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-[#4E61D3] text-white">
-                    <th className="border px-4 py-3 text-left text-sm font-medium">Waktu</th>
-                    <th className="border px-4 py-3 text-left text-sm font-medium">Pengguna</th>
-                    <th className="border px-4 py-3 text-left text-sm font-medium">Aksi</th>
-                    <th className="border px-4 py-3 text-left text-sm font-medium">Model</th>
-                    <th className="border px-4 py-3 text-left text-sm font-medium">Deskripsi</th>
-                    <th className="border px-4 py-3 text-left text-sm font-medium">Perubahan</th>
-                    <th className="border px-4 py-3 text-left text-sm font-medium">Catatan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50">
-                      <td className="border px-4 py-3 text-sm whitespace-nowrap">
-                        {formatDateTime(log.timestamp)}
-                      </td>
-                      <td className="border px-4 py-3 text-sm">
-                        <div className="flex items-center space-x-2">
-                          <UserIcon className="h-4 w-4 text-gray-400" />
-                          <span>{log.user_name || 'System'}</span>
-                        </div>
-                      </td>
-                      <td className="border px-4 py-3">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getActionColor(log.action_type)}`}>
-                          {log.action_type_display}
-                        </span>
-                      </td>
-                      <td className="border px-4 py-3 text-sm">
-                        {log.model_name}
-                      </td>
-                      <td className="border px-4 py-3 text-sm">
-                        {log.object_repr}
-                        <div className="text-xs text-gray-500">ID: {log.object_id}</div>
-                      </td>
-                      <td className="border px-4 py-3 text-sm">
-                        {log.changes ? (
-                          <div className="space-y-1">
-                            {Object.entries(log.changes).map(([field, change]) => (
-                              <div key={field} className="text-xs">
-                                <span className="font-medium">{field}:</span>{' '}
-                                <span className="text-red-600">{String(change.old)}</span> →{' '}
-                                <span className="text-green-600">{String(change.new)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 text-xs">-</span>
-                        )}
-                      </td>
-                      <td className="border px-4 py-3 text-sm text-gray-600">
-                        {log.notes || '-'}
-                      </td>
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-[#4E61D3] to-[#3D4EA8] text-white">
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                        Waktu
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                        Pengguna
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                        Aksi
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                        Model
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                        Deskripsi
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                        Perubahan
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                        Catatan
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {logs.map((log, index) => (
+                      <tr
+                        key={log.id}
+                        className={`transition-colors ${
+                          index % 2 === 0 ? 'bg-white hover:bg-blue-50' : 'bg-gray-50 hover:bg-blue-50'
+                        }`}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <Calendar01Icon className="h-4 w-4 text-gray-400 mr-2" />
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {new Date(log.timestamp).toLocaleDateString('id-ID', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {new Date(log.timestamp).toLocaleTimeString('id-ID', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="h-8 w-8 rounded-full bg-[#4E61D3] bg-opacity-10 flex items-center justify-center mr-3">
+                              <UserIcon className="h-4 w-4 text-[#4E61D3]" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {log.user_name || 'System'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getActionColor(log.action_type)}`}>
+                            {log.action_type_display}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-gray-900">{log.model_name}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">{log.object_repr}</div>
+                          <div className="text-xs text-gray-500 mt-1">ID: {log.object_id}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {log.changes ? (
+                            <div className="space-y-2">
+                              {Object.entries(log.changes).map(([field, change]) => (
+                                <div key={field} className="text-xs">
+                                  <div className="font-semibold text-gray-700 mb-1">{field}</div>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="px-2 py-1 bg-red-50 text-red-700 rounded border border-red-200">
+                                      {String(change.old) || 'null'}
+                                    </span>
+                                    <span className="text-gray-400">→</span>
+                                    <span className="px-2 py-1 bg-green-50 text-green-700 rounded border border-green-200">
+                                      {String(change.new) || 'null'}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-sm italic">Tidak ada perubahan</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-600 max-w-xs">
+                            {log.notes || <span className="text-gray-400 italic">-</span>}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Menampilkan <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> - <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalCount)}</span> dari <span className="font-medium">{totalCount}</span> hasil
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-2 rounded border ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      }`}
+                    >
+                      <ChevronLeftIcon className="h-4 w-4" />
+                    </button>
+
+                    <div className="flex items-center space-x-1">
+                      {[...Array(totalPages)].map((_, index) => {
+                        const page = index + 1;
+                        // Show first page, last page, current page, and pages around current
+                        if (
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 1 && page <= currentPage + 1)
+                        ) {
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`px-3 py-2 rounded text-sm font-medium ${
+                                currentPage === page
+                                  ? 'bg-[#4E61D3] text-white'
+                                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        } else if (page === currentPage - 2 || page === currentPage + 2) {
+                          return <span key={page} className="px-2 text-gray-400">...</span>;
+                        }
+                        return null;
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-2 rounded border ${
+                        currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      }`}
+                    >
+                      <ChevronRightIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
