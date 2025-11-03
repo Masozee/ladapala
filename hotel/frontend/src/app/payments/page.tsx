@@ -85,6 +85,7 @@ interface Transaction {
   check_in_date: string;
   check_out_date: string;
   amount: string;
+  subtotal: string;
   payment_method: string;
   payment_method_display: string;
   status: string;
@@ -92,6 +93,17 @@ interface Transaction {
   payment_date: string;
   transaction_id: string | null;
   notes: string;
+  // Promotion fields
+  voucher_code: string | null;
+  voucher_name: string | null;
+  voucher_discount: string;
+  discount_name: string | null;
+  discount_type: string | null;
+  discount_amount: string;
+  loyalty_points_redeemed: number;
+  loyalty_points_value: string;
+  loyalty_points_earned: number;
+  total_discount: string;
 }
 
 const PaymentsPage = () => {
@@ -125,6 +137,14 @@ const PaymentsPage = () => {
   const [authError, setAuthError] = useState('');
   const [voidReason, setVoidReason] = useState('');
   const [pendingVoidTransaction, setPendingVoidTransaction] = useState<Transaction | null>(null);
+
+  // Promotion states
+  const [voucherCode, setVoucherCode] = useState('');
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+  const [availablePoints, setAvailablePoints] = useState(0);
+  const [calculationResult, setCalculationResult] = useState<any>(null);
+  const [applyingVoucher, setApplyingVoucher] = useState(false);
+  const [voucherError, setVoucherError] = useState('');
 
   const paymentMethods: PaymentMethod[] = [
     { id: 'cash', name: 'Cash', icon: CreditCardIcon, enabled: true },
@@ -191,6 +211,10 @@ const PaymentsPage = () => {
         .then(data => {
           const reservation = data.results?.find((r: any) => r.id === parseInt(resId));
           if (reservation?.reservation_number) {
+            // Fetch guest loyalty points if guest ID is available
+            if (reservation.guest) {
+              fetchGuestLoyaltyPoints(reservation.guest);
+            }
             // Fetch full details with payment info
             return fetch(`http://localhost:8000/api/hotel/reservations/${reservation.reservation_number}/`);
           }
@@ -272,6 +296,76 @@ const PaymentsPage = () => {
     setLineItems(lineItems.filter(item => item.id !== id));
   };
 
+  // Fetch guest loyalty points
+  const fetchGuestLoyaltyPoints = async (guestId: number) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/hotel/guests/${guestId}/`);
+      if (response.ok) {
+        const data = await response.json();
+        setAvailablePoints(data.loyalty_points || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching guest loyalty points:', error);
+      setAvailablePoints(0);
+    }
+  };
+
+  // Calculate payment with promotions
+  const calculateWithPromotions = async () => {
+    if (!reservationId) return;
+
+    setApplyingVoucher(true);
+    setVoucherError('');
+
+    try {
+      const response = await fetch('http://localhost:8000/api/hotel/payments/calculate/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          reservation_id: reservationId,
+          voucher_code: voucherCode || undefined,
+          redeem_points: pointsToRedeem || 0,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setVoucherError(data.error || 'Failed to calculate promotions');
+        setCalculationResult(null);
+      } else {
+        setCalculationResult(data);
+        setVoucherError('');
+      }
+    } catch (error) {
+      console.error('Error calculating promotions:', error);
+      setVoucherError('Network error occurred');
+      setCalculationResult(null);
+    } finally {
+      setApplyingVoucher(false);
+    }
+  };
+
+  // Apply voucher button handler
+  const handleApplyVoucher = () => {
+    if (!voucherCode.trim() && pointsToRedeem === 0) {
+      setVoucherError('Please enter a voucher code or points to redeem');
+      return;
+    }
+    calculateWithPromotions();
+  };
+
+  // Clear promotions
+  const handleClearPromotions = () => {
+    setVoucherCode('');
+    setPointsToRedeem(0);
+    setCalculationResult(null);
+    setVoucherError('');
+  };
+
   const handlePayment = async () => {
     setPaymentStatus('processing');
 
@@ -291,30 +385,62 @@ const PaymentsPage = () => {
         'qris': 'DIGITAL_WALLET'
       };
 
-      const paymentData = {
-        reservation: reservationId,
-        amount: totalAmount,
-        payment_method: paymentMethodMap[selectedPaymentMethod] || 'CASH',
-        status: 'COMPLETED',
-        payment_date: new Date().toISOString(),
-        notes: notes,
-      };
+      let response;
+      let paymentResult;
 
-      // Create payment record in backend
-      const response = await fetch('http://localhost:8000/api/hotel/payments/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(paymentData),
-      });
+      // Use process_with_promotions endpoint if promotions are applied
+      if (calculationResult && (voucherCode || pointsToRedeem > 0)) {
+        const promotionData = {
+          reservation_id: reservationId,
+          payment_method: paymentMethodMap[selectedPaymentMethod] || 'CASH',
+          transaction_id: null,
+          voucher_code: voucherCode || undefined,
+          redeem_points: pointsToRedeem || 0,
+        };
 
-      if (!response.ok) {
-        throw new Error('Payment failed');
+        response = await fetch('http://localhost:8000/api/hotel/payments/process_with_promotions/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(promotionData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Payment with promotions failed');
+        }
+
+        const data = await response.json();
+        paymentResult = data.payment;
+        console.log('Payment with promotions created:', paymentResult);
+      } else {
+        // Standard payment without promotions
+        const paymentData = {
+          reservation: reservationId,
+          amount: totalAmount,
+          payment_method: paymentMethodMap[selectedPaymentMethod] || 'CASH',
+          status: 'COMPLETED',
+          payment_date: new Date().toISOString(),
+          notes: notes,
+        };
+
+        response = await fetch('http://localhost:8000/api/hotel/payments/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(paymentData),
+        });
+
+        if (!response.ok) {
+          throw new Error('Payment failed');
+        }
+
+        paymentResult = await response.json();
+        console.log('Payment created:', paymentResult);
       }
-
-      const paymentResult = await response.json();
-      console.log('Payment created:', paymentResult);
 
       setPaymentStatus('completed');
       setShowReceipt(true);
@@ -608,6 +734,117 @@ const PaymentsPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Apply Voucher Code */}
+            <div className="bg-white border border-gray-200 no-print">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Apply Voucher or Discount</h3>
+                    <p className="text-sm text-gray-600 mt-1">Enter promo code to get discount</p>
+                  </div>
+                  <div className="w-8 h-8 bg-orange-500 flex items-center justify-center">
+                    <PackageIcon className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 bg-gray-50">
+                <div className="space-y-3">
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      placeholder="Enter voucher code (e.g. WELCOME2025)"
+                      value={voucherCode}
+                      onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                      className="flex-1 px-4 py-2 bg-white border border-gray-300 focus:ring-2 focus:ring-[#005357] focus:outline-none uppercase"
+                    />
+                    <button
+                      onClick={handleApplyVoucher}
+                      disabled={applyingVoucher || !reservationId}
+                      className="px-6 py-2 bg-[#005357] text-white font-medium hover:bg-[#004449] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {applyingVoucher ? 'Applying...' : 'Apply'}
+                    </button>
+                    {calculationResult && (
+                      <button
+                        onClick={handleClearPromotions}
+                        className="px-4 py-2 bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  {voucherError && (
+                    <p className="text-xs text-red-600">{voucherError}</p>
+                  )}
+                  {calculationResult && calculationResult.voucher_applied && (
+                    <p className="text-xs text-green-600">
+                      ✓ Voucher "{calculationResult.voucher_code}" applied: {formatCurrency(calculationResult.voucher_discount)}
+                    </p>
+                  )}
+                  {calculationResult && calculationResult.discount_applied && (
+                    <p className="text-xs text-purple-600">
+                      ✓ Auto discount "{calculationResult.discount_name}" applied: {formatCurrency(calculationResult.discount_amount)}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">Valid voucher codes will be applied automatically to your total</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Redeem Loyalty Points - For Returning Guests */}
+            <div className="bg-white border border-gray-200 no-print">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Redeem Loyalty Points</h3>
+                    <p className="text-sm text-gray-600 mt-1">For returning guests with reward points</p>
+                  </div>
+                  <div className="w-8 h-8 bg-yellow-500 flex items-center justify-center">
+                    <UserCheckIcon className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 bg-gray-50">
+                <div className="space-y-3">
+                  <div className="p-3 bg-yellow-50 border border-yellow-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-700">Available Points</span>
+                      <span className="text-xl font-bold text-yellow-700">{availablePoints.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Points to Redeem
+                    </label>
+                    <div className="flex gap-3">
+                      <input
+                        type="number"
+                        min="0"
+                        max={availablePoints}
+                        value={pointsToRedeem || ''}
+                        onChange={(e) => setPointsToRedeem(parseInt(e.target.value) || 0)}
+                        placeholder="Enter points amount"
+                        className="flex-1 px-4 py-2 bg-white border border-gray-300 focus:ring-2 focus:ring-[#005357] focus:outline-none"
+                      />
+                      <button
+                        onClick={handleApplyVoucher}
+                        disabled={applyingVoucher || !reservationId || pointsToRedeem === 0}
+                        className="px-6 py-2 bg-[#005357] text-white font-medium hover:bg-[#004449] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {applyingVoucher ? 'Applying...' : 'Apply'}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">1,000 points = Rp 50,000 discount</p>
+                    {calculationResult && calculationResult.points_redeemed > 0 && (
+                      <p className="text-xs text-yellow-600 mt-1">
+                        ✓ {calculationResult.points_redeemed.toLocaleString()} points redeemed: {formatCurrency(calculationResult.points_value)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right Panel - Order Summary & Payment */}
@@ -683,10 +920,41 @@ const PaymentsPage = () => {
                       <span>Tax (11%):</span>
                       <span>{formatCurrency(taxAmount)}</span>
                     </div>
+
+                    {/* Promotions/Discounts */}
+                    {calculationResult && calculationResult.voucher_discount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Voucher Discount ({calculationResult.voucher_code}):</span>
+                        <span>- {formatCurrency(calculationResult.voucher_discount)}</span>
+                      </div>
+                    )}
+                    {calculationResult && calculationResult.discount_amount > 0 && (
+                      <div className="flex justify-between text-sm text-purple-600">
+                        <span>Auto Discount ({calculationResult.discount_name}):</span>
+                        <span>- {formatCurrency(calculationResult.discount_amount)}</span>
+                      </div>
+                    )}
+                    {calculationResult && calculationResult.points_value > 0 && (
+                      <div className="flex justify-between text-sm text-yellow-600">
+                        <span>Points Redeemed ({calculationResult.points_redeemed.toLocaleString()}):</span>
+                        <span>- {formatCurrency(calculationResult.points_value)}</span>
+                      </div>
+                    )}
+
                     <div className="flex justify-between text-lg font-bold pt-2 border-t">
                       <span>Total:</span>
-                      <span className="text-[#005357]">{formatCurrency(totalAmount)}</span>
+                      <span className="text-[#005357]">
+                        {calculationResult ? formatCurrency(calculationResult.final_amount) : formatCurrency(totalAmount)}
+                      </span>
                     </div>
+
+                    {/* Points to Earn */}
+                    {calculationResult && calculationResult.points_earned > 0 && (
+                      <div className="p-2 bg-blue-50 border border-blue-200 text-center mt-2">
+                        <p className="text-xs text-blue-700">You will earn</p>
+                        <p className="text-sm font-bold text-blue-800">+{calculationResult.points_earned.toLocaleString()} points</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -992,6 +1260,7 @@ const PaymentsPage = () => {
                       <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Room</th>
                       <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-in</th>
                       <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                      <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Promotions</th>
                       <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
                       <th className="border border-gray-300 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                       <th className="border border-gray-300 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -1022,7 +1291,59 @@ const PaymentsPage = () => {
                         <td className="border border-gray-200 px-6 py-4 text-sm text-gray-600">
                           {transaction.check_in_date ? new Date(transaction.check_in_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}
                         </td>
-                        <td className="border border-gray-200 px-6 py-4 text-sm font-medium text-gray-900">{formatCurrency(parseFloat(transaction.amount))}</td>
+                        <td className="border border-gray-200 px-6 py-4 text-sm font-medium text-gray-900">
+                          <div>
+                            {formatCurrency(parseFloat(transaction.amount))}
+                            {parseFloat(transaction.total_discount) > 0 && (
+                              <div className="text-xs text-green-600 font-normal mt-1">
+                                ({formatCurrency(parseFloat(transaction.total_discount))} discount)
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="border border-gray-200 px-6 py-4 text-sm text-gray-600">
+                          {parseFloat(transaction.total_discount) > 0 ? (
+                            <div className="space-y-1">
+                              {transaction.voucher_code && (
+                                <div className="flex items-center space-x-1">
+                                  <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-green-100 text-green-800">
+                                    {transaction.voucher_code}
+                                  </span>
+                                  <span className="text-xs text-gray-600">
+                                    -{formatCurrency(parseFloat(transaction.voucher_discount))}
+                                  </span>
+                                </div>
+                              )}
+                              {transaction.discount_name && (
+                                <div className="flex items-center space-x-1">
+                                  <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-purple-100 text-purple-800">
+                                    {transaction.discount_name}
+                                  </span>
+                                  <span className="text-xs text-gray-600">
+                                    -{formatCurrency(parseFloat(transaction.discount_amount))}
+                                  </span>
+                                </div>
+                              )}
+                              {transaction.loyalty_points_redeemed > 0 && (
+                                <div className="flex items-center space-x-1">
+                                  <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-yellow-100 text-yellow-800">
+                                    {transaction.loyalty_points_redeemed.toLocaleString()} pts
+                                  </span>
+                                  <span className="text-xs text-gray-600">
+                                    -{formatCurrency(parseFloat(transaction.loyalty_points_value))}
+                                  </span>
+                                </div>
+                              )}
+                              {transaction.loyalty_points_earned > 0 && (
+                                <div className="text-xs text-blue-600">
+                                  +{transaction.loyalty_points_earned.toLocaleString()} pts earned
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
                         <td className="border border-gray-200 px-6 py-4 text-sm text-gray-600">{transaction.payment_method_display}</td>
                         <td className="border border-gray-200 px-6 py-4">
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
