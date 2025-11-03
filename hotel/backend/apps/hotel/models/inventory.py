@@ -149,3 +149,128 @@ class StockMovement(models.Model):
 
     def __str__(self):
         return f'{self.inventory_item.name} - {self.movement_type} ({self.quantity:+d})'
+
+
+class StockOpname(models.Model):
+    """Stock Opname (Physical Inventory Count) Session"""
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+
+    opname_number = models.CharField(max_length=20, unique=True, editable=False)
+    opname_date = models.DateField(default=timezone.now)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    location = models.CharField(max_length=100, default='Main Warehouse')
+    notes = models.TextField(blank=True, null=True)
+
+    # Tracking
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='opnames_created')
+    completed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='opnames_completed')
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    # Summary fields (calculated)
+    total_items_counted = models.PositiveIntegerField(default=0)
+    total_discrepancies = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-opname_date', '-created_at']
+        verbose_name = 'Stock Opname'
+        verbose_name_plural = 'Stock Opnames'
+
+    def __str__(self):
+        return f'{self.opname_number} - {self.opname_date} ({self.status})'
+
+    def save(self, *args, **kwargs):
+        if not self.opname_number:
+            # Generate opname number: OPN-YYYY-NNNN
+            year = timezone.now().year
+            last_opname = StockOpname.objects.filter(
+                opname_number__startswith=f'OPN-{year}-'
+            ).order_by('-opname_number').first()
+
+            if last_opname:
+                last_num = int(last_opname.opname_number.split('-')[-1])
+                new_num = last_num + 1
+            else:
+                new_num = 1
+
+            self.opname_number = f'OPN-{year}-{new_num:04d}'
+
+        super().save(*args, **kwargs)
+
+    def calculate_summary(self):
+        """Calculate summary statistics"""
+        items = self.items.all()
+        self.total_items_counted = items.filter(counted_stock__isnull=False).count()
+        self.total_discrepancies = items.filter(difference__ne=0).count()
+        self.save(update_fields=['total_items_counted', 'total_discrepancies'])
+
+    def get_total_discrepancy_value(self):
+        """Calculate total value of discrepancies"""
+        total = 0
+        for item in self.items.all():
+            if item.difference:
+                total += abs(item.difference * item.inventory_item.unit_price)
+        return total
+
+
+class StockOpnameItem(models.Model):
+    """Individual item in a Stock Opname session"""
+    stock_opname = models.ForeignKey(StockOpname, on_delete=models.CASCADE, related_name='items')
+    inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE)
+
+    # Stock levels
+    system_stock = models.PositiveIntegerField(help_text='Stock in system at start of opname')
+    counted_stock = models.PositiveIntegerField(null=True, blank=True, help_text='Physical count')
+    difference = models.IntegerField(default=0, help_text='Counted - System')
+
+    # Details
+    reason = models.TextField(blank=True, null=True, help_text='Reason for discrepancy')
+    counted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='opname_items_counted')
+    counted_at = models.DateTimeField(null=True, blank=True)
+
+    # Tracking
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['inventory_item__name']
+        unique_together = ['stock_opname', 'inventory_item']
+
+    def __str__(self):
+        return f'{self.stock_opname.opname_number} - {self.inventory_item.name}'
+
+    def save(self, *args, **kwargs):
+        # Calculate difference when counted_stock is set
+        if self.counted_stock is not None:
+            self.difference = self.counted_stock - self.system_stock
+            if not self.counted_at:
+                self.counted_at = timezone.now()
+        super().save(*args, **kwargs)
+
+    @property
+    def has_discrepancy(self):
+        """Check if there's a discrepancy"""
+        return self.difference != 0
+
+    @property
+    def discrepancy_value(self):
+        """Calculate value of discrepancy"""
+        if self.difference:
+            return abs(self.difference * self.inventory_item.unit_price)
+        return 0
+
+    @property
+    def discrepancy_percentage(self):
+        """Calculate percentage discrepancy"""
+        if self.system_stock > 0:
+            return (self.difference / self.system_stock) * 100
+        return 0

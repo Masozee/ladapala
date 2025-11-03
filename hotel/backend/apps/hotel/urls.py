@@ -17,6 +17,8 @@ try:
     from .views.housekeeping import HousekeepingTaskViewSet, AmenityUsageViewSet
     from .views.payments import AdditionalChargeViewSet
     from .views.warehouse import PurchaseOrderViewSet, PurchaseOrderItemViewSet, StockMovementViewSet
+    from .views.stock_opname import StockOpnameViewSet, StockOpnameItemViewSet
+    from .views.audit import WarehouseAuditLogViewSet
     from .views.maintenance import MaintenanceRequestViewSet, MaintenanceTechnicianViewSet
     from .views.settings import HotelSettingsViewSet
     from .views.sidebar_counts import sidebar_counts
@@ -69,6 +71,9 @@ if LEGACY_VIEWS:
     router.register(r'event-bookings', EventBookingViewSet, basename='hotel-event-bookings')
     router.register(r'event-payments', EventPaymentViewSet, basename='hotel-event-payments')
     router.register(r'event-addons', EventAddOnViewSet, basename='hotel-event-addons')
+    router.register(r'stock-opnames', StockOpnameViewSet, basename='hotel-stock-opnames')
+    router.register(r'stock-opname-items', StockOpnameItemViewSet, basename='hotel-stock-opname-items')
+    router.register(r'warehouse-audit', WarehouseAuditLogViewSet, basename='hotel-warehouse-audit')
 
 urlpatterns = [
     path('', include(router.urls)),
