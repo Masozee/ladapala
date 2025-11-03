@@ -5,11 +5,17 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow login page and public assets
-  if (pathname.startsWith('/login') ||
-      pathname.startsWith('/_next') ||
-      pathname.startsWith('/api') ||
-      pathname.startsWith('/static') ||
-      pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|css|js)$/)) {
+  if (pathname === '/login' ||
+      pathname.startsWith('/_next/') ||
+      pathname.startsWith('/api/') ||
+      pathname.startsWith('/static/') ||
+      pathname.endsWith('.ico') ||
+      pathname.endsWith('.png') ||
+      pathname.endsWith('.jpg') ||
+      pathname.endsWith('.jpeg') ||
+      pathname.endsWith('.svg') ||
+      pathname.endsWith('.css') ||
+      pathname.endsWith('.js')) {
     return NextResponse.next();
   }
 
@@ -23,22 +29,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Session exists - client-side DepartmentGuard will handle fine-grained access control
-  const response = NextResponse.next();
-  response.headers.set('x-pathname', pathname);
-
-  return response;
+  // Session exists - proceed with the request
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
+     * Match all request paths except:
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - public files with extensions
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
