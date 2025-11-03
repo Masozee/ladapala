@@ -267,7 +267,7 @@ class EventBookingViewSet(viewsets.ModelViewSet):
             if email_sent:
                 return Response({
                     'message': 'Invoice email sent successfully',
-                    'sent_to': 'nurojilukmansyah@gmail.com',  # Test email
+                    'sent_to': 'nurojilukmansyah@gmail.com',  # Development test email
                     'booking_number': booking.booking_number
                 })
             else:

@@ -11,9 +11,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -187,7 +192,20 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
-# MailerSend Configuration
-# Get the API key from environment variable (from frontend's .env)
+# Email Configuration - Gmail SMTP
 import os
-MAILERSEND_API_KEY = os.environ.get('MAILER_SEND', 'mlsn.8531194b66340f9d29e41b47b92cad73df9fbd2962fcb77547f7390a896674d9')
+
+# SMTP Settings - Using custom backend with certifi for SSL verification
+EMAIL_BACKEND = 'core.email_backend.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')  # Your Gmail address
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')  # Your Gmail App Password
+# DEFAULT_FROM_EMAIL must match EMAIL_HOST_USER for Gmail
+DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_TIMEOUT = 10  # seconds
+
+# Old MailerSend configuration (kept for reference, can be removed later)
+# MAILERSEND_API_KEY = os.environ.get('MAILER_SEND', 'mlsn.8531194b66340f9d29e41b47b92cad73df9fbd2962fcb77547f7390a896674d9')

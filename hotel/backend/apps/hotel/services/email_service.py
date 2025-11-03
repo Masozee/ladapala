@@ -1,9 +1,8 @@
 """
-Email Service using MailerSend
+Email Service using Gmail SMTP
 """
-import os
 import base64
-from mailersend import MailerSendClient, EmailBuilder
+from django.core.mail import EmailMessage
 from django.conf import settings
 from .pdf_generator import generate_event_invoice_pdf
 
@@ -19,22 +18,17 @@ def send_event_invoice_email(event_booking):
         bool: True if email sent successfully, False otherwise
     """
     try:
-        # Get MailerSend API key from settings
-        api_key = getattr(settings, 'MAILERSEND_API_KEY', None)
-        if not api_key:
-            print("Warning: MAILERSEND_API_KEY not found in settings")
-            return False
-
-        # Initialize MailerSend client
-        mailer = MailerSendClient(api_key=api_key)
 
         # Generate PDF invoice
         pdf_buffer = generate_event_invoice_pdf(event_booking)
         pdf_content = pdf_buffer.getvalue()
-        pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
 
         # Email subject
         subject = f"Invoice Pembayaran Event - {event_booking.event_name}"
+
+        # Recipient email - FOR DEVELOPMENT: Send all emails to test address
+        recipient_email = "nurojilukmansyah@gmail.com"  # Development test email
+        # recipient_email = event_booking.guest.email  # Uncomment for production
 
         # Email body (HTML)
         html_content = f"""
@@ -190,48 +184,29 @@ def send_event_invoice_email(event_booking):
         Email: info@kapulaga.net | Telepon: (021) 1234-5678
         """
 
-        # Build email using EmailBuilder
-        email_builder = EmailBuilder()
-
-        # Set from address
-        email_builder.from_email(
-            email="noreply@kapulaga.net",
-            name="Hotel Kapulaga"
+        # Create email using Django's EmailMessage
+        email = EmailMessage(
+            subject=subject,
+            body=html_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[recipient_email],
         )
 
-        # FOR TESTING: Send to test email instead of guest email
-        # TODO: Change back to guest email in production
-        email_builder.to(
-            email="nurojilukmansyah@gmail.com",  # Test email
-            # email=event_booking.guest.email,  # Uncomment for production
-            name=event_booking.guest.full_name
-        )
-
-        # Set subject and content
-        email_builder.subject(subject)
-        email_builder.html(html_content)
-        email_builder.text(text_content)
+        # Set content type to HTML
+        email.content_subtype = "html"
 
         # Attach PDF
-        email_builder.attach_content(
-            content=pdf_base64,
-            filename=f"Invoice_{event_booking.booking_number}.pdf"
+        email.attach(
+            filename=f"Invoice_{event_booking.booking_number}.pdf",
+            content=pdf_content,
+            mimetype='application/pdf'
         )
 
-        # Build the email object
-        email = email_builder.build()
-
         # Send email
-        response = mailer.emails.send(email)
+        email.send()
 
-        # Check if successful (MailerSend returns 202 for accepted)
-        print(f"MailerSend response: {response}")
-        if response and hasattr(response, 'status_code') and response.status_code == 202:
-            print(f"Invoice email sent successfully to nurojilukmansyah@gmail.com (test)")
-            return True
-        else:
-            print(f"Failed to send email. Response: {response}")
-            return False
+        print(f"Invoice email sent successfully to {recipient_email}")
+        return True
 
     except Exception as e:
         print(f"Error sending invoice email: {str(e)}")

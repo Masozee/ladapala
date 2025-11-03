@@ -539,7 +539,7 @@ class RoomListSerializer(serializers.ModelSerializer):
 
     def get_current_guest(self, obj):
         """Get current guest if room is occupied"""
-        from .models import Reservation
+        from ..models import Reservation
 
         # Get active reservation (CHECKED_IN)
         reservation = Reservation.objects.filter(
@@ -560,7 +560,7 @@ class RoomListSerializer(serializers.ModelSerializer):
 
     def get_current_staff(self, obj):
         """Get current staff working on room (housekeeping or maintenance)"""
-        from .models import HousekeepingTask
+        from ..models import HousekeepingTask
         from apps.user.models import User
 
         # Get active housekeeping task (not CLEAN)
