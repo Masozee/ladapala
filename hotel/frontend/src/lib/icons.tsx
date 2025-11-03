@@ -60,6 +60,7 @@ import {
   CircleArrowReload01Icon as HugeCircleArrowReload01,
   Image02Icon as HugeImage02,
   Archive03Icon as HugeArchive03,
+  Clipboard as HugeClipboard,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 
@@ -224,3 +225,6 @@ Activity.displayName = 'Activity';
 Cpu.displayName = 'Cpu';
 Server.displayName = 'Server';
 HardDrive.displayName = 'HardDrive';
+
+export const ClipboardCheckIcon = createIconComponent(HugeClipboard);
+ClipboardCheckIcon.displayName = 'ClipboardCheckIcon';
