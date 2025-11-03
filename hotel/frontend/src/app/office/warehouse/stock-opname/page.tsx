@@ -202,18 +202,19 @@ export default function StockOpnamePage() {
 
         {/* Filters */}
         <div className="bg-white border border-gray-200 rounded p-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="relative w-full md:w-80">
-              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cari nomor opname atau lokasi..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
-              />
-            </div>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-4">
+            {/* Status Filter Dropdown */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 w-full md:w-48 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+            >
+              {statuses.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label} ({status.count})
+                </option>
+              ))}
+            </select>
 
             {/* Date From */}
             <div className="w-full md:w-40">
@@ -234,23 +235,18 @@ export default function StockOpnamePage() {
                 className="px-3 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
               />
             </div>
-          </div>
 
-          {/* Status Filter Tabs */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            {statuses.map((status) => (
-              <button
-                key={status.value}
-                onClick={() => setStatusFilter(status.value)}
-                className={`px-4 py-2 rounded text-sm font-medium transition ${
-                  statusFilter === status.value
-                    ? 'bg-[#4E61D3] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {status.label} ({status.count})
-              </button>
-            ))}
+            {/* Search */}
+            <div className="relative w-full md:w-80">
+              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Cari nomor opname atau lokasi..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+              />
+            </div>
           </div>
         </div>
 
