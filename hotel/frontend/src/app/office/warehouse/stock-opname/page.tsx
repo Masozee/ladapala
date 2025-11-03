@@ -204,7 +204,7 @@ export default function StockOpnamePage() {
         <div className="bg-white border border-gray-200 rounded p-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
-            <div className="relative flex-1">
+            <div className="relative w-full md:w-80">
               <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
@@ -216,7 +216,7 @@ export default function StockOpnamePage() {
             </div>
 
             {/* Date From */}
-            <div className="w-full md:w-48">
+            <div className="w-full md:w-40">
               <input
                 type="date"
                 value={dateFrom}
@@ -226,7 +226,7 @@ export default function StockOpnamePage() {
             </div>
 
             {/* Date To */}
-            <div className="w-full md:w-48">
+            <div className="w-full md:w-40">
               <input
                 type="date"
                 value={dateTo}

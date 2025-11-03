@@ -341,7 +341,7 @@ export default function StockOpnameDetailPage() {
         {/* Filters */}
         <div className="bg-white border border-gray-200 rounded p-6">
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
+            <div className="relative w-full md:w-80">
               <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
@@ -355,7 +355,7 @@ export default function StockOpnameDetailPage() {
             <select
               value={filterDiscrepancy}
               onChange={(e) => setFilterDiscrepancy(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
+              className="px-3 py-2 w-full md:w-64 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
             >
               <option value="ALL">Semua ({opname.items.length})</option>
               <option value="UNCOUNTED">Belum Dihitung ({uncountedCount})</option>
