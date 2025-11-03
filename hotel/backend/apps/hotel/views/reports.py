@@ -15,6 +15,34 @@ from ..models import (
 from ..utils.report_formatters import get_formatter
 
 
+def parse_period_to_date_range(period):
+    """
+    Parse period parameter to date range.
+    Accepts YYYY-MM format (e.g., "2025-10" for Oktober 2025)
+    Returns (start_date, end_date) tuple
+    """
+    today = date.today()
+
+    if period and '-' in period:
+        # Format: "YYYY-MM" (e.g., "2025-10")
+        try:
+            year, month = map(int, period.split('-'))
+            start_date = date(year, month, 1)
+            # Last day of the month
+            if month == 12:
+                end_date = date(year, 12, 31)
+            else:
+                end_date = date(year, month + 1, 1) - timedelta(days=1)
+            return start_date, end_date
+        except (ValueError, IndexError):
+            pass
+
+    # Default to current month
+    start_date = date(today.year, today.month, 1)
+    end_date = today
+    return start_date, end_date
+
+
 def format_response(data, report_type, request):
     """
     Format response based on requested download format (json/pdf/xlsx)
@@ -513,21 +541,8 @@ def available_reports(request):
 @permission_classes([AllowAny])
 def occupancy_report(request):
     """Generate occupancy report"""
-    period = request.GET.get('period', 'thisMonth')
-
-    # Calculate date range
-    today = date.today()
-    if period == 'thisMonth':
-        start_date = date(today.year, today.month, 1)
-        end_date = today
-    elif period == 'lastMonth':
-        last_month = today.replace(day=1) - timedelta(days=1)
-        start_date = date(last_month.year, last_month.month, 1)
-        end_date = date(last_month.year, last_month.month, 1) + timedelta(days=32)
-        end_date = end_date.replace(day=1) - timedelta(days=1)
-    else:
-        start_date = date(today.year, today.month, 1)
-        end_date = today
+    period = request.GET.get('period', '')
+    start_date, end_date = parse_period_to_date_range(period)
 
     total_rooms = Room.objects.filter(is_active=True).count()
 
@@ -1021,28 +1036,7 @@ def tax_report(request):
     Records all taxable transactions with detailed breakdown
     """
     period = request.GET.get('period', '')
-
-    # Calculate date range based on year-month format (e.g., "2025-10" for Oktober 2025)
-    today = date.today()
-
-    if period and '-' in period:
-        # Format: "YYYY-MM" (e.g., "2025-10")
-        try:
-            year, month = map(int, period.split('-'))
-            start_date = date(year, month, 1)
-            # Last day of the month
-            if month == 12:
-                end_date = date(year, 12, 31)
-            else:
-                end_date = date(year, month + 1, 1) - timedelta(days=1)
-        except (ValueError, IndexError):
-            # Default to current month if parsing fails
-            start_date = date(today.year, today.month, 1)
-            end_date = today
-    else:
-        # Default to current month
-        start_date = date(today.year, today.month, 1)
-        end_date = today
+    start_date, end_date = parse_period_to_date_range(period)
 
     start_datetime = datetime.combine(start_date, datetime.min.time())
     end_datetime = datetime.combine(end_date, datetime.max.time())
