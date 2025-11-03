@@ -20,6 +20,9 @@ def parse_period_to_date_range(period):
     Parse period parameter to date range.
     Accepts YYYY-MM format (e.g., "2025-10" for Oktober 2025)
     Returns (start_date, end_date) tuple
+
+    Important: If the selected month is the current month, end_date is capped at today.
+    This prevents showing future dates in reports.
     """
     today = date.today()
 
@@ -28,11 +31,23 @@ def parse_period_to_date_range(period):
         try:
             year, month = map(int, period.split('-'))
             start_date = date(year, month, 1)
-            # Last day of the month
+
+            # Calculate last day of the month
             if month == 12:
-                end_date = date(year, 12, 31)
+                month_end_date = date(year, 12, 31)
             else:
-                end_date = date(year, month + 1, 1) - timedelta(days=1)
+                month_end_date = date(year, month + 1, 1) - timedelta(days=1)
+
+            # Cap at today if this is the current month or future month
+            if year == today.year and month == today.month:
+                end_date = today
+            elif year > today.year or (year == today.year and month > today.month):
+                # Future month - use today as end date
+                end_date = today
+            else:
+                # Past month - use full month
+                end_date = month_end_date
+
             return start_date, end_date
         except (ValueError, IndexError):
             pass
