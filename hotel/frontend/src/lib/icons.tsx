@@ -60,7 +60,7 @@ import {
   CircleArrowReload01Icon as HugeCircleArrowReload01,
   Image02Icon as HugeImage02,
   Archive03Icon as HugeArchive03,
-  Clipboard as HugeClipboard,
+  ClipboardIcon as HugeClipboard,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 
