@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import (
+from ..models import (
     RoomType, Room, RoomTypeImage, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
     CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, Supplier,
     MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
