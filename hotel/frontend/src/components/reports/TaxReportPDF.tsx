@@ -305,103 +305,19 @@ export const TaxReportPDF: React.FC<TaxReportPDFProps> = ({ data }) => {
         </View>
       </View>
 
-      {/* Room Transactions Detail */}
-      {data.room_transactions.length > 0 && (
-        <View style={pdfStyles.section} break>
-          <Text style={pdfStyles.sectionTitle}>Lampiran A: Detail Transaksi Kamar</Text>
-          <Text style={{ fontSize: 8, color: '#6B7280', marginBottom: 8, fontStyle: 'italic' }}>
-            Menampilkan {Math.min(data.room_transactions.length, 50)} dari {data.room_transactions.length} transaksi kamar
-          </Text>
-          <View style={pdfStyles.table}>
-            <View style={[pdfStyles.tableRow, pdfStyles.tableHeader]}>
-              <Text style={[pdfStyles.tableCell, { width: '15%' }]}>No. Reservasi</Text>
-              <Text style={[pdfStyles.tableCell, { width: '10%' }]}>Kamar</Text>
-              <Text style={[pdfStyles.tableCell, { width: '12%' }]}>Check-in</Text>
-              <Text style={[pdfStyles.tableCell, { width: '8%', textAlign: 'center' }]}>Malam</Text>
-              <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right' }]}>Subtotal</Text>
-              <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right' }]}>Pajak</Text>
-              <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right' }]}>Service</Text>
-              <Text style={[pdfStyles.tableCell, { width: '14%', textAlign: 'right' }]}>Total</Text>
-            </View>
-            {data.room_transactions.slice(0, 50).map((trx, index) => (
-              <View key={index} style={pdfStyles.tableRow}>
-                <Text style={[pdfStyles.tableCell, { width: '15%', fontSize: 6 }]}>{trx.transaction_id}</Text>
-                <Text style={[pdfStyles.tableCell, { width: '10%', fontSize: 6 }]}>{trx.room_number}</Text>
-                <Text style={[pdfStyles.tableCell, { width: '12%', fontSize: 6 }]}>
-                  {new Date(trx.check_in).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}
-                </Text>
-                <Text style={[pdfStyles.tableCell, { width: '8%', textAlign: 'center', fontSize: 6 }]}>
-                  {trx.nights}
-                </Text>
-                <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.subtotal).replace('Rp', '').replace(/\s/g, '').slice(0, 10)}
-                </Text>
-                <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.tax_amount).replace('Rp', '').replace(/\s/g, '').slice(0, 10)}
-                </Text>
-                <Text style={[pdfStyles.tableCell, { width: '13%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.service_charge).replace('Rp', '').replace(/\s/g, '').slice(0, 10)}
-                </Text>
-                <Text style={[pdfStyles.tableCell, { width: '14%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.grand_total).replace('Rp', '').replace(/\s/g, '').slice(0, 11)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Event Transactions Detail */}
-      {data.event_transactions.length > 0 && (
-        <View style={pdfStyles.section} break>
-          <Text style={pdfStyles.sectionTitle}>Lampiran B: Detail Transaksi Event</Text>
-          <Text style={{ fontSize: 8, color: '#6B7280', marginBottom: 8, fontStyle: 'italic' }}>
-            Menampilkan {Math.min(data.event_transactions.length, 50)} dari {data.event_transactions.length} transaksi event
-          </Text>
-          <View style={pdfStyles.table}>
-            <View style={[pdfStyles.tableRow, pdfStyles.tableHeader]}>
-              <Text style={[pdfStyles.tableCell, { width: '12%' }]}>No. Booking</Text>
-              <Text style={[pdfStyles.tableCell, { width: '18%' }]}>Organizer</Text>
-              <Text style={[pdfStyles.tableCell, { width: '18%' }]}>Event</Text>
-              <Text style={[pdfStyles.tableCell, { width: '10%' }]}>Tanggal</Text>
-              <Text style={[pdfStyles.tableCell, { width: '12%', textAlign: 'right' }]}>Subtotal</Text>
-              <Text style={[pdfStyles.tableCell, { width: '12%', textAlign: 'right' }]}>Pajak</Text>
-              <Text style={[pdfStyles.tableCell, { width: '12%', textAlign: 'right' }]}>Total</Text>
-            </View>
-            {data.event_transactions.slice(0, 50).map((trx, index) => (
-              <View key={index} style={pdfStyles.tableRow}>
-                <Text style={[pdfStyles.tableCell, { width: '12%', fontSize: 6 }]}>{trx.transaction_id}</Text>
-                <Text style={[pdfStyles.tableCell, { width: '18%', fontSize: 6 }]}>{trx.organizer_name}</Text>
-                <Text style={[pdfStyles.tableCell, { width: '18%', fontSize: 6 }]}>{trx.event_name}</Text>
-                <Text style={[pdfStyles.tableCell, { width: '10%', fontSize: 6 }]}>
-                  {new Date(trx.event_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}
-                </Text>
-                <Text style={[pdfStyles.tableCell, { width: '12%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.subtotal).replace('Rp', '').replace(/\s/g, '').slice(0, 10)}
-                </Text>
-                <Text style={[pdfStyles.tableCell, { width: '12%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.tax_amount).replace('Rp', '').replace(/\s/g, '').slice(0, 10)}
-                </Text>
-                <Text style={[pdfStyles.tableCell, { width: '12%', textAlign: 'right', fontSize: 6 }]}>
-                  {formatCurrency(trx.grand_total).replace('Rp', '').replace(/\s/g, '').slice(0, 10)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
 
       {/* Footer Notes */}
       <View style={pdfStyles.section}>
         <Text style={pdfStyles.sectionTitle}>Catatan</Text>
         <Text style={{ fontSize: 9, lineHeight: 1.5, color: '#6B7280' }}>
-          1. Laporan ini mencakup semua transaksi yang telah dikonfirmasi dalam periode {formatDate(data.start_date)} - {formatDate(data.end_date)}.{'\n'}
-          2. Pajak yang dikumpulkan (PPN {data.tax_rates.ppn}%) telah dipungut dari pelanggan dan wajib disetor ke negara.{'\n'}
-          3. Pajak Hotel ({data.tax_rates.hotel_tax}%) merupakan pajak daerah (provincial) yang wajib disetor ke pemerintah provinsi.{'\n'}
-          4. PPh Final ({data.tax_rates.pph_final}%) merupakan pajak penghasilan final yang wajib disetor ke pemerintah pusat.{'\n'}
-          5. Service charge ({data.tax_rates.service_charge}%) merupakan biaya layanan untuk karyawan dan bukan merupakan pajak.{'\n'}
-          6. Total kewajiban pajak sebesar {formatCurrency(data.tax_obligations.total_payable)} harus disetor sesuai peraturan perpajakan yang berlaku.{'\n'}
-          7. Detail transaksi lengkap tersedia untuk keperluan audit dan verifikasi pajak.
+          1. Laporan ini mencakup semua transaksi dalam periode {formatDate(data.start_date)} - {formatDate(data.end_date)} ({data.statistics.total_transactions} transaksi, {data.statistics.total_guests} tamu).{'\n'}
+          2. Rincian harian berdasarkan tanggal check-in untuk kamar dan tanggal event untuk acara (mencerminkan tanggal penyediaan layanan).{'\n'}
+          3. PPN ({data.tax_rates.ppn}%) dan Pajak Hotel ({data.tax_rates.hotel_tax}%) telah dikumpulkan dari pelanggan dan wajib disetor ke pemerintah.{'\n'}
+          4. PPh Final ({data.tax_rates.pph_final}%) merupakan pajak penghasilan yang wajib disetor ke pemerintah pusat.{'\n'}
+          5. Service charge ({data.tax_rates.service_charge}%) merupakan biaya layanan untuk karyawan (bukan pajak).{'\n'}
+          6. Total kewajiban pajak: {formatCurrency(data.tax_obligations.total_payable)} harus disetor sesuai peraturan perpajakan yang berlaku.{'\n'}
+          7. Metode pembayaran menunjukkan distribusi pembayaran yang diterima (persentase dari total pembayaran).{'\n'}
+          8. Laporan ini siap untuk diserahkan kepada instansi pajak sebagai bukti pelaporan kewajiban pajak hotel.
         </Text>
       </View>
     </PDFTemplate>

@@ -1137,12 +1137,15 @@ def tax_report(request):
         count=Count('id')
     ).order_by('-total')
 
+    # Calculate total payments for percentage
+    total_payments = payments.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
     payment_methods = [
         {
             'method': item['payment_method'],
             'total': float(item['total']),
             'count': item['count'],
-            'percentage': round((item['total'] / (room_grand_total + event_grand_total) * 100), 2) if (room_grand_total + event_grand_total) > 0 else 0
+            'percentage': round((item['total'] / total_payments * 100), 1) if total_payments > 0 else 0
         }
         for item in payment_by_method
     ]
