@@ -198,9 +198,13 @@ def send_event_invoice_email_with_pdf(event_booking, pdf_base64_content):
         email_builder.html(html_content)
         email_builder.text(text_content)
 
-        # Attach PDF (content is already base64 encoded)
+        # Decode base64 to bytes first (attach_content will re-encode it)
+        # The MailerSend SDK's attach_content() does base64 encoding internally
+        # So we need to pass raw bytes, not base64 string
+        pdf_bytes = base64.b64decode(pdf_base64_content)
+
         email_builder.attach_content(
-            content=pdf_base64_content,
+            content=pdf_bytes,  # Pass raw bytes, not base64
             filename=f"Invoice_{event_booking.booking_number}.pdf"
         )
 
