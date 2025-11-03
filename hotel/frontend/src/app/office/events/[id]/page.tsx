@@ -219,12 +219,39 @@ export default function EventBookingDetailPage() {
 
     setResendingInvoice(true);
     try {
+      // Dynamically import @react-pdf/renderer to generate PDF
+      const { pdf } = await import('@react-pdf/renderer');
+      const EventInvoicePDF = (await import('@/components/EventInvoicePDF')).default;
+
+      // Generate PDF blob
+      const pdfBlob = await pdf(<EventInvoicePDF booking={booking} />).toBlob();
+
+      // Convert blob to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          const base64 = reader.result as string;
+          // Remove the "data:application/pdf;base64," prefix
+          const base64Content = base64.split(',')[1];
+          resolve(base64Content);
+        };
+        reader.onerror = reject;
+      });
+      reader.readAsDataURL(pdfBlob);
+
+      const pdfBase64 = await base64Promise;
+
+      // Send PDF to backend
       const response = await fetch(buildApiUrl(`hotel/event-bookings/${booking.id}/resend_invoice/`), {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'X-CSRFToken': getCsrfToken() || '',
         },
         credentials: 'include',
+        body: JSON.stringify({
+          pdf_content: pdfBase64
+        })
       });
 
       if (response.ok) {

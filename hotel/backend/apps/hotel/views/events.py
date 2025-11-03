@@ -241,7 +241,7 @@ class EventBookingViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def resend_invoice(self, request, pk=None):
-        """Resend invoice email to guest"""
+        """Resend invoice email to guest with PDF attachment from frontend"""
         try:
             booking = self.get_object()
 
@@ -252,9 +252,17 @@ class EventBookingViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Send invoice email
-            from apps.hotel.services.email_service import send_event_invoice_email
-            email_sent = send_event_invoice_email(booking)
+            # Get PDF content from request (base64 encoded)
+            pdf_base64 = request.data.get('pdf_content')
+            if not pdf_base64:
+                return Response(
+                    {'error': 'PDF content is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Send invoice email with the provided PDF
+            from apps.hotel.services.email_service_simple import send_event_invoice_email_with_pdf
+            email_sent = send_event_invoice_email_with_pdf(booking, pdf_base64)
 
             if email_sent:
                 return Response({
