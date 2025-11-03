@@ -296,6 +296,9 @@ class EventPayment(models.Model):
             random_num = random.randint(1000, 9999)
             self.payment_number = f'PAY-EVT-{timestamp}-{random_num}'
 
+        # Track if this is the payment that completes the booking
+        was_not_fully_paid = not self.event_booking.full_payment_paid if self.pk else True
+
         super().save(*args, **kwargs)
 
         # Update event booking payment status
@@ -303,9 +306,22 @@ class EventPayment(models.Model):
             total_paid = self.event_booking.get_total_paid()
             if total_paid >= self.event_booking.down_payment_amount:
                 self.event_booking.down_payment_paid = True
+
+            # Check if this payment completes the booking
             if total_paid >= self.event_booking.grand_total:
                 self.event_booking.full_payment_paid = True
                 self.event_booking.status = 'PAID'
+
+                # Send invoice email only if this is the payment that completes it
+                if was_not_fully_paid:
+                    try:
+                        from apps.hotel.services.email_service import send_event_invoice_email
+                        send_event_invoice_email(self.event_booking)
+                    except Exception as e:
+                        print(f"Failed to send invoice email: {str(e)}")
+                        # Don't fail the payment if email fails
+                        pass
+
             self.event_booking.save(update_fields=['down_payment_paid', 'full_payment_paid', 'status'])
 
 

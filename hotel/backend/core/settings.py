@@ -186,3 +186,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+# MailerSend Configuration
+# Get the API key from environment variable (from frontend's .env)
+import os
+MAILERSEND_API_KEY = os.environ.get('MAILER_SEND', 'mlsn.8531194b66340f9d29e41b47b92cad73df9fbd2962fcb77547f7390a896674d9')
