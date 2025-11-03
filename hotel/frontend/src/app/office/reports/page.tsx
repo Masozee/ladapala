@@ -34,7 +34,7 @@ const PDFViewer = dynamic(
   { ssr: false }
 );
 
-import { OccupancyReportPDF, RevenueReportPDF, GenericReportPDF } from '@/components/reports';
+import { OccupancyReportPDF, RevenueReportPDF, TaxReportPDF, GenericReportPDF } from '@/components/reports';
 
 // TypeScript interfaces for API responses
 interface ReportSummary {
@@ -292,6 +292,8 @@ export default function ReportsPage() {
         return <OccupancyReportPDF data={data} />;
       case 'revenue':
         return <RevenueReportPDF data={data} />;
+      case 'tax':
+        return <TaxReportPDF data={data} />;
       default:
         return <GenericReportPDF data={data} title={reportTitles[reportId] || 'Laporan'} />;
     }

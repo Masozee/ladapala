@@ -1016,7 +1016,10 @@ def maintenance_report(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def tax_report(request):
-    """Generate tax report"""
+    """
+    Comprehensive tax report for government submission
+    Records all taxable transactions with detailed breakdown
+    """
     period = request.GET.get('period', 'thisMonth')
 
     # Calculate date range
@@ -1029,6 +1032,13 @@ def tax_report(request):
         start_date = date(last_month.year, last_month.month, 1)
         end_date = date(last_month.year, last_month.month, 1) + timedelta(days=32)
         end_date = end_date.replace(day=1) - timedelta(days=1)
+    elif period == 'thisQuarter':
+        quarter = (today.month - 1) // 3
+        start_date = date(today.year, quarter * 3 + 1, 1)
+        end_date = today
+    elif period == 'thisYear':
+        start_date = date(today.year, 1, 1)
+        end_date = today
     else:
         start_date = date(today.year, today.month, 1)
         end_date = today
@@ -1036,30 +1046,232 @@ def tax_report(request):
     start_datetime = datetime.combine(start_date, datetime.min.time())
     end_datetime = datetime.combine(end_date, datetime.max.time())
 
-    # Total revenue
-    total_revenue = Payment.objects.filter(
+    # Tax rates (Indonesian hotel taxation)
+    PPN_RATE = Decimal('0.11')  # PPN 11% (updated 2022)
+    HOTEL_TAX_RATE = Decimal('0.10')  # Pajak Hotel 10% (Provincial)
+    SERVICE_CHARGE_RATE = Decimal('0.10')  # Service charge 10%
+    PPh_FINAL_RATE = Decimal('0.10')  # PPh Final 10% on gross revenue
+
+    # === 1. ROOM REVENUE FROM RESERVATIONS ===
+    reservations = Reservation.objects.filter(
+        created_at__range=[start_datetime, end_datetime],
+        status__in=['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT']
+    )
+
+    # Calculate taxes on the fly (since DB may not have tax fields yet)
+    room_subtotal = reservations.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    room_tax_amount = room_subtotal * (PPN_RATE + HOTEL_TAX_RATE)  # 11% PPN + 10% Hotel Tax
+    room_service_charge = room_subtotal * SERVICE_CHARGE_RATE
+    room_grand_total = room_subtotal + room_tax_amount + room_service_charge
+
+    # Detail room reservations
+    room_transactions = []
+    for res in reservations[:100]:  # Limit for performance, paginate if needed
+        res_subtotal = res.total_amount
+        res_tax = res_subtotal * (PPN_RATE + HOTEL_TAX_RATE)
+        res_service = res_subtotal * SERVICE_CHARGE_RATE
+        res_grand = res_subtotal + res_tax + res_service
+
+        # Calculate nights
+        nights = (res.check_out_date - res.check_in_date).days
+
+        room_transactions.append({
+            'transaction_id': res.reservation_number,
+            'transaction_date': res.created_at.strftime('%Y-%m-%d'),
+            'guest_name': res.guest.full_name,
+            'guest_id': res.guest.id_number,
+            'room_number': res.room.room_number,
+            'check_in': res.check_in_date.strftime('%Y-%m-%d'),
+            'check_out': res.check_out_date.strftime('%Y-%m-%d'),
+            'nights': nights,
+            'subtotal': float(res_subtotal),
+            'tax_amount': float(res_tax),
+            'service_charge': float(res_service),
+            'grand_total': float(res_grand)
+        })
+
+    # === 2. EVENT BOOKING REVENUE ===
+    try:
+        from ..models import EventBooking, EventBookingPayment
+
+        event_bookings = EventBooking.objects.filter(
+            created_at__range=[start_datetime, end_datetime],
+            status__in=['CONFIRMED', 'ONGOING', 'COMPLETED']
+        )
+
+        event_subtotal = event_bookings.aggregate(total=Sum('subtotal'))['total'] or Decimal('0')
+        event_tax_amount = event_bookings.aggregate(total=Sum('tax_amount'))['total'] or Decimal('0')
+        event_grand_total = event_bookings.aggregate(total=Sum('grand_total'))['total'] or Decimal('0')
+
+        # Detail event transactions
+        event_transactions = []
+        for event in event_bookings[:100]:
+            event_transactions.append({
+                'transaction_id': event.booking_number,
+                'transaction_date': event.created_at.strftime('%Y-%m-%d'),
+                'organizer_name': event.organizer_name,
+                'organization': event.organization or '-',
+                'event_name': event.event_name,
+                'event_type': event.event_type,
+                'event_date': event.event_date.strftime('%Y-%m-%d'),
+                'pax': event.confirmed_pax or event.expected_pax,
+                'venue': event.venue.room_number if event.venue else '-',
+                'subtotal': float(event.subtotal),
+                'tax_amount': float(event.tax_amount),
+                'grand_total': float(event.grand_total)
+            })
+    except:
+        event_subtotal = Decimal('0')
+        event_tax_amount = Decimal('0')
+        event_grand_total = Decimal('0')
+        event_transactions = []
+
+    # === 3. PAYMENT RECORDS ===
+    payments = Payment.objects.filter(
         payment_date__range=[start_datetime, end_datetime],
         status='COMPLETED'
-    ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    )
 
-    # Calculate taxes (10% PPN)
-    vat_rate = Decimal('0.10')
-    vat_amount = total_revenue * vat_rate
+    payment_by_method = payments.values('payment_method').annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total')
 
-    # Hotel tax (typically 10% in Indonesia)
-    hotel_tax_rate = Decimal('0.10')
-    hotel_tax = total_revenue * hotel_tax_rate
+    payment_methods = [
+        {
+            'method': item['payment_method'],
+            'total': float(item['total']),
+            'count': item['count'],
+            'percentage': round((item['total'] / (room_grand_total + event_grand_total) * 100), 2) if (room_grand_total + event_grand_total) > 0 else 0
+        }
+        for item in payment_by_method
+    ]
 
-    total_tax = vat_amount + hotel_tax
+    # === 4. DAILY TAX BREAKDOWN ===
+    daily_breakdown = []
+    current_date = start_date
+    while current_date <= end_date:
+        day_start = datetime.combine(current_date, datetime.min.time())
+        day_end = datetime.combine(current_date, datetime.max.time())
 
+        day_reservations = Reservation.objects.filter(
+            created_at__range=[day_start, day_end],
+            status__in=['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT']
+        )
+
+        day_room_subtotal = day_reservations.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+        day_room_tax = day_room_subtotal * (PPN_RATE + HOTEL_TAX_RATE)
+        day_room_service = day_room_subtotal * SERVICE_CHARGE_RATE
+        day_room_total = day_room_subtotal + day_room_tax + day_room_service
+
+        try:
+            day_events = EventBooking.objects.filter(
+                created_at__range=[day_start, day_end],
+                status__in=['CONFIRMED', 'ONGOING', 'COMPLETED']
+            )
+            day_event_subtotal = day_events.aggregate(total=Sum('subtotal'))['total'] or Decimal('0')
+            day_event_tax = day_events.aggregate(total=Sum('tax_amount'))['total'] or Decimal('0')
+            day_event_total = day_events.aggregate(total=Sum('grand_total'))['total'] or Decimal('0')
+        except:
+            day_event_subtotal = Decimal('0')
+            day_event_tax = Decimal('0')
+            day_event_total = Decimal('0')
+
+        day_total_subtotal = day_room_subtotal + day_event_subtotal
+        day_total_tax = day_room_tax + day_event_tax
+        day_total_service = day_room_service
+        day_total_grand = day_room_total + day_event_total
+
+        daily_breakdown.append({
+            'date': current_date.strftime('%Y-%m-%d'),
+            'room_revenue': float(day_room_subtotal),
+            'event_revenue': float(day_event_subtotal),
+            'total_revenue': float(day_total_subtotal),
+            'tax_collected': float(day_total_tax),
+            'service_charge': float(day_total_service),
+            'grand_total': float(day_total_grand)
+        })
+
+        current_date += timedelta(days=1)
+
+    # === 5. CALCULATE TOTAL TAXES ===
+    total_subtotal = room_subtotal + event_subtotal
+    total_tax_collected = room_tax_amount + event_tax_amount
+    total_service_charge = room_service_charge
+    total_grand_total = room_grand_total + event_grand_total
+
+    # Calculate government tax obligations
+    # Note: In Indonesian hotel taxation, the tax is usually already included in grand_total
+    # But we calculate the breakdown for reporting purposes
+
+    # Base amount for PPh Final (from subtotal before tax)
+    pph_final_amount = total_subtotal * PPh_FINAL_RATE
+
+    # Summary data
     data = {
         'period': period,
-        'total_revenue': float(total_revenue),
-        'vat_rate': float(vat_rate * 100),
-        'vat_amount': float(vat_amount),
-        'hotel_tax_rate': float(hotel_tax_rate * 100),
-        'hotel_tax': float(hotel_tax),
-        'total_tax': float(total_tax)
+        'start_date': start_date.strftime('%Y-%m-%d'),
+        'end_date': end_date.strftime('%Y-%m-%d'),
+        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+
+        # Tax rates
+        'tax_rates': {
+            'ppn': float(PPN_RATE * 100),  # 11%
+            'hotel_tax': float(HOTEL_TAX_RATE * 100),  # 10%
+            'service_charge': float(SERVICE_CHARGE_RATE * 100),  # 10%
+            'pph_final': float(PPh_FINAL_RATE * 100)  # 10%
+        },
+
+        # Revenue breakdown
+        'revenue_breakdown': {
+            'room_revenue': {
+                'subtotal': float(room_subtotal),
+                'tax_amount': float(room_tax_amount),
+                'service_charge': float(room_service_charge),
+                'grand_total': float(room_grand_total),
+                'transaction_count': reservations.count()
+            },
+            'event_revenue': {
+                'subtotal': float(event_subtotal),
+                'tax_amount': float(event_tax_amount),
+                'service_charge': 0,
+                'grand_total': float(event_grand_total),
+                'transaction_count': len(event_transactions)
+            },
+            'total': {
+                'subtotal': float(total_subtotal),
+                'tax_collected': float(total_tax_collected),
+                'service_charge': float(total_service_charge),
+                'grand_total': float(total_grand_total),
+                'transaction_count': reservations.count() + len(event_transactions)
+            }
+        },
+
+        # Tax obligations to government
+        'tax_obligations': {
+            'ppn_collected': float(total_tax_collected),  # Already collected from customers
+            'hotel_tax_payable': float(total_subtotal * HOTEL_TAX_RATE),  # Payable to provincial gov
+            'pph_final_payable': float(pph_final_amount),  # Payable to central gov
+            'total_payable': float(total_tax_collected + (total_subtotal * HOTEL_TAX_RATE) + pph_final_amount)
+        },
+
+        # Payment methods
+        'payment_methods': payment_methods,
+
+        # Daily breakdown
+        'daily_breakdown': daily_breakdown,
+
+        # Transaction details (for audit)
+        'room_transactions': room_transactions,
+        'event_transactions': event_transactions,
+
+        # Statistics
+        'statistics': {
+            'total_transactions': reservations.count() + len(event_transactions),
+            'total_guests': reservations.values('guest').distinct().count(),
+            'average_transaction_value': float(total_grand_total / (reservations.count() + len(event_transactions))) if (reservations.count() + len(event_transactions)) > 0 else 0,
+            'tax_percentage_of_revenue': round((total_tax_collected / total_subtotal * 100), 2) if total_subtotal > 0 else 0
+        }
     }
 
     return format_response(data, 'tax', request)

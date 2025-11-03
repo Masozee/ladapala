@@ -1,6 +1,7 @@
 // Report PDF Components Registry
 export { OccupancyReportPDF } from './OccupancyReportPDF';
 export { RevenueReportPDF } from './RevenueReportPDF';
+export { TaxReportPDF } from './TaxReportPDF';
 export { PDFTemplate, pdfStyles } from './PDFTemplate';
 
 // Generic report PDF component for reports without custom components
