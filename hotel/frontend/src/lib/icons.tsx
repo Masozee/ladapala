@@ -61,6 +61,8 @@ import {
   Image02Icon as HugeImage02,
   Archive03Icon as HugeArchive03,
   ClipboardIcon as HugeClipboard,
+  CheckmarkCircle02Icon as HugeCheckmarkCircle02,
+  PlayIcon as HugePlay,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 
@@ -228,3 +230,9 @@ HardDrive.displayName = 'HardDrive';
 
 export const ClipboardCheckIcon = createIconComponent(HugeClipboard);
 ClipboardCheckIcon.displayName = 'ClipboardCheckIcon';
+
+export const CheckmarkCircle02Icon = createIconComponent(HugeCheckmarkCircle02);
+CheckmarkCircle02Icon.displayName = 'CheckmarkCircle02Icon';
+
+export const PlayIcon = createIconComponent(HugePlay);
+PlayIcon.displayName = 'PlayIcon';
