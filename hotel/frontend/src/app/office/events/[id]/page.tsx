@@ -95,6 +95,7 @@ export default function EventBookingDetailPage() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentNotes, setPaymentNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [resendingInvoice, setResendingInvoice] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -213,6 +214,34 @@ export default function EventBookingDetailPage() {
     }
   };
 
+  const handleResendInvoice = async () => {
+    if (!booking) return;
+
+    setResendingInvoice(true);
+    try {
+      const response = await fetch(buildApiUrl(`hotel/event-bookings/${booking.id}/resend_invoice/`), {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken() || '',
+        },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`Invoice berhasil dikirim ke ${data.sent_to}`);
+      } else {
+        const error = await response.json();
+        alert('Gagal mengirim invoice: ' + (error.error || JSON.stringify(error)));
+      }
+    } catch (error) {
+      console.error('Error resending invoice:', error);
+      alert('Terjadi kesalahan saat mengirim invoice');
+    } finally {
+      setResendingInvoice(false);
+    }
+  };
+
   const formatCurrency = (amount: string | number) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('id-ID', {
@@ -328,6 +357,17 @@ export default function EventBookingDetailPage() {
               >
                 <Cancel01Icon className="h-5 w-5" />
                 <span>Batalkan</span>
+              </button>
+            )}
+
+            {booking.full_payment_paid && (
+              <button
+                onClick={handleResendInvoice}
+                disabled={resendingInvoice}
+                className="inline-flex items-center px-4 py-2 bg-[#4E61D3] text-white rounded hover:bg-[#3D4EA8] transition space-x-2 disabled:opacity-50"
+              >
+                <Mail01Icon className="h-5 w-5" />
+                <span>{resendingInvoice ? 'Mengirim...' : 'Kirim Invoice'}</span>
               </button>
             )}
 

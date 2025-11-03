@@ -239,6 +239,41 @@ class EventBookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @action(detail=True, methods=['post'])
+    def resend_invoice(self, request, pk=None):
+        """Resend invoice email to guest"""
+        try:
+            booking = self.get_object()
+
+            # Check if booking is fully paid
+            if not booking.full_payment_paid:
+                return Response(
+                    {'error': 'Invoice can only be sent for fully paid bookings'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Send invoice email
+            from apps.hotel.services.email_service import send_event_invoice_email
+            email_sent = send_event_invoice_email(booking)
+
+            if email_sent:
+                return Response({
+                    'message': 'Invoice email sent successfully',
+                    'sent_to': 'nurojilukmansyah@gmail.com',  # Test email
+                    'booking_number': booking.booking_number
+                })
+            else:
+                return Response(
+                    {'error': 'Failed to send invoice email. Please check backend logs.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class EventPaymentViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet for viewing event payments (read-only)"""
