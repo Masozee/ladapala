@@ -181,25 +181,12 @@ export default function WarehouseAuditPage() {
 
         {/* Filters */}
         <div className="bg-white border border-gray-200 rounded p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Search */}
-            <div className="relative lg:col-span-2">
-              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cari deskripsi atau catatan..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && fetchLogs()}
-                className="pl-10 pr-4 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
-              />
-            </div>
-
+          <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-4">
             {/* Action Type Filter */}
             <select
               value={actionTypeFilter}
               onChange={(e) => setActionTypeFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
+              className="px-3 py-2 w-full md:w-48 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
             >
               <option value="ALL">Semua Aksi</option>
               <option value="CREATE">Dibuat</option>
@@ -215,7 +202,7 @@ export default function WarehouseAuditPage() {
             <select
               value={modelFilter}
               onChange={(e) => setModelFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
+              className="px-3 py-2 w-full md:w-48 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
             >
               <option value="ALL">Semua Model</option>
               {uniqueModels.map((model) => (
@@ -223,21 +210,36 @@ export default function WarehouseAuditPage() {
               ))}
             </select>
 
-            {/* Date Range */}
-            <div className="flex space-x-2">
+            {/* Date From */}
+            <div className="w-full md:w-40">
               <input
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                placeholder="Dari"
                 className="px-3 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
               />
+            </div>
+
+            {/* Date To */}
+            <div className="w-full md:w-40">
               <input
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                placeholder="Sampai"
                 className="px-3 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
+              />
+            </div>
+
+            {/* Search */}
+            <div className="relative w-full md:w-80">
+              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Cari deskripsi atau catatan..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && fetchLogs()}
+                className="pl-10 pr-4 py-2 w-full text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3]"
               />
             </div>
           </div>
