@@ -10,7 +10,8 @@ import {
   TruckDeliveryIcon,
   ArrowRightIcon,
   ClipboardCheckIcon,
-  Shield01Icon
+  Shield01Icon,
+  UserMultipleIcon
 } from '@/lib/icons';
 
 export default function WarehouseDashboardPage() {
@@ -22,6 +23,14 @@ export default function WarehouseDashboardPage() {
       href: '/office/warehouse/master-data',
       color: 'bg-blue-500',
       stats: 'Lihat & kelola semua item'
+    },
+    {
+      title: 'Suppliers',
+      description: 'Kelola data supplier',
+      icon: UserMultipleIcon,
+      href: '/office/suppliers',
+      color: 'bg-teal-500',
+      stats: 'Manajemen supplier & vendor'
     },
     {
       title: 'Purchase Orders',

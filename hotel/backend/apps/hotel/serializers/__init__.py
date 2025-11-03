@@ -294,15 +294,28 @@ class PaymentSerializer(serializers.ModelSerializer):
     check_in_date = serializers.DateField(source='reservation.check_in_date', read_only=True)
     check_out_date = serializers.DateField(source='reservation.check_out_date', read_only=True)
 
+    # Promotion fields
+    voucher_code = serializers.CharField(source='voucher.code', read_only=True, allow_null=True)
+    voucher_name = serializers.CharField(source='voucher.name', read_only=True, allow_null=True)
+    discount_name = serializers.CharField(source='discount.name', read_only=True, allow_null=True)
+    discount_type = serializers.CharField(source='discount.discount_type', read_only=True, allow_null=True)
+    total_discount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+
     class Meta:
         model = Payment
         fields = [
             'id', 'reservation', 'reservation_number', 'guest_name', 'room_number',
-            'check_in_date', 'check_out_date', 'amount', 'payment_method',
+            'check_in_date', 'check_out_date', 'amount', 'subtotal', 'payment_method',
             'payment_method_display', 'status', 'status_display', 'payment_date',
-            'transaction_id', 'notes', 'created_at', 'updated_at'
+            'transaction_id', 'notes',
+            # Promotion fields
+            'voucher', 'voucher_code', 'voucher_name', 'voucher_discount',
+            'discount', 'discount_name', 'discount_type', 'discount_amount',
+            'loyalty_points_redeemed', 'loyalty_points_value', 'loyalty_points_earned',
+            'total_discount',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'total_discount']
 
 
 class ComplaintImageSerializer(serializers.ModelSerializer):
@@ -1011,3 +1024,8 @@ class EventBookingSerializer(serializers.ModelSerializer):
         else:
             return 'Belum Bayar'
 
+from .promotions import (
+    VoucherSerializer, VoucherListSerializer, VoucherValidationSerializer,
+    DiscountSerializer, LoyaltyProgramSerializer, GuestLoyaltyPointsSerializer,
+    LoyaltyTransactionSerializer, PointsRedemptionSerializer, VoucherUsageSerializer
+)

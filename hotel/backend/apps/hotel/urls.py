@@ -23,6 +23,10 @@ try:
     from .views.settings import HotelSettingsViewSet
     from .views.sidebar_counts import sidebar_counts
     from .views.support_reports import support_analytics
+    from .views.promotions import (
+        VoucherViewSet, DiscountViewSet, LoyaltyProgramViewSet,
+        GuestLoyaltyPointsViewSet, LoyaltyTransactionViewSet
+    )
     from .views.reports import (
         daily_reports, daily_reports_range, monthly_reports,
         report_summary, available_reports, occupancy_report,
@@ -31,6 +35,7 @@ try:
     )
     from .views.analytics import dashboard_analytics, monthly_comparison
     from .views.financial import financial_overview, financial_transactions
+    from .views.occupancy import occupancy_analytics
     LEGACY_VIEWS = True
 except ImportError:
     LEGACY_VIEWS = False
@@ -66,6 +71,11 @@ if LEGACY_VIEWS:
     router.register(r'maintenance-requests', MaintenanceRequestViewSet, basename='hotel-maintenance-requests')
     router.register(r'maintenance-technicians', MaintenanceTechnicianViewSet, basename='hotel-maintenance-technicians')
     router.register(r'settings', HotelSettingsViewSet, basename='hotel-settings')
+    router.register(r'vouchers', VoucherViewSet, basename='hotel-vouchers')
+    router.register(r'discounts', DiscountViewSet, basename='hotel-discounts')
+    router.register(r'loyalty-program', LoyaltyProgramViewSet, basename='hotel-loyalty-program')
+    router.register(r'loyalty-points', GuestLoyaltyPointsViewSet, basename='hotel-loyalty-points')
+    router.register(r'loyalty-transactions', LoyaltyTransactionViewSet, basename='hotel-loyalty-transactions')
     router.register(r'event-packages', EventPackageViewSet, basename='hotel-event-packages')
     router.register(r'food-packages', FoodPackageViewSet, basename='hotel-food-packages')
     router.register(r'event-bookings', EventBookingViewSet, basename='hotel-event-bookings')
@@ -104,6 +114,7 @@ if LEGACY_VIEWS:
         path('reports/tax/', tax_report, name='tax-report'),
         path('analytics/dashboard/', dashboard_analytics, name='dashboard-analytics'),
         path('analytics/monthly-comparison/', monthly_comparison, name='monthly-comparison'),
+        path('analytics/occupancy/', occupancy_analytics, name='occupancy-analytics'),
         path('financial/overview/', financial_overview, name='financial-overview'),
         path('financial/transactions/', financial_transactions, name='financial-transactions'),
     ]

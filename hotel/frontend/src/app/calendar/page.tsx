@@ -45,6 +45,13 @@ interface CalendarEvent {
   guest_name?: string;
   assigned_employee_name?: string;
   duration_hours: number;
+  source?: 'calendar' | 'booking'; // Track source of event
+  booking_number?: string; // For booking events
+  booking_status?: string;
+  payment_status?: string;
+  venue_name?: string;
+  expected_pax?: number;
+  grand_total?: string;
 }
 
 interface Holiday {
@@ -100,7 +107,7 @@ const CalendarPage = () => {
 
       const response = await fetch(buildApiUrl(`hotel/holidays/?${params}`));
       if (!response.ok) throw new Error('Failed to fetch holidays');
-      
+
       const data = await response.json();
       return data.results || [];
     } catch (err) {
@@ -109,23 +116,71 @@ const CalendarPage = () => {
     }
   };
 
+  // Fetch event bookings and transform to calendar events
+  const fetchEventBookings = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/event-bookings/'), {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        console.warn('Event bookings endpoint not available');
+        return [];
+      }
+
+      const data = await response.json();
+      const bookings = data.results || [];
+
+      // Transform bookings to calendar events
+      return bookings.map((booking: any) => ({
+        id: `booking-${booking.id}`,
+        title: booking.event_name || 'Event Booking',
+        description: `${booking.event_type} - ${booking.guest_name}\nPAX: ${booking.expected_pax || booking.confirmed_pax}\nVenue: ${booking.venue_name || 'TBD'}`,
+        event_type: 'EVENT_BOOKING',
+        start_datetime: `${booking.event_date}T${booking.event_start_time}`,
+        end_datetime: `${booking.event_date}T${booking.event_end_time}`,
+        all_day: false,
+        status: booking.booking_status,
+        priority: booking.payment_status === 'FULLY_PAID' ? 'LOW' : booking.down_payment_paid ? 'MEDIUM' : 'HIGH',
+        location: booking.venue_name,
+        guest_name: booking.guest_name,
+        duration_hours: 0,
+        source: 'booking' as const,
+        booking_number: booking.booking_number,
+        booking_status: booking.booking_status_display,
+        payment_status: booking.payment_status_display,
+        venue_name: booking.venue_name,
+        expected_pax: booking.expected_pax,
+        grand_total: booking.grand_total,
+      }));
+    } catch (err) {
+      console.error('Error fetching event bookings:', err);
+      return [];
+    }
+  };
+
   // Initial data load
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      
+
       // Fetch events for current, previous, and next month
       const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
       const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1);
-      
-      const [currentEvents, prevEvents, nextEvents] = await Promise.all([
+
+      const [currentEvents, prevEvents, nextEvents, eventBookings] = await Promise.all([
         fetchEventsForMonth(currentDate.getMonth() + 1, currentDate.getFullYear()),
         fetchEventsForMonth(prevMonth.getMonth() + 1, prevMonth.getFullYear()),
-        fetchEventsForMonth(nextMonth.getMonth() + 1, nextMonth.getFullYear())
+        fetchEventsForMonth(nextMonth.getMonth() + 1, nextMonth.getFullYear()),
+        fetchEventBookings()
       ]);
-      
-      // Combine all events
-      const allEvents = [...(currentEvents || []), ...(prevEvents || []), ...(nextEvents || [])];
+
+      // Combine all events (calendar events + event bookings)
+      const allEvents = [
+        ...(currentEvents || []),
+        ...(prevEvents || []),
+        ...(nextEvents || []),
+        ...(eventBookings || [])
+      ];
       setEvents(allEvents);
       
       // Fetch holidays for current year and adjacent years if needed
@@ -211,6 +266,7 @@ const CalendarPage = () => {
       case 'HOUSEKEEPING': return 'bg-yellow-500';
       case 'STAFF_SCHEDULE': return 'bg-purple-500';
       case 'EVENT': return 'bg-pink-500';
+      case 'EVENT_BOOKING': return 'bg-orange-500';
       case 'REMINDER': return 'bg-gray-500';
       default: return 'bg-gray-500';
     }
@@ -224,6 +280,7 @@ const CalendarPage = () => {
       case 'HOUSEKEEPING': return 'Housekeeping';
       case 'STAFF_SCHEDULE': return 'Staff Schedule';
       case 'EVENT': return 'Hotel Event';
+      case 'EVENT_BOOKING': return 'Event Booking';
       case 'REMINDER': return 'Reminder';
       default: return 'Event';
     }
@@ -438,6 +495,7 @@ const CalendarPage = () => {
                     <option value="HOUSEKEEPING" className="text-gray-900">Housekeeping</option>
                     <option value="STAFF_SCHEDULE" className="text-gray-900">Staff Schedule</option>
                     <option value="EVENT" className="text-gray-900">Hotel Events</option>
+                    <option value="EVENT_BOOKING" className="text-gray-900">Event Bookings</option>
                   </select>
                 </div>
                 <button className="flex items-center space-x-2 px-4 py-2 bg-white/10 text-white hover:bg-white/20 transition-colors">
@@ -682,8 +740,49 @@ const CalendarPage = () => {
                     <div className="space-y-4">
                       <div>
                         <h4 className="font-medium text-gray-900 mb-2">Description</h4>
-                        <p className="text-gray-600">{selectedEvent.description || 'No description provided'}</p>
+                        <p className="text-gray-600 whitespace-pre-line">{selectedEvent.description || 'No description provided'}</p>
                       </div>
+
+                      {/* Event Booking Specific Details */}
+                      {selectedEvent.source === 'booking' && (
+                        <>
+                          <div className="bg-orange-50 border border-orange-200 rounded p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="font-medium text-gray-900">Booking Information</h4>
+                              <span className="text-xs text-orange-600 font-medium">{selectedEvent.booking_number}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <span className="text-gray-500">Status:</span>
+                                <span className="ml-2 font-medium text-gray-900">{selectedEvent.booking_status}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Payment:</span>
+                                <span className="ml-2 font-medium text-gray-900">{selectedEvent.payment_status}</span>
+                              </div>
+                              {selectedEvent.expected_pax && (
+                                <div>
+                                  <span className="text-gray-500">Expected PAX:</span>
+                                  <span className="ml-2 font-medium text-gray-900">{selectedEvent.expected_pax} orang</span>
+                                </div>
+                              )}
+                              {selectedEvent.grand_total && (
+                                <div>
+                                  <span className="text-gray-500">Grand Total:</span>
+                                  <span className="ml-2 font-medium text-gray-900">
+                                    {new Intl.NumberFormat('id-ID', {
+                                      style: 'currency',
+                                      currency: 'IDR',
+                                      minimumFractionDigits: 0,
+                                    }).format(parseFloat(selectedEvent.grand_total))}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <h4 className="font-medium text-gray-900 mb-2">Date & Time</h4>
@@ -694,7 +793,10 @@ const CalendarPage = () => {
                             </div>
                             <div className="flex items-center space-x-2">
                               <Clock01Icon className="h-4 w-4" />
-                              <span>{formatTime(selectedEvent.start_datetime)} ({selectedEvent.duration_hours}h)</span>
+                              <span>
+                                {formatTime(selectedEvent.start_datetime)}
+                                {selectedEvent.end_datetime && ` - ${formatTime(selectedEvent.end_datetime)}`}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -725,30 +827,43 @@ const CalendarPage = () => {
                           </div>
                         </div>
                       )}
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-2">Status & Priority</h4>
-                        <div className="flex items-center space-x-4">
-                          <span className={`px-2 py-1 text-xs rounded ${
-                            selectedEvent.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                            selectedEvent.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-                            selectedEvent.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                            'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            {selectedEvent.status}
-                          </span>
-                          <span className={`px-2 py-1 text-xs rounded ${getPriorityColor(selectedEvent.priority)}`}>
-                            {selectedEvent.priority}
-                          </span>
+                      {selectedEvent.source !== 'booking' && (
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-2">Status & Priority</h4>
+                          <div className="flex items-center space-x-4">
+                            <span className={`px-2 py-1 text-xs rounded ${
+                              selectedEvent.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                              selectedEvent.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
+                              selectedEvent.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {selectedEvent.status}
+                            </span>
+                            <span className={`px-2 py-1 text-xs rounded ${getPriorityColor(selectedEvent.priority)}`}>
+                              {selectedEvent.priority}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                     <div className="flex justify-end space-x-2 mt-6">
-                      <button className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
-                        Edit Event
-                      </button>
-                      <button className="px-4 py-2 bg-[#005357] text-white hover:bg-[#004147] transition-colors">
-                        View Details
-                      </button>
+                      {selectedEvent.source === 'booking' ? (
+                        <a
+                          href={`/office/events/${selectedEvent.id.toString().replace('booking-', '')}`}
+                          className="px-4 py-2 bg-[#005357] text-white hover:bg-[#004147] transition-colors"
+                        >
+                          View Full Details
+                        </a>
+                      ) : (
+                        <>
+                          <button className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
+                            Edit Event
+                          </button>
+                          <button className="px-4 py-2 bg-[#005357] text-white hover:bg-[#004147] transition-colors">
+                            View Details
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </>
@@ -852,6 +967,15 @@ const CalendarPage = () => {
               <h4 className="font-medium text-gray-900">This Month</h4>
             </div>
             <div className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">Event Bookings</span>
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {events.filter(e => e.event_type === 'EVENT_BOOKING').length}
+                </span>
+              </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>

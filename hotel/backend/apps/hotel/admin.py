@@ -280,3 +280,43 @@ class EventAddOnAdmin(admin.ModelAdmin):
     list_display = ['event_booking', 'addon_type', 'name', 'quantity', 'unit_price', 'total_price']
     list_filter = ['addon_type']
     search_fields = ['event_booking__booking_number', 'name']
+
+# Promotion models
+from .models import Voucher, Discount, LoyaltyProgram, GuestLoyaltyPoints, LoyaltyTransaction, VoucherUsage
+
+@admin.register(Voucher)
+class VoucherAdmin(admin.ModelAdmin):
+    list_display = ['code', 'name', 'voucher_type', 'status', 'usage_count', 'usage_limit', 'valid_from', 'valid_until']
+    list_filter = ['status', 'voucher_type', 'is_public']
+    search_fields = ['code', 'name']
+    readonly_fields = ['usage_count', 'created_at', 'updated_at']
+
+@admin.register(Discount)
+class DiscountAdmin(admin.ModelAdmin):
+    list_display = ['name', 'discount_type', 'discount_percentage', 'is_active', 'priority', 'valid_from', 'valid_until']
+    list_filter = ['discount_type', 'is_active']
+    search_fields = ['name']
+
+@admin.register(LoyaltyProgram)
+class LoyaltyProgramAdmin(admin.ModelAdmin):
+    list_display = ['name', 'points_per_rupiah', 'rupiah_per_point', 'is_active']
+    list_filter = ['is_active']
+
+@admin.register(GuestLoyaltyPoints)
+class GuestLoyaltyPointsAdmin(admin.ModelAdmin):
+    list_display = ['guest', 'total_points', 'lifetime_points', 'updated_at']
+    search_fields = ['guest__name', 'guest__email']
+    readonly_fields = ['total_points', 'lifetime_points', 'created_at', 'updated_at']
+
+@admin.register(LoyaltyTransaction)
+class LoyaltyTransactionAdmin(admin.ModelAdmin):
+    list_display = ['guest', 'transaction_type', 'points', 'balance_after', 'created_at']
+    list_filter = ['transaction_type']
+    search_fields = ['guest__name']
+    readonly_fields = ['created_at']
+
+@admin.register(VoucherUsage)
+class VoucherUsageAdmin(admin.ModelAdmin):
+    list_display = ['voucher', 'guest', 'reservation', 'discount_amount', 'used_at']
+    search_fields = ['voucher__code', 'guest__name']
+    readonly_fields = ['used_at']

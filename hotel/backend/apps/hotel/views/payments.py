@@ -1,16 +1,18 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status as http_status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
+from decimal import Decimal
 
-from ..models import Payment, AdditionalCharge
+from ..models import Payment, AdditionalCharge, Reservation
 from ..serializers import PaymentSerializer, AdditionalChargeSerializer
+from ..services.payment_calculator import PaymentCalculator, PaymentCalculationError
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
     """ViewSet for managing payments"""
-    queryset = Payment.objects.select_related('reservation', 'reservation__guest')
+    queryset = Payment.objects.select_related('reservation', 'reservation__guest', 'voucher', 'discount')
     serializer_class = PaymentSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['payment_method', 'status', 'payment_date']
@@ -44,6 +46,102 @@ class PaymentViewSet(viewsets.ModelViewSet):
             payments_by_method[method].append(PaymentSerializer(payment).data)
 
         return Response(payments_by_method)
+
+    @action(detail=False, methods=['post'])
+    def calculate(self, request):
+        """
+        Calculate payment amount with promotions applied
+        POST data:
+        - reservation_id: ID of the reservation
+        - voucher_code: (optional) Voucher code to apply
+        - redeem_points: (optional) Number of loyalty points to redeem
+        """
+        reservation_id = request.data.get('reservation_id')
+        voucher_code = request.data.get('voucher_code')
+        redeem_points = int(request.data.get('redeem_points', 0))
+
+        if not reservation_id:
+            return Response(
+                {'error': 'reservation_id is required'},
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            reservation = Reservation.objects.select_related('guest', 'room').get(id=reservation_id)
+        except Reservation.DoesNotExist:
+            return Response(
+                {'error': 'Reservation not found'},
+                status=http_status.HTTP_404_NOT_FOUND
+            )
+
+        # Calculate payment
+        calculator = PaymentCalculator(reservation)
+        result = calculator.calculate(
+            voucher_code=voucher_code,
+            redeem_points=redeem_points
+        )
+
+        if not result['success']:
+            return Response(
+                {'error': result['error'], 'error_type': result.get('error_type')},
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(result)
+
+    @action(detail=False, methods=['post'])
+    def process_with_promotions(self, request):
+        """
+        Process payment with promotions
+        POST data:
+        - reservation_id: ID of the reservation
+        - payment_method: Payment method
+        - transaction_id: (optional) Transaction ID
+        - voucher_code: (optional) Voucher code to apply
+        - redeem_points: (optional) Number of loyalty points to redeem
+        """
+        reservation_id = request.data.get('reservation_id')
+        payment_method = request.data.get('payment_method')
+        transaction_id = request.data.get('transaction_id')
+        voucher_code = request.data.get('voucher_code')
+        redeem_points = int(request.data.get('redeem_points', 0))
+
+        if not reservation_id or not payment_method:
+            return Response(
+                {'error': 'reservation_id and payment_method are required'},
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            reservation = Reservation.objects.select_related('guest', 'room').get(id=reservation_id)
+        except Reservation.DoesNotExist:
+            return Response(
+                {'error': 'Reservation not found'},
+                status=http_status.HTTP_404_NOT_FOUND
+            )
+
+        # Process payment with calculator
+        calculator = PaymentCalculator(reservation)
+
+        try:
+            payment, calculation = calculator.create_payment(
+                payment_method=payment_method,
+                transaction_id=transaction_id,
+                voucher_code=voucher_code,
+                redeem_points=redeem_points
+            )
+        except PaymentCalculationError as e:
+            return Response(
+                {'error': str(e)},
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        # Return payment data with calculation details
+        serializer = self.get_serializer(payment)
+        return Response({
+            'payment': serializer.data,
+            'calculation': calculation
+        }, status=http_status.HTTP_201_CREATED)
 
 
 class AdditionalChargeViewSet(viewsets.ModelViewSet):
