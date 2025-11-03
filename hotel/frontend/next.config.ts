@@ -1,12 +1,6 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  // Set Turbopack root to current directory to avoid workspace inference warnings
-  turbopack: {
-    root: path.resolve(__dirname),
-  },
-
   // Configure headers for better security and API compatibility
   async headers() {
     return [
