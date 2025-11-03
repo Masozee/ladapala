@@ -306,35 +306,25 @@ export default function WarehouseAuditPage() {
                         }`}
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <Calendar01Icon className="h-4 w-4 text-gray-400 mr-2" />
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {new Date(log.timestamp).toLocaleDateString('id-ID', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric',
-                                })}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {new Date(log.timestamp).toLocaleTimeString('id-ID', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                              </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {new Date(log.timestamp).toLocaleDateString('id-ID', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(log.timestamp).toLocaleTimeString('id-ID', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center">
-                            <div className="h-8 w-8 rounded-full bg-[#4E61D3] bg-opacity-10 flex items-center justify-center mr-3">
-                              <UserIcon className="h-4 w-4 text-[#4E61D3]" />
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {log.user_name || 'System'}
-                              </div>
-                            </div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {log.user_name || 'System'}
                           </div>
                         </td>
                         <td className="px-6 py-4">
