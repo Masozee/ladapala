@@ -1,4 +1,4 @@
-# Restaurant Backend Requirements
+# Hotel Backend Requirements
 # Python >= 3.12
 
 # Django Core
