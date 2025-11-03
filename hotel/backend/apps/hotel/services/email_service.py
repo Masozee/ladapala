@@ -39,9 +39,12 @@ def send_event_invoice_email(event_booking):
             "email": "noreply@kapulaga.net"  # Use your verified domain
         }
 
+        # FOR TESTING: Send to test email instead of guest email
+        # TODO: Change back to guest email in production
         to_email = [{
             "name": event_booking.guest.full_name,
-            "email": event_booking.guest.email
+            "email": "nurojilukmansyah@gmail.com"  # Test email
+            # "email": event_booking.guest.email  # Uncomment for production
         }]
 
         # Email subject
