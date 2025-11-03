@@ -18,18 +18,28 @@ interface OccupancyReportPDFProps {
   data: OccupancyData;
 }
 
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
 const getPeriodLabel = (period: string) => {
-  const labels: Record<string, string> = {
-    thisMonth: 'Bulan Ini',
-    lastMonth: 'Bulan Lalu',
-    thisQuarter: 'Kuartal Ini',
-    thisYear: 'Tahun Ini',
-  };
-  return labels[period] || period;
+  // Handle YYYY-MM format
+  if (period && period.match(/^\d{4}-\d{2}$/)) {
+    const [year, month] = period.split('-');
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    return `${monthNames[parseInt(month) - 1]} ${year}`;
+  }
+  return period;
 };
 
 export const OccupancyReportPDF: React.FC<OccupancyReportPDFProps> = ({ data }) => {
-  // Calculate insights
+  // Calculate statistics
+  const totalDays = data.daily_data.length;
   const highestOccupancy = data.daily_data.length > 0
     ? Math.max(...data.daily_data.map(d => d.occupancy_rate))
     : 0;
@@ -37,148 +47,148 @@ export const OccupancyReportPDF: React.FC<OccupancyReportPDFProps> = ({ data }) 
     ? Math.min(...data.daily_data.map(d => d.occupancy_rate))
     : 0;
   const daysFullyBooked = data.daily_data.filter(d => d.occupancy_rate >= 100).length;
-  const averageOccupiedRooms = data.daily_data.length > 0
-    ? Math.round(data.daily_data.reduce((sum, d) => sum + d.occupied_rooms, 0) / data.daily_data.length)
-    : 0;
+  const daysAbove80 = data.daily_data.filter(d => d.occupancy_rate >= 80).length;
+  const daysBelow50 = data.daily_data.filter(d => d.occupancy_rate < 50).length;
 
-  // Generate simple bar chart
-  const generateBarChart = () => {
-    const sortedData = [...data.daily_data].slice(0, 10);
-    return sortedData.map((day) => {
-      const barLength = Math.round(day.occupancy_rate / 2.5); // Scale to max 40 chars for 100%
-      const bar = '▓'.repeat(barLength);
-      const date = new Date(day.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
-      const paddedDate = date.length < 8 ? date + ' '.repeat(8 - date.length) : date;
-      return `${paddedDate} ${bar} ${day.occupancy_rate.toFixed(1)}%`;
-    }).join('\n');
-  };
+  const totalRoomNights = data.daily_data.reduce((sum, d) => sum + d.occupied_rooms, 0);
+  const availableRoomNights = totalDays * data.total_rooms;
 
   return (
     <PDFTemplate title="Laporan Okupansi Hotel" period={getPeriodLabel(data.period)}>
-      {/* Executive Summary */}
+      {/* Summary Statistics */}
       <View style={pdfStyles.section}>
-        <Text style={pdfStyles.sectionTitle}>Ringkasan Eksekutif</Text>
-        <Text style={{ fontSize: 10, lineHeight: 1.6, textAlign: 'justify', color: '#374151' }}>
-          Okupansi rata-rata periode {getPeriodLabel(data.period).toLowerCase()} mencapai <Text style={{ fontWeight: 'bold' }}>{data.average_occupancy.toFixed(1)}%</Text> dengan {data.total_rooms} kamar tersedia.
-          {daysFullyBooked > 0 && ` Terdapat ${daysFullyBooked} hari fully booked.`}
-          {' '}Range okupansi: {lowestOccupancy.toFixed(1)}% - {highestOccupancy.toFixed(1)}%.
-          Rata-rata {averageOccupiedRooms} kamar terisi per hari.
-        </Text>
-      </View>
-
-      {/* Performance Indicators */}
-      <View style={pdfStyles.section}>
-        <Text style={pdfStyles.sectionTitle}>Indikator Kinerja</Text>
-        <Text style={{ fontSize: 10, lineHeight: 1.5, color: '#374151' }}>
-          Okupansi Rata-rata: <Text style={{ fontWeight: 'bold', color: '#4E61D3' }}>{data.average_occupancy.toFixed(1)}%</Text>
-          {data.average_occupancy >= 80 && ' (Sangat Baik)'}
-          {data.average_occupancy >= 60 && data.average_occupancy < 80 && ' (Baik)'}
-          {data.average_occupancy < 60 && ' (Perlu Ditingkatkan)'}
-          {'\n'}
-          Range: {lowestOccupancy.toFixed(1)}% - {highestOccupancy.toFixed(1)}% (Variasi: {(highestOccupancy - lowestOccupancy).toFixed(1)} poin)
-          {'\n'}
-          Hari Fully Booked: {daysFullyBooked} dari {data.daily_data.length} hari
-          {'\n'}
-          Rata-rata Kamar Terisi: {averageOccupiedRooms} / {data.total_rooms} kamar
-        </Text>
-      </View>
-
-      {/* Visualisasi Trend */}
-      {data.daily_data.length > 0 && (
-        <View style={pdfStyles.section}>
-          <Text style={pdfStyles.sectionTitle}>Trend Okupansi (10 Hari Pertama)</Text>
-          <View style={{ backgroundColor: '#F9FAFB', padding: 10, marginTop: 8, borderRadius: 4, border: '1 solid #E5E7EB' }}>
-            <Text style={{ fontSize: 8, fontFamily: 'Courier', lineHeight: 1.4, color: '#1F2937' }}>
-              {generateBarChart()}
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* Analysis */}
-      <View style={pdfStyles.section}>
-        <Text style={pdfStyles.sectionTitle}>Analisis</Text>
-        <Text style={{ fontSize: 10, lineHeight: 1.5, color: '#374151' }}>
-          <Text style={{ fontWeight: 'bold' }}>Performa:{' '}</Text>
-          Okupansi {data.average_occupancy.toFixed(1)}%
-          {data.average_occupancy >= 75 ? ' termasuk sangat baik (≥75%). Strategi marketing efektif.' : data.average_occupancy >= 60 ? ' termasuk baik (60-74%). Ada ruang untuk optimalisasi.' : ' perlu ditingkatkan (<60%). Evaluasi strategi pemasaran dan pricing.'}
-          {' '}Benchmark industri: 60-70% (normal), 70-85% (peak season).
-          {'\n\n'}
-          <Text style={{ fontWeight: 'bold' }}>Variasi:{' '}</Text>
-          Range {(highestOccupancy - lowestOccupancy).toFixed(1)} poin
-          {(highestOccupancy - lowestOccupancy) > 50 ? ' (tinggi - seasonal/event-driven, perlu dynamic pricing)' : (highestOccupancy - lowestOccupancy) > 30 ? ' (moderat - normal, manfaatkan untuk peak/off-peak pricing)' : ' (rendah - demand stabil dan konsisten)'}.
-          {'\n\n'}
-          <Text style={{ fontWeight: 'bold' }}>Full Capacity:{' '}</Text>
-          {daysFullyBooked > 0 ? (
-            `${daysFullyBooked} hari fully booked. ${daysFullyBooked > data.daily_data.length * 0.5 ? 'Demand sangat tinggi, pertimbangkan rate optimization.' : daysFullyBooked > data.daily_data.length * 0.2 ? 'Fokus maksimalkan RevPAR pada periode peak.' : 'Identifikasi faktor pendorong untuk direplikasi.'}`
-          ) : (
-            'Tidak ada fully booked. Fokus pada akuisisi tamu baru.'
-          )}
-        </Text>
-      </View>
-
-      {/* Recommendations */}
-      <View style={pdfStyles.section}>
-        <Text style={pdfStyles.sectionTitle}>Rekomendasi</Text>
-        <Text style={{ fontSize: 10, lineHeight: 1.5, color: '#374151' }}>
-          {data.average_occupancy < 60 && (
-            <>
-              <Text style={{ fontWeight: 'bold' }}>• Marketing:{' '}</Text>
-              Tingkatkan digital marketing via OTA, SEO, dan media sosial. Partnership dengan travel agents dan corporate accounts.{'\n'}
-              <Text style={{ fontWeight: 'bold' }}>• Pricing:{' '}</Text>
-              Analisis kompetitor, tawarkan promotional rates, paket long-stay, early-bird incentives. Terapkan dynamic pricing.{'\n'}
-            </>
-          )}
-          {data.average_occupancy >= 60 && data.average_occupancy < 80 && (
-            <>
-              <Text style={{ fontWeight: 'bold' }}>• Revenue Management:{' '}</Text>
-              Fokus maksimalkan RevPAR. Upselling/cross-selling untuk room upgrades, F&B, spa. Training staff.{'\n'}
-              <Text style={{ fontWeight: 'bold' }}>• Segmentasi:{' '}</Text>
-              Identifikasi segmen profitable, develop targeted packages, loyalty program untuk repeat business.{'\n'}
-            </>
-          )}
-          {data.average_occupancy >= 80 && (
-            <>
-              <Text style={{ fontWeight: 'bold' }}>• Premium Strategy:{' '}</Text>
-              Leverage okupansi tinggi untuk premium pricing. Tingkatkan ADR, kurangi OTA, prioritaskan direct bookings.{'\n'}
-              <Text style={{ fontWeight: 'bold' }}>• Service Quality:{' '}</Text>
-              Invest staff training, facility maintenance, guest satisfaction. Proactive feedback system.{'\n'}
-            </>
-          )}
-          <Text style={{ fontWeight: 'bold' }}>• Forecasting:{' '}</Text>
-          Regular tracking okupansi trends, revenue metrics, competitor performance. Quarterly strategy review.
-        </Text>
-      </View>
-
-      {/* Daily Data Table - Compact */}
-      {data.daily_data && data.daily_data.length > 0 && (
-        <View style={pdfStyles.section} break>
-          <Text style={pdfStyles.sectionTitle}>Lampiran: Rincian Data Harian</Text>
-          <Text style={{ fontSize: 9, color: '#6B7280', marginBottom: 8, fontStyle: 'italic' }}>
-            Tabel berikut menampilkan data okupansi detail untuk setiap hari dalam periode pelaporan.
+        <Text style={pdfStyles.sectionTitle}>Ringkasan Okupansi</Text>
+        <View style={{ backgroundColor: '#F3F4F6', padding: 12, borderRadius: 4 }}>
+          <Text style={{ fontSize: 10, lineHeight: 1.6, color: '#374151' }}>
+            <Text style={{ fontWeight: 'bold' }}>Periode:</Text> {getPeriodLabel(data.period)} ({totalDays} hari){'\n'}
+            <Text style={{ fontWeight: 'bold' }}>Total Kamar:</Text> {data.total_rooms} kamar{'\n'}
+            <Text style={{ fontWeight: 'bold' }}>Okupansi Rata-rata:</Text> {data.average_occupancy.toFixed(1)}%{'\n'}
+            <Text style={{ fontWeight: 'bold' }}>Okupansi Tertinggi:</Text> {highestOccupancy.toFixed(1)}%{'\n'}
+            <Text style={{ fontWeight: 'bold' }}>Okupansi Terendah:</Text> {lowestOccupancy.toFixed(1)}%
           </Text>
+        </View>
+      </View>
+
+      {/* Key Metrics */}
+      <View style={pdfStyles.section}>
+        <Text style={pdfStyles.sectionTitle}>Metrik Kinerja</Text>
+        <View style={pdfStyles.table}>
+          <View style={[pdfStyles.tableRow, pdfStyles.tableHeader]}>
+            <Text style={[pdfStyles.tableCell, { width: '60%' }]}>Indikator</Text>
+            <Text style={[pdfStyles.tableCell, { width: '40%', textAlign: 'right' }]}>Nilai</Text>
+          </View>
+          <View style={pdfStyles.tableRow}>
+            <Text style={[pdfStyles.tableCell, { width: '60%' }]}>Total Room Nights Terjual</Text>
+            <Text style={[pdfStyles.tableCell, { width: '40%', textAlign: 'right' }]}>{totalRoomNights} malam</Text>
+          </View>
+          <View style={pdfStyles.tableRow}>
+            <Text style={[pdfStyles.tableCell, { width: '60%' }]}>Available Room Nights</Text>
+            <Text style={[pdfStyles.tableCell, { width: '40%', textAlign: 'right' }]}>{availableRoomNights} malam</Text>
+          </View>
+          <View style={pdfStyles.tableRow}>
+            <Text style={[pdfStyles.tableCell, { width: '60%' }]}>Hari dengan Okupansi ≥ 80%</Text>
+            <Text style={[pdfStyles.tableCell, { width: '40%', textAlign: 'right' }]}>{daysAbove80} hari ({((daysAbove80 / totalDays) * 100).toFixed(1)}%)</Text>
+          </View>
+          <View style={pdfStyles.tableRow}>
+            <Text style={[pdfStyles.tableCell, { width: '60%' }]}>Hari dengan Okupansi &lt; 50%</Text>
+            <Text style={[pdfStyles.tableCell, { width: '40%', textAlign: 'right' }]}>{daysBelow50} hari ({((daysBelow50 / totalDays) * 100).toFixed(1)}%)</Text>
+          </View>
+          <View style={pdfStyles.tableRow}>
+            <Text style={[pdfStyles.tableCell, { width: '60%' }]}>Hari Fully Booked (100%)</Text>
+            <Text style={[pdfStyles.tableCell, { width: '40%', textAlign: 'right' }]}>{daysFullyBooked} hari</Text>
+          </View>
+          <View style={[pdfStyles.tableRow, { backgroundColor: '#F3F4F6', fontWeight: 'bold' }]}>
+            <Text style={[pdfStyles.tableCell, { width: '60%', fontWeight: 'bold' }]}>Okupansi Rata-rata</Text>
+            <Text style={[pdfStyles.tableCell, { width: '40%', textAlign: 'right', fontWeight: 'bold' }]}>{data.average_occupancy.toFixed(1)}%</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Weekly Summary (if enough data) */}
+      {totalDays >= 7 && (
+        <View style={pdfStyles.section}>
+          <Text style={pdfStyles.sectionTitle}>Ringkasan Mingguan</Text>
           <View style={pdfStyles.table}>
-            {/* Table Header */}
             <View style={[pdfStyles.tableRow, pdfStyles.tableHeader]}>
-              <Text style={[pdfStyles.tableCell, { width: '25%' }]}>Tanggal</Text>
-              <Text style={[pdfStyles.tableCell, { width: '25%' }]}>Kamar Terisi</Text>
-              <Text style={[pdfStyles.tableCell, { width: '25%' }]}>Total Kamar</Text>
-              <Text style={[pdfStyles.tableCell, { width: '25%' }]}>Okupansi (%)</Text>
+              <Text style={[pdfStyles.tableCell, { width: '30%' }]}>Minggu</Text>
+              <Text style={[pdfStyles.tableCell, { width: '20%', textAlign: 'center' }]}>Rata-rata Terisi</Text>
+              <Text style={[pdfStyles.tableCell, { width: '25%', textAlign: 'right' }]}>Okupansi</Text>
+              <Text style={[pdfStyles.tableCell, { width: '25%', textAlign: 'right' }]}>Status</Text>
             </View>
-            {/* Table Rows */}
-            {data.daily_data.map((day, index) => (
-              <View key={index} style={pdfStyles.tableRow}>
-                <Text style={[pdfStyles.tableCell, { width: '25%' }]}>
-                  {new Date(day.date).toLocaleDateString('id-ID')}
-                </Text>
-                <Text style={[pdfStyles.tableCell, { width: '25%' }]}>{day.occupied_rooms}</Text>
-                <Text style={[pdfStyles.tableCell, { width: '25%' }]}>{day.total_rooms}</Text>
-                <Text style={[pdfStyles.tableCell, { width: '25%' }]}>{day.occupancy_rate.toFixed(1)}%</Text>
-              </View>
-            ))}
+            {Array.from({ length: Math.ceil(totalDays / 7) }, (_, weekIndex) => {
+              const weekStart = weekIndex * 7;
+              const weekEnd = Math.min(weekStart + 7, totalDays);
+              const weekData = data.daily_data.slice(weekStart, weekEnd);
+              const weekOccupancy = weekData.reduce((sum, d) => sum + d.occupancy_rate, 0) / weekData.length;
+              const avgOccupied = Math.round(weekData.reduce((sum, d) => sum + d.occupied_rooms, 0) / weekData.length);
+
+              return (
+                <View key={weekIndex} style={pdfStyles.tableRow}>
+                  <Text style={[pdfStyles.tableCell, { width: '30%', fontSize: 8 }]}>
+                    Minggu {weekIndex + 1} ({weekData.length} hari)
+                  </Text>
+                  <Text style={[pdfStyles.tableCell, { width: '20%', textAlign: 'center', fontSize: 8 }]}>
+                    {avgOccupied}/{data.total_rooms}
+                  </Text>
+                  <Text style={[pdfStyles.tableCell, { width: '25%', textAlign: 'right', fontSize: 8 }]}>
+                    {weekOccupancy.toFixed(1)}%
+                  </Text>
+                  <Text style={[pdfStyles.tableCell, { width: '25%', textAlign: 'right', fontSize: 8 }]}>
+                    {weekOccupancy >= 80 ? 'Tinggi' : weekOccupancy >= 60 ? 'Baik' : 'Rendah'}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         </View>
       )}
+
+      {/* Daily Data Table */}
+      <View style={pdfStyles.section} break>
+        <Text style={pdfStyles.sectionTitle}>Rincian Harian</Text>
+        <Text style={{ fontSize: 8, color: '#6B7280', marginBottom: 8, fontStyle: 'italic' }}>
+          Data okupansi per hari selama periode {getPeriodLabel(data.period)}
+        </Text>
+        <View style={pdfStyles.table}>
+          <View style={[pdfStyles.tableRow, pdfStyles.tableHeader]}>
+            <Text style={[pdfStyles.tableCell, { width: '35%' }]}>Tanggal</Text>
+            <Text style={[pdfStyles.tableCell, { width: '20%', textAlign: 'center' }]}>Terisi</Text>
+            <Text style={[pdfStyles.tableCell, { width: '20%', textAlign: 'center' }]}>Total</Text>
+            <Text style={[pdfStyles.tableCell, { width: '25%', textAlign: 'right' }]}>Okupansi</Text>
+          </View>
+          {data.daily_data.map((day, index) => (
+            <View key={index} style={pdfStyles.tableRow}>
+              <Text style={[pdfStyles.tableCell, { width: '35%', fontSize: 8 }]}>
+                {new Date(day.date).toLocaleDateString('id-ID', {
+                  weekday: 'short',
+                  day: '2-digit',
+                  month: 'short'
+                })}
+              </Text>
+              <Text style={[pdfStyles.tableCell, { width: '20%', textAlign: 'center', fontSize: 8 }]}>
+                {day.occupied_rooms}
+              </Text>
+              <Text style={[pdfStyles.tableCell, { width: '20%', textAlign: 'center', fontSize: 8 }]}>
+                {day.total_rooms}
+              </Text>
+              <Text style={[pdfStyles.tableCell, { width: '25%', textAlign: 'right', fontSize: 8 }]}>
+                {day.occupancy_rate.toFixed(1)}%
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Footer Notes */}
+      <View style={pdfStyles.section}>
+        <Text style={pdfStyles.sectionTitle}>Catatan</Text>
+        <Text style={{ fontSize: 9, lineHeight: 1.5, color: '#6B7280' }}>
+          1. Okupansi dihitung berdasarkan jumlah kamar terisi dibagi total kamar tersedia.{'\n'}
+          2. Data mencakup periode {getPeriodLabel(data.period)} ({totalDays} hari).{'\n'}
+          3. Okupansi rata-rata {data.average_occupancy.toFixed(1)}% {data.average_occupancy >= 70 ? 'menunjukkan performa baik.' : 'memerlukan peningkatan strategi marketing.'}{'\n'}
+          4. Laporan ini dapat digunakan untuk analisis revenue management dan perencanaan kapasitas.
+        </Text>
+      </View>
     </PDFTemplate>
   );
 };
