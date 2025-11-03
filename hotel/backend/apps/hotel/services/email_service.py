@@ -3,7 +3,7 @@ Email Service using MailerSend
 """
 import os
 import base64
-from mailersend import emails
+from mailersend import MailerSendClient, Email, EmailAttachment, EmailContact
 from django.conf import settings
 from .pdf_generator import generate_event_invoice_pdf
 
@@ -25,30 +25,30 @@ def send_event_invoice_email(event_booking):
             print("Warning: MAILERSEND_API_KEY not found in settings")
             return False
 
-        # Initialize MailerSend
-        mailer = emails.NewEmail(api_key)
+        # Initialize MailerSend client
+        mailer = MailerSendClient(api_token=api_key)
 
         # Generate PDF invoice
         pdf_buffer = generate_event_invoice_pdf(event_booking)
         pdf_content = pdf_buffer.getvalue()
         pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
 
-        # Email configuration
-        from_email = {
-            "name": "Hotel Kapulaga",
-            "email": "noreply@kapulaga.net"  # Use your verified domain
-        }
+        # Email subject
+        subject = f"Invoice Pembayaran Event - {event_booking.event_name}"
+
+        # From email
+        from_email = EmailContact(
+            name="Hotel Kapulaga",
+            email="noreply@kapulaga.net"
+        )
 
         # FOR TESTING: Send to test email instead of guest email
         # TODO: Change back to guest email in production
-        to_email = [{
-            "name": event_booking.guest.full_name,
-            "email": "nurojilukmansyah@gmail.com"  # Test email
-            # "email": event_booking.guest.email  # Uncomment for production
-        }]
-
-        # Email subject
-        subject = f"Invoice Pembayaran Event - {event_booking.event_name}"
+        to_email = EmailContact(
+            name=event_booking.guest.full_name,
+            email="nurojilukmansyah@gmail.com"  # Test email
+            # email=event_booking.guest.email  # Uncomment for production
+        )
 
         # Email body (HTML)
         html_content = f"""
@@ -204,26 +204,29 @@ def send_event_invoice_email(event_booking):
         Email: info@kapulaga.net | Telepon: (021) 1234-5678
         """
 
-        # Build email with attachment
-        mailer.set_mail_from(from_email, mail_to=to_email)
-        mailer.set_subject(subject)
-        mailer.set_html_content(html_content)
-        mailer.set_plaintext_content(text_content)
+        # Create PDF attachment
+        attachment = EmailAttachment(
+            content=pdf_base64,
+            filename=f"Invoice_{event_booking.booking_number}.pdf"
+        )
 
-        # Add PDF attachment
-        attachment = {
-            "content": pdf_base64,
-            "filename": f"Invoice_{event_booking.booking_number}.pdf",
-            "disposition": "attachment"
-        }
-        mailer.set_attachments([attachment])
+        # Build email with attachment
+        email = Email(
+            mail_from=from_email,
+            recipients=[to_email],
+            subject=subject,
+            html=html_content,
+            text=text_content,
+            attachments=[attachment]
+        )
 
         # Send email
-        response = mailer.send()
+        response = mailer.send(email)
 
         # Check if successful (MailerSend returns 202 for accepted)
-        if hasattr(response, 'status_code') and response.status_code == 202:
-            print(f"Invoice email sent successfully to {event_booking.guest.email}")
+        print(f"MailerSend response: {response}")
+        if response and (response.get('status_code') == 202 or response.get('X-Message-Id')):
+            print(f"Invoice email sent successfully to nurojilukmansyah@gmail.com (test)")
             return True
         else:
             print(f"Failed to send email. Response: {response}")
