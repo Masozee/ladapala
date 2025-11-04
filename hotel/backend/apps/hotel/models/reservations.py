@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from decimal import Decimal
 from .guests import Guest
-from .rooms import Room
+from .rooms import Room, RoomType
 
 
 class Reservation(models.Model):
@@ -26,7 +26,8 @@ class Reservation(models.Model):
 
     reservation_number = models.CharField(max_length=20, unique=True)
     guest = models.ForeignKey(Guest, on_delete=models.CASCADE)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
+    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, null=True, blank=True)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True, help_text='Assigned at check-in')
     check_in_date = models.DateField()
     check_out_date = models.DateField()
     adults = models.PositiveIntegerField(default=1)
@@ -64,6 +65,8 @@ class Reservation(models.Model):
         """Calculate total amount based on room price and nights"""
         if self.room:
             return self.room.get_current_price() * self.nights
+        elif self.room_type:
+            return self.room_type.base_price * self.nights
         return Decimal('0.00')
 
     def get_additional_charges_total(self):

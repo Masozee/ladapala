@@ -161,6 +161,8 @@ class ReservationSerializer(serializers.ModelSerializer):
     """Serializer for reservations"""
     guest_name = serializers.CharField(source='guest.full_name', read_only=True)
     guest_details = GuestSerializer(source='guest', read_only=True)
+    room_type_name = serializers.CharField(source='room_type.name', read_only=True)
+    room_type_details = RoomTypeSerializer(source='room_type', read_only=True)
     room_number = serializers.CharField(source='room.number', read_only=True)
     room_details = RoomSerializer(source='room', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -187,6 +189,7 @@ class ReservationSerializer(serializers.ModelSerializer):
         model = Reservation
         fields = [
             'id', 'reservation_number', 'guest', 'guest_name', 'guest_details',
+            'room_type', 'room_type_name', 'room_type_details',
             'room', 'room_number', 'room_details', 'check_in_date', 'check_out_date',
             'nights', 'adults', 'children', 'status', 'status_display',
             'booking_source', 'booking_source_display', 'special_requests', 'notes',
@@ -201,6 +204,8 @@ class ReservationSerializer(serializers.ModelSerializer):
         """Calculate subtotal (room rate * nights)"""
         if obj.room and obj.room.room_type:
             return float(obj.room.room_type.base_price * obj.nights)
+        elif obj.room_type:
+            return float(obj.room_type.base_price * obj.nights)
         return float(obj.total_amount) if obj.total_amount else 0.0
 
     def get_taxes(self, obj):

@@ -296,17 +296,10 @@ const BookingsPage = () => {
     try {
       setLoading(true);
       
-      // Prepare room assignments with the selected room
-      const roomAssignments = [{
-        room_id: selectedRoom.id,
-        rate: selectedRoom.room_type?.base_price || selectedRoom.current_price || 0,
-        discount_amount: 0,
-        extra_charges: 0
-      }];
-
+      // Prepare reservation with room TYPE (specific room will be assigned at check-in)
       const reservationData = {
         ...formData,
-        room_assignments: roomAssignments,
+        room_type: selectedRoom.id, // Send room type ID, not specific room
       };
 
       console.log('Creating reservation with data:', reservationData);
@@ -707,6 +700,7 @@ const BookingsPage = () => {
     booking_source?: string;
     special_requests?: string;
     notes?: string;
+    room_type?: number; // Room type ID (specific room assigned at check-in)
     room_assignments?: Array<{
       room_id: number;
       rate?: number;
@@ -716,21 +710,27 @@ const BookingsPage = () => {
     }>;
   }) => {
     try {
+      const csrfToken = getCsrfToken();
+
       // First create or get the guest
-      const guestResponse = await fetch(buildApiUrl('guests/'), {
+      const guestResponse = await fetch(buildApiUrl('hotel/guests/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
         },
+        credentials: 'include',
         body: JSON.stringify(reservationData.guest),
       });
-      
+
       let guest;
       if (guestResponse.ok) {
         guest = await guestResponse.json();
       } else {
         // Guest might already exist, try to find by email
-        const existingGuestResponse = await fetch(buildApiUrl(`guests/?email=${reservationData.guest.email}`));
+        const existingGuestResponse = await fetch(buildApiUrl(`hotel/guests/?email=${reservationData.guest.email}`), {
+          credentials: 'include',
+        });
         if (existingGuestResponse.ok) {
           const guestData = await existingGuestResponse.json();
           guest = guestData.results?.[0] || guestData[0];
@@ -743,20 +743,23 @@ const BookingsPage = () => {
       // Create the reservation
       const reservationPayload = {
         guest: guest.id,
+        room_type: reservationData.room_type, // Room type ID
         check_in_date: reservationData.check_in_date,
         check_out_date: reservationData.check_out_date,
         adults: reservationData.adults,
         children: reservationData.children,
         booking_source: reservationData.booking_source || 'DIRECT',
         special_requests: reservationData.special_requests,
-        room_assignments: reservationData.room_assignments || [],
+        status: 'CONFIRMED',
       };
 
-      const response = await fetch(buildApiUrl('reservations/'), {
+      const response = await fetch(buildApiUrl('hotel/reservations/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
         },
+        credentials: 'include',
         body: JSON.stringify(reservationPayload),
       });
       
@@ -774,141 +777,74 @@ const BookingsPage = () => {
 
   const fetchAvailableRooms = async (checkInDate: string, checkOutDate: string, adults: number, children: number) => {
     console.log('fetchAvailableRooms called with:', { checkInDate, checkOutDate, adults, children });
-    
+
     try {
       // Calculate number of nights and check if dates are valid
       const checkIn = new Date(checkInDate);
       const checkOut = new Date(checkOutDate);
       const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 3600 * 24));
-      
+
       console.log('Date calculation:', { checkIn, checkOut, nights });
-      
+
       if (nights <= 0) {
         throw new Error('Invalid date range');
       }
 
-      // Fetch all rooms with enhanced data (availability + pricing)
-      console.log('Fetching rooms from API...');
-      const response = await fetch(buildApiUrl('rooms/'));
+      // Fetch room TYPES instead of individual rooms
+      console.log('Fetching room types from API...');
+      const response = await fetch(buildApiUrl(`hotel/room-types/?check_in=${checkInDate}&check_out=${checkOutDate}`));
       if (!response.ok) {
-        console.error('Failed to fetch rooms:', response.status, response.statusText);
-        throw new Error('Failed to fetch rooms');
+        console.error('Failed to fetch room types:', response.status, response.statusText);
+        throw new Error('Failed to fetch room types');
       }
-      
+
       const data = await response.json();
-      const rooms = data.results || data;
-      console.log(`Fetched ${rooms.length} total rooms`);
-      
-      // Filter rooms based on guest capacity first
-      const eligibleRooms = rooms.filter((room: any) => {
-        if (!room.is_active || room.status !== 'AVAILABLE') return false;
-        if (room.room_type?.max_occupancy && (adults + children) > room.room_type.max_occupancy) {
-          return false;
-        }
-        return true;
-      });
-      
-      console.log(`Found ${eligibleRooms.length} eligible rooms out of ${rooms.length} total rooms`);
-      
-      // For now, let's use a simpler approach - check if stay is within 7 days from today
-      const today = new Date();
-      const maxDate = new Date(today);
-      maxDate.setDate(today.getDate() + 7);
-      
-      if (checkIn > maxDate) {
-        console.warn('Check-in date is more than 7 days ahead - using simplified availability check');
-        // Return eligible rooms with basic info for dates beyond 7-day window
-        const basicAvailableRooms = eligibleRooms.slice(0, 10).map((room: any) => ({
-          ...room,
-          room_type_name: room.room_type_name || 'Standard Room',
-          current_price: room.room_type?.base_price || 350000,
-          base_price: room.room_type?.base_price || 350000,
-          total_cost: (room.room_type?.base_price || 350000) * nights,
+      const roomTypes = data.results || data;
+      console.log(`Fetched ${roomTypes.length} total room types`);
+
+      // Filter room types based on guest capacity and availability
+      const availableRoomTypes = roomTypes
+        .filter((roomType: any) => {
+          // Check if max occupancy can accommodate guests
+          if (roomType.max_occupancy && (adults + children) > roomType.max_occupancy) {
+            return false;
+          }
+          // Check if there are available rooms of this type
+          if (!roomType.available_rooms_count || roomType.available_rooms_count === 0) {
+            return false;
+          }
+          return roomType.is_active;
+        })
+        .map((roomType: any) => ({
+          id: roomType.id,
+          name: roomType.name,
+          description: roomType.description,
+          room_type_name: roomType.name,
+          base_price: roomType.base_price,
+          current_price: roomType.base_price,
+          max_occupancy: roomType.max_occupancy,
+          size_sqm: roomType.size_sqm,
+          bed_configuration: roomType.bed_configuration,
+          available_rooms_count: roomType.available_rooms_count,
+          total_rooms: roomType.total_rooms,
+          total_cost: roomType.base_price * nights,
           nights: nights,
           availability_status: 'available',
           pricing_info: {
-            base_price: room.room_type?.base_price || 350000,
-            current_price: room.room_type?.base_price || 350000,
+            base_price: roomType.base_price,
+            current_price: roomType.base_price,
             currency: 'IDR',
             price_includes: ['Room accommodation', 'Basic amenities'],
             price_excludes: ['PPN/VAT (11%)', 'Service charge', 'Extra services']
-          }
+          },
+          room_type: roomType // Store full room type data
         }));
-        
-        console.log(`Returning ${basicAvailableRooms.length} rooms with basic availability check`);
-        return basicAvailableRooms;
-      }
-      
-      // Fetch detailed availability for rooms (limit to first 20 for performance)
-      const roomsToCheck = eligibleRooms.slice(0, 20);
-      console.log(`Checking detailed availability for ${roomsToCheck.length} rooms`);
-      
-      const roomPromises = roomsToCheck.map(async (room: any) => {
-        try {
-          const roomDetailResponse = await fetch(buildApiUrl(`rooms/${room.id}/`));
-          if (!roomDetailResponse.ok) {
-            console.warn(`Failed to fetch details for room ${room.id}: ${roomDetailResponse.status}`);
-            return null;
-          }
-          
-          const roomDetail = await roomDetailResponse.json();
-          
-          // Check availability for each night of the stay using the 7-day calendar
-          let isAvailableForStay = true;
-          const availabilityCalendar = roomDetail.availability_7_days || [];
-          
-          // Only check dates within the 7-day calendar range
-          for (let i = 0; i < nights; i++) {
-            const stayDate = new Date(checkIn);
-            stayDate.setDate(stayDate.getDate() + i);
-            const stayDateStr = stayDate.toISOString().split('T')[0];
-            
-            // Find this date in the availability calendar
-            const dayAvailability = availabilityCalendar.find((day: any) => day.date === stayDateStr);
-            
-            // If date is outside 7-day window, assume available (fallback)
-            if (!dayAvailability) {
-              console.warn(`Date ${stayDateStr} is outside the 7-day availability window for room ${room.number} - assuming available`);
-              continue;
-            }
-            
-            if (!dayAvailability.available) {
-              isAvailableForStay = false;
-              break;
-            }
-          }
-          
-          if (isAvailableForStay) {
-            return {
-              ...roomDetail,
-              // Calculate total cost for the stay
-              total_cost: (roomDetail.current_price || roomDetail.base_price || 0) * nights,
-              nights: nights,
-              // Add availability status from calendar
-              availability_status: 'available',
-              // Include pricing info
-              pricing_info: roomDetail.pricing_info
-            };
-          }
-          
-          return null;
-        } catch (roomError) {
-          console.error(`Error fetching details for room ${room.id}:`, roomError);
-          return null;
-        }
-      });
-      
-      // Wait for all room checks to complete with timeout
-      const roomResults = await Promise.allSettled(roomPromises);
-      const availableRooms = roomResults
-        .filter(result => result.status === 'fulfilled' && result.value !== null)
-        .map(result => (result as any).value);
-      
+
       // Sort by price (ascending)
-      availableRooms.sort((a, b) => (a.current_price || a.base_price || 0) - (b.current_price || b.base_price || 0));
-      
-      console.log(`Successfully found ${availableRooms.length} available rooms`);
-      return availableRooms;
+      availableRoomTypes.sort((a, b) => a.base_price - b.base_price);
+
+      console.log(`Successfully found ${availableRoomTypes.length} available room types`);
+      return availableRoomTypes;
     } catch (error) {
       console.error('Error fetching available rooms:', error);
       return [];
@@ -2744,18 +2680,19 @@ const BookingsPage = () => {
                   </div>
                 )}
 
-                {/* Step 3: Room Selection */}
+                {/* Step 3: Room Type Selection */}
                 {wizardStep === 3 && (
                   <div className="bg-white p-6 rounded border border-gray-200">
-                    <h3 className="font-bold text-gray-900 mb-4">Select Room</h3>
+                    <h3 className="font-bold text-gray-900 mb-2">Select Room Type</h3>
+                    <p className="text-sm text-gray-600 mb-4">Specific room number will be assigned at check-in</p>
                     {availableRooms.length > 0 ? (
                       <div className="space-y-4">
-                        {availableRooms.map((room) => (
+                        {availableRooms.map((roomType) => (
                           <div
-                            key={room.id}
-                            onClick={() => setSelectedRoom(room)}
+                            key={roomType.id}
+                            onClick={() => setSelectedRoom(roomType)}
                             className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                              selectedRoom?.id === room.id
+                              selectedRoom?.id === roomType.id
                                 ? 'border-[#005357] bg-[#005357]/5'
                                 : 'border-gray-200 hover:border-[#005357] hover:bg-gray-50'
                             }`}
@@ -2765,23 +2702,25 @@ const BookingsPage = () => {
                                 <input
                                   type="radio"
                                   name="selectedRoom"
-                                  checked={selectedRoom?.id === room.id}
-                                  onChange={() => setSelectedRoom(room)}
+                                  checked={selectedRoom?.id === roomType.id}
+                                  onChange={() => setSelectedRoom(roomType)}
                                   className="w-4 h-4 text-[#005357]"
                                 />
                                 <div className="flex-grow">
-                                  <h4 className="font-medium text-gray-900">Room {room.number}</h4>
-                                  <p className="text-sm text-gray-500">{room.room_type_name}</p>
-                                  <div className="flex items-center space-x-2 text-xs text-gray-400">
-                                    <span>Floor {room.floor}</span>
+                                  <h4 className="font-medium text-gray-900">{roomType.name}</h4>
+                                  <p className="text-sm text-gray-500">{roomType.description}</p>
+                                  <div className="flex items-center space-x-2 text-xs text-gray-400 mt-1">
+                                    <span>{roomType.bed_configuration}</span>
                                     <span>•</span>
-                                    <span>Max {room.room_type?.max_occupancy || 'N/A'} guests</span>
+                                    <span>Max {roomType.max_occupancy} guests</span>
                                     <span>•</span>
-                                    <span className="text-green-600 font-medium">✓ Available all nights</span>
+                                    <span>{roomType.size_sqm} m²</span>
+                                    <span>•</span>
+                                    <span className="text-green-600 font-medium">{roomType.available_rooms_count} rooms available</span>
                                   </div>
-                                  {room.pricing_info && (
+                                  {roomType.pricing_info && (
                                     <div className="mt-2 text-xs text-gray-500">
-                                      <p>Includes: {room.pricing_info.price_includes?.join(', ')}</p>
+                                      <p>Includes: {roomType.pricing_info.price_includes?.join(', ')}</p>
                                     </div>
                                   )}
                                 </div>
@@ -2789,45 +2728,23 @@ const BookingsPage = () => {
                               <div className="text-right ml-4">
                                 <div className="mb-1">
                                   <p className="text-lg font-bold text-gray-900">
-                                    {formatCurrency(room.current_price || room.base_price || 0)}
+                                    {formatCurrency(roomType.current_price || roomType.base_price || 0)}
                                   </p>
                                   <p className="text-xs text-gray-500">per night</p>
                                 </div>
                                 <div className="border-t pt-2 mt-2">
                                   <p className="text-sm font-semibold text-[#005357]">
-                                    {formatCurrency(room.total_cost || 0)}
+                                    {formatCurrency(roomType.total_cost || 0)}
                                   </p>
                                   <p className="text-xs text-gray-500">
-                                    total ({room.nights || 0} nights)
+                                    total ({roomType.nights || 0} nights)
                                   </p>
                                 </div>
                                 <div className="text-xs text-gray-400 mt-1">
-                                  + {room.pricing_info?.price_excludes?.[0] || 'taxes'}
+                                  + {roomType.pricing_info?.price_excludes?.[0] || 'taxes'}
                                 </div>
                               </div>
                             </div>
-                            
-                            {/* Availability Calendar Preview (if available) */}
-                            {room.availability_7_days && room.availability_7_days.length > 0 && (
-                              <div className="mt-3 pt-3 border-t border-gray-100">
-                                <p className="text-xs font-medium text-gray-600 mb-2">7-Day Availability</p>
-                                <div className="flex space-x-1">
-                                  {room.availability_7_days.slice(0, 7).map((day: any) => (
-                                    <div
-                                      key={day.date}
-                                      className={`w-8 h-8 rounded text-xs flex items-center justify-center ${
-                                        day.available 
-                                          ? 'bg-green-100 text-green-700' 
-                                          : 'bg-red-100 text-red-700'
-                                      }`}
-                                      title={`${day.date} (${day.day_name}): ${day.available ? 'Available' : 'Not Available'}`}
-                                    >
-                                      {day.date.split('-')[2]}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
                           </div>
                         ))}
                       </div>
