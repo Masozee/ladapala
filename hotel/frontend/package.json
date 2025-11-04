@@ -3,10 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "NODE_ENV=production node server.js",
+    "preview": "npm run build && npm run start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "deploy": "./deploy.sh",
+    "production:install": "npm ci --only=production",
+    "production:build": "NODE_ENV=production npm run build",
+    "clean": "rm -rf .next && rm -rf out",
+    "analyze": "ANALYZE=true npm run build",
+    "cpanel:package": "node scripts/create-cpanel-package.js",
+    "cpanel:deploy": "npm run build && npm run cpanel:package"
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "^1.2.1",
