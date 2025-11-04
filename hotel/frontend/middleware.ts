@@ -4,8 +4,9 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow login page and public assets
+  // Allow login page, customer booking pages, and public assets
   if (pathname === '/login' ||
+      pathname.startsWith('/customers') ||
       pathname.startsWith('/_next/') ||
       pathname.startsWith('/api/') ||
       pathname.startsWith('/static/') ||
