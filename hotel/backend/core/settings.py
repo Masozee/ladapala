@@ -188,17 +188,19 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # Session and CSRF settings for cross-origin authentication
-# For production cross-domain (palermo.id.rapidplex.com <-> api.kapulaga.net)
-SESSION_COOKIE_SAMESITE = None  # Required for cross-site cookies
-SESSION_COOKIE_SECURE = True  # Required with SameSite=None (HTTPS only)
+# For subdomain sharing (hotel.kapulaga.net <-> api.kapulaga.net)
+IS_PRODUCTION = os.environ.get('DJANGO_ENV') == 'production'
+
+SESSION_COOKIE_SAMESITE = 'Lax'  # Lax works for same-site subdomains
+SESSION_COOKIE_SECURE = IS_PRODUCTION  # True in production (HTTPS), False in development
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_COOKIE_DOMAIN = None  # No domain restriction for cross-site
+SESSION_COOKIE_DOMAIN = '.kapulaga.net' if IS_PRODUCTION else None  # Share across subdomains in production
 
-CSRF_COOKIE_SAMESITE = None  # Required for cross-site cookies
-CSRF_COOKIE_SECURE = True  # Required with SameSite=None (HTTPS only)
+CSRF_COOKIE_SAMESITE = 'Lax'  # Lax works for same-site subdomains
+CSRF_COOKIE_SECURE = IS_PRODUCTION  # True in production (HTTPS), False in development
 CSRF_COOKIE_HTTPONLY = False  # Must be False for JS to read it
-CSRF_COOKIE_DOMAIN = None  # No domain restriction for cross-site
+CSRF_COOKIE_DOMAIN = '.kapulaga.net' if IS_PRODUCTION else None  # Share across subdomains in production
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
