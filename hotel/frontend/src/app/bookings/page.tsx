@@ -717,7 +717,7 @@ const BookingsPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken,
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify(reservationData.guest),
@@ -757,7 +757,7 @@ const BookingsPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken,
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify(reservationPayload),
@@ -841,7 +841,7 @@ const BookingsPage = () => {
         }));
 
       // Sort by price (ascending)
-      availableRoomTypes.sort((a, b) => a.base_price - b.base_price);
+      availableRoomTypes.sort((a: any, b: any) => a.base_price - b.base_price);
 
       console.log(`Successfully found ${availableRoomTypes.length} available room types`);
       return availableRoomTypes;
