@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl } from '@/lib/config';
 
 // Add print styles
 const printStyles = `
@@ -174,7 +175,7 @@ const PaymentsPage = () => {
   const loadTransactions = async () => {
     setLoadingTransactions(true);
     try {
-      const response = await fetch('http://localhost:8000/api/hotel/payments/today_payments/');
+      const response = await fetch(buildApiUrl('hotel/payments/today_payments/'));
       if (response.ok) {
         const data = await response.json();
         setTransactions(data.payments || []);
@@ -188,7 +189,7 @@ const PaymentsPage = () => {
 
   // Fetch CSRF token on mount
   useEffect(() => {
-    fetch('http://localhost:8000/api/user/csrf/', {
+    fetch(buildApiUrl('user/csrf/'), {
       credentials: 'include'
     }).catch(err => console.error('Error fetching CSRF token:', err));
   }, []);
@@ -206,7 +207,7 @@ const PaymentsPage = () => {
       setReservationId(resId);
 
       // First fetch to get reservation_number
-      fetch(`http://localhost:8000/api/hotel/reservations/`)
+      fetch(buildApiUrl('hotel/reservations/'))
         .then(res => res.json())
         .then(data => {
           const reservation = data.results?.find((r: any) => r.id === parseInt(resId));
@@ -216,7 +217,7 @@ const PaymentsPage = () => {
               fetchGuestLoyaltyPoints(reservation.guest);
             }
             // Fetch full details with payment info
-            return fetch(`http://localhost:8000/api/hotel/reservations/${reservation.reservation_number}/`);
+            return fetch(buildApiUrl(`hotel/reservations/${reservation.reservation_number}/`));
           }
         })
         .then(res => res?.json())
@@ -299,7 +300,7 @@ const PaymentsPage = () => {
   // Fetch guest loyalty points
   const fetchGuestLoyaltyPoints = async (guestId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/hotel/guests/${guestId}/`);
+      const response = await fetch(buildApiUrl(`hotel/guests/${guestId}/`));
       if (response.ok) {
         const data = await response.json();
         setAvailablePoints(data.loyalty_points || 0);
@@ -318,7 +319,7 @@ const PaymentsPage = () => {
     setVoucherError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/hotel/payments/calculate/', {
+      const response = await fetch(buildApiUrl('hotel/payments/calculate/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -398,7 +399,7 @@ const PaymentsPage = () => {
           redeem_points: pointsToRedeem || 0,
         };
 
-        response = await fetch('http://localhost:8000/api/hotel/payments/process_with_promotions/', {
+        response = await fetch(buildApiUrl('hotel/payments/process_with_promotions/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -426,7 +427,7 @@ const PaymentsPage = () => {
           notes: notes,
         };
 
-        response = await fetch('http://localhost:8000/api/hotel/payments/', {
+        response = await fetch(buildApiUrl('hotel/payments/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -541,7 +542,7 @@ const PaymentsPage = () => {
         ?.split('=')[1];
 
       // Authenticate manager
-      const authResponse = await fetch('http://localhost:8000/api/user/login/', {
+      const authResponse = await fetch(buildApiUrl('user/login/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -575,7 +576,7 @@ const PaymentsPage = () => {
       // Proceed with voiding the transaction
       if (!pendingVoidTransaction) return;
 
-      const response = await fetch(`http://localhost:8000/api/hotel/payments/${pendingVoidTransaction.id}/`, {
+      const response = await fetch(buildApiUrl(`hotel/payments/${pendingVoidTransaction.id}/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

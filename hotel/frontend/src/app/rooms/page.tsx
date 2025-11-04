@@ -499,7 +499,13 @@ const RoomsPage = () => {
         }
 
         // Check if there's a next page
-        url = data.next ? data.next.replace('http://localhost:8000/api/', '') : null;
+        // Extract just the endpoint path from the full URL for buildApiUrl
+        if (data.next) {
+          const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+          url = data.next.replace(apiBaseUrl + '/', '');
+        } else {
+          url = null;
+        }
       }
 
       console.log('Total rooms fetched:', allRooms.length);

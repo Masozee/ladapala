@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import SupportSidebar from './SupportSidebar';
 import DepartmentGuard from './DepartmentGuard';
+import { buildApiUrl } from '@/lib/config';
 import {
   Notification02Icon,
   Cancel01Icon,
@@ -45,7 +46,7 @@ export const SupportHeaderActions = () => {
             const csrfToken = getCookie('csrftoken');
 
             // Call logout API
-            const response = await fetch('http://localhost:8000/api/user/logout/', {
+            const response = await fetch(buildApiUrl('user/logout/'), {
               method: 'POST',
               credentials: 'include',
               headers: {
