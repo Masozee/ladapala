@@ -30,7 +30,13 @@ SECRET_KEY = 'django-insecure-=($q9)p_gi(+6+qcbu+mdit%a#)p^ml3#7s@%a!r0%*xwx1i=0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'api.kapulaga.net',
+    'hotel.kapulaga.net',
+    'palermo.id.rapidplex.com',
+]
 
 
 # Application definition
@@ -155,6 +161,11 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://hotel.kapulaga.net",
+    "http://hotel.kapulaga.net",
+    "https://palermo.id.rapidplex.com",
+    "http://palermo.id.rapidplex.com",
+    "http://palermo.id.rapidplex.com:3000",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -177,19 +188,24 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # Session and CSRF settings for cross-origin authentication
-SESSION_COOKIE_SAMESITE = 'Lax'  # Use 'Lax' for local development without HTTPS
-SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+# For production cross-domain (palermo.id.rapidplex.com <-> api.kapulaga.net)
+SESSION_COOKIE_SAMESITE = None  # Required for cross-site cookies
+SESSION_COOKIE_SECURE = True  # Required with SameSite=None (HTTPS only)
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_COOKIE_DOMAIN = None  # Allow cookies to work on localhost
+SESSION_COOKIE_DOMAIN = None  # No domain restriction for cross-site
 
-CSRF_COOKIE_SAMESITE = 'Lax'  # Use 'Lax' for local development without HTTPS
-CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_SAMESITE = None  # Required for cross-site cookies
+CSRF_COOKIE_SECURE = True  # Required with SameSite=None (HTTPS only)
 CSRF_COOKIE_HTTPONLY = False  # Must be False for JS to read it
-CSRF_COOKIE_DOMAIN = None  # Allow cookies to work on localhost
+CSRF_COOKIE_DOMAIN = None  # No domain restriction for cross-site
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://hotel.kapulaga.net",
+    "http://hotel.kapulaga.net",
+    "https://palermo.id.rapidplex.com",
+    "http://palermo.id.rapidplex.com",
 ]
 
 # Email Configuration - Gmail SMTP
