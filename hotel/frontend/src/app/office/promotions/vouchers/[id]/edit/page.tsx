@@ -135,7 +135,8 @@ export default function EditVoucherPage() {
       });
 
       if (response.ok) {
-        router.push(`/office/promotions/vouchers/${params.id}`);
+        alert('Voucher berhasil diperbarui!');
+        router.push('/office/promotions');
       } else {
         const error = await response.json();
         alert(`Gagal menyimpan: ${JSON.stringify(error)}`);
@@ -164,7 +165,7 @@ export default function EditVoucherPage() {
         {/* Header */}
         <div className="flex items-center space-x-4 mb-6">
           <Link
-            href={`/office/promotions/vouchers/${params.id}`}
+            href="/office/promotions"
             className="p-2 hover:bg-gray-100 transition-colors"
           >
             <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
@@ -438,7 +439,7 @@ export default function EditVoucherPage() {
           {/* Actions */}
           <div className="flex items-center justify-end space-x-4 mt-6">
             <Link
-              href={`/office/promotions/vouchers/${params.id}`}
+              href="/office/promotions"
               className="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Cancel

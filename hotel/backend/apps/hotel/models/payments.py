@@ -115,4 +115,4 @@ class VoucherUsage(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.voucher.code} used by {self.guest.name}"
+        return f"{self.voucher.code} used by {self.guest.full_name}"

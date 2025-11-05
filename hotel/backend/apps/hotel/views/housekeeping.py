@@ -87,16 +87,10 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Get amenity items from request (required)
+        # Get amenity items from request (optional - can complete without items)
         amenity_items = request.data.get('amenity_items', [])
 
-        if not amenity_items:
-            return Response(
-                {'error': 'Please record items used before completing the task'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Validate amenity items format
+        # Validate amenity items format (only if items are provided)
         for item in amenity_items:
             if 'inventory_item' not in item or 'quantity_used' not in item:
                 return Response(
@@ -156,10 +150,10 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
         notes = request.data.get('notes')
         task.pass_inspection(inspector=request.user, notes=notes)
 
-        # Update room status to AVAILABLE if it was being cleaned
-        if task.room.status in ['MAINTENANCE', 'OUT_OF_ORDER']:
+        # Update room status to AVAILABLE after cleaning is done and inspection passed
+        if task.room.status in ['MAINTENANCE', 'CLEANING', 'OUT_OF_ORDER', 'cleaning']:
             task.room.status = 'AVAILABLE'
-            task.room.save()
+            task.room.save(update_fields=['status', 'updated_at'])
 
         serializer = self.get_serializer(task)
         return Response(serializer.data)

@@ -481,8 +481,18 @@ const RoomDetailPage = () => {
                       <p className="text-xs text-orange-600 font-medium mb-3">Only {roomType.available_rooms} rooms left!</p>
                     )}
 
-                    <button 
+                    <button
                       type="button"
+                      onClick={() => {
+                        // Navigate to reservations page with room details
+                        const bookingParams = new URLSearchParams({
+                          room_type: params.id as string,
+                          check_in: checkInDate,
+                          check_out: checkOutDate,
+                          guests: guests.toString()
+                        });
+                        router.push(`/reservations/new?${bookingParams.toString()}`);
+                      }}
                       className="w-full bg-[#005357] text-white py-3 px-4 font-medium hover:bg-[#004147] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={roomType.available_rooms === 0}
                     >

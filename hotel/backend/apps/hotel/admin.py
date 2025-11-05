@@ -305,18 +305,18 @@ class LoyaltyProgramAdmin(admin.ModelAdmin):
 @admin.register(GuestLoyaltyPoints)
 class GuestLoyaltyPointsAdmin(admin.ModelAdmin):
     list_display = ['guest', 'total_points', 'lifetime_points', 'updated_at']
-    search_fields = ['guest__name', 'guest__email']
+    search_fields = ['guest__first_name', 'guest__last_name', 'guest__email']
     readonly_fields = ['total_points', 'lifetime_points', 'created_at', 'updated_at']
 
 @admin.register(LoyaltyTransaction)
 class LoyaltyTransactionAdmin(admin.ModelAdmin):
     list_display = ['guest', 'transaction_type', 'points', 'balance_after', 'created_at']
     list_filter = ['transaction_type']
-    search_fields = ['guest__name']
+    search_fields = ['guest__first_name', 'guest__last_name', 'guest__email']
     readonly_fields = ['created_at']
 
 @admin.register(VoucherUsage)
 class VoucherUsageAdmin(admin.ModelAdmin):
     list_display = ['voucher', 'guest', 'reservation', 'discount_amount', 'used_at']
-    search_fields = ['voucher__code', 'guest__name']
+    search_fields = ['voucher__code', 'guest__first_name', 'guest__last_name', 'guest__email']
     readonly_fields = ['used_at']

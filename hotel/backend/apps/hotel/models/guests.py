@@ -11,7 +11,10 @@ class Guest(models.Model):
     ID_TYPE_CHOICES = [
         ('passport', 'Passport'),
         ('national_id', 'National ID'),
+        ('ktp', 'KTP (Indonesian ID)'),
+        ('kitas', 'KITAS'),
         ('driving_license', 'Driving License'),
+        ('other', 'Other'),
     ]
 
     first_name = models.CharField(max_length=50)

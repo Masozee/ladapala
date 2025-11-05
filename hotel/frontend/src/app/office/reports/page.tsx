@@ -34,7 +34,7 @@ const PDFViewer = dynamic(
   { ssr: false }
 );
 
-import { OccupancyReportPDF, RevenueReportPDF, TaxReportPDF, GenericReportPDF } from '@/components/reports';
+import { OccupancyReportPDF, RevenueReportPDF, TaxReportPDF, GuestAnalyticsPDF, FullReportPDF, GenericReportPDF } from '@/components/reports';
 
 // TypeScript interfaces for API responses
 interface ReportSummary {
@@ -282,7 +282,6 @@ export default function ReportsPage() {
       'occupancy': 'Laporan Okupansi',
       'revenue': 'Laporan Pendapatan',
       'guest-analytics': 'Analisis Tamu',
-      'staff-performance': 'Performa Karyawan',
       'satisfaction': 'Survei Kepuasan',
       'maintenance': 'Laporan Maintenance',
       'inventory': 'Laporan Inventaris',
@@ -296,6 +295,10 @@ export default function ReportsPage() {
         return <RevenueReportPDF data={data} />;
       case 'tax':
         return <TaxReportPDF data={data} />;
+      case 'guest-analytics':
+        return <GuestAnalyticsPDF data={data} />;
+      case 'full-report':
+        return <FullReportPDF data={data} />;
       default:
         return <GenericReportPDF data={data} title={reportTitles[reportId] || 'Laporan'} />;
     }
@@ -376,6 +379,57 @@ export default function ReportsPage() {
       setGeneratingReports(prev => {
         const newSet = new Set(prev);
         newSet.delete('executive');
+        return newSet;
+      });
+    }
+  };
+
+  // Generate full report with all available reports
+  const handleFullReport = async () => {
+    setGeneratingReports(prev => new Set(prev).add('full-report'));
+    try {
+      // Fetch all available reports in parallel
+      const reportPromises = filteredReports.map(report =>
+        fetch(`${API_BASE_URL}/reports/${report.id}/?period=${selectedPeriod}`, { credentials: 'include' })
+          .then(res => res.json())
+          .then(data => ({ reportId: report.id, data }))
+          .catch(err => {
+            console.error(`Error fetching ${report.id}:`, err);
+            return null;
+          })
+      );
+
+      const results = await Promise.all(reportPromises);
+      const successfulReports = results.filter(r => r !== null);
+
+      if (successfulReports.length === 0) {
+        throw new Error('Tidak ada laporan yang berhasil di-generate');
+      }
+
+      // Create combined data object
+      const fullReportData = {
+        period: selectedPeriod,
+        generated_at: new Date().toISOString(),
+        reports: successfulReports
+      };
+
+      // Show preview of the first successful report
+      if (successfulReports[0]) {
+        setPdfPreviewData({
+          reportId: 'full-report',
+          data: fullReportData
+        });
+        setShowPdfPreview(true);
+      }
+
+      alert(`Berhasil generate ${successfulReports.length} laporan`);
+    } catch (err) {
+      console.error('Error generating full report:', err);
+      alert(err instanceof Error ? err.message : 'Terjadi kesalahan saat generate laporan lengkap');
+    } finally {
+      setGeneratingReports(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('full-report');
         return newSet;
       });
     }
@@ -566,9 +620,13 @@ export default function ReportsPage() {
                   <option value="hr">SDM</option>
                 </select>
               </div>
-              <button className="bg-[#4E61D3] text-white px-4 py-2 text-sm font-medium hover:bg-[#3D4EA8] transition-colors flex items-center space-x-2">
-                <ChevronDownIcon className="h-4 w-4" />
-                <span>Bulk Export</span>
+              <button
+                onClick={handleFullReport}
+                disabled={generatingReports.has('full-report') || filteredReports.length === 0}
+                className="bg-[#4E61D3] text-white px-4 py-2 text-sm font-medium hover:bg-[#3D4EA8] transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <File01Icon className="h-4 w-4" />
+                <span>{generatingReports.has('full-report') ? 'Generating...' : 'Laporan Lengkap'}</span>
               </button>
             </div>
 

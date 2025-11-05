@@ -275,7 +275,6 @@ export default function FinancialPage() {
           <TabButton tabId="overview" label="Ringkasan" icon={PieChartIcon} />
           <TabButton tabId="transactions" label="Transaksi" icon={File01Icon} />
           <TabButton tabId="invoices" label="Faktur" icon={File01Icon} />
-          <TabButton tabId="reports" label="Laporan" icon={ArrowUp01Icon} />
         </div>
 
         {/* Overview Tab */}
@@ -804,120 +803,6 @@ export default function FinancialPage() {
                       ))}
                     </tbody>
                   </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Reports Tab */}
-          {activeTab === 'reports' && (
-            <div>
-              <div className="p-6 bg-[#4E61D3] text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Laporan Keuangan</h3>
-                    <p className="text-sm text-gray-100 mt-1">Generate dan export laporan keuangan</p>
-                  </div>
-                  <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <ArrowUp01Icon className="h-4 w-4 text-[#4E61D3]" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6 bg-gray-50">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Revenue Report */}
-                  <div className="bg-white border border-gray-200">
-                    <div className="p-6 ">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900">Laporan Pendapatan</h3>
-                          <p className="text-sm text-gray-600 mt-1">Analisis pendapatan harian, bulanan, tahunan</p>
-                        </div>
-                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
-                          <ArrowUp01Icon className="h-4 w-4 text-white" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-gray-50">
-                      <div className="space-y-3">
-                        <button className="w-full p-3 text-left bg-white hover:bg-gray-100 transition-colors border">
-                          <div className="font-medium text-gray-900">Pendapatan Harian</div>
-                          <div className="text-sm text-gray-600 mt-1">Laporan pendapatan per hari</div>
-                        </button>
-                        <button className="w-full p-3 text-left bg-white hover:bg-gray-100 transition-colors border">
-                          <div className="font-medium text-gray-900">Pendapatan Bulanan</div>
-                          <div className="text-sm text-gray-600 mt-1">Ringkasan pendapatan bulanan</div>
-                        </button>
-                        <button className="w-full p-3 text-left bg-white hover:bg-gray-100 transition-colors border">
-                          <div className="font-medium text-gray-900">Pendapatan Tahunan</div>
-                          <div className="text-sm text-gray-600 mt-1">Analisis tren tahunan</div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Expense Report */}
-                  <div className="bg-white border border-gray-200">
-                    <div className="p-6 ">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900">Laporan Pengeluaran</h3>
-                          <p className="text-sm text-gray-600 mt-1">Tracking dan analisis pengeluaran</p>
-                        </div>
-                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
-                          <ArrowUp01Icon className="h-4 w-4 text-white" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-gray-50">
-                      <div className="space-y-3">
-                        <button className="w-full p-3 text-left bg-white hover:bg-gray-100 transition-colors border">
-                          <div className="font-medium text-gray-900">Pengeluaran per Kategori</div>
-                          <div className="text-sm text-gray-600 mt-1">Breakdown pengeluaran operasional</div>
-                        </button>
-                        <button className="w-full p-3 text-left bg-white hover:bg-gray-100 transition-colors border">
-                          <div className="font-medium text-gray-900">Tren Pengeluaran</div>
-                          <div className="text-sm text-gray-600 mt-1">Analisis tren pengeluaran</div>
-                        </button>
-                        <button className="w-full p-3 text-left bg-white hover:bg-gray-100 transition-colors border">
-                          <div className="font-medium text-gray-900">Budget vs Aktual</div>
-                          <div className="text-sm text-gray-600 mt-1">Perbandingan budget dengan realisasi</div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Tax Report */}
-                  <div className="bg-white border border-gray-200">
-                    <div className="p-6 ">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900">Laporan Pajak</h3>
-                          <p className="text-sm text-gray-600 mt-1">Laporan siap untuk perpajakan</p>
-                        </div>
-                        <div className="w-8 h-8 bg-[#4E61D3] flex items-center justify-center">
-                          <File01Icon className="h-4 w-4 text-white" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-gray-50">
-                      <div className="space-y-3">
-                        <button className="w-full p-3 text-left bg-white hover:bg-gray-100 transition-colors border">
-                          <div className="font-medium text-gray-900">PPh 21</div>
-                          <div className="text-sm text-gray-600 mt-1">Laporan pajak penghasilan karyawan</div>
-                        </button>
-                        <button className="w-full p-3 text-left bg-white hover:bg-gray-100 transition-colors border">
-                          <div className="font-medium text-gray-900">PPN</div>
-                          <div className="text-sm text-gray-600 mt-1">Laporan pajak pertambahan nilai</div>
-                        </button>
-                        <button className="w-full p-3 text-left bg-white hover:bg-gray-100 transition-colors border">
-                          <div className="font-medium text-gray-900">Laporan SPT</div>
-                          <div className="text-sm text-gray-600 mt-1">Surat pemberitahuan tahunan</div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>

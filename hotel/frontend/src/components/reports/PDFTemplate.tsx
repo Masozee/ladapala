@@ -1,10 +1,11 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
-// Define colors matching office theme
+// Define colors - charcoal for professional look
 const COLORS = {
-  primary: '#4E61D3',
-  secondary: '#3D4EA8',
+  primary: '#1e40af',  // Blue - only for cover/header
+  textDark: '#1f2937',  // Charcoal for headings
+  text: '#374151',  // Dark gray for body text
   gray: '#6B7280',
   lightGray: '#F9FAFB',
   border: '#E5E7EB',
@@ -20,13 +21,13 @@ export const pdfStyles = StyleSheet.create({
   },
   header: {
     marginBottom: 20,
-    borderBottom: `2 solid ${COLORS.primary}`,
+    borderBottom: `2 solid ${COLORS.textDark}`,
     paddingBottom: 15,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.textDark,
     marginBottom: 5,
     textAlign: 'center',
   },
@@ -43,7 +44,7 @@ export const pdfStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.textDark,
     marginBottom: 8,
     borderBottom: `1 solid ${COLORS.border}`,
     paddingBottom: 4,
@@ -69,12 +70,13 @@ export const pdfStyles = StyleSheet.create({
   metricValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.textDark,
   },
   table: {
     display: 'flex',
     width: 'auto',
     marginTop: 10,
+    border: `1 solid ${COLORS.border}`,
   },
   tableRow: {
     flexDirection: 'row',
@@ -82,17 +84,23 @@ export const pdfStyles = StyleSheet.create({
     minHeight: 25,
     alignItems: 'center',
   },
-  tableHeader: {
+  tableRowAlt: {
     backgroundColor: COLORS.lightGray,
-    color: COLORS.primary,
+  },
+  tableHeader: {
+    backgroundColor: COLORS.textDark,
+    color: COLORS.white,
     fontWeight: 'bold',
     fontSize: 9,
-    borderBottom: `2 solid ${COLORS.primary}`,
   },
   tableCell: {
     padding: 6,
     fontSize: 9,
-    color: COLORS.gray,
+    color: COLORS.text,
+    borderRight: `1 solid ${COLORS.border}`,
+  },
+  tableCellLast: {
+    borderRight: 'none',
   },
   footer: {
     position: 'absolute',

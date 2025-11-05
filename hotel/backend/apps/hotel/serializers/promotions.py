@@ -127,7 +127,7 @@ class LoyaltyProgramSerializer(serializers.ModelSerializer):
 class LoyaltyTransactionSerializer(serializers.ModelSerializer):
     """Serializer for Loyalty Transaction"""
 
-    guest_name = serializers.CharField(source='guest.name', read_only=True)
+    guest_name = serializers.CharField(source='guest.full_name', read_only=True)
     transaction_type_display = serializers.CharField(source='get_transaction_type_display', read_only=True)
 
     class Meta:
@@ -143,7 +143,7 @@ class LoyaltyTransactionSerializer(serializers.ModelSerializer):
 class GuestLoyaltyPointsSerializer(serializers.ModelSerializer):
     """Serializer for Guest Loyalty Points"""
 
-    guest_name = serializers.CharField(source='guest.name', read_only=True)
+    guest_name = serializers.CharField(source='guest.full_name', read_only=True)
     guest_email = serializers.EmailField(source='guest.email', read_only=True)
     recent_transactions = serializers.SerializerMethodField()
 
@@ -174,7 +174,7 @@ class VoucherUsageSerializer(serializers.ModelSerializer):
 
     voucher_code = serializers.CharField(source='voucher.code', read_only=True)
     voucher_name = serializers.CharField(source='voucher.name', read_only=True)
-    guest_name = serializers.CharField(source='guest.name', read_only=True)
+    guest_name = serializers.CharField(source='guest.full_name', read_only=True)
     reservation_number = serializers.CharField(source='reservation.reservation_number', read_only=True)
 
     class Meta:

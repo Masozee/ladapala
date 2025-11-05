@@ -2,6 +2,8 @@
 export { OccupancyReportPDF } from './OccupancyReportPDF';
 export { RevenueReportPDF } from './RevenueReportPDF';
 export { TaxReportPDF } from './TaxReportPDF';
+export { GuestAnalyticsPDF } from './GuestAnalyticsPDF';
+export { FullReportPDF } from './FullReportPDF';
 export { PDFTemplate, pdfStyles } from './PDFTemplate';
 
 // Generic report PDF component for reports without custom components

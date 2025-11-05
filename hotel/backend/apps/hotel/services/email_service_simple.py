@@ -23,9 +23,8 @@ def send_event_invoice_email_with_pdf(event_booking, pdf_base64_content):
         # Email subject
         subject = f"Invoice Pembayaran Event - {event_booking.event_name}"
 
-        # Recipient email - FOR DEVELOPMENT: Send all emails to test address
-        recipient_email = "nurojilukmansyah@gmail.com"  # Development test email
-        # recipient_email = event_booking.guest.email  # Uncomment for production
+        # Recipient email - Send to guest's email
+        recipient_email = event_booking.guest.email
 
         # Email body (HTML)
         html_content = f"""

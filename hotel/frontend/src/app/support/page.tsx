@@ -43,6 +43,25 @@ export default function SupportDashboard() {
 
   useEffect(() => {
     fetchAllData();
+
+    // Refresh data when page becomes visible (user switches back to tab)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAllData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Auto-refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      fetchAllData();
+    }, 30000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(refreshInterval);
+    };
   }, []);
 
   const fetchAllData = async () => {
@@ -460,7 +479,7 @@ export default function SupportDashboard() {
               ) : (
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {sortedRecentRequests.map((request) => (
-                  <div key={request.id} className="bg-white p-4 border border-gray-200">
+                  <div key={`${request.type}-${request.id}`} className="bg-white p-4 border border-gray-200">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">

@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 
 // Add print styles
 const printStyles = `
@@ -319,10 +319,12 @@ const PaymentsPage = () => {
     setVoucherError('');
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl('hotel/payments/calculate/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -399,10 +401,12 @@ const PaymentsPage = () => {
           redeem_points: pointsToRedeem || 0,
         };
 
+        const csrfToken = getCsrfToken();
         response = await fetch(buildApiUrl('hotel/payments/process_with_promotions/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(csrfToken && { 'X-CSRFToken': csrfToken }),
           },
           credentials: 'include',
           body: JSON.stringify(promotionData),
@@ -607,7 +611,8 @@ const PaymentsPage = () => {
 
   const calculateChange = () => {
     if (selectedPaymentMethod === 'cash' && cashReceived > 0) {
-      return Math.max(0, cashReceived - totalAmount);
+      const finalTotal = calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount;
+      return Math.max(0, cashReceived - finalTotal);
     }
     return 0;
   };
@@ -778,14 +783,14 @@ const PaymentsPage = () => {
                   {voucherError && (
                     <p className="text-xs text-red-600">{voucherError}</p>
                   )}
-                  {calculationResult && calculationResult.voucher_applied && (
+                  {calculationResult && calculationResult.voucher?.code && (
                     <p className="text-xs text-green-600">
-                      ✓ Voucher "{calculationResult.voucher_code}" applied: {formatCurrency(calculationResult.voucher_discount)}
+                      ✓ Voucher "{calculationResult.voucher.code}" applied: {formatCurrency(parseFloat(calculationResult.voucher.discount))}
                     </p>
                   )}
-                  {calculationResult && calculationResult.discount_applied && (
+                  {calculationResult && calculationResult.auto_discount?.name && (
                     <p className="text-xs text-purple-600">
-                      ✓ Auto discount "{calculationResult.discount_name}" applied: {formatCurrency(calculationResult.discount_amount)}
+                      ✓ Auto discount "{calculationResult.auto_discount.name}" applied: {formatCurrency(parseFloat(calculationResult.auto_discount.discount))}
                     </p>
                   )}
                   <p className="text-xs text-gray-500">Valid voucher codes will be applied automatically to your total</p>
@@ -837,9 +842,9 @@ const PaymentsPage = () => {
                       </button>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">1,000 points = Rp 50,000 discount</p>
-                    {calculationResult && calculationResult.points_redeemed > 0 && (
+                    {calculationResult && calculationResult.loyalty_points?.redeemed > 0 && (
                       <p className="text-xs text-yellow-600 mt-1">
-                        ✓ {calculationResult.points_redeemed.toLocaleString()} points redeemed: {formatCurrency(calculationResult.points_value)}
+                        ✓ {calculationResult.loyalty_points.redeemed.toLocaleString()} points redeemed: {formatCurrency(parseFloat(calculationResult.loyalty_points.value))}
                       </p>
                     )}
                   </div>
@@ -923,22 +928,22 @@ const PaymentsPage = () => {
                     </div>
 
                     {/* Promotions/Discounts */}
-                    {calculationResult && calculationResult.voucher_discount > 0 && (
+                    {calculationResult && calculationResult.voucher?.discount && parseFloat(calculationResult.voucher.discount) > 0 && (
                       <div className="flex justify-between text-sm text-green-600">
-                        <span>Voucher Discount ({calculationResult.voucher_code}):</span>
-                        <span>- {formatCurrency(calculationResult.voucher_discount)}</span>
+                        <span>Voucher Discount ({calculationResult.voucher.code}):</span>
+                        <span>- {formatCurrency(parseFloat(calculationResult.voucher.discount))}</span>
                       </div>
                     )}
-                    {calculationResult && calculationResult.discount_amount > 0 && (
+                    {calculationResult && calculationResult.auto_discount?.discount && parseFloat(calculationResult.auto_discount.discount) > 0 && (
                       <div className="flex justify-between text-sm text-purple-600">
-                        <span>Auto Discount ({calculationResult.discount_name}):</span>
-                        <span>- {formatCurrency(calculationResult.discount_amount)}</span>
+                        <span>Auto Discount ({calculationResult.auto_discount.name}):</span>
+                        <span>- {formatCurrency(parseFloat(calculationResult.auto_discount.discount))}</span>
                       </div>
                     )}
-                    {calculationResult && calculationResult.points_value > 0 && (
+                    {calculationResult && calculationResult.loyalty_points?.value && parseFloat(calculationResult.loyalty_points.value) > 0 && (
                       <div className="flex justify-between text-sm text-yellow-600">
-                        <span>Points Redeemed ({calculationResult.points_redeemed.toLocaleString()}):</span>
-                        <span>- {formatCurrency(calculationResult.points_value)}</span>
+                        <span>Points Redeemed ({calculationResult.loyalty_points.redeemed.toLocaleString()}):</span>
+                        <span>- {formatCurrency(parseFloat(calculationResult.loyalty_points.value))}</span>
                       </div>
                     )}
 
@@ -950,10 +955,10 @@ const PaymentsPage = () => {
                     </div>
 
                     {/* Points to Earn */}
-                    {calculationResult && calculationResult.points_earned > 0 && (
+                    {calculationResult && calculationResult.loyalty_points?.to_earn > 0 && (
                       <div className="p-2 bg-blue-50 border border-blue-200 text-center mt-2">
                         <p className="text-xs text-blue-700">You will earn</p>
-                        <p className="text-sm font-bold text-blue-800">+{calculationResult.points_earned.toLocaleString()} points</p>
+                        <p className="text-sm font-bold text-blue-800">+{calculationResult.loyalty_points.to_earn.toLocaleString()} points</p>
                       </div>
                     )}
                   </div>
@@ -1063,7 +1068,7 @@ const PaymentsPage = () => {
                           Scan QR code with your mobile banking app
                         </p>
                         <p className="text-xs text-blue-600 mt-1">
-                          Amount: {formatCurrency(totalAmount)}
+                          Amount: {formatCurrency(calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount)}
                         </p>
                       </div>
                     </div>
@@ -1125,7 +1130,7 @@ const PaymentsPage = () => {
                     ) : (
                       <>
                         <CreditCardIcon className="h-5 w-5 mr-2" />
-                        Process Payment ({formatCurrency(totalAmount)})
+                        Process Payment ({formatCurrency(calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount)})
                       </>
                     )}
                   </button>
@@ -1198,10 +1203,34 @@ const PaymentsPage = () => {
               <span>Tax (11%):</span>
               <span>{formatCurrency(taxAmount)}</span>
             </div>
+            {calculationResult && calculationResult.voucher?.discount && parseFloat(calculationResult.voucher.discount) > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', color: '#16a34a' }}>
+                <span>Voucher ({calculationResult.voucher.code}):</span>
+                <span>-{formatCurrency(parseFloat(calculationResult.voucher.discount))}</span>
+              </div>
+            )}
+            {calculationResult && calculationResult.auto_discount?.discount && parseFloat(calculationResult.auto_discount.discount) > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', color: '#9333ea' }}>
+                <span>Discount ({calculationResult.auto_discount.name}):</span>
+                <span>-{formatCurrency(parseFloat(calculationResult.auto_discount.discount))}</span>
+              </div>
+            )}
+            {calculationResult && calculationResult.loyalty_points?.value && parseFloat(calculationResult.loyalty_points.value) > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', color: '#ca8a04' }}>
+                <span>Points ({calculationResult.loyalty_points.redeemed}):</span>
+                <span>-{formatCurrency(parseFloat(calculationResult.loyalty_points.value))}</span>
+              </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '18px', fontWeight: 'bold', borderTop: '2px solid #000', paddingTop: '10px' }}>
               <span>TOTAL:</span>
-              <span>{formatCurrency(totalAmount)}</span>
+              <span>{formatCurrency(calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount)}</span>
             </div>
+            {calculationResult && calculationResult.loyalty_points?.to_earn > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px', fontSize: '12px', color: '#2563eb' }}>
+                <span>Points Earned:</span>
+                <span>+{calculationResult.loyalty_points.to_earn.toLocaleString()} pts</span>
+              </div>
+            )}
           </div>
 
           <div style={{ marginBottom: '20px', fontSize: '14px', borderTop: '1px dashed #000', paddingTop: '10px' }}>

@@ -58,7 +58,7 @@ export default function NewPurchaseOrderPage() {
 
   const fetchInventoryItems = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/inventory/'), {
+      const response = await fetch(buildApiUrl('hotel/inventory/?page_size=1000'), {
         credentials: 'include',
       });
       if (response.ok) {

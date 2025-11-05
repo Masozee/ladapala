@@ -191,6 +191,27 @@ const HousekeepingPage = () => {
     fetchTasks();
     fetchStatistics();
     fetchRooms();
+
+    // Refresh data when page becomes visible (user switches back to tab)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchTasks();
+        fetchStatistics();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Auto-refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      fetchTasks();
+      fetchStatistics();
+    }, 30000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(refreshInterval);
+    };
   }, [filterStatus]);
 
   const getStatusColor = (status: string) => {
@@ -285,10 +306,7 @@ const HousekeepingPage = () => {
     // Filter out items with 0 quantity
     const selectedItems = amenityItems.filter(item => item.quantity_used > 0);
 
-    if (selectedItems.length === 0) {
-      alert('Please select at least one item before completing the task');
-      return;
-    }
+    // Note: Completing without items is now allowed (amenity tracking is optional)
 
     try {
       setFormLoading(true);
@@ -986,7 +1004,7 @@ const HousekeepingPage = () => {
                       <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
                         <p className="text-sm text-blue-800">
                           <strong>Instructions:</strong> Adjust quantities for items used during cleaning.
-                          Items with 0 quantity will not be recorded.
+                          Items with 0 quantity will not be recorded. You can complete the task without selecting items if none were used.
                         </p>
                       </div>
 
@@ -1097,7 +1115,7 @@ const HousekeepingPage = () => {
                     <button
                       onClick={submitTaskCompletion}
                       className="px-4 py-2 bg-[#F87B1B] text-white text-sm hover:bg-[#E06A0A] disabled:opacity-50"
-                      disabled={formLoading || amenityItems.filter(item => (item.quantity_used ?? item.suggested_quantity) > 0).length === 0}
+                      disabled={formLoading}
                     >
                       {formLoading ? 'Completing...' : 'Complete Task'}
                     </button>

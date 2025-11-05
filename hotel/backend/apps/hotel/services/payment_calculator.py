@@ -65,9 +65,9 @@ class PaymentCalculator:
 
         # Check usage limit per guest
         guest_usage_count = voucher.usages.filter(guest=self.guest).count()
-        if voucher.usage_limit_per_guest and guest_usage_count >= voucher.usage_limit_per_guest:
+        if voucher.usage_per_guest and guest_usage_count >= voucher.usage_per_guest:
             raise PaymentCalculationError(
-                f"You have already used this voucher {guest_usage_count} time(s). Limit: {voucher.usage_limit_per_guest}"
+                f"You have already used this voucher {guest_usage_count} time(s). Limit: {voucher.usage_per_guest}"
             )
 
         # Check room type restrictions (if applicable)
@@ -113,42 +113,38 @@ class PaymentCalculator:
         # Get all active discounts within date range
         applicable_discounts = Discount.objects.filter(
             is_active=True,
-            start_date__lte=now,
-            end_date__gte=now,
-            min_booking_amount__lte=self.subtotal,
+            valid_from__lte=now,
+            valid_until__gte=now,
             min_nights__lte=nights
-        ).order_by('priority')  # Lower priority number = higher priority
+        ).order_by('-priority')  # Higher priority number = applied first
 
         best_discount = None
         best_discount_amount = Decimal('0.00')
 
         for discount in applicable_discounts:
-            # Check booking window (if applicable)
-            if discount.booking_window_days:
-                days_before_checkin = (check_in_date - booking_date).days
-                if discount.discount_type == 'EARLY_BIRD':
-                    if days_before_checkin < discount.booking_window_days:
-                        continue  # Not early enough
-                elif discount.discount_type == 'LAST_MINUTE':
-                    if days_before_checkin > discount.booking_window_days:
-                        continue  # Not last minute enough
+            # Check advance booking window (if applicable)
+            days_before_checkin = (check_in_date - booking_date).days
 
-            # Check applicable days (if specified)
-            if discount.applicable_days:
-                checkin_day = check_in_date.strftime('%A').upper()
-                if checkin_day not in discount.applicable_days:
+            if discount.discount_type == 'EARLY_BIRD':
+                if discount.min_advance_days and days_before_checkin < discount.min_advance_days:
+                    continue  # Not early enough
+            elif discount.discount_type == 'LAST_MINUTE':
+                if discount.max_advance_days and days_before_checkin > discount.max_advance_days:
+                    continue  # Not last minute enough
+
+            # Check applicable stay period (if specified)
+            if discount.applicable_from and check_in_date < discount.applicable_from:
+                continue
+            if discount.applicable_until and check_in_date > discount.applicable_until:
+                continue
+
+            # Check room type restrictions (if applicable)
+            if discount.applicable_room_types.exists():
+                if self.reservation.room and self.reservation.room.room_type not in discount.applicable_room_types.all():
                     continue
 
             # Calculate discount amount
-            discount_amount = Decimal('0.00')
-
-            if discount.discount_percentage:
-                discount_amount = self.subtotal * (discount.discount_percentage / Decimal('100'))
-                if discount.max_discount_amount and discount_amount > discount.max_discount_amount:
-                    discount_amount = discount.max_discount_amount
-
-            elif discount.discount_amount:
-                discount_amount = min(discount.discount_amount, self.subtotal)
+            discount_amount = self.subtotal * (discount.discount_percentage / Decimal('100'))
 
             # Take the first matching discount (highest priority)
             if discount_amount > Decimal('0.00'):
@@ -179,19 +175,20 @@ class PaymentCalculator:
             raise PaymentCalculationError("No active loyalty program found")
 
         # Check min redemption
-        if points_to_redeem < program.min_points_redemption:
+        if points_to_redeem < program.min_points_to_redeem:
             raise PaymentCalculationError(
-                f"Minimum {program.min_points_redemption} points required for redemption"
+                f"Minimum {program.min_points_to_redeem} points required for redemption"
             )
 
         # Check available points
-        if points_to_redeem > loyalty_account.current_points:
+        available_points = self.guest.loyalty_points if hasattr(self.guest, 'loyalty_points') else 0
+        if points_to_redeem > available_points:
             raise PaymentCalculationError(
-                f"Insufficient points. Available: {loyalty_account.current_points}, Requested: {points_to_redeem}"
+                f"Insufficient points. Available: {available_points}, Requested: {points_to_redeem}"
             )
 
         # Calculate value
-        points_value = Decimal(str(points_to_redeem)) * program.points_currency_value
+        points_value = Decimal(str(points_to_redeem)) * program.rupiah_per_point
 
         # Points value cannot exceed remaining payment amount
         remaining_after_discounts = self.subtotal - self.voucher_discount - self.auto_discount_amount
@@ -214,8 +211,8 @@ class PaymentCalculator:
             return 0
 
         # Calculate points based on final payment amount
-        # points_per_amount is like "1 point per 10000 IDR"
-        points_earned = int(final_payment_amount / program.points_per_amount)
+        # points_per_rupiah is like "1 point per Rupiah spent"
+        points_earned = int(final_payment_amount * program.points_per_rupiah)
 
         self.points_to_earn = points_earned
         return points_earned

@@ -107,7 +107,7 @@ export default function NewEventBookingPage() {
     email: '',
     phone: '',
     nationality: 'Indonesia',
-    gender: 'MALE'
+    gender: 'M'
   });
 
   useEffect(() => {
@@ -281,7 +281,7 @@ export default function NewEventBookingPage() {
           email: '',
           phone: '',
           nationality: 'Indonesia',
-          gender: 'MALE'
+          gender: 'M'
         });
         alert('Tamu baru berhasil ditambahkan!');
       } else {
@@ -827,8 +827,9 @@ export default function NewEventBookingPage() {
                   onChange={(e) => setNewGuestData({ ...newGuestData, gender: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
                 >
-                  <option value="MALE">Laki-laki</option>
-                  <option value="FEMALE">Perempuan</option>
+                  <option value="M">Laki-laki</option>
+                  <option value="F">Perempuan</option>
+                  <option value="O">Lainnya</option>
                 </select>
               </div>
 

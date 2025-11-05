@@ -351,20 +351,31 @@ export default function SupportReportsPage() {
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-900">Trend 7 Hari Terakhir</h3>
               </div>
-              <div className="p-6">
-                <div className="space-y-2">
-                  {data.maintenance.trend_7days.map((item) => (
-                    <div key={item.date} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                      <span className="text-sm text-gray-600">{new Date(item.date).toLocaleDateString('id-ID', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-32 bg-gray-200 h-2 rounded">
-                          <div className="bg-[#F87B1B] h-2 rounded" style={{ width: `${Math.min(item.count * 10, 100)}%` }}></div>
-                        </div>
-                        <span className="text-sm font-bold text-gray-900 w-8 text-right">{item.count}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#F87B1B] text-white">
+                      <th className="border border-gray-200 px-6 py-3 text-left text-sm font-medium">Tanggal</th>
+                      <th className="border border-gray-200 px-6 py-3 text-left text-sm font-medium">Hari</th>
+                      <th className="border border-gray-200 px-6 py-3 text-right text-sm font-medium">Jumlah Request</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.maintenance.trend_7days.map((item) => (
+                      <tr key={item.date} className="hover:bg-gray-50">
+                        <td className="border border-gray-200 px-6 py-3 text-sm text-gray-900">
+                          {new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </td>
+                        <td className="border border-gray-200 px-6 py-3 text-sm text-gray-600">
+                          {new Date(item.date).toLocaleDateString('id-ID', { weekday: 'long' })}
+                        </td>
+                        <td className="border border-gray-200 px-6 py-3 text-right">
+                          <span className="text-lg font-bold text-gray-900">{item.count}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -416,20 +427,31 @@ export default function SupportReportsPage() {
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-900">Trend 7 Hari Terakhir</h3>
               </div>
-              <div className="p-6">
-                <div className="space-y-2">
-                  {data.housekeeping.trend_7days.map((item) => (
-                    <div key={item.date} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                      <span className="text-sm text-gray-600">{new Date(item.date).toLocaleDateString('id-ID', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-32 bg-gray-200 h-2 rounded">
-                          <div className="bg-[#F87B1B] h-2 rounded" style={{ width: `${Math.min(item.count * 10, 100)}%` }}></div>
-                        </div>
-                        <span className="text-sm font-bold text-gray-900 w-8 text-right">{item.count}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#F87B1B] text-white">
+                      <th className="border border-gray-200 px-6 py-3 text-left text-sm font-medium">Tanggal</th>
+                      <th className="border border-gray-200 px-6 py-3 text-left text-sm font-medium">Hari</th>
+                      <th className="border border-gray-200 px-6 py-3 text-right text-sm font-medium">Jumlah Tugas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.housekeeping.trend_7days.map((item) => (
+                      <tr key={item.date} className="hover:bg-gray-50">
+                        <td className="border border-gray-200 px-6 py-3 text-sm text-gray-900">
+                          {new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </td>
+                        <td className="border border-gray-200 px-6 py-3 text-sm text-gray-600">
+                          {new Date(item.date).toLocaleDateString('id-ID', { weekday: 'long' })}
+                        </td>
+                        <td className="border border-gray-200 px-6 py-3 text-right">
+                          <span className="text-lg font-bold text-gray-900">{item.count}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -486,20 +508,31 @@ export default function SupportReportsPage() {
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-900">Trend 7 Hari Terakhir</h3>
               </div>
-              <div className="p-6">
-                <div className="space-y-2">
-                  {data.amenity.trend_7days.map((item) => (
-                    <div key={item.date} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                      <span className="text-sm text-gray-600">{new Date(item.date).toLocaleDateString('id-ID', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-32 bg-gray-200 h-2 rounded">
-                          <div className="bg-[#F87B1B] h-2 rounded" style={{ width: `${Math.min(item.count * 10, 100)}%` }}></div>
-                        </div>
-                        <span className="text-sm font-bold text-gray-900 w-8 text-right">{item.count}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#F87B1B] text-white">
+                      <th className="border border-gray-200 px-6 py-3 text-left text-sm font-medium">Tanggal</th>
+                      <th className="border border-gray-200 px-6 py-3 text-left text-sm font-medium">Hari</th>
+                      <th className="border border-gray-200 px-6 py-3 text-right text-sm font-medium">Jumlah Request</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.amenity.trend_7days.map((item) => (
+                      <tr key={item.date} className="hover:bg-gray-50">
+                        <td className="border border-gray-200 px-6 py-3 text-sm text-gray-900">
+                          {new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </td>
+                        <td className="border border-gray-200 px-6 py-3 text-sm text-gray-600">
+                          {new Date(item.date).toLocaleDateString('id-ID', { weekday: 'long' })}
+                        </td>
+                        <td className="border border-gray-200 px-6 py-3 text-right">
+                          <span className="text-lg font-bold text-gray-900">{item.count}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

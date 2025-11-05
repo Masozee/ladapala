@@ -256,8 +256,8 @@ class LoyaltyProgram(models.Model):
 
     # Points earning rates
     points_per_rupiah = models.DecimalField(
-        max_digits=10, decimal_places=2, default=1,
-        help_text="Points earned per Rupiah spent"
+        max_digits=10, decimal_places=4, default=0.001,
+        help_text="Points earned per Rupiah spent (e.g., 0.001 = 1 point per 1000 Rupiah)"
     )
 
     # Points redemption rates
@@ -311,7 +311,7 @@ class GuestLoyaltyPoints(models.Model):
         verbose_name_plural = "Guest Loyalty Points"
 
     def __str__(self):
-        return f"{self.guest.name} - {self.total_points} points"
+        return f"{self.guest.full_name} - {self.total_points} points"
 
     def add_points(self, points, description, reference_type=None, reference_id=None):
         """Add points to guest balance"""
@@ -381,4 +381,4 @@ class LoyaltyTransaction(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.guest.name} - {self.transaction_type} - {self.points} points"
+        return f"{self.guest.full_name} - {self.transaction_type} - {self.points} points"

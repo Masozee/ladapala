@@ -1161,7 +1161,7 @@ const RoomsPage = () => {
                   <button
                     onClick={() => {
                       if (roomType.available_rooms > 0) {
-                        router.push(`/bookings/new?room_type=${roomType.id}&room_type_name=${encodeURIComponent(roomType.name)}&check_in=${checkInDate}&check_out=${checkOutDate}&guests=${guests}`);
+                        router.push(`/reservations/new?room_type=${roomType.id}&room_type_name=${encodeURIComponent(roomType.name)}&check_in=${checkInDate}&check_out=${checkOutDate}&guests=${guests}`);
                       }
                     }}
                     className="text-sm bg-[#005357] text-white px-3 py-2 hover:bg-[#004147] transition-colors disabled:opacity-50"
@@ -1337,7 +1337,7 @@ const RoomsPage = () => {
                                 <button
                                   onClick={() => {
                                     if (roomType.available_rooms > 0) {
-                                      router.push(`/bookings/new?room_type=${roomType.id}&room_type_name=${encodeURIComponent(roomType.name)}&check_in=${checkInDate}&check_out=${checkOutDate}&guests=${guests}`);
+                                      router.push(`/reservations/new?room_type=${roomType.id}&room_type_name=${encodeURIComponent(roomType.name)}&check_in=${checkInDate}&check_out=${checkOutDate}&guests=${guests}`);
                                     }
                                     setActiveDropdown(null);
                                   }}

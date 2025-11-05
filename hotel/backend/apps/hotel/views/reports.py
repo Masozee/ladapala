@@ -508,14 +508,6 @@ def available_reports(request):
             'status': 'ready'
         },
         {
-            'id': 'staff-performance',
-            'title': 'Performa Karyawan',
-            'description': 'Evaluasi kinerja dan produktivitas karyawan',
-            'category': 'hr',
-            'last_generated': (today - timedelta(days=2)).strftime('%Y-%m-%d'),
-            'status': 'ready'
-        },
-        {
             'id': 'satisfaction',
             'title': 'Survei Kepuasan',
             'description': 'Rating dan review tamu, analisis feedback',
@@ -601,19 +593,8 @@ def revenue_report(request):
     """Generate revenue report"""
     period = request.GET.get('period', 'thisMonth')
 
-    # Calculate date range
-    today = date.today()
-    if period == 'thisMonth':
-        start_date = date(today.year, today.month, 1)
-        end_date = today
-    elif period == 'lastMonth':
-        last_month = today.replace(day=1) - timedelta(days=1)
-        start_date = date(last_month.year, last_month.month, 1)
-        end_date = date(last_month.year, last_month.month, 1) + timedelta(days=32)
-        end_date = end_date.replace(day=1) - timedelta(days=1)
-    else:
-        start_date = date(today.year, today.month, 1)
-        end_date = today
+    # Use parse_period_to_date_range for consistency with other reports
+    start_date, end_date = parse_period_to_date_range(period)
 
     start_datetime = datetime.combine(start_date, datetime.min.time())
     end_datetime = datetime.combine(end_date, datetime.max.time())
@@ -686,19 +667,8 @@ def guest_analytics_report(request):
     """Generate guest analytics report"""
     period = request.GET.get('period', 'thisMonth')
 
-    # Calculate date range
-    today = date.today()
-    if period == 'thisMonth':
-        start_date = date(today.year, today.month, 1)
-        end_date = today
-    elif period == 'lastMonth':
-        last_month = today.replace(day=1) - timedelta(days=1)
-        start_date = date(last_month.year, last_month.month, 1)
-        end_date = date(last_month.year, last_month.month, 1) + timedelta(days=32)
-        end_date = end_date.replace(day=1) - timedelta(days=1)
-    else:
-        start_date = date(today.year, today.month, 1)
-        end_date = today
+    # Use the helper function to parse period (supports YYYY-MM format)
+    start_date, end_date = parse_period_to_date_range(period)
 
     start_datetime = datetime.combine(start_date, datetime.min.time())
     end_datetime = datetime.combine(end_date, datetime.max.time())
@@ -712,7 +682,7 @@ def guest_analytics_report(request):
     repeat_guests = Guest.objects.filter(
         created_at__lte=end_datetime
     ).annotate(
-        reservation_count=Count('reservations')
+        reservation_count=Count('reservation')
     ).filter(reservation_count__gt=1).count()
 
     # Guest nationality breakdown
@@ -747,6 +717,45 @@ def guest_analytics_report(request):
     else:
         avg_stay = 0
 
+    # Daily breakdown
+    daily_data = []
+    current_date = start_date
+    while current_date <= end_date:
+        day_start = datetime.combine(current_date, datetime.min.time())
+        day_end = datetime.combine(current_date, datetime.max.time())
+
+        # New guests registered on this day
+        day_guests = Guest.objects.filter(
+            created_at__range=[day_start, day_end]
+        ).count()
+
+        # New reservations created on this day
+        day_reservations = Reservation.objects.filter(
+            created_at__range=[day_start, day_end]
+        ).count()
+
+        # Check-ins on this day
+        day_checkins = Reservation.objects.filter(
+            check_in_date=current_date,
+            status__in=['CHECKED_IN', 'CHECKED_OUT']
+        ).count()
+
+        # Check-outs on this day
+        day_checkouts = Reservation.objects.filter(
+            check_out_date=current_date,
+            status='CHECKED_OUT'
+        ).count()
+
+        daily_data.append({
+            'date': current_date.strftime('%Y-%m-%d'),
+            'new_guests': day_guests,
+            'new_reservations': day_reservations,
+            'check_ins': day_checkins,
+            'check_outs': day_checkouts
+        })
+
+        current_date += timedelta(days=1)
+
     data = {
         'period': period,
         'total_guests': total_guests,
@@ -761,7 +770,8 @@ def guest_analytics_report(request):
             }
             for item in nationality_breakdown
         ],
-        'booking_by_day': booking_by_day
+        'booking_by_day': booking_by_day,
+        'daily_data': daily_data
     }
 
     return format_response(data, 'guest-analytics', request)
@@ -839,19 +849,8 @@ def satisfaction_report(request):
     """Generate guest satisfaction report based on complaints"""
     period = request.GET.get('period', 'thisMonth')
 
-    # Calculate date range
-    today = date.today()
-    if period == 'thisMonth':
-        start_date = date(today.year, today.month, 1)
-        end_date = today
-    elif period == 'lastMonth':
-        last_month = today.replace(day=1) - timedelta(days=1)
-        start_date = date(last_month.year, last_month.month, 1)
-        end_date = date(last_month.year, last_month.month, 1) + timedelta(days=32)
-        end_date = end_date.replace(day=1) - timedelta(days=1)
-    else:
-        start_date = date(today.year, today.month, 1)
-        end_date = today
+    # Use parse_period_to_date_range for consistency
+    start_date, end_date = parse_period_to_date_range(period)
 
     start_datetime = datetime.combine(start_date, datetime.min.time())
     end_datetime = datetime.combine(end_date, datetime.max.time())
@@ -884,6 +883,29 @@ def satisfaction_report(request):
     else:
         satisfaction_score = 4.5
 
+    # Daily breakdown
+    daily_data = []
+    current_date = start_date
+    while current_date <= end_date:
+        day_start = datetime.combine(current_date, datetime.min.time())
+        day_end = datetime.combine(current_date, datetime.max.time())
+
+        day_complaints = Complaint.objects.filter(
+            created_at__range=[day_start, day_end]
+        )
+
+        day_resolved = day_complaints.filter(status='RESOLVED').count()
+        day_total = day_complaints.count()
+
+        daily_data.append({
+            'date': current_date.strftime('%Y-%m-%d'),
+            'total_complaints': day_total,
+            'resolved': day_resolved,
+            'pending': day_complaints.filter(status__in=['OPEN', 'IN_PROGRESS']).count()
+        })
+
+        current_date += timedelta(days=1)
+
     data = {
         'period': period,
         'total_complaints': total_complaints,
@@ -891,6 +913,7 @@ def satisfaction_report(request):
         'pending_complaints': pending_complaints,
         'resolution_rate': resolution_rate,
         'satisfaction_score': round(satisfaction_score, 1),
+        'total_reservations': total_reservations,
         'complaints_by_category': [
             {
                 'category': item['category'],
@@ -898,7 +921,8 @@ def satisfaction_report(request):
                 'percentage': round((item['count'] / total_complaints * 100), 1) if total_complaints > 0 else 0
             }
             for item in complaints_by_category
-        ]
+        ],
+        'daily_data': daily_data
     }
 
     return format_response(data, 'satisfaction', request)
@@ -916,10 +940,11 @@ def inventory_report(request):
 
     # Low stock items (current_stock <= minimum_stock OR current_stock <= 10 if no minimum_stock)
     from django.db.models import F
-    low_stock_items = items.filter(
+    low_stock_items_qs = items.filter(
         Q(current_stock__lte=F('minimum_stock')) |
         Q(minimum_stock__isnull=True, current_stock__lte=10)
-    ).count()
+    )
+    low_stock_items = low_stock_items_qs.count()
 
     out_of_stock = items.filter(current_stock=0).count()
 
@@ -935,6 +960,31 @@ def inventory_report(request):
         total_quantity=Sum('current_stock')
     ).order_by('-count')
 
+    # Critical items list (low stock and out of stock)
+    critical_items = []
+    for item in low_stock_items_qs[:50]:  # Limit to 50 items
+        critical_items.append({
+            'name': item.name,
+            'category': item.category.name if item.category else 'Uncategorized',
+            'current_stock': item.current_stock,
+            'minimum_stock': item.minimum_stock or 10,
+            'unit': item.unit,
+            'unit_price': float(item.unit_price),
+            'status': 'OUT_OF_STOCK' if item.current_stock == 0 else 'LOW_STOCK'
+        })
+
+    # Top value items
+    top_value_items = []
+    for item in sorted(items, key=lambda x: x.current_stock * x.unit_price, reverse=True)[:20]:
+        item_value = float(item.current_stock * item.unit_price)
+        top_value_items.append({
+            'name': item.name,
+            'category': item.category.name if item.category else 'Uncategorized',
+            'current_stock': item.current_stock,
+            'unit_price': float(item.unit_price),
+            'total_value': item_value
+        })
+
     data = {
         'total_items': total_items,
         'low_stock_items': low_stock_items,
@@ -947,7 +997,9 @@ def inventory_report(request):
                 'total_quantity': item['total_quantity'] or 0
             }
             for item in items_by_category
-        ]
+        ],
+        'critical_items': critical_items,
+        'top_value_items': top_value_items
     }
 
     return format_response(data, 'inventory', request)
@@ -959,19 +1011,8 @@ def maintenance_report(request):
     """Generate maintenance report"""
     period = request.GET.get('period', 'thisMonth')
 
-    # Calculate date range
-    today = date.today()
-    if period == 'thisMonth':
-        start_date = date(today.year, today.month, 1)
-        end_date = today
-    elif period == 'lastMonth':
-        last_month = today.replace(day=1) - timedelta(days=1)
-        start_date = date(last_month.year, last_month.month, 1)
-        end_date = date(last_month.year, last_month.month, 1) + timedelta(days=32)
-        end_date = end_date.replace(day=1) - timedelta(days=1)
-    else:
-        start_date = date(today.year, today.month, 1)
-        end_date = today
+    # Use parse_period_to_date_range to support YYYY-MM format
+    start_date, end_date = parse_period_to_date_range(period)
 
     start_datetime = datetime.combine(start_date, datetime.min.time())
     end_datetime = datetime.combine(end_date, datetime.max.time())
@@ -1016,6 +1057,32 @@ def maintenance_report(request):
     else:
         avg_resolution_time = 0
 
+    # Daily breakdown
+    daily_data = []
+    current_date = start_date
+    while current_date <= end_date:
+        day_start = datetime.combine(current_date, datetime.min.time())
+        day_end = datetime.combine(current_date, datetime.max.time())
+
+        day_requests = MaintenanceRequest.objects.filter(
+            requested_date__range=[day_start, day_end]
+        )
+
+        day_completed = day_requests.filter(status='COMPLETED').count()
+        day_total = day_requests.count()
+        day_cost = day_requests.aggregate(total=Sum('actual_cost'))['total'] or Decimal('0')
+
+        daily_data.append({
+            'date': current_date.strftime('%Y-%m-%d'),
+            'total_requests': day_total,
+            'completed': day_completed,
+            'in_progress': day_requests.filter(status='IN_PROGRESS').count(),
+            'pending': day_requests.filter(status__in=['SUBMITTED', 'ACKNOWLEDGED']).count(),
+            'cost': float(day_cost)
+        })
+
+        current_date += timedelta(days=1)
+
     data = {
         'period': period,
         'total_requests': total_requests,
@@ -1037,7 +1104,8 @@ def maintenance_report(request):
                 'count': item['count']
             }
             for item in by_category
-        ]
+        ],
+        'daily_data': daily_data
     }
 
     return format_response(data, 'maintenance', request)
@@ -1077,7 +1145,7 @@ def tax_report(request):
     # Detail room reservations
     room_transactions = []
     for res in reservations[:100]:  # Limit for performance, paginate if needed
-        res_subtotal = res.total_amount
+        res_subtotal = res.total_amount or Decimal('0')
         res_tax = res_subtotal * (PPN_RATE + HOTEL_TAX_RATE)
         res_service = res_subtotal * SERVICE_CHARGE_RATE
         res_grand = res_subtotal + res_tax + res_service
@@ -1088,9 +1156,9 @@ def tax_report(request):
         room_transactions.append({
             'transaction_id': res.reservation_number,
             'transaction_date': res.created_at.strftime('%Y-%m-%d'),
-            'guest_name': res.guest.full_name,
-            'guest_id': res.guest.id_number,
-            'room_number': res.room.number,
+            'guest_name': res.guest.full_name if res.guest else '-',
+            'guest_id': res.guest.id_number if res.guest and res.guest.id_number else '-',
+            'room_number': res.room.number if res.room else '-',
             'check_in': res.check_in_date.strftime('%Y-%m-%d'),
             'check_out': res.check_out_date.strftime('%Y-%m-%d'),
             'nights': nights,
@@ -1102,7 +1170,7 @@ def tax_report(request):
 
     # === 2. EVENT BOOKING REVENUE ===
     try:
-        from ..models import EventBooking, EventBookingPayment
+        from ..models import EventBooking
 
         event_bookings = EventBooking.objects.filter(
             created_at__range=[start_datetime, end_datetime],
