@@ -367,7 +367,7 @@ export default function OccupancyPage() {
         {/* Daily View */}
         {viewMode === 'daily' && (
           <div className="bg-white border border-gray-200">
-            <div className="overflow-x-auto">
+            <div className="overflow-visible">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gradient-to-r from-[#4E61D3] to-[#3D4EA8] text-white">
@@ -480,7 +480,7 @@ export default function OccupancyPage() {
         {/* Room Type View */}
         {viewMode === 'roomType' && (
           <div className="bg-white border border-gray-200">
-            <div className="overflow-x-auto">
+            <div className="overflow-visible">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gradient-to-r from-[#4E61D3] to-[#3D4EA8] text-white">

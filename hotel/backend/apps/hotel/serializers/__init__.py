@@ -143,6 +143,17 @@ class GuestSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
     gender_display = serializers.CharField(source='get_gender_display', read_only=True)
     id_type_display = serializers.CharField(source='get_id_type_display', read_only=True)
+    loyalty_level = serializers.SerializerMethodField()
+
+    # Statistics from reservation history
+    total_stays = serializers.SerializerMethodField()
+    total_nights = serializers.SerializerMethodField()
+    total_spent = serializers.SerializerMethodField()
+    last_stay_date = serializers.SerializerMethodField()
+    upcoming_stays = serializers.SerializerMethodField()
+
+    # Full reservation history list
+    reservations = serializers.SerializerMethodField()
 
     class Meta:
         model = Guest
@@ -152,9 +163,118 @@ class GuestSerializer(serializers.ModelSerializer):
             'id_type', 'id_type_display', 'id_number', 'address',
             'preferences', 'allergies',
             'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
-            'is_vip', 'loyalty_points', 'created_at', 'updated_at'
+            'is_vip', 'loyalty_points', 'loyalty_level',
+            'total_stays', 'total_nights', 'total_spent', 'last_stay_date', 'upcoming_stays',
+            'reservations',
+            'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'full_name']
+
+    def get_loyalty_level(self, obj):
+        """Calculate loyalty level based on points"""
+        points = obj.loyalty_points or 0
+        if points >= 10000:
+            return 'Diamond'
+        elif points >= 5000:
+            return 'Platinum'
+        elif points >= 2000:
+            return 'Gold'
+        elif points >= 500:
+            return 'Silver'
+        else:
+            return 'Bronze'
+
+    def get_total_stays(self, obj):
+        """Count completed reservations"""
+        from ..models import Reservation
+        return Reservation.objects.filter(
+            guest=obj,
+            status='CHECKED_OUT'
+        ).count()
+
+    def get_total_nights(self, obj):
+        """Sum total nights from completed reservations"""
+        from ..models import Reservation
+        from django.db.models import Sum, F
+        from datetime import timedelta
+
+        reservations = Reservation.objects.filter(
+            guest=obj,
+            status='CHECKED_OUT'
+        )
+
+        total = 0
+        for res in reservations:
+            nights = (res.check_out_date - res.check_in_date).days
+            total += nights
+
+        return total
+
+    def get_total_spent(self, obj):
+        """Calculate total amount spent from completed reservations"""
+        from ..models import Reservation, Payment
+        from django.db.models import Sum
+
+        # Get all completed reservations
+        reservation_ids = Reservation.objects.filter(
+            guest=obj,
+            status='CHECKED_OUT'
+        ).values_list('id', flat=True)
+
+        # Sum all payments for these reservations
+        total = Payment.objects.filter(
+            reservation_id__in=reservation_ids
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        return float(total)
+
+    def get_last_stay_date(self, obj):
+        """Get the check-out date of the most recent completed stay"""
+        from ..models import Reservation
+
+        last_stay = Reservation.objects.filter(
+            guest=obj,
+            status='CHECKED_OUT'
+        ).order_by('-check_out_date').first()
+
+        return last_stay.check_out_date if last_stay else None
+
+    def get_upcoming_stays(self, obj):
+        """Count upcoming confirmed reservations"""
+        from ..models import Reservation
+        from django.utils import timezone
+
+        return Reservation.objects.filter(
+            guest=obj,
+            status__in=['CONFIRMED', 'CHECKED_IN'],
+            check_in_date__gte=timezone.now().date()
+        ).count()
+
+    def get_reservations(self, obj):
+        """Get all reservations for this guest with full details"""
+        from ..models import Reservation
+
+        reservations = Reservation.objects.filter(
+            guest=obj
+        ).select_related('room', 'room_type').order_by('-check_in_date')
+
+        return [{
+            'id': res.id,
+            'reservation_number': res.reservation_number,
+            'check_in_date': res.check_in_date,
+            'check_out_date': res.check_out_date,
+            'nights': (res.check_out_date - res.check_in_date).days,
+            'adults': res.adults,
+            'children': res.children,
+            'room_number': res.room.number if res.room else None,
+            'room_type': res.room_type.name if res.room_type else None,
+            'status': res.status,
+            'status_display': res.get_status_display(),
+            'booking_source': res.booking_source,
+            'booking_source_display': res.get_booking_source_display(),
+            'special_requests': res.special_requests,
+            'created_at': res.created_at,
+        } for res in reservations]
 
 
 class ReservationSerializer(serializers.ModelSerializer):
@@ -235,8 +355,11 @@ class ReservationSerializer(serializers.ModelSerializer):
         return round(subtotal + taxes + service_charge + additional_charges, 2)
 
     def get_deposit_amount(self, obj):
-        """Get deposit amount (currently 0, can be enhanced later)"""
-        return 0.0
+        """Get deposit amount (30% of grand total)"""
+        from decimal import Decimal
+        grand_total = self.get_grand_total(obj)
+        deposit_percentage = Decimal('0.30')  # 30% deposit
+        return float(Decimal(str(grand_total)) * deposit_percentage)
 
     def get_balance_due(self, obj):
         """Calculate balance due"""
@@ -293,11 +416,13 @@ class PaymentSerializer(serializers.ModelSerializer):
     """Serializer for payments"""
     reservation_number = serializers.CharField(source='reservation.reservation_number', read_only=True)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
+    payment_type_display = serializers.CharField(source='get_payment_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     guest_name = serializers.CharField(source='reservation.guest.full_name', read_only=True)
     room_number = serializers.CharField(source='reservation.room.number', read_only=True)
     check_in_date = serializers.DateField(source='reservation.check_in_date', read_only=True)
     check_out_date = serializers.DateField(source='reservation.check_out_date', read_only=True)
+    is_fully_paid = serializers.BooleanField(source='reservation.is_fully_paid', read_only=True)
 
     # Promotion fields
     voucher_code = serializers.CharField(source='voucher.code', read_only=True, allow_null=True)
@@ -311,8 +436,9 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'reservation', 'reservation_number', 'guest_name', 'room_number',
             'check_in_date', 'check_out_date', 'amount', 'subtotal', 'payment_method',
-            'payment_method_display', 'status', 'status_display', 'payment_date',
-            'transaction_id', 'notes',
+            'payment_method_display', 'payment_type', 'payment_type_display',
+            'status', 'status_display', 'payment_date',
+            'transaction_id', 'notes', 'is_fully_paid',
             # Promotion fields
             'voucher', 'voucher_code', 'voucher_name', 'voucher_discount',
             'discount', 'discount_name', 'discount_type', 'discount_amount',
@@ -320,7 +446,7 @@ class PaymentSerializer(serializers.ModelSerializer):
             'total_discount',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'total_discount']
+        read_only_fields = ['created_at', 'updated_at', 'total_discount', 'is_fully_paid']
 
 
 class ComplaintImageSerializer(serializers.ModelSerializer):
@@ -610,24 +736,54 @@ class GuestListSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
     gender_display = serializers.CharField(source='get_gender_display', read_only=True)
     loyalty_level = serializers.SerializerMethodField()
+    total_stays = serializers.SerializerMethodField()
+    total_spent = serializers.SerializerMethodField()
 
     class Meta:
         model = Guest
-        fields = ['id', 'full_name', 'email', 'phone', 'nationality', 'is_vip', 'gender_display', 'loyalty_points', 'loyalty_level']
+        fields = ['id', 'full_name', 'email', 'phone', 'nationality', 'is_vip',
+                  'gender_display', 'loyalty_points', 'loyalty_level',
+                  'total_stays', 'total_spent']
 
     def get_loyalty_level(self, obj):
-        """Calculate loyalty level based on points"""
-        points = obj.loyalty_points
-        if points >= 5000:
+        """Calculate loyalty level based on points (consistent with GuestSerializer)"""
+        points = obj.loyalty_points or 0
+        if points >= 10000:
             return 'Diamond'
-        elif points >= 2500:
+        elif points >= 5000:
             return 'Platinum'
-        elif points >= 1000:
+        elif points >= 2000:
             return 'Gold'
         elif points >= 500:
             return 'Silver'
         else:
             return 'Bronze'
+
+    def get_total_stays(self, obj):
+        """Count completed reservations"""
+        from ..models import Reservation
+        return Reservation.objects.filter(
+            guest=obj,
+            status='CHECKED_OUT'
+        ).count()
+
+    def get_total_spent(self, obj):
+        """Calculate total amount spent from completed reservations"""
+        from ..models import Reservation, Payment
+        from django.db.models import Sum
+
+        # Get all completed reservations
+        reservation_ids = Reservation.objects.filter(
+            guest=obj,
+            status='CHECKED_OUT'
+        ).values_list('id', flat=True)
+
+        # Sum all payments for these reservations
+        total = Payment.objects.filter(
+            reservation_id__in=reservation_ids
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        return float(total)
 
 
 class ReservationListSerializer(serializers.ModelSerializer):
@@ -639,14 +795,15 @@ class ReservationListSerializer(serializers.ModelSerializer):
     nights = serializers.IntegerField(read_only=True)
     total_guests = serializers.SerializerMethodField()
     is_fully_paid = serializers.SerializerMethodField()
+    grand_total = serializers.SerializerMethodField()
 
     class Meta:
         model = Reservation
         fields = [
-            'id', 'reservation_number', 'guest_name', 'room_number', 'room_type_name',
+            'id', 'reservation_number', 'guest', 'guest_name', 'room_number', 'room_type_name',
             'check_in_date', 'check_out_date', 'nights', 'adults', 'children',
             'total_guests', 'status', 'status_display', 'booking_source',
-            'booking_source_display', 'is_fully_paid', 'created_at'
+            'booking_source_display', 'is_fully_paid', 'grand_total', 'created_at'
         ]
 
     def get_total_guests(self, obj):
@@ -656,6 +813,10 @@ class ReservationListSerializer(serializers.ModelSerializer):
     def get_is_fully_paid(self, obj):
         """Check if reservation is fully paid"""
         return obj.is_fully_paid()
+
+    def get_grand_total(self, obj):
+        """Calculate grand total including taxes and additional charges"""
+        return float(obj.get_grand_total())
 
 
 class HolidayListSerializer(serializers.ModelSerializer):

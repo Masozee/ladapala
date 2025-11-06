@@ -6,7 +6,8 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
 from ..models import (
-    Room, Guest, Reservation, FinancialTransaction, Invoice, InvoiceItem
+    Room, Guest, Reservation, FinancialTransaction, Invoice, InvoiceItem,
+    Payment, Expense
 )
 from ..serializers import (
     FinancialTransactionSerializer, InvoiceSerializer, InvoiceItemSerializer
@@ -74,24 +75,18 @@ class FinancialViewSet(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Get revenue data (current period)
-        revenue_transactions = FinancialTransaction.objects.filter(
-            transaction_type='revenue',
-            transaction_date__gte=start_date,
-            transaction_date__lte=end_date,
-            status='completed'
-        )
-
-        total_revenue = revenue_transactions.aggregate(
-            total=Sum('amount')
-        )['total'] or Decimal('0.00')
+        # Get revenue data from Payment model (current period)
+        total_revenue = Payment.objects.filter(
+            payment_date__date__gte=start_date,
+            payment_date__date__lte=end_date,
+            status='COMPLETED'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
 
         # Get revenue from last period for growth calculation
-        last_revenue = FinancialTransaction.objects.filter(
-            transaction_type='revenue',
-            transaction_date__gte=last_start,
-            transaction_date__lte=last_end,
-            status='completed'
+        last_revenue = Payment.objects.filter(
+            payment_date__date__gte=last_start,
+            payment_date__date__lte=last_end,
+            status='COMPLETED'
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
 
         # Calculate growth percentage
@@ -112,12 +107,11 @@ class FinancialViewSet(viewsets.ViewSet):
             'dailyAverage': round(daily_average, 2)
         }
 
-        # Get expense data by category
-        expense_transactions = FinancialTransaction.objects.filter(
-            transaction_type='expense',
-            transaction_date__gte=start_date,
-            transaction_date__lte=end_date,
-            status='completed'
+        # Get expense data from Expense model by category
+        expense_transactions = Expense.objects.filter(
+            expense_date__date__gte=start_date,
+            expense_date__date__lte=end_date,
+            status='PAID'
         )
 
         total_expenses = expense_transactions.aggregate(
@@ -131,14 +125,16 @@ class FinancialViewSet(viewsets.ViewSet):
 
         # Calculate percentages
         expense_categories = []
+        # Get category display names from Expense model CATEGORY_CHOICES
+        category_choices = dict(Expense.CATEGORY_CHOICES)
         for cat in expense_by_category:
             if total_expenses > 0:
                 percentage = float(cat['amount']) / float(total_expenses) * 100
             else:
                 percentage = 0.0
 
-            # Format category name
-            category_name = cat['category'].replace('_', ' ').title()
+            # Get proper category name from choices
+            category_name = category_choices.get(cat['category'], cat['category'])
 
             expense_categories.append({
                 'name': category_name,
@@ -210,46 +206,85 @@ class FinancialViewSet(viewsets.ViewSet):
             start_date = today.replace(day=1)
             end_date = today
 
-        # Build query
-        transactions = FinancialTransaction.objects.filter(
-            transaction_date__gte=start_date,
-            transaction_date__lte=end_date
-        ).select_related('guest', 'reservation', 'processed_by')
+        # Get payments (revenue) from Payment model
+        transactions_list = []
 
-        # Apply filters
+        payments = Payment.objects.filter(
+            payment_date__date__gte=start_date,
+            payment_date__date__lte=end_date
+        ).select_related('reservation', 'reservation__guest')
+
+        # Filter payments by status
         if status_filter != 'all':
-            transactions = transactions.filter(status=status_filter)
+            status_map = {
+                'completed': 'COMPLETED',
+                'pending': 'PENDING',
+                'cancelled': 'CANCELLED'
+            }
+            if status_filter in status_map:
+                payments = payments.filter(status=status_map[status_filter])
 
-        if type_filter != 'all':
-            transactions = transactions.filter(transaction_type=type_filter)
+        # Add payments to list if type filter allows
+        if type_filter in ['all', 'revenue']:
+            for payment in payments:
+                guest_name = payment.reservation.guest.full_name if payment.reservation and payment.reservation.guest else 'Walk-in'
 
-        if search:
-            transactions = transactions.filter(
-                Q(description__icontains=search) |
-                Q(transaction_id__icontains=search) |
-                Q(guest__first_name__icontains=search) |
-                Q(guest__last_name__icontains=search)
+                # Apply search filter
+                if search and search.lower() not in guest_name.lower() and (not payment.transaction_id or search.lower() not in payment.transaction_id.lower()):
+                    continue
+
+                transactions_list.append({
+                    'id': f'PAY{payment.id}',
+                    'date': payment.payment_date.strftime('%Y-%m-%d'),
+                    'time': payment.payment_date.strftime('%H:%M'),
+                    'description': f'Room Payment - {payment.reservation.reservation_number}' if payment.reservation else 'Room Payment',
+                    'guest': guest_name,
+                    'type': 'revenue',
+                    'category': 'Kamar',
+                    'amount': float(payment.amount),
+                    'paymentMethod': dict(Payment.PAYMENT_METHOD_CHOICES).get(payment.payment_method, payment.payment_method),
+                    'status': payment.status.lower(),
+                    'reference': payment.reservation.reservation_number if payment.reservation else ''
+                })
+
+        # Get expenses from Expense model
+        if type_filter in ['all', 'expense']:
+            expenses = Expense.objects.filter(
+                expense_date__date__gte=start_date,
+                expense_date__date__lte=end_date
             )
 
-        # Order by date desc
-        transactions = transactions.order_by('-transaction_date', '-transaction_time')
+            # Filter expenses by status
+            if status_filter != 'all':
+                status_map = {
+                    'completed': 'PAID',
+                    'pending': 'PENDING',
+                    'cancelled': 'CANCELLED'
+                }
+                if status_filter in status_map:
+                    expenses = expenses.filter(status=status_map[status_filter])
 
-        # Format response to match frontend expectations
-        transactions_list = []
-        for txn in transactions:
-            transactions_list.append({
-                'id': txn.transaction_id,
-                'date': txn.transaction_date.isoformat(),
-                'time': txn.transaction_time.strftime('%H:%M'),
-                'description': txn.description,
-                'guest': txn.guest.full_name if txn.guest else None,
-                'type': txn.transaction_type,
-                'category': txn.category.replace('_', ' ').title(),
-                'amount': float(txn.amount),
-                'paymentMethod': txn.get_payment_method_display(),
-                'status': txn.status,
-                'reference': txn.reference_number or '-'
-            })
+            for expense in expenses:
+                # Apply search filter
+                if search and search.lower() not in expense.description.lower():
+                    continue
+
+                transactions_list.append({
+                    'id': f'EXP{expense.id}',
+                    'date': expense.expense_date.strftime('%Y-%m-%d'),
+                    'time': expense.expense_date.strftime('%H:%M'),
+                    'description': expense.description,
+                    'guest': None,
+                    'type': 'expense',
+                    'category': dict(Expense.CATEGORY_CHOICES).get(expense.category, expense.category),
+                    'amount': float(expense.amount),
+                    'paymentMethod': dict(Expense.PAYMENT_METHOD_CHOICES).get(expense.payment_method, expense.payment_method),
+                    'status': 'completed' if expense.status == 'PAID' else expense.status.lower(),
+                    'reference': expense.reference or ''
+                })
+
+        # Sort by date and time descending
+        transactions_list.sort(key=lambda x: (x['date'], x['time']), reverse=True)
 
         return Response({
             'transactions': transactions_list,

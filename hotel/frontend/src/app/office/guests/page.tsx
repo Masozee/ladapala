@@ -41,9 +41,10 @@ interface ApiGuest {
   nationality: string | null;
   loyalty_points: number;
   is_vip: boolean;
-  
   gender_display: string | null;
   loyalty_level: string;
+  total_stays: number;
+  total_spent: number;
 }
 
 interface ApiGuestDetail {
@@ -235,17 +236,11 @@ const fetchGuests = async (page: number = 1, limit: number = 20): Promise<{ gues
       return { guests: [], count: 0 };
     }
 
-    // Fetch reservations for each guest and calculate statistics
+    // Map API data to frontend Guest format - API now provides stats
     const guestsWithStats = await Promise.all(
       data.results.map(async (apiGuest): Promise<Guest> => {
+        // Fetch reservations for expandable table
         const reservations = await fetchGuestReservations(apiGuest.id);
-        const completedReservations = reservations.filter(r => r.status === 'completed');
-
-        const totalSpent = completedReservations.reduce((sum, r) => sum + r.total_amount, 0);
-        const totalNights = completedReservations.reduce((sum, r) => sum + r.nights, 0);
-        const lastStay = completedReservations.length > 0
-          ? completedReservations.sort((a, b) => new Date(b.check_out_date).getTime() - new Date(a.check_out_date).getTime())[0].check_out_date
-          : new Date().toISOString();
 
         return {
           id: apiGuest.id,
@@ -264,19 +259,17 @@ const fetchGuests = async (page: number = 1, limit: number = 20): Promise<{ gues
           emergency_contact_name: 'Not specified',
           emergency_contact_phone: 'Not specified',
           created_at: new Date().toISOString(),
-          last_stay: lastStay,
-          total_stays: completedReservations.length,
-          total_nights: totalNights,
-          total_spent: totalSpent,
-          avg_rating: completedReservations.length > 0
-            ? completedReservations.reduce((sum, r) => sum + (r.rating || 4.5), 0) / completedReservations.length
-            : 4.5,
+          last_stay: new Date().toISOString(),
+          total_stays: apiGuest.total_stays || 0,
+          total_nights: 0,
+          total_spent: apiGuest.total_spent || 0,
+          avg_rating: 4.5,
           rewards: {
             program_name: 'Kapulaga Rewards',
             member_number: `KR${apiGuest.id.toString().padStart(9, '0')}`,
             tier_level: mapLoyaltyLevel(apiGuest.loyalty_level),
             points_balance: apiGuest.loyalty_points,
-            points_lifetime: apiGuest.loyalty_points * 2,
+            points_lifetime: apiGuest.loyalty_points,
             tier_benefits: getTierBenefits(mapLoyaltyLevel(apiGuest.loyalty_level)),
             next_tier_required: getNextTierRequired(mapLoyaltyLevel(apiGuest.loyalty_level), apiGuest.loyalty_points),
             points_expiring: 0,
@@ -286,9 +279,7 @@ const fetchGuests = async (page: number = 1, limit: number = 20): Promise<{ gues
           recent_stays: reservations.slice(0, 5),
           notes: 'Fetched from API',
           blacklisted: false,
-          favorite_room_type: completedReservations.length > 0
-            ? completedReservations[0].room_type
-            : 'Standard Room',
+          favorite_room_type: 'Standard Room',
           preferred_floor: 1,
           marketing_consent: true
         };
@@ -544,7 +535,7 @@ const GuestsPage = () => {
   const [showNewGuestModal, setShowNewGuestModal] = useState(false);
   const [isCreatingGuest, setIsCreatingGuest] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
-  
+
   // New Guest Form states
   const [newGuest, setNewGuest] = useState({
     first_name: '',
@@ -559,7 +550,7 @@ const GuestsPage = () => {
     city: '',
     country: '',
     is_vip: false,
-    preferences: {},
+    preferences: '',
     notes: ''
   });
   
@@ -616,6 +607,28 @@ const GuestsPage = () => {
       case 'Platinum': return <SparklesIcon className="h-3 w-3" />;
       case 'Diamond': return <SparklesIcon className="h-3 w-3" />;
       default: return <SparklesIcon className="h-3 w-3" />;
+    }
+  };
+
+  const getReservationStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'current': return 'bg-blue-100 text-blue-800';
+      case 'upcoming': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'no_show': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getReservationStatusLabel = (status: string) => {
+    switch (status) {
+      case 'completed': return 'Selesai';
+      case 'current': return 'Sedang Menginap';
+      case 'upcoming': return 'Akan Datang';
+      case 'cancelled': return 'Dibatalkan';
+      case 'no_show': return 'Tidak Hadir';
+      default: return status;
     }
   };
 
@@ -681,7 +694,7 @@ const GuestsPage = () => {
         city: '',
         country: '',
         is_vip: false,
-        preferences: {},
+        preferences: '',
         notes: ''
       });
       setShowNewGuestModal(false);
@@ -718,7 +731,7 @@ const GuestsPage = () => {
       city: '',
       country: '',
       is_vip: false,
-      preferences: {},
+      preferences: '',
       notes: ''
     });
     setCreateError(null);
@@ -1227,7 +1240,7 @@ const GuestsPage = () => {
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-visible">
               <table className="w-full border-collapse">
                 <thead className="bg-[#4E61D3]">
                   <tr>
@@ -1257,28 +1270,28 @@ const GuestsPage = () => {
                 <tbody>
                   {filteredGuests.map((guest) => (
                     <tr key={guest.id} className="hover:bg-gray-50">
-                      {/* Guest Info */}
-                      <td className="border border-gray-200 px-6 py-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                            <UserIcon className="h-5 w-5 text-gray-600" />
-                          </div>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <button 
-                                onClick={() => router.push(`/guests/${guest.id}`)}
-                                className="font-bold text-gray-900 hover:text-[#4E61D3] transition-colors text-left"
-                              >
-                                {guest.full_name}
-                              </button>
-                              {guest.vip_status && (
-                                <SparklesIcon className="h-3 w-3 text-yellow-400 fill-current" />
-                              )}
+                        {/* Guest Info */}
+                        <td className="border border-gray-200 px-6 py-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                              <UserIcon className="h-5 w-5 text-gray-600" />
                             </div>
-                            <p className="text-xs text-gray-600">{guest.nationality}</p>
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => router.push(`/office/guests/${guest.id}`)}
+                                  className="font-bold text-gray-900 hover:text-[#4E61D3] transition-colors text-left"
+                                >
+                                  {guest.full_name}
+                                </button>
+                                {guest.vip_status && (
+                                  <SparklesIcon className="h-3 w-3 text-yellow-400 fill-current" />
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-600">{guest.nationality}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
                       {/* Contact */}
                       <td className="border border-gray-200 px-6 py-4">

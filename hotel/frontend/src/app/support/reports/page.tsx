@@ -351,7 +351,7 @@ export default function SupportReportsPage() {
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-900">Trend 7 Hari Terakhir</h3>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-visible">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-[#F87B1B] text-white">
@@ -427,7 +427,7 @@ export default function SupportReportsPage() {
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-900">Trend 7 Hari Terakhir</h3>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-visible">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-[#F87B1B] text-white">
@@ -508,7 +508,7 @@ export default function SupportReportsPage() {
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-900">Trend 7 Hari Terakhir</h3>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-visible">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-[#F87B1B] text-white">

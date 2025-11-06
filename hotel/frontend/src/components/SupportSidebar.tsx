@@ -85,9 +85,9 @@ const SupportSidebar = () => {
 
   return (
     <Tooltip.Provider delayDuration={300}>
-      <div className="w-20 bg-[#F87B1B] flex flex-col">
+      <div className="w-20 bg-[#F87B1B] flex flex-col h-screen">
         {/* Header */}
-        <div className="p-4">
+        <div className="flex-shrink-0 p-4">
           <Link href="/" className="flex items-center justify-center group">
             <div className="w-10 h-10 bg-white flex items-center justify-center p-1 transition-transform group-hover:scale-110">
               <Image
@@ -102,18 +102,18 @@ const SupportSidebar = () => {
         </div>
 
         {/* Main Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4">
-          <div className="space-y-2 px-2">
+        <nav className="flex-1 flex flex-col py-2 min-h-0">
+          <div className="flex-shrink-0 px-2 mb-2">
             {mainNavItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
-              
+
               return (
                 <Tooltip.Root key={item.href}>
                   <Tooltip.Trigger asChild>
                     <Link
                       href={item.href}
-                      className={`relative flex items-center justify-center w-16 h-14 transition-all duration-200 group ${
+                      className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
                         active
                           ? 'bg-white/10'
                           : 'hover:bg-white/10'
@@ -142,53 +142,55 @@ const SupportSidebar = () => {
             })}
           </div>
 
-          <Separator.Root className="my-4 mx-2 bg-white/20 h-px" />
+          <Separator.Root className="flex-shrink-0 my-2 mx-2 bg-white/20 h-px" />
 
           {/* Support Operations */}
-          <div className="space-y-1 px-2">
-            {supportActions.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
+          <div className="flex-1 px-2 min-h-0">
+            <div className="flex flex-col gap-0.5">
+              {supportActions.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
 
-              return (
-                <Tooltip.Root key={item.href}>
-                  <Tooltip.Trigger asChild>
-                    <Link
-                      href={item.href}
-                      className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
-                        active
-                          ? 'bg-white/10'
-                          : 'hover:bg-white/10'
-                      }`}
-                    >
-                      <Icon className={`h-5 w-5 text-white transition-transform group-hover:scale-110`} />
-                      {item.badge && (
-                        <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content
-                      side="right"
-                      sideOffset={12}
-                      className="bg-gray-900 text-white px-2 py-1 text-sm border border-gray-300 z-50"
-                    >
-                      {item.name}
-                      <Tooltip.Arrow className="fill-gray-900" />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-              );
-            })}
+                return (
+                  <Tooltip.Root key={item.href}>
+                    <Tooltip.Trigger asChild>
+                      <Link
+                        href={item.href}
+                        className={`relative flex items-center justify-center w-16 h-11 transition-all duration-200 group ${
+                          active
+                            ? 'bg-white/10'
+                            : 'hover:bg-white/10'
+                        }`}
+                      >
+                        <Icon className={`h-5 w-5 text-white transition-transform group-hover:scale-110`} />
+                        {item.badge && (
+                          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-[10px] flex items-center justify-center">
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    </Tooltip.Trigger>
+                    <Tooltip.Portal>
+                      <Tooltip.Content
+                        side="right"
+                        sideOffset={12}
+                        className="bg-gray-900 text-white px-2 py-1 text-sm border border-gray-300 z-50"
+                      >
+                        {item.name}
+                        <Tooltip.Arrow className="fill-gray-900" />
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
+                );
+              })}
+            </div>
           </div>
         </nav>
 
         {/* Bottom Actions */}
-        <div className="p-2">
-          <Separator.Root className="mb-4 mx-0 bg-white/20 h-px" />
-          <div className="space-y-1">
+        <div className="flex-shrink-0 p-2">
+          <Separator.Root className="mb-2 mx-0 bg-white/20 h-px" />
+          <div className="flex flex-col gap-0.5">
             {bottomActions.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -198,7 +200,7 @@ const SupportSidebar = () => {
                   <Tooltip.Trigger asChild>
                     <Link
                       href={item.href}
-                      className={`relative flex items-center justify-center w-16 h-12 transition-all duration-200 group ${
+                      className={`relative flex items-center justify-center w-16 h-11 transition-all duration-200 group ${
                         active
                           ? 'bg-white/10'
                           : 'hover:bg-white/10'

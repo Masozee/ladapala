@@ -290,10 +290,11 @@ class PaymentCalculator:
             }
         }
 
-    def create_payment(self, payment_method, transaction_id=None, voucher_code=None, redeem_points=0):
+    def create_payment(self, payment_method, transaction_id=None, voucher_code=None, redeem_points=0, payment_type='FULL'):
         """
         Create a payment with all promotions applied
         Also creates voucher usage record and loyalty transactions
+        payment_type: 'FULL', 'DEPOSIT', or 'BALANCE'
         """
         # Calculate first
         calculation = self.calculate(voucher_code=voucher_code, redeem_points=redeem_points)
@@ -301,12 +302,23 @@ class PaymentCalculator:
         if not calculation['success']:
             raise PaymentCalculationError(calculation['error'])
 
+        # Determine payment amount based on payment_type
+        final_amount = Decimal(calculation['final_amount'])
+        if payment_type == 'DEPOSIT':
+            # 30% deposit
+            final_amount = final_amount * Decimal('0.30')
+        elif payment_type == 'BALANCE':
+            # Calculate balance due
+            total_paid = self.reservation.get_total_paid()
+            final_amount = final_amount - total_paid
+
         # Create payment
         payment = Payment.objects.create(
             reservation=self.reservation,
-            amount=Decimal(calculation['final_amount']),
+            amount=final_amount,
             subtotal=self.subtotal,
             payment_method=payment_method,
+            payment_type=payment_type,
             status='COMPLETED',
             transaction_id=transaction_id,
             payment_date=timezone.now(),
@@ -336,7 +348,11 @@ class PaymentCalculator:
 
         # Process loyalty points
         try:
-            loyalty_account = GuestLoyaltyPoints.objects.get(guest=self.guest)
+            # Try to get or create loyalty account
+            loyalty_account, created = GuestLoyaltyPoints.objects.get_or_create(
+                guest=self.guest,
+                defaults={'total_points': self.guest.loyalty_points, 'lifetime_points': self.guest.loyalty_points}
+            )
             program = LoyaltyProgram.objects.get(is_active=True)
 
             # Redeem points
@@ -345,6 +361,9 @@ class PaymentCalculator:
                     points=self.points_to_redeem,
                     description=f"Redeemed for reservation {self.reservation.reservation_number}"
                 )
+                # Sync to Guest model
+                self.guest.loyalty_points -= self.points_to_redeem
+                self.guest.save(update_fields=['loyalty_points'])
 
             # Award points
             if self.points_to_earn > 0:
@@ -353,8 +372,11 @@ class PaymentCalculator:
                     description=f"Earned from reservation {self.reservation.reservation_number}",
                     expiry_date=timezone.now() + timezone.timedelta(days=program.points_expiry_days) if program.points_expiry_days else None
                 )
+                # Sync to Guest model
+                self.guest.loyalty_points += self.points_to_earn
+                self.guest.save(update_fields=['loyalty_points'])
 
-        except (GuestLoyaltyPoints.DoesNotExist, LoyaltyProgram.DoesNotExist):
-            pass  # Guest doesn't have loyalty account, skip
+        except LoyaltyProgram.DoesNotExist:
+            pass  # No active loyalty program, skip
 
         return payment, calculation

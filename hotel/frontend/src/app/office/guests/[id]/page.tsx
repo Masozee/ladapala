@@ -184,19 +184,84 @@ const GuestDetailPage = () => {
   useEffect(() => {
     const fetchGuest = async () => {
       try {
-        const response = await fetch(buildApiUrl(`guests/${params.id}/`), {
+        // Fetch guest details
+        const response = await fetch(buildApiUrl(`hotel/guests/${params.id}/`), {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
         });
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
+        // Fetch guest's reservation history (without date filter to get all history)
+        const reservationsResponse = await fetch(
+          buildApiUrl(`hotel/reservations/?guest=${params.id}&page_size=100&check_in_date__gte=2000-01-01`),
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          }
+        );
+
+        let reservations: any[] = [];
+        if (reservationsResponse.ok) {
+          const reservationsData = await reservationsResponse.json();
+          reservations = reservationsData.results || reservationsData || [];
+          console.log(`[Guest] Fetched ${reservations.length} reservations for guest ${params.id}`);
+        }
+
+        // Map reservations to GuestStay format
+        const recentStays: GuestStay[] = reservations.map(res => ({
+          id: res.id,
+          reservation_number: res.reservation_number,
+          check_in_date: res.check_in_date,
+          check_out_date: res.check_out_date,
+          nights: res.nights,
+          room_type: res.room_type_name || 'Standard Room',
+          room_number: res.room_number || 'N/A',
+          total_amount: res.grand_total || 0,
+          points_earned: Math.floor(res.grand_total / 10000) || 0,  // Calculate points if not provided
+          rating: res.rating,
+          review: res.review,
+          status: res.status === 'CHECKED_OUT' ? 'completed' :
+                  res.status === 'CHECKED_IN' ? 'current' :
+                  res.status === 'CONFIRMED' ? 'upcoming' :
+                  res.status === 'CANCELLED' ? 'cancelled' : 'upcoming'
+        }));
+
+        // Use stats from API (already calculated in backend)
+        const totalStays = data.total_stays || 0;
+        const totalNights = data.total_nights || 0;
+        const totalSpent = data.total_spent || 0;
+
+        // Calculate average rating from completed stays with ratings
+        const completedStays = recentStays.filter(s => s.status === 'completed');
+        const avgRating = completedStays.filter(s => s.rating).length > 0
+          ? completedStays.reduce((sum, s) => sum + (s.rating || 0), 0) / completedStays.filter(s => s.rating).length
+          : 0;
+
+        const lastStay = data.last_stay_date || new Date().toISOString();
+
+        // Parse preferences if it's a string
+        let preferencesArray: string[] = [];
+        if (data.preferences && data.preferences !== '-') {
+          try {
+            preferencesArray = typeof data.preferences === 'string'
+              ? data.preferences.split(',').map((p: string) => p.trim()).filter((p: string) => p)
+              : data.preferences;
+          } catch {
+            preferencesArray = [];
+          }
+        }
+
         // Map Django API response to frontend format
         const mappedGuest: Guest = {
           id: data.id,
@@ -208,38 +273,38 @@ const GuestDetailPage = () => {
           date_of_birth: data.date_of_birth || '1990-01-01',
           gender: data.gender_display || 'Not specified',
           id_number: data.id_number || 'Not available',
-          id_type: data.id_type || 'Not available',
-          vip_status: data.vip_status || false,
-          preferences: data.preferences_array || [],
-          allergies: data.allergies || [],
+          id_type: data.id_type_display || data.id_type || 'Not available',
+          vip_status: data.is_vip || false,
+          preferences: preferencesArray,
+          allergies: data.allergies && data.allergies !== '-' ? data.allergies.split(',').map((a: string) => a.trim()) : [],
           emergency_contact_name: data.emergency_contact_name || 'Not specified',
           emergency_contact_phone: data.emergency_contact_phone || 'Not specified',
           created_at: data.created_at,
-          last_stay: data.last_stay || new Date().toISOString(),
-          total_stays: data.total_stays || 0,
-          total_nights: data.total_nights || 0,
-          total_spent: data.total_spent || 0,
-          avg_rating: data.avg_rating || 4.5,
-          rewards: data.rewards ? {
-            program_name: data.rewards.program_name,
-            member_number: data.rewards.member_number,
-            tier_level: data.rewards.tier_level as 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond',
-            points_balance: data.rewards.points_balance,
-            points_lifetime: data.rewards.points_lifetime,
-            tier_benefits: data.rewards.tier_benefits,
-            next_tier_required: data.rewards.next_tier_required,
-            points_expiring: data.rewards.points_expiring,
-            expiry_date: data.rewards.expiry_date,
-            join_date: data.rewards.join_date
-          } : undefined,
-          recent_stays: data.recent_stays || [],
+          last_stay: lastStay,
+          total_stays: totalStays,
+          total_nights: totalNights,
+          total_spent: totalSpent,
+          avg_rating: avgRating,
+          rewards: {
+            program_name: 'Kapulaga Rewards',
+            member_number: `KR${String(data.id).padStart(9, '0')}`,
+            tier_level: data.loyalty_level || 'Bronze',
+            points_balance: data.loyalty_points || 0,
+            points_lifetime: data.loyalty_points || 0,
+            tier_benefits: getTierBenefits(data.loyalty_level || 'Bronze'),
+            next_tier_required: getNextTierPoints(data.loyalty_level || 'Bronze', data.loyalty_points || 0),
+            points_expiring: 0,
+            expiry_date: new Date(new Date().setMonth(new Date().getMonth() + 12)).toISOString().split('T')[0],
+            join_date: data.created_at
+          },
+          recent_stays: recentStays,
           notes: data.notes || '',
           blacklisted: data.blacklisted || false,
           favorite_room_type: data.favorite_room_type,
           preferred_floor: data.preferred_floor,
-          marketing_consent: data.marketing_consent || true
+          marketing_consent: data.marketing_consent !== false
         };
-        
+
         setGuest(mappedGuest);
         setEditedNotes(mappedGuest.notes);
       } catch (error) {
@@ -252,6 +317,27 @@ const GuestDetailPage = () => {
 
     fetchGuest();
   }, [params.id]);
+
+  const getTierBenefits = (tier: string): string[] => {
+    const benefits: { [key: string]: string[] } = {
+      'Bronze': ['Free WiFi'],
+      'Silver': ['Free WiFi', 'Late Checkout'],
+      'Gold': ['Free WiFi', 'Late Checkout', 'Room Upgrade', 'Welcome Drink', 'Priority Booking'],
+      'Platinum': ['Free WiFi', 'Late Checkout', 'Room Upgrade', 'Welcome Drink', 'Priority Booking', 'Airport Transfer', 'Executive Lounge'],
+      'Diamond': ['Free WiFi', 'Late Checkout', 'Room Upgrade', 'Welcome Drink', 'Priority Booking', 'Airport Transfer', 'Executive Lounge', 'Personal Concierge', 'Spa Discount']
+    };
+    return benefits[tier] || benefits['Bronze'];
+  };
+
+  const getNextTierPoints = (tier: string, currentPoints: number): number => {
+    const tierThresholds: { [key: string]: number } = {
+      'Bronze': 500,    // Need 500 to reach Silver
+      'Silver': 2000,   // Need 2000 to reach Gold
+      'Gold': 5000,     // Need 5000 to reach Platinum
+      'Platinum': 10000 // Need 10000 to reach Diamond
+    };
+    return Math.max(0, (tierThresholds[tier] || 0) - currentPoints);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -353,80 +439,86 @@ const GuestDetailPage = () => {
               <span>Back to Guests</span>
             </button>
           </div>
-          
-          {/* Page Title */}
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{guest.full_name}</h1>
-            <p className="text-gray-600 mt-1">Guest Profile & Management</p>
+
+          {/* Page Title and Actions - Aligned in One Row */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{guest.full_name}</h1>
+              <p className="text-gray-600 mt-1">Guest Profile & Management</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => router.push(`/office/guests/${params.id}/edit`)}
+                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <PencilEdit02Icon className="h-4 w-4" />
+                <span>Edit Profile</span>
+              </button>
+              <button
+                onClick={() => router.push(`/reservations/new?guest_id=${params.id}`)}
+                className="flex items-center space-x-2 px-4 py-2 bg-[#4E61D3] rounded text-white hover:bg-[#3D4EA8] transition-colors"
+              >
+                <Add01Icon className="h-4 w-4" />
+                <span>New Reservation</span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Guest Profile Header */}
-        <div className="bg-white border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
-                  <UserIcon className="h-10 w-10 text-gray-600" />
-                </div>
-                <div>
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h2 className="text-2xl font-bold text-gray-900">{guest.full_name}</h2>
-                    {guest.vip_status && (
-                      <span className="inline-flex items-center space-x-1 bg-yellow-100 text-yellow-800 px-3 py-1 text-sm font-medium rounded">
-                        <SparklesIcon className="h-4 w-4 fill-current" />
-                        <span>VIP Guest</span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-6 text-sm text-gray-600">
-                    <div className="flex items-center space-x-2">
-                      <Mail01Icon className="h-4 w-4" />
-                      <span>{guest.email}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Call02Icon className="h-4 w-4" />
-                      <span>{guest.phone}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Location01Icon className="h-4 w-4" />
-                      <span>{guest.nationality}</span>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-xs text-gray-500">
-                    Guest ID: {guest.id} • Member since {formatDate(guest.created_at)}
-                  </div>
-                </div>
+            <div className="flex items-center space-x-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#4E61D3] to-[#3D4EA8] rounded-full flex items-center justify-center">
+                <UserIcon className="h-10 w-10 text-white" />
               </div>
-              <div className="flex items-center space-x-3">
-                <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
-                  <PencilEdit02Icon className="h-4 w-4" />
-                  <span>Edit Profile</span>
-                </button>
-                <button className="flex items-center space-x-2 px-4 py-2 bg-[#4E61D3] text-white hover:bg-[#3D4EA8] transition-colors">
-                  <Add01Icon className="h-4 w-4" />
-                  <span>New Reservation</span>
-                </button>
+              <div className="flex-1">
+                <div className="flex items-center space-x-3 mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900">{guest.full_name}</h2>
+                  {guest.vip_status && (
+                    <span className="inline-flex items-center space-x-1 bg-yellow-100 text-yellow-800 px-3 py-1 text-sm font-medium rounded-full">
+                      <SparklesIcon className="h-4 w-4 fill-current" />
+                      <span>VIP Guest</span>
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center space-x-6 text-sm text-gray-600">
+                  <div className="flex items-center space-x-2">
+                    <Mail01Icon className="h-4 w-4" />
+                    <span>{guest.email}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Call02Icon className="h-4 w-4" />
+                    <span>{guest.phone}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Location01Icon className="h-4 w-4" />
+                    <span>{guest.nationality}</span>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-gray-500">
+                  Guest ID: {guest.id} • Member since {formatDate(guest.created_at)}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Quick Stats */}
-          <div className="p-4 bg-gray-50">
+          <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-t border-gray-100">
             <div className="grid grid-cols-4 gap-6">
-              <div className="text-center">
+              <div className="text-center p-3 rounded-lg hover:bg-white transition-colors">
                 <div className="text-2xl font-bold text-[#4E61D3]">{guest.total_stays}</div>
                 <div className="text-sm text-gray-600">Total Stays</div>
               </div>
-              <div className="text-center">
+              <div className="text-center p-3 rounded-lg hover:bg-white transition-colors">
                 <div className="text-2xl font-bold text-[#4E61D3]">{guest.total_nights}</div>
                 <div className="text-sm text-gray-600">Total Nights</div>
               </div>
-              <div className="text-center">
+              <div className="text-center p-3 rounded-lg hover:bg-white transition-colors">
                 <div className="text-lg font-bold text-[#4E61D3]">{formatCurrency(guest.total_spent)}</div>
                 <div className="text-sm text-gray-600">Total Spent</div>
               </div>
-              <div className="text-center">
+              <div className="text-center p-3 rounded-lg hover:bg-white transition-colors">
                 <div className="flex items-center justify-center space-x-1">
                   <SparklesIcon className="h-5 w-5 text-yellow-400 fill-current" />
                   <span className="text-2xl font-bold text-gray-900">{guest.avg_rating}</span>
@@ -442,19 +534,19 @@ const GuestDetailPage = () => {
           {/* Left Column - Personal Information */}
           <div className="space-y-6">
             {/* Contact Information */}
-            <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#4E61D3]">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-6 bg-gradient-to-r from-[#4E61D3] to-[#3D4EA8]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Contact Information</h3>
-                    <p className="text-sm text-gray-200 mt-1">Personal details and contact info</p>
+                    <p className="text-sm text-white/80 mt-1">Personal details and contact info</p>
                   </div>
-                  <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                    <Call02Icon className="h-4 w-4 text-white" />
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                    <Call02Icon className="h-5 w-5 text-white" />
                   </div>
                 </div>
               </div>
-              <div className="p-4 bg-gray-50">
+              <div className="p-6 bg-white">
                 <div className="space-y-4 text-sm">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -500,19 +592,19 @@ const GuestDetailPage = () => {
             </div>
 
             {/* Preferences & Allergies */}
-            <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#4E61D3]">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-6 bg-gradient-to-r from-[#4E61D3] to-[#3D4EA8]">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Preferences & Allergies</h3>
-                    <p className="text-sm text-gray-200 mt-1">Guest preferences and dietary restrictions</p>
+                    <p className="text-sm text-white/80 mt-1">Guest preferences and dietary restrictions</p>
                   </div>
-                  <div className="w-8 h-8 bg-white/20 flex items-center justify-center">
-                    <SparklesIcon className="h-4 w-4 text-white" />
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                    <SparklesIcon className="h-5 w-5 text-white" />
                   </div>
                 </div>
               </div>
-              <div className="p-4 bg-gray-50">
+              <div className="p-6 bg-white">
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-medium text-gray-700 mb-2">Room Preferences</h4>
@@ -701,7 +793,7 @@ const GuestDetailPage = () => {
               </div>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full border-collapse">
               <thead className="bg-[#4E61D3]">
                 <tr>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   ChevronLeftIcon,
@@ -321,6 +321,7 @@ const BookingDetailPage = () => {
   const [booking, setBooking] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState(true);
   const [showInvoice, setShowInvoice] = useState(false);
+  const [resendingInvoice, setResendingInvoice] = useState(false);
 
   const transformApiData = (apiData: any): Reservation => {
     // Parse amenities from string to array
@@ -459,6 +460,55 @@ const BookingDetailPage = () => {
     }).format(amount);
   };
 
+  const handleResendInvoice = async () => {
+    if (!booking) return;
+
+    setResendingInvoice(true);
+    try {
+      // Dynamically import @react-pdf/renderer and PDF component
+      const { pdf } = await import('@react-pdf/renderer');
+      const ReservationInvoicePDF = (await import('@/components/ReservationInvoicePDF')).default;
+
+      // Generate PDF as blob
+      const pdfBlob = await pdf(<ReservationInvoicePDF booking={booking} />).toBlob();
+
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(pdfBlob);
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+        const base64Content = base64data.split(',')[1]; // Remove data:application/pdf;base64, prefix
+
+        // Get CSRF token
+        const csrfToken = getCsrfToken();
+
+        // Send to backend
+        const response = await fetch(buildApiUrl(`hotel/reservations/${booking.reservation_number}/resend_invoice/`), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken || '',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ pdf_content: base64Content }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert(`Invoice berhasil dikirim ke ${data.sent_to}`);
+        } else {
+          alert('Gagal mengirim invoice: ' + (data.error || JSON.stringify(data)));
+        }
+      };
+    } catch (error) {
+      console.error('Error resending invoice:', error);
+      alert('Terjadi kesalahan saat mengirim invoice');
+    } finally {
+      setResendingInvoice(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'CONFIRMED': return 'bg-blue-100 text-blue-800';
@@ -570,12 +620,20 @@ const BookingDetailPage = () => {
             </div>
           </div>
           <div className="flex space-x-3">
-            <button 
+            <button
               onClick={() => setShowInvoice(true)}
               className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors"
             >
               <File01Icon className="h-4 w-4" />
               <span>Generate Invoice</span>
+            </button>
+            <button
+              onClick={handleResendInvoice}
+              disabled={resendingInvoice}
+              className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Mail01Icon className="h-4 w-4" />
+              <span>{resendingInvoice ? 'Mengirim...' : 'Kirim Invoice'}</span>
             </button>
             <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
               <PencilEdit02Icon className="h-4 w-4" />
@@ -1152,7 +1210,7 @@ const BookingDetailPage = () => {
                   {/* Invoice Items Table */}
                   <div>
                     <h3 className="font-bold text-gray-900 mb-4">Services & Charges:</h3>
-                    <div className="overflow-x-auto">
+                    <div className="overflow-visible">
                       <table className="w-full border-collapse">
                         <thead>
                           <tr className="bg-gray-50">

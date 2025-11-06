@@ -1201,7 +1201,7 @@ const RoomsPage = () => {
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-visible">
               <table className="w-full border-collapse">
                 <thead className="bg-[#005357]">
                   <tr>
@@ -1539,7 +1539,7 @@ const RoomsPage = () => {
                     </div>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-visible">
                   <table className="w-full border-collapse">
                     <thead className="bg-[#005357]">
                       <tr>

@@ -4,7 +4,7 @@ from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
-from apps.hotel.models import Payment, Expense, Reservation
+from apps.hotel.models import Payment, Expense, Reservation, Invoice
 
 
 @api_view(['GET'])
@@ -12,6 +12,9 @@ def financial_overview(request):
     """
     Financial overview API for the financial page
     Returns revenue, expenses, and profit data
+
+    NOTE: This view is deprecated. The FinancialViewSet in financial_new.py
+    is now used for /api/hotel/financial/overview/ endpoint.
     """
     # Get period filter (default: thisMonth)
     period = request.GET.get('period', 'thisMonth')
@@ -223,4 +226,78 @@ def financial_transactions(request):
     return Response({
         'transactions': transactions,
         'count': len(transactions)
+    })
+
+
+@api_view(['GET'])
+def financial_invoices(request):
+    """
+    Get list of invoices with filtering
+    """
+    # Get filters
+    search = request.GET.get('search', '')
+    status_filter = request.GET.get('status', 'all')
+    period = request.GET.get('period', 'thisMonth')
+
+    # Calculate date range
+    today = timezone.now().date()
+    if period == 'thisMonth':
+        start_date = today.replace(day=1)
+        end_date = today
+    elif period == 'lastMonth':
+        last_day_prev_month = today.replace(day=1) - timedelta(days=1)
+        start_date = last_day_prev_month.replace(day=1)
+        end_date = last_day_prev_month
+    elif period == 'thisYear':
+        start_date = today.replace(month=1, day=1)
+        end_date = today
+    else:
+        start_date = today.replace(day=1)
+        end_date = today
+
+    # Get invoices
+    invoices_qs = Invoice.objects.filter(
+        issue_date__gte=start_date,
+        issue_date__lte=end_date
+    ).select_related('guest', 'reservation').prefetch_related('items')
+
+    # Filter by status
+    if status_filter != 'all':
+        invoices_qs = invoices_qs.filter(status=status_filter)
+
+    # Search filter
+    if search:
+        invoices_qs = invoices_qs.filter(
+            Q(invoice_number__icontains=search) |
+            Q(guest__full_name__icontains=search) |
+            Q(reservation__reservation_number__icontains=search)
+        )
+
+    # Format response
+    invoices_data = []
+    for invoice in invoices_qs:
+        invoices_data.append({
+            'id': invoice.invoice_number,
+            'date': invoice.issue_date.strftime('%Y-%m-%d'),
+            'guest': invoice.guest.full_name,
+            'reservation': invoice.reservation.reservation_number,
+            'amount': float(invoice.total_amount),
+            'status': invoice.status,
+            'dueDate': invoice.due_date.strftime('%Y-%m-%d'),
+            'paid_amount': float(invoice.paid_amount),
+            'balance': float(invoice.balance),
+            'items': [
+                {
+                    'description': item.description,
+                    'quantity': item.quantity,
+                    'rate': float(item.rate),
+                    'total': float(item.amount)
+                }
+                for item in invoice.items.all()
+            ]
+        })
+
+    return Response({
+        'invoices': invoices_data,
+        'count': len(invoices_data)
     })

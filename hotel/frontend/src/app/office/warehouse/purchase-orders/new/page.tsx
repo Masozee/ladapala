@@ -384,7 +384,7 @@ export default function NewPurchaseOrderPage() {
                 <p>Belum ada item. Klik "Tambah Item" untuk menambahkan.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-visible">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
                     <tr>

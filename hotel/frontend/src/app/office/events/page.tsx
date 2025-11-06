@@ -327,7 +327,7 @@ export default function EventBookingsPage() {
 
       {/* Bookings Table */}
       <div className="bg-white border border-gray-200 rounded overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-visible">
           <table className="w-full">
             <thead>
               <tr className="bg-[#4E61D3] text-white">

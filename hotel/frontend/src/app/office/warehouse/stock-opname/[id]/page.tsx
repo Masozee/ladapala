@@ -366,7 +366,7 @@ export default function StockOpnameDetailPage() {
         </div>
 
         {/* Items Table */}
-        <div className="bg-white border border-gray-200 rounded overflow-x-auto">
+        <div className="bg-white border border-gray-200 rounded overflow-visible">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-[#4E61D3] text-white">

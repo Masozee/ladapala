@@ -34,7 +34,7 @@ try:
         satisfaction_report, inventory_report, tax_report, maintenance_report
     )
     from .views.analytics import dashboard_analytics, monthly_comparison
-    from .views.financial import financial_overview, financial_transactions
+    from .views.financial import financial_overview, financial_transactions, financial_invoices
     from .views.occupancy import occupancy_analytics
     LEGACY_VIEWS = True
 except ImportError:
@@ -117,4 +117,5 @@ if LEGACY_VIEWS:
         path('analytics/occupancy/', occupancy_analytics, name='occupancy-analytics'),
         path('financial/overview/', financial_overview, name='financial-overview'),
         path('financial/transactions/', financial_transactions, name='financial-transactions'),
+        path('financial/invoices/', financial_invoices, name='financial-invoices'),
     ]

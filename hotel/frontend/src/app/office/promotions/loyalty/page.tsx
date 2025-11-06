@@ -17,10 +17,10 @@ interface LoyaltyProgram {
   id: number;
   name: string;
   description: string;
-  points_per_amount: string;
-  points_currency_value: string;
-  min_points_redemption: number;
-  points_expiry_days: number | null;
+  points_per_rupiah: string;
+  rupiah_per_point: string;
+  min_points_to_redeem: number;
+  points_expiry_months: number | null;
   is_active: boolean;
 }
 
@@ -29,10 +29,8 @@ interface GuestLoyaltyPoints {
   guest: number;
   guest_name: string;
   guest_email: string;
-  current_points: number;
+  total_points: number;
   lifetime_points: number;
-  lifetime_redeemed: number;
-  tier: string;
   created_at: string;
   updated_at: string;
 }
@@ -101,9 +99,9 @@ export default function LoyaltyProgramPage() {
   );
 
   const totalAccounts = guestAccounts.length;
-  const totalPoints = guestAccounts.reduce((sum, acc) => sum + acc.current_points, 0);
-  const totalEarned = guestAccounts.reduce((sum, acc) => sum + acc.lifetime_points, 0);
-  const totalRedeemed = guestAccounts.reduce((sum, acc) => sum + acc.lifetime_redeemed, 0);
+  const totalPoints = guestAccounts.reduce((sum, acc) => sum + (acc.total_points || 0), 0);
+  const totalEarned = guestAccounts.reduce((sum, acc) => sum + (acc.lifetime_points || 0), 0);
+  const totalRedeemed = 0; // Not available in current API response
 
   const formatCurrency = (amount: string) => {
     return new Intl.NumberFormat('id-ID', {
@@ -190,25 +188,25 @@ export default function LoyaltyProgramPage() {
                   <div>
                     <div className="text-sm text-gray-600">Points per Rp</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {program.points_per_amount} poin / {formatCurrency('1000')}
+                      {program.points_per_rupiah} poin / Rp 1
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-600">Point Value</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {formatCurrency(program.points_currency_value)} / poin
+                      {formatCurrency(program.rupiah_per_point || '0')} / poin
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-600">Min Redemption</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {program.min_points_redemption} poin
+                      {program.min_points_to_redeem} poin
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-600">Points Expiry</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {program.points_expiry_days || 'Never'} hari
+                      {program.points_expiry_months ? `${program.points_expiry_months} bulan` : 'Never'}
                     </div>
                   </div>
                 </div>
@@ -281,6 +279,20 @@ export default function LoyaltyProgramPage() {
           </div>
         </div>
 
+        {/* Search Bar - Outside the table */}
+        <div className="mb-4">
+          <div className="relative max-w-md">
+            <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder={activeTab === 'accounts' ? 'Cari member...' : 'Cari transaksi...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
+            />
+          </div>
+        </div>
+
         {/* Tabs */}
         <div className="bg-white border border-gray-200 mb-6">
           <div className="flex border-b border-gray-200">
@@ -306,32 +318,16 @@ export default function LoyaltyProgramPage() {
             </button>
           </div>
 
-          {/* Search Bar */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="relative">
-              <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder={activeTab === 'accounts' ? 'Cari member...' : 'Cari transaksi...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-[#4E61D3] focus:border-transparent"
-              />
-            </div>
-          </div>
-
           {/* Content */}
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             {activeTab === 'accounts' ? (
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guest</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tier</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Points</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lifetime Earned</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lifetime Redeemed</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member Since</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
@@ -339,7 +335,7 @@ export default function LoyaltyProgramPage() {
                 <tbody className="divide-y divide-gray-200">
                   {filteredAccounts.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                         Tidak ada member ditemukan
                       </td>
                     </tr>
@@ -351,20 +347,12 @@ export default function LoyaltyProgramPage() {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">{account.guest_email}</td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium ${getTierColor(account.tier)}`}>
-                            {account.tier}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
                           <span className="text-lg font-bold text-green-600">
-                            {account.current_points.toLocaleString()}
+                            {(account.total_points || 0).toLocaleString()}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {account.lifetime_points.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {account.lifetime_redeemed.toLocaleString()}
+                          {(account.lifetime_points || 0).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
                           {formatDate(account.created_at)}

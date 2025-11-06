@@ -205,7 +205,7 @@ export default function DiscountsPage() {
 
         {/* Discounts Table */}
         <div className="bg-white border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full">
               <thead className="bg-gradient-to-r from-[#4E61D3] to-[#3D4EA8] text-white">
                 <tr>

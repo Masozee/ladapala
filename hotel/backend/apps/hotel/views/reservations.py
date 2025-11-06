@@ -396,3 +396,39 @@ class ReservationViewSet(viewsets.ModelViewSet):
             'fee': fee if approved else None,
             'reservation_number': reservation.reservation_number
         })
+
+    @action(detail=True, methods=['post'])
+    def resend_invoice(self, request, reservation_number=None):
+        """Resend invoice email to guest with PDF attachment from frontend"""
+        try:
+            reservation = self.get_object()
+
+            # Get PDF content from request (base64 encoded)
+            pdf_base64 = request.data.get('pdf_content')
+            if not pdf_base64:
+                return Response(
+                    {'error': 'PDF content is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Send invoice email with the provided PDF
+            from apps.hotel.services.email_service_simple import send_reservation_invoice_email_with_pdf
+            email_sent = send_reservation_invoice_email_with_pdf(reservation, pdf_base64)
+
+            if email_sent:
+                return Response({
+                    'message': 'Invoice email sent successfully',
+                    'sent_to': reservation.guest.email,
+                    'reservation_number': reservation.reservation_number
+                })
+            else:
+                return Response(
+                    {'error': 'Failed to send invoice email. Please check backend logs.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

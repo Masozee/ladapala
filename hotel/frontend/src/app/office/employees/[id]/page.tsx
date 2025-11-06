@@ -440,7 +440,7 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
               <div className="text-sm text-gray-600">Oktober 2024</div>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full">
               <thead>
                 <tr className="bg-[#4E61D3]">

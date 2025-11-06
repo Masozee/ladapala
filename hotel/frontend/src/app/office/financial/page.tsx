@@ -73,6 +73,11 @@ interface TransactionsResponse {
   count: number;
 }
 
+interface InvoicesResponse {
+  invoices: Transaction[];
+  count: number;
+}
+
 export default function FinancialPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,12 +89,15 @@ export default function FinancialPage() {
   const [expenseData, setExpenseData] = useState<ExpenseData | null>(null);
   const [profitData, setProfitData] = useState<ProfitData | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [invoices, setInvoices] = useState<Transaction[]>([]);
 
   // Loading and error states
   const [loadingOverview, setLoadingOverview] = useState(true);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [loadingInvoices, setLoadingInvoices] = useState(true);
   const [errorOverview, setErrorOverview] = useState<string | null>(null);
   const [errorTransactions, setErrorTransactions] = useState<string | null>(null);
+  const [errorInvoices, setErrorInvoices] = useState<string | null>(null);
 
   // Fetch financial overview data
   useEffect(() => {
@@ -160,46 +168,47 @@ export default function FinancialPage() {
     fetchTransactions();
   }, [selectedPeriod, selectedPaymentStatus, searchQuery]);
 
-  const invoices = [
-    {
-      id: 'INV-2024-001',
-      date: '2024-08-28',
-      guest: 'Liu Wei',
-      reservation: 'RSV005',
-      amount: 13500000,
-      status: 'paid',
-      dueDate: '2024-08-30',
-      items: [
-        { description: 'Presidential Suite - 3 nights', quantity: 3, rate: 4500000, total: 13500000 }
-      ]
-    },
-    {
-      id: 'INV-2024-002',
-      date: '2024-08-27',
-      guest: 'Ahmed Hassan',
-      reservation: 'RSV003',
-      amount: 12000000,
-      status: 'pending',
-      dueDate: '2024-08-31',
-      items: [
-        { description: 'Junior Suite - 4 nights', quantity: 4, rate: 3000000, total: 12000000 }
-      ]
-    },
-    {
-      id: 'INV-2024-003',
-      date: '2024-08-26',
-      guest: 'Emma Wilson',
-      reservation: 'RSV006',
-      amount: 9600000,
-      status: 'overdue',
-      dueDate: '2024-08-28',
-      items: [
-        { description: 'Standard Room - 4 nights', quantity: 4, rate: 2400000, total: 9600000 }
-      ]
-    }
-  ];
 
-  const formatCurrency = (amount: number) => {
+
+  // Fetch invoices data
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      setLoadingInvoices(true);
+      setErrorInvoices(null);
+
+      try {
+        const params = new URLSearchParams({
+          period: selectedPeriod,
+          status: selectedPaymentStatus,
+        });
+
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
+
+        const url = buildApiUrl(`hotel/financial/invoices/?${params.toString()}`);
+        const response = await fetch(url, {
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch invoices');
+        }
+
+        const data: InvoicesResponse = await response.json();
+        setInvoices(data.invoices);
+      } catch (error) {
+        console.error('Error fetching invoices:', error);
+        setErrorInvoices('Gagal memuat data faktur');
+      } finally {
+        setLoadingInvoices(false);
+      }
+    };
+
+    fetchInvoices();
+  }, [selectedPeriod, selectedPaymentStatus, searchQuery]);
+
+    const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -412,27 +421,77 @@ export default function FinancialPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="p-4 bg-gray-50">
-                      <div className="space-y-4">
-                        {expenseData.categories.map((category, index) => (
-                          <div key={index} className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm font-medium text-gray-900">{category.name}</span>
-                                <span className="text-sm text-gray-600">{category.percentage}%</span>
+                    <div className="p-6 bg-gray-50">
+                      <div className="flex flex-col items-center">
+                        {/* Pie Chart */}
+                        <div className="relative" style={{ width: '240px', height: '240px' }}>
+                          <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                            {(() => {
+                              const colors = ['#4E61D3', '#F87B1B', '#2baf6a', '#e74c3c', '#f39c12', '#9b59b6'];
+                              let currentAngle = 0;
+
+                              return expenseData.categories.map((category, index) => {
+                                const percentage = category.percentage;
+                                const angle = (percentage / 100) * 360;
+                                const radius = 40;
+                                const centerX = 50;
+                                const centerY = 50;
+
+                                // Calculate path for pie slice
+                                const startAngle = currentAngle;
+                                const endAngle = currentAngle + angle;
+
+                                const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
+                                const startY = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
+                                const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
+                                const endY = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
+
+                                const largeArc = angle > 180 ? 1 : 0;
+
+                                const pathData = [
+                                  `M ${centerX} ${centerY}`,
+                                  `L ${startX} ${startY}`,
+                                  `A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY}`,
+                                  'Z'
+                                ].join(' ');
+
+                                currentAngle += angle;
+
+                                return (
+                                  <path
+                                    key={index}
+                                    d={pathData}
+                                    fill={colors[index % colors.length]}
+                                    stroke="white"
+                                    strokeWidth="0.5"
+                                  />
+                                );
+                              });
+                            })()}
+                          </svg>
+                        </div>
+
+                        {/* Legend */}
+                        <div className="mt-6 w-full space-y-2">
+                          {expenseData.categories.map((category, index) => {
+                            const colors = ['#4E61D3', '#F87B1B', '#2baf6a', '#e74c3c', '#f39c12', '#9b59b6'];
+                            return (
+                              <div key={index} className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className="w-3 h-3 rounded-sm"
+                                    style={{ backgroundColor: colors[index % colors.length] }}
+                                  ></div>
+                                  <span className="text-gray-700">{category.name}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-gray-600">{category.percentage}%</span>
+                                  <span className="font-medium text-gray-900">{formatCurrency(category.amount)}</span>
+                                </div>
                               </div>
-                              <div className="w-full bg-gray-200 h-2">
-                                <div 
-                                  className="bg-[#4E61D3] h-2" 
-                                  style={{ width: `${category.percentage}%` }}
-                                ></div>
-                              </div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                {formatCurrency(category.amount)}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -544,7 +603,7 @@ export default function FinancialPage() {
 
             {/* Transactions Table */}
             {!loadingTransactions && !errorTransactions && (
-            <div className="overflow-x-auto">
+            <div className="overflow-visible">
                   <table className="w-full border-collapse">
                     <thead className="bg-[#4E61D3]">
                       <tr>
@@ -674,6 +733,26 @@ export default function FinancialPage() {
               </div>
               
               <div className="p-6 bg-gray-50">
+                {/* Loading State */}
+                {loadingInvoices && (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4E61D3]"></div>
+                    <p className="mt-4 text-gray-600">Memuat data faktur...</p>
+                  </div>
+                )}
+
+                {/* Error State */}
+                {errorInvoices && !loadingInvoices && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 mb-6">
+                    <div className="flex items-center">
+                      <AlertCircleIcon className="h-5 w-5 mr-2" />
+                      <span>{errorInvoices}</span>
+                    </div>
+                  </div>
+                )}
+
+                {!loadingInvoices && !errorInvoices && (
+                <>
                 {/* Invoice Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                   <div className="bg-white p-6 border border-gray-200">
@@ -698,7 +777,7 @@ export default function FinancialPage() {
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Menunggu Pembayaran</p>
                         <p className="text-2xl font-bold text-gray-900">
-                          {invoices.filter(inv => inv.status === 'pending').length}
+                          {invoices.filter(inv => inv.status === 'issued').length}
                         </p>
                       </div>
                     </div>
@@ -720,7 +799,7 @@ export default function FinancialPage() {
                 </div>
 
                 {/* Invoices Table */}
-                <div className="overflow-x-auto">
+                <div className="overflow-visible">
                   <table className="w-full border-collapse">
                     <thead className="bg-[#4E61D3]">
                       <tr>
@@ -742,7 +821,14 @@ export default function FinancialPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white">
-                      {invoices.map((invoice) => (
+                      {invoices.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="border border-gray-200 px-6 py-12 text-center text-gray-500">
+                            Tidak ada faktur ditemukan
+                          </td>
+                        </tr>
+                      ) : (
+                      invoices.map((invoice) => (
                         <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
                           <td className="border border-gray-200 px-6 py-4">
                             <div>
@@ -800,10 +886,13 @@ export default function FinancialPage() {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      ))
+                      )}
                     </tbody>
                   </table>
                 </div>
+                </>
+                )}
               </div>
             </div>
           )}

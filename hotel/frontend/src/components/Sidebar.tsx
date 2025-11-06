@@ -96,9 +96,9 @@ const Sidebar = () => {
 
   return (
     <Tooltip.Provider delayDuration={300}>
-      <div className="w-20 min-w-[5rem] max-w-[5rem] bg-[#005357] border border-gray-200 flex flex-col">
+      <div className="w-20 min-w-[5rem] max-w-[5rem] bg-[#005357] border border-gray-200 flex flex-col h-screen">
         {/* Header */}
-        <div className="p-4">
+        <div className="flex-shrink-0 p-4">
           <div className="flex items-center justify-center">
             <div className="w-10 h-10 min-w-[2.5rem] min-h-[2.5rem] bg-white flex items-center justify-center p-1">
               <Image
@@ -113,12 +113,12 @@ const Sidebar = () => {
           </div>
         </div>
 
-        <Separator.Root className="mx-4 bg-white/20 h-px" />
+        <Separator.Root className="flex-shrink-0 mx-4 bg-white/20 h-px" />
 
         {/* Main Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4">
+        <nav className="flex-1 py-4 min-h-0">
           {/* Frontline Operations */}
-          <div className="space-y-1 px-2">
+          <div className="flex flex-col gap-0.5 px-2">
             {frontlineActions.map((item) => {
               const Icon = item.icon;
 
@@ -198,15 +198,15 @@ const Sidebar = () => {
                   <Tooltip.Trigger asChild>
                     <Link
                       href={item.href || '#'}
-                      className={`relative flex items-center justify-center w-full h-12 min-h-[3rem] rounded transition-all duration-200 group ${
+                      className={`relative flex items-center justify-center w-full h-11 transition-all duration-200 group ${
                         active
                           ? 'bg-white/10'
                           : 'hover:bg-white/10'
                       }`}
                     >
-                      <Icon className={`h-5 w-5 min-w-[1.25rem] min-h-[1.25rem] text-white transition-transform group-hover:scale-110`} />
+                      <Icon className={`h-5 w-5 text-white transition-transform group-hover:scale-110`} />
                       {item.badge && (
-                        <span className="absolute -top-0.5 -right-0.5 min-h-[1rem] min-w-[1rem] h-4 w-4 rounded-sm bg-red-500 text-white text-[0.625rem] leading-none flex items-center justify-center">
+                        <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-[10px] flex items-center justify-center">
                           {item.badge}
                         </span>
                       )}
@@ -229,9 +229,9 @@ const Sidebar = () => {
         </nav>
 
         {/* Bottom Actions */}
-        <div className="p-2">
-          <Separator.Root className="mb-4 mx-0 bg-white/20 h-px" />
-          <div className="space-y-1">
+        <div className="flex-shrink-0 p-2">
+          <Separator.Root className="mb-2 mx-0 bg-white/20 h-px" />
+          <div className="flex flex-col gap-0.5">
             {bottomActions.map((item) => {
               const Icon = item.icon;
 
@@ -311,13 +311,13 @@ const Sidebar = () => {
                   <Tooltip.Trigger asChild>
                     <Link
                       href={item.href || '#'}
-                      className={`relative flex items-center justify-center w-full h-12 min-h-[3rem] rounded transition-all duration-200 group ${
+                      className={`relative flex items-center justify-center w-full h-11 transition-all duration-200 group ${
                         active
                           ? 'bg-white/10'
                           : 'hover:bg-white/10'
                       }`}
                     >
-                      <Icon className={`h-5 w-5 min-w-[1.25rem] min-h-[1.25rem] text-white transition-transform group-hover:scale-110`} />
+                      <Icon className={`h-5 w-5 text-white transition-transform group-hover:scale-110`} />
                     </Link>
                   </Tooltip.Trigger>
                   <Tooltip.Portal>

@@ -646,7 +646,7 @@ export default function OfficePage() {
             <h3 className="text-xl font-bold text-gray-900">Room Type Performance (30 Days)</h3>
             <p className="text-sm text-gray-600 mt-1">Revenue and bookings by room type</p>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full border-collapse">
               <thead className="bg-[#4E61D3]">
                 <tr>

@@ -131,6 +131,12 @@ const PaymentsPage = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [isAlreadyPaid, setIsAlreadyPaid] = useState(false);
 
+  // Deposit payment states
+  const [paymentType, setPaymentType] = useState<'FULL' | 'DEPOSIT' | 'BALANCE'>('FULL');
+  const [depositAmount, setDepositAmount] = useState(0);
+  const [balanceDue, setBalanceDue] = useState(0);
+  const [reservationData, setReservationData] = useState<any>(null);
+
   // Manager authorization modal state
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authEmail, setAuthEmail] = useState('');
@@ -222,8 +228,19 @@ const PaymentsPage = () => {
         })
         .then(res => res?.json())
         .then(fullData => {
-          if (fullData?.is_fully_paid) {
-            setIsAlreadyPaid(true);
+          if (fullData) {
+            setReservationData(fullData);
+            setDepositAmount(fullData.deposit_amount || 0);
+            setBalanceDue(fullData.balance_due || 0);
+
+            if (fullData?.is_fully_paid) {
+              setIsAlreadyPaid(true);
+            }
+
+            // If there's a balance due, default to balance payment
+            if (fullData.total_paid > 0 && !fullData.is_fully_paid) {
+              setPaymentType('BALANCE');
+            }
           }
         })
         .catch(err => console.error('Error checking payment status:', err));
@@ -388,17 +405,91 @@ const PaymentsPage = () => {
         'qris': 'DIGITAL_WALLET'
       };
 
+      // Generate PDF invoice before payment to send with email
+      let pdfBase64Content = null;
+      let reservationNumber = null;
+      if (reservationId) {
+        try {
+          // First fetch reservation to get reservation_number
+          const reservationListResponse = await fetch(buildApiUrl(`hotel/reservations/?id=${reservationId}`));
+          if (reservationListResponse.ok) {
+            const listData = await reservationListResponse.json();
+            const reservation = listData.results?.[0];
+            if (reservation?.reservation_number) {
+              reservationNumber = reservation.reservation_number;
+            }
+          }
+
+          // Fetch full reservation data by reservation_number
+          if (!reservationNumber) {
+            console.warn('Could not find reservation_number for reservationId:', reservationId);
+          }
+          const reservationResponse = reservationNumber
+            ? await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/`))
+            : null;
+          if (reservationResponse && reservationResponse.ok) {
+            const reservationData = await reservationResponse.json();
+
+            // Dynamically import PDF generator
+            const { pdf } = await import('@react-pdf/renderer');
+            const ReservationInvoicePDF = (await import('@/components/ReservationInvoicePDF')).default;
+
+            // Transform reservation data to match invoice format
+            const invoiceData = {
+              reservation_number: reservationData.reservation_number,
+              guest_name: reservationData.guest_name,
+              guest_details: reservationData.guest_details,
+              check_in_date: reservationData.check_in_date,
+              check_out_date: reservationData.check_out_date,
+              nights: reservationData.nights,
+              adults: reservationData.adults,
+              total_amount: reservationData.grand_total || reservationData.total_amount,
+              status: reservationData.status,
+              created_at: reservationData.created_at,
+            };
+
+            // Generate PDF as blob
+            const pdfBlob = await pdf(<ReservationInvoicePDF booking={invoiceData} />).toBlob();
+
+            // Convert blob to base64
+            const reader = new FileReader();
+            await new Promise((resolve, reject) => {
+              reader.readAsDataURL(pdfBlob);
+              reader.onloadend = () => {
+                const base64data = reader.result as string;
+                pdfBase64Content = base64data.split(',')[1]; // Remove data:application/pdf;base64, prefix
+                resolve(null);
+              };
+              reader.onerror = reject;
+            });
+          }
+        } catch (error) {
+          console.error('Error generating PDF invoice:', error);
+          // Continue with payment even if PDF generation fails
+        }
+      }
+
       let response;
       let paymentResult;
+
+      // Calculate payment amount based on payment type
+      let actualPaymentAmount = totalAmount;
+      if (paymentType === 'DEPOSIT') {
+        actualPaymentAmount = depositAmount;
+      } else if (paymentType === 'BALANCE') {
+        actualPaymentAmount = balanceDue;
+      }
 
       // Use process_with_promotions endpoint if promotions are applied
       if (calculationResult && (voucherCode || pointsToRedeem > 0)) {
         const promotionData = {
           reservation_id: reservationId,
           payment_method: paymentMethodMap[selectedPaymentMethod] || 'CASH',
+          payment_type: paymentType,
           transaction_id: null,
           voucher_code: voucherCode || undefined,
           redeem_points: pointsToRedeem || 0,
+          pdf_content: pdfBase64Content, // Include PDF for email
         };
 
         const csrfToken = getCsrfToken();
@@ -420,22 +511,29 @@ const PaymentsPage = () => {
         const data = await response.json();
         paymentResult = data.payment;
         console.log('Payment with promotions created:', paymentResult);
+        if (data.invoice_sent) {
+          console.log('Invoice email sent to guest');
+        }
       } else {
         // Standard payment without promotions
         const paymentData = {
           reservation: reservationId,
-          amount: totalAmount,
+          amount: actualPaymentAmount,
           payment_method: paymentMethodMap[selectedPaymentMethod] || 'CASH',
+          payment_type: paymentType,
           status: 'COMPLETED',
           payment_date: new Date().toISOString(),
           notes: notes,
         };
 
+        const csrfToken = getCsrfToken();
         response = await fetch(buildApiUrl('hotel/payments/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(csrfToken && { 'X-CSRFToken': csrfToken }),
           },
+          credentials: 'include',
           body: JSON.stringify(paymentData),
         });
 
@@ -445,6 +543,28 @@ const PaymentsPage = () => {
 
         paymentResult = await response.json();
         console.log('Payment created:', paymentResult);
+
+        // Send invoice email for standard payment if PDF was generated
+        if (pdfBase64Content && reservationNumber) {
+          try {
+            const emailResponse = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/resend_invoice/`), {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+              },
+              credentials: 'include',
+              body: JSON.stringify({ pdf_content: pdfBase64Content }),
+            });
+
+            if (emailResponse.ok) {
+              console.log('Invoice email sent to guest');
+            }
+          } catch (emailError) {
+            console.error('Error sending invoice email:', emailError);
+            // Don't fail the payment if email fails
+          }
+        }
       }
 
       setPaymentStatus('completed');
@@ -611,7 +731,15 @@ const PaymentsPage = () => {
 
   const calculateChange = () => {
     if (selectedPaymentMethod === 'cash' && cashReceived > 0) {
-      const finalTotal = calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount;
+      let finalTotal = calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount;
+
+      // Adjust for payment type
+      if (paymentType === 'DEPOSIT') {
+        finalTotal = depositAmount;
+      } else if (paymentType === 'BALANCE') {
+        finalTotal = balanceDue;
+      }
+
       return Math.max(0, cashReceived - finalTotal);
     }
     return 0;
@@ -634,7 +762,7 @@ const PaymentsPage = () => {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Payment Entry
+              Pembayaran
             </button>
             <button
               onClick={() => setActiveTab('history')}
@@ -644,15 +772,15 @@ const PaymentsPage = () => {
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Transaction History
+              Riwayat Transaksi
             </button>
           </div>
 
           {/* Page Title and Actions */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Point of Sale</h1>
-              <p className="text-sm text-gray-600 mt-1">Process payments and manage charges</p>
+              <h1 className="text-3xl font-bold text-gray-900">Pembayaran</h1>
+              <p className="text-sm text-gray-600 mt-1">Proses pembayaran dan kelola tagihan</p>
             </div>
             <div className="flex items-center space-x-3 no-print">
               {paymentStatus === 'completed' && (
@@ -661,7 +789,7 @@ const PaymentsPage = () => {
                   className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                 >
                   <PrinterIcon className="h-4 w-4" />
-                  <span>Print Receipt</span>
+                  <span>Cetak Struk</span>
                 </button>
               )}
             </div>
@@ -670,17 +798,17 @@ const PaymentsPage = () => {
 
         {/* Payment Entry Tab */}
         {activeTab === 'payment' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
             {/* Left Panel - Guest Info & Services */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-7 space-y-6">
             {/* Guest Information Card */}
             {(guestName || roomNumber) && (
               <div className="bg-white border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Guest Information</h3>
-                      <p className="text-sm text-gray-600 mt-1">Current reservation details</p>
+                      <h3 className="text-xl font-bold text-gray-900">Informasi Tamu</h3>
+                      <p className="text-sm text-gray-600 mt-1">Detail reservasi saat ini</p>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
                       <UserIcon className="h-4 w-4 text-white" />
@@ -688,13 +816,13 @@ const PaymentsPage = () => {
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">Guest Name</p>
+                      <p className="text-sm text-gray-600">Nama Tamu</p>
                       <p className="font-medium">{guestName || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Room Number</p>
+                      <p className="text-sm text-gray-600">Nomor Kamar</p>
                       <p className="font-medium">{roomNumber || 'N/A'}</p>
                     </div>
                     <div>
@@ -704,6 +832,10 @@ const PaymentsPage = () => {
                     <div>
                       <p className="text-sm text-gray-600">Check-out</p>
                       <p className="font-medium">{checkOutDate || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Poin Loyalitas</p>
+                      <p className="font-medium text-yellow-600">{availablePoints.toLocaleString()} pts</p>
                     </div>
                   </div>
                 </div>
@@ -715,8 +847,8 @@ const PaymentsPage = () => {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Quick Add Services</h3>
-                    <p className="text-sm text-gray-600 mt-1">Add common hotel services and amenities</p>
+                    <h3 className="text-xl font-bold text-gray-900">Layanan Cepat</h3>
+                    <p className="text-sm text-gray-600 mt-1">Tambah layanan dan fasilitas hotel</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
                     <Add01Icon className="h-4 w-4 text-white" />
@@ -746,8 +878,8 @@ const PaymentsPage = () => {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Apply Voucher or Discount</h3>
-                    <p className="text-sm text-gray-600 mt-1">Enter promo code to get discount</p>
+                    <h3 className="text-xl font-bold text-gray-900">Gunakan Voucher atau Diskon</h3>
+                    <p className="text-sm text-gray-600 mt-1">Masukkan kode promo untuk mendapat diskon</p>
                   </div>
                   <div className="w-8 h-8 bg-orange-500 flex items-center justify-center">
                     <PackageIcon className="h-4 w-4 text-white" />
@@ -759,7 +891,7 @@ const PaymentsPage = () => {
                   <div className="flex gap-3">
                     <input
                       type="text"
-                      placeholder="Enter voucher code (e.g. WELCOME2025)"
+                      placeholder="Masukkan kode voucher (mis. WELCOME2025)"
                       value={voucherCode}
                       onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
                       className="flex-1 px-4 py-2 bg-white border border-gray-300 focus:ring-2 focus:ring-[#005357] focus:outline-none uppercase"
@@ -769,14 +901,14 @@ const PaymentsPage = () => {
                       disabled={applyingVoucher || !reservationId}
                       className="px-6 py-2 bg-[#005357] text-white font-medium hover:bg-[#004449] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {applyingVoucher ? 'Applying...' : 'Apply'}
+                      {applyingVoucher ? 'Memproses...' : 'Gunakan'}
                     </button>
                     {calculationResult && (
                       <button
                         onClick={handleClearPromotions}
                         className="px-4 py-2 bg-red-500 text-white font-medium hover:bg-red-600 transition-colors"
                       >
-                        Clear
+                        Hapus
                       </button>
                     )}
                   </div>
@@ -803,8 +935,8 @@ const PaymentsPage = () => {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Redeem Loyalty Points</h3>
-                    <p className="text-sm text-gray-600 mt-1">For returning guests with reward points</p>
+                    <h3 className="text-xl font-bold text-gray-900">Tukar Poin Loyalitas</h3>
+                    <p className="text-sm text-gray-600 mt-1">Untuk tamu dengan poin reward</p>
                   </div>
                   <div className="w-8 h-8 bg-yellow-500 flex items-center justify-center">
                     <UserCheckIcon className="h-4 w-4 text-white" />
@@ -815,13 +947,13 @@ const PaymentsPage = () => {
                 <div className="space-y-3">
                   <div className="p-3 bg-yellow-50 border border-yellow-200">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-700">Available Points</span>
+                      <span className="text-sm text-gray-700">Poin Tersedia</span>
                       <span className="text-xl font-bold text-yellow-700">{availablePoints.toLocaleString()}</span>
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Points to Redeem
+                      Poin yang Ditukar
                     </label>
                     <div className="flex gap-3">
                       <input
@@ -830,7 +962,7 @@ const PaymentsPage = () => {
                         max={availablePoints}
                         value={pointsToRedeem || ''}
                         onChange={(e) => setPointsToRedeem(parseInt(e.target.value) || 0)}
-                        placeholder="Enter points amount"
+                        placeholder="Masukkan jumlah poin"
                         className="flex-1 px-4 py-2 bg-white border border-gray-300 focus:ring-2 focus:ring-[#005357] focus:outline-none"
                       />
                       <button
@@ -838,10 +970,10 @@ const PaymentsPage = () => {
                         disabled={applyingVoucher || !reservationId || pointsToRedeem === 0}
                         className="px-6 py-2 bg-[#005357] text-white font-medium hover:bg-[#004449] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {applyingVoucher ? 'Applying...' : 'Apply'}
+                        {applyingVoucher ? 'Memproses...' : 'Gunakan'}
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">1,000 points = Rp 50,000 discount</p>
+                    <p className="text-xs text-gray-500 mt-1">1.000 poin = Rp 50.000 diskon</p>
                     {calculationResult && calculationResult.loyalty_points?.redeemed > 0 && (
                       <p className="text-xs text-yellow-600 mt-1">
                         ✓ {calculationResult.loyalty_points.redeemed.toLocaleString()} points redeemed: {formatCurrency(parseFloat(calculationResult.loyalty_points.value))}
@@ -854,14 +986,14 @@ const PaymentsPage = () => {
           </div>
 
           {/* Right Panel - Order Summary & Payment */}
-          <div className="space-y-6 no-print">
+          <div className="lg:col-span-5 space-y-6 no-print">
             {/* Order Summary */}
             <div className="bg-white border border-gray-200 border">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Order Summary</h3>
-                    <p className="text-sm text-gray-600 mt-1">Current charges and fees</p>
+                    <h3 className="text-xl font-bold text-gray-900">Ringkasan Tagihan</h3>
+                    <p className="text-sm text-gray-600 mt-1">Tagihan dan biaya saat ini</p>
                   </div>
                   <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
                     <File01Icon className="h-4 w-4 text-white" />
@@ -929,21 +1061,21 @@ const PaymentsPage = () => {
 
                     {/* Promotions/Discounts */}
                     {calculationResult && calculationResult.voucher?.discount && parseFloat(calculationResult.voucher.discount) > 0 && (
-                      <div className="flex justify-between text-sm text-green-600">
-                        <span>Voucher Discount ({calculationResult.voucher.code}):</span>
-                        <span>- {formatCurrency(parseFloat(calculationResult.voucher.discount))}</span>
+                      <div className="flex justify-between text-sm text-green-600 gap-2">
+                        <span className="truncate">Voucher ({calculationResult.voucher.code}):</span>
+                        <span className="whitespace-nowrap">- {formatCurrency(parseFloat(calculationResult.voucher.discount))}</span>
                       </div>
                     )}
                     {calculationResult && calculationResult.auto_discount?.discount && parseFloat(calculationResult.auto_discount.discount) > 0 && (
-                      <div className="flex justify-between text-sm text-purple-600">
-                        <span>Auto Discount ({calculationResult.auto_discount.name}):</span>
-                        <span>- {formatCurrency(parseFloat(calculationResult.auto_discount.discount))}</span>
+                      <div className="flex justify-between text-sm text-purple-600 gap-2">
+                        <span className="truncate">Diskon ({calculationResult.auto_discount.name}):</span>
+                        <span className="whitespace-nowrap">- {formatCurrency(parseFloat(calculationResult.auto_discount.discount))}</span>
                       </div>
                     )}
                     {calculationResult && calculationResult.loyalty_points?.value && parseFloat(calculationResult.loyalty_points.value) > 0 && (
-                      <div className="flex justify-between text-sm text-yellow-600">
-                        <span>Points Redeemed ({calculationResult.loyalty_points.redeemed.toLocaleString()}):</span>
-                        <span>- {formatCurrency(parseFloat(calculationResult.loyalty_points.value))}</span>
+                      <div className="flex justify-between text-sm text-yellow-600 gap-2">
+                        <span className="truncate">Poin ({calculationResult.loyalty_points.redeemed.toLocaleString()}):</span>
+                        <span className="whitespace-nowrap">- {formatCurrency(parseFloat(calculationResult.loyalty_points.value))}</span>
                       </div>
                     )}
 
@@ -966,14 +1098,80 @@ const PaymentsPage = () => {
               </div>
             </div>
 
+            {/* Payment Type Selection */}
+            {lineItems.length > 0 && !isAlreadyPaid && (
+              <div className="bg-white border border-gray-200">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Tipe Pembayaran</h3>
+                      <p className="text-sm text-gray-600 mt-1">Pembayaran penuh atau deposit</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 bg-gray-50 space-y-3">
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      onClick={() => setPaymentType('FULL')}
+                      disabled={reservationData?.total_paid > 0}
+                      className={`p-3 border transition-all ${
+                        paymentType === 'FULL'
+                          ? 'border-[#005357] bg-[#005357] text-white'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      } ${reservationData?.total_paid > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <div className="text-xs font-medium">Penuh</div>
+                      <div className="text-xs mt-1 break-words">
+                        {formatCurrency(calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount)}
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setPaymentType('DEPOSIT')}
+                      disabled={reservationData?.total_paid > 0}
+                      className={`p-3 border transition-all ${
+                        paymentType === 'DEPOSIT'
+                          ? 'border-[#005357] bg-[#005357] text-white'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      } ${reservationData?.total_paid > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <div className="text-xs font-medium">DP (30%)</div>
+                      <div className="text-xs mt-1 break-words">{formatCurrency(depositAmount)}</div>
+                    </button>
+                    <button
+                      onClick={() => setPaymentType('BALANCE')}
+                      disabled={!reservationData?.total_paid || reservationData?.total_paid === 0}
+                      className={`p-3 border transition-all ${
+                        paymentType === 'BALANCE'
+                          ? 'border-[#005357] bg-[#005357] text-white'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      } ${!reservationData?.total_paid || reservationData?.total_paid === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <div className="text-xs font-medium">Pelunasan</div>
+                      <div className="text-xs mt-1 break-words">{formatCurrency(balanceDue)}</div>
+                    </button>
+                  </div>
+                  {paymentType === 'DEPOSIT' && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 text-xs text-blue-800">
+                      ℹ️ Jumlah DP 30% dari total. Sisa bayar: {formatCurrency((calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount) - depositAmount)}
+                    </div>
+                  )}
+                  {paymentType === 'BALANCE' && reservationData?.total_paid > 0 && (
+                    <div className="p-3 bg-green-50 border border-green-200 text-xs text-green-800">
+                      ✓ Pembayaran sebelumnya: {formatCurrency(reservationData.total_paid)}. Sisa: {formatCurrency(balanceDue)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Payment Method */}
             {lineItems.length > 0 && (
               <div className="bg-white border border-gray-200 border">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Payment Method</h3>
-                      <p className="text-sm text-gray-600 mt-1">Select payment type</p>
+                      <h3 className="text-xl font-bold text-gray-900">Metode Pembayaran</h3>
+                      <p className="text-sm text-gray-600 mt-1">Pilih metode pembayaran</p>
                     </div>
                     <div className="w-8 h-8 bg-[#005357] flex items-center justify-center">
                       <CreditCardIcon className="h-4 w-4 text-white" />
@@ -1006,14 +1204,14 @@ const PaymentsPage = () => {
                     <div className="space-y-3">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Cash Received *
+                          Uang Diterima *
                         </label>
                         <input
                           type="number"
                           value={cashReceived}
                           onChange={(e) => setCashReceived(parseFloat(e.target.value) || 0)}
                           className="w-full px-3 py-2 bg-gray-50 focus:ring-2 focus:ring-[#005357] focus:outline-none"
-                          placeholder="Enter cash amount"
+                          placeholder="Masukkan jumlah uang"
                         />
                       </div>
                       {cashReceived > 0 && (
@@ -1130,7 +1328,11 @@ const PaymentsPage = () => {
                     ) : (
                       <>
                         <CreditCardIcon className="h-5 w-5 mr-2" />
-                        Process Payment ({formatCurrency(calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount)})
+                        Process Payment ({formatCurrency(
+                          paymentType === 'DEPOSIT' ? depositAmount :
+                          paymentType === 'BALANCE' ? balanceDue :
+                          (calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount)
+                        )})
                       </>
                     )}
                   </button>
@@ -1276,7 +1478,7 @@ const PaymentsPage = () => {
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto overflow-y-visible">
+            <div className="overflow-visible">
               {loadingTransactions ? (
                 <div className="p-8 text-center text-gray-500">Loading transactions...</div>
               ) : transactions.length === 0 ? (

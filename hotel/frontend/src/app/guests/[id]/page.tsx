@@ -54,12 +54,11 @@ interface Reservation {
   check_out_date: string;
   status: string;
   status_display: string;
-  total_amount: string;
-  num_nights: number;
-  room_assignments?: {
-    room_number: string;
-    room_type_name: string;
-  }[];
+  total_amount: string | null;
+  grand_total: number;
+  nights: number;
+  room_number: string;
+  room_type_name: string;
 }
 
 export default function GuestDetailPage() {
@@ -411,19 +410,18 @@ export default function GuestDetailPage() {
                               <div>
                                 <span className="text-gray-500">Room:</span>
                                 <span className="ml-2 text-gray-900">
-                                  {reservation.room_assignments?.[0]?.room_number || 'N/A'} -{' '}
-                                  {reservation.room_assignments?.[0]?.room_type_name || 'N/A'}
+                                  {reservation.room_number || 'N/A'} - {reservation.room_type_name || 'N/A'}
                                 </span>
                               </div>
                               <div>
                                 <span className="text-gray-500">Nights:</span>
-                                <span className="ml-2 text-gray-900">{reservation.num_nights}</span>
+                                <span className="ml-2 text-gray-900">{reservation.nights}</span>
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
                             <p className="text-lg font-bold text-[#4E61D3]">
-                              {formatCurrency(reservation.total_amount)}
+                              {formatCurrency(reservation.grand_total || 0)}
                             </p>
                           </div>
                         </div>
@@ -504,14 +502,14 @@ export default function GuestDetailPage() {
                   </div>
                   <div className="text-center p-4 bg-gray-50">
                     <div className="text-2xl font-bold text-[#4E61D3]">
-                      {reservations.reduce((sum, r) => sum + (Number(r.num_nights) || 0), 0)}
+                      {reservations.reduce((sum, r) => sum + (r.nights || 0), 0)}
                     </div>
                     <div className="text-sm text-gray-600">Total Nights</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50">
                     <div className="text-2xl font-bold text-[#4E61D3]">
                       {formatCurrency(
-                        reservations.reduce((sum, r) => sum + (parseFloat(r.total_amount) || 0), 0)
+                        reservations.reduce((sum, r) => sum + (r.grand_total || 0), 0)
                       )}
                     </div>
                     <div className="text-sm text-gray-600">Total Spent</div>

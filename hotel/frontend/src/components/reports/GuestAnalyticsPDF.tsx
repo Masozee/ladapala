@@ -87,22 +87,26 @@ export const GuestAnalyticsPDF: React.FC<GuestAnalyticsPDFProps> = ({ data }) =>
       {/* Summary Metrics */}
       <View style={pdfStyles.section}>
         <Text style={pdfStyles.sectionTitle}>Ringkasan</Text>
-        <View style={pdfStyles.metricsGrid}>
-          <View style={pdfStyles.metricCard}>
-            <Text style={pdfStyles.metricLabel}>Total Tamu</Text>
-            <Text style={pdfStyles.metricValue}>{data.total_guests.toLocaleString('id-ID')}</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={{ width: '23%', backgroundColor: '#F3F4F6', padding: 10, borderRadius: 4 }}>
+            <Text style={{ fontSize: 9, color: '#6B7280', marginBottom: 4 }}>Total Tamu</Text>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1f2937', marginBottom: 2 }}>{data.total_guests.toLocaleString('id-ID')}</Text>
+            <Text style={{ fontSize: 8, color: '#6B7280' }}>tamu terdaftar</Text>
           </View>
-          <View style={pdfStyles.metricCard}>
-            <Text style={pdfStyles.metricLabel}>Tamu Berulang</Text>
-            <Text style={pdfStyles.metricValue}>{data.repeat_guests.toLocaleString('id-ID')}</Text>
+          <View style={{ width: '23%', backgroundColor: '#F3F4F6', padding: 10, borderRadius: 4 }}>
+            <Text style={{ fontSize: 9, color: '#6B7280', marginBottom: 4 }}>Tamu Berulang</Text>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1f2937', marginBottom: 2 }}>{data.repeat_guests.toLocaleString('id-ID')}</Text>
+            <Text style={{ fontSize: 8, color: '#6B7280' }}>{data.repeat_rate}% dari total</Text>
           </View>
-          <View style={pdfStyles.metricCard}>
-            <Text style={pdfStyles.metricLabel}>Tingkat Kunjungan Berulang</Text>
-            <Text style={pdfStyles.metricValue}>{data.repeat_rate}%</Text>
+          <View style={{ width: '23%', backgroundColor: '#F3F4F6', padding: 10, borderRadius: 4 }}>
+            <Text style={{ fontSize: 9, color: '#6B7280', marginBottom: 4 }}>Tingkat Loyalitas</Text>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1f2937', marginBottom: 2 }}>{data.repeat_rate}%</Text>
+            <Text style={{ fontSize: 8, color: '#6B7280' }}>kunjungan berulang</Text>
           </View>
-          <View style={pdfStyles.metricCard}>
-            <Text style={pdfStyles.metricLabel}>Rata-rata Lama Menginap</Text>
-            <Text style={pdfStyles.metricValue}>{data.average_stay} Malam</Text>
+          <View style={{ width: '23%', backgroundColor: '#F3F4F6', padding: 10, borderRadius: 4 }}>
+            <Text style={{ fontSize: 9, color: '#6B7280', marginBottom: 4 }}>Rata-rata Menginap</Text>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1f2937', marginBottom: 2 }}>{data.average_stay}</Text>
+            <Text style={{ fontSize: 8, color: '#6B7280' }}>malam per reservasi</Text>
           </View>
         </View>
       </View>

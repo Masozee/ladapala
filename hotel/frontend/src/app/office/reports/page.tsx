@@ -34,7 +34,7 @@ const PDFViewer = dynamic(
   { ssr: false }
 );
 
-import { OccupancyReportPDF, RevenueReportPDF, TaxReportPDF, GuestAnalyticsPDF, FullReportPDF, GenericReportPDF } from '@/components/reports';
+import { OccupancyReportPDF, RevenueReportPDF, TaxReportPDF, GuestAnalyticsPDF, SatisfactionReportPDF, MaintenanceReportPDF, InventoryReportPDF, FullReportPDF, GenericReportPDF } from '@/components/reports';
 
 // TypeScript interfaces for API responses
 interface ReportSummary {
@@ -216,6 +216,16 @@ export default function ReportsPage() {
       }
 
       const data = await response.json();
+
+      // Debug: Check daily_breakdown data
+      if (reportId === 'tax' && data.daily_breakdown) {
+        console.log('Tax report daily_breakdown:', {
+          total_days: data.daily_breakdown.length,
+          days_with_data: data.daily_breakdown.filter((d: any) => d.total_revenue > 0).length,
+          first_3_days: data.daily_breakdown.slice(0, 3)
+        });
+      }
+
       setPdfPreviewData({ reportId, data });
       setShowPdfPreview(true);
 
@@ -286,6 +296,8 @@ export default function ReportsPage() {
       'maintenance': 'Laporan Maintenance',
       'inventory': 'Laporan Inventaris',
       'tax': 'Laporan Pajak',
+      'daily': 'Laporan Harian',
+      'executive': 'Executive Dashboard',
     };
 
     switch (reportId) {
@@ -297,8 +309,18 @@ export default function ReportsPage() {
         return <TaxReportPDF data={data} />;
       case 'guest-analytics':
         return <GuestAnalyticsPDF data={data} />;
+      case 'satisfaction':
+        return <SatisfactionReportPDF data={data} />;
+      case 'maintenance':
+        return <MaintenanceReportPDF data={data} />;
+      case 'inventory':
+        return <InventoryReportPDF data={data} />;
       case 'full-report':
+      case 'executive':
         return <FullReportPDF data={data} />;
+      case 'daily':
+        // For daily report, wrap the summary data in a format GenericReportPDF can display
+        return <GenericReportPDF data={data} title="Laporan Harian" />;
       default:
         return <GenericReportPDF data={data} title={reportTitles[reportId] || 'Laporan'} />;
     }
@@ -309,8 +331,10 @@ export default function ReportsPage() {
   const handleDailyReport = async () => {
     setGeneratingReports(prev => new Set(prev).add('daily'));
     try {
+      // Use the summary endpoint with today's date for comprehensive daily report
+      const today = new Date().toISOString().split('T')[0];
       const response = await fetch(
-        `${API_BASE_URL}/reports/daily/`,
+        `${API_BASE_URL}/reports/summary/?period=${today}`,
         {
           credentials: 'include',
           headers: {
@@ -321,16 +345,21 @@ export default function ReportsPage() {
 
       if (!response.ok) throw new Error('Gagal generate laporan harian');
 
-      const data = await response.json();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `daily-report-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const rawData = await response.json();
+
+      // Add period and formatted data for better display
+      const data = {
+        ...rawData,
+        period: today,
+        report_date: today,
+        generated_at: new Date().toISOString(),
+      };
+
+      console.log('Daily report data:', data); // Debug
+
+      // Show PDF preview with the data
+      setPdfPreviewData({ reportId: 'daily', data });
+      setShowPdfPreview(true);
     } catch (err) {
       console.error('Error:', err);
       alert(err instanceof Error ? err.message : 'Terjadi kesalahan');

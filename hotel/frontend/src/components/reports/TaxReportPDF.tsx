@@ -128,6 +128,14 @@ export const TaxReportPDF: React.FC<TaxReportPDFProps> = ({ data }) => {
   const limitedDailyBreakdown = data.daily_breakdown.slice(0, 15);
   const totalDays = data.daily_breakdown.length;
 
+  // Debug logging
+  console.log('TaxReportPDF rendering with data:', {
+    total_days: totalDays,
+    limited_days: limitedDailyBreakdown.length,
+    first_day: limitedDailyBreakdown[0],
+    has_revenue: limitedDailyBreakdown.filter(d => d.total_revenue > 0).length
+  });
+
   return (
     <PDFTemplate title="Laporan Pajak Hotel - Untuk Pelaporan Pemerintah" period={getPeriodLabel(data.period)}>
       {/* Header Information */}

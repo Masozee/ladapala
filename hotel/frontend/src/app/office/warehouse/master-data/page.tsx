@@ -622,7 +622,7 @@ export default function WarehousePage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full border-collapse text-sm">
               <thead className="bg-[#4E61D3]">
                 <tr>

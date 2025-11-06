@@ -459,7 +459,75 @@ def create_manual():
             doc.add_paragraph(f'{step}', style='List Number')
 
     doc.add_paragraph()
-    doc.add_paragraph('B. Melihat Riwayat Pembayaran', style='Heading 3')
+    doc.add_paragraph('B. Voucher dan Diskon', style='Heading 3')
+    doc.add_paragraph(
+        'Sistem mendukung pemberian voucher dan diskon otomatis untuk meningkatkan '
+        'kepuasan tamu dan program loyalitas.'
+    )
+
+    doc.add_paragraph('Jenis Diskon:', style='Heading 4')
+    discount_types = [
+        'Voucher Code: Tamu masukkan kode voucher (contoh: PROMO2025, PROMO50)',
+        'Diskon Otomatis: Sistem otomatis memberikan diskon berdasarkan:',
+        '   - Early Bird: Booking jauh hari',
+        '   - Length of Stay: Menginap lebih dari X malam',
+        '   - Seasonal Discount: Promo musiman',
+        'Loyalty Points: Tamu redeem poin loyalitas (1 poin = Rp 1)',
+    ]
+    for item in discount_types:
+        if item.startswith('   '):
+            doc.add_paragraph(item.strip(), style='List Bullet 2')
+        else:
+            doc.add_paragraph(item, style='List Bullet')
+
+    doc.add_paragraph()
+    doc.add_paragraph('Cara Menggunakan Voucher:', style='Heading 4')
+    voucher_steps = [
+        'Saat proses pembayaran, masukkan kode voucher di kolom "Voucher Code"',
+        'Klik "Apply" atau tekan Enter',
+        'Sistem akan validasi voucher:',
+        '   - Cek apakah kode valid',
+        '   - Cek masa berlaku',
+        '   - Cek apakah sudah digunakan (jika single-use)',
+        '   - Cek minimum booking requirements',
+        'Jika valid, diskon akan otomatis diterapkan',
+        'Rincian diskon akan muncul di breakdown pembayaran',
+        'Total yang harus dibayar akan berkurang',
+    ]
+    for i, step in enumerate(voucher_steps, 1):
+        if step.startswith('   '):
+            doc.add_paragraph(step.strip(), style='List Bullet 2')
+        else:
+            doc.add_paragraph(f'{step}', style='List Number')
+
+    doc.add_paragraph()
+    doc.add_paragraph('Perhitungan Pembayaran dengan Diskon:', style='Heading 4')
+    doc.add_paragraph(
+        'Sistem secara otomatis menghitung status pembayaran dengan mempertimbangkan '
+        'semua diskon yang diterapkan:'
+    )
+    payment_calc = [
+        'Grand Total: Total kamar + Tax (21%) + Service Charge (10%)',
+        'Dikurangi: Voucher Discount',
+        'Dikurangi: Automatic Discount',
+        'Dikurangi: Loyalty Points Value',
+        'Hasil: Final Amount (jumlah yang harus dibayar tamu)',
+        'Status "Fully Paid" akan muncul jika total bayaran ≥ Final Amount',
+    ]
+    for item in payment_calc:
+        doc.add_paragraph(item, style='List Bullet')
+
+    doc.add_paragraph()
+    p = doc.add_paragraph()
+    p.add_run('Catatan Penting: ').bold = True
+    p.add_run(
+        'Update sistem November 2025 memastikan status "Fully Paid" sudah memperhitungkan '
+        'semua voucher dan diskon. Tamu yang membayar dengan voucher akan langsung '
+        'ditandai sebagai fully paid jika pembayaran sudah memenuhi Final Amount.'
+    )
+
+    doc.add_paragraph()
+    doc.add_paragraph('C. Melihat Riwayat Pembayaran', style='Heading 3')
     payment_history = [
         'Tab "Payment History" menampilkan semua transaksi',
         'Filter berdasarkan tanggal',
@@ -881,6 +949,9 @@ def create_manual():
          'Laporan tingkat hunian kamar per periode dengan breakdown per room type dan grafik trends.'),
         ('Revenue Report',
          'Laporan pendapatan dengan breakdown per source (room, F&B, services), comparison dengan periode sebelumnya.'),
+        ('Tax Report (Laporan Pajak)',
+         'Laporan pajak untuk pemerintah Indonesia dengan rincian PPN, Pajak Hotel, dan PPh Final. '
+         'Update November 2025: Data individual transaksi sudah ditampilkan dengan benar.'),
         ('Guest Report',
          'Analisis tamu: nationality breakdown, repeat guests, average length of stay, guest satisfaction.'),
         ('Housekeeping Report',
@@ -897,6 +968,45 @@ def create_manual():
         p = doc.add_paragraph()
         p.add_run(f'{report_name}: ').bold = True
         p.add_run(description)
+
+    doc.add_paragraph()
+    doc.add_paragraph('Detail Laporan Pajak:', style='Heading 4')
+    doc.add_paragraph(
+        'Laporan Pajak adalah laporan khusus untuk pelaporan pemerintah Indonesia '
+        'yang mencakup seluruh transaksi hotel dengan breakdown pajak lengkap.'
+    )
+
+    tax_report_content = [
+        'Informasi yang ditampilkan:',
+        '   - Periode laporan (format: YYYY-MM)',
+        '   - Revenue breakdown (kamar + event)',
+        '   - PPN (Pajak Pertambahan Nilai): 11%',
+        '   - Pajak Hotel (Pajak Daerah): 10%',
+        '   - Service Charge: 10%',
+        '   - PPh Final: 10% dari gross revenue',
+        '   - Payment methods breakdown',
+        '   - Daily revenue breakdown',
+        '   - Daftar transaksi individual dengan data tamu',
+        'Cara mengakses:',
+        '   - API endpoint: /api/hotel/reports/tax/?period=YYYY-MM',
+        '   - Contoh: /api/hotel/reports/tax/?period=2025-11',
+        'Format output: JSON (dapat di-export ke Excel/PDF)',
+        'Digunakan untuk: Pelaporan pajak bulanan ke pemerintah',
+    ]
+    for item in tax_report_content:
+        if item.startswith('   '):
+            doc.add_paragraph(item.strip(), style='List Bullet 2')
+        else:
+            doc.add_paragraph(item, style='List Bullet')
+
+    doc.add_paragraph()
+    p = doc.add_paragraph()
+    p.add_run('Update November 2025: ').bold = True
+    p.add_run(
+        'Sistem telah diperbaiki untuk memastikan semua transaksi individual menampilkan '
+        'nilai yang benar (subtotal, pajak, service charge, grand total). Data sekarang '
+        'dihitung berdasarkan pembayaran aktual yang diterima, bukan dari total reservasi.'
+    )
 
     doc.add_paragraph()
     doc.add_paragraph('Cara Generate Laporan:', style='Heading 3')

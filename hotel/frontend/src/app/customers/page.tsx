@@ -144,7 +144,7 @@ export default function CustomersPage() {
             </div>
           ) : (
             <div className="overflow-hidden">
-              <div className="overflow-x-auto">
+              <div className="overflow-visible">
                 <table className="min-w-full border-collapse">
                   <thead className="bg-gray-50">
                     <tr>

@@ -96,15 +96,19 @@ class PaymentViewSet(viewsets.ModelViewSet):
         POST data:
         - reservation_id: ID of the reservation
         - payment_method: Payment method
+        - payment_type: (optional) Payment type (FULL, DEPOSIT, BALANCE)
         - transaction_id: (optional) Transaction ID
         - voucher_code: (optional) Voucher code to apply
         - redeem_points: (optional) Number of loyalty points to redeem
+        - pdf_content: (optional) Base64 encoded PDF invoice to send via email
         """
         reservation_id = request.data.get('reservation_id')
         payment_method = request.data.get('payment_method')
+        payment_type = request.data.get('payment_type', 'FULL')
         transaction_id = request.data.get('transaction_id')
         voucher_code = request.data.get('voucher_code')
         redeem_points = int(request.data.get('redeem_points', 0))
+        pdf_content = request.data.get('pdf_content')
 
         if not reservation_id or not payment_method:
             return Response(
@@ -128,7 +132,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 payment_method=payment_method,
                 transaction_id=transaction_id,
                 voucher_code=voucher_code,
-                redeem_points=redeem_points
+                redeem_points=redeem_points,
+                payment_type=payment_type
             )
         except PaymentCalculationError as e:
             return Response(
@@ -136,11 +141,22 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 status=http_status.HTTP_400_BAD_REQUEST
             )
 
+        # If payment successful and PDF provided, send invoice email
+        email_sent = False
+        if payment.status == 'COMPLETED' and pdf_content:
+            try:
+                from apps.hotel.services.email_service_simple import send_reservation_invoice_email_with_pdf
+                email_sent = send_reservation_invoice_email_with_pdf(reservation, pdf_content)
+            except Exception as e:
+                # Log error but don't fail the payment
+                print(f"Error sending invoice email: {str(e)}")
+
         # Return payment data with calculation details
         serializer = self.get_serializer(payment)
         return Response({
             'payment': serializer.data,
-            'calculation': calculation
+            'calculation': calculation,
+            'invoice_sent': email_sent
         }, status=http_status.HTTP_201_CREATED)
 
 

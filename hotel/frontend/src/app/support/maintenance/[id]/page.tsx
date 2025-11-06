@@ -863,7 +863,7 @@ const MaintenanceDetailPage = () => {
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50">
-                  <div className="overflow-x-auto">
+                  <div className="overflow-visible">
                     <table className="w-full border-collapse">
                       <thead className="bg-gray-100">
                         <tr>

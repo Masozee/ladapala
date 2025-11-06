@@ -374,7 +374,7 @@ export default function PurchaseOrderDetailPage() {
               <h3 className="text-lg font-bold">Item Pesanan ({po.items_count})</h3>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-visible">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>

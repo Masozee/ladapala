@@ -593,7 +593,7 @@ const HousekeepingPage = () => {
                 <h3 className="text-xl font-bold text-gray-900">Housekeeping Tasks ({filteredTasks.length})</h3>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="overflow-visible">
                 <table className="w-full border-collapse">
                   <thead className="bg-[#F87B1B]">
                     <tr>

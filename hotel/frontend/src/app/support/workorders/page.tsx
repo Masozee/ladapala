@@ -450,7 +450,7 @@ export default function WorkOrdersPage() {
 
         {/* Work Orders Table */}
         <div className="bg-white border border-gray-200">
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full">
               <thead>
                 <tr className="bg-[#F87B1B]">

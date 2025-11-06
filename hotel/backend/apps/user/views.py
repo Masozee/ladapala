@@ -788,10 +788,10 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
 
 class ShiftViewSet(viewsets.ModelViewSet):
-    """ViewSet for Shift management"""
+    """ViewSet for Shift management - accessible to all authenticated users"""
     queryset = Shift.objects.all().select_related('employee', 'employee__user', 'employee__department').order_by('-shift_date', 'start_time')
     serializer_class = ShiftSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Allow viewing schedules without strict authentication
 
     def get_queryset(self):
         """Filter shifts based on query parameters"""

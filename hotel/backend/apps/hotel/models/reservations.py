@@ -93,8 +93,32 @@ class Reservation(models.Model):
         )['total']
         return total or Decimal('0.00')
 
+    def get_expected_payment_amount(self):
+        """Calculate expected payment amount after discounts/vouchers"""
+        from .payments import Payment
+
+        # Start with grand total (base + tax + additional charges)
+        grand_total = self.get_grand_total()
+
+        # Get total discounts from all payments for this reservation
+        total_discounts = self.payments.filter(status='COMPLETED').aggregate(
+            voucher_discount=models.Sum('voucher_discount'),
+            discount_amount=models.Sum('discount_amount'),
+            loyalty_points_value=models.Sum('loyalty_points_value')
+        )
+
+        voucher_discount = total_discounts['voucher_discount'] or Decimal('0.00')
+        discount_amount = total_discounts['discount_amount'] or Decimal('0.00')
+        loyalty_points_value = total_discounts['loyalty_points_value'] or Decimal('0.00')
+
+        # Expected amount = grand total - all discounts
+        expected = grand_total - voucher_discount - discount_amount - loyalty_points_value
+
+        # Ensure it's not negative
+        return max(expected, Decimal('0.00'))
+
     def is_fully_paid(self):
-        """Check if reservation is fully paid including additional charges"""
-        expected_total = self.get_grand_total()
+        """Check if reservation is fully paid including additional charges and discounts"""
+        expected_total = self.get_expected_payment_amount()
         total_paid = self.get_total_paid()
         return total_paid >= expected_total

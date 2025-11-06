@@ -6,8 +6,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from django.utils import timezone
 
-from ..models import MaintenanceRequest, MaintenanceTechnician
-from ..serializers import MaintenanceRequestSerializer, MaintenanceTechnicianSerializer
+from ..models import MaintenanceRequest, MaintenanceTechnician, Complaint
+from ..serializers import MaintenanceRequestSerializer, MaintenanceTechnicianSerializer, ComplaintSerializer
 
 
 class MaintenanceRequestViewSet(viewsets.ModelViewSet):
@@ -22,25 +22,78 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
     ordering = ['-requested_date']
 
     def list(self, request, *args, **kwargs):
-        """Override list to include statistics"""
-        response = super().list(request, *args, **kwargs)
+        """Override list to include engineering complaints and statistics"""
+        # Get maintenance requests
+        maintenance_requests = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(maintenance_requests)
+
+        if page is not None:
+            maintenance_serializer = self.get_serializer(page, many=True)
+            maintenance_data = maintenance_serializer.data
+        else:
+            maintenance_serializer = self.get_serializer(maintenance_requests, many=True)
+            maintenance_data = maintenance_serializer.data
+
+        # Get complaints assigned to ENGINEERING team
+        engineering_complaints = Complaint.objects.filter(
+            assigned_team='ENGINEERING'
+        ).exclude(
+            status='CLOSED'  # Don't show closed complaints
+        ).select_related('room', 'guest').order_by('-created_at')
+
+        complaint_serializer = ComplaintSerializer(engineering_complaints, many=True)
+
+        # Transform complaints to match maintenance request format
+        complaints_as_maintenance = []
+        for complaint in complaint_serializer.data:
+            complaints_as_maintenance.append({
+                'id': f"COMPLAINT_{complaint['id']}",  # Prefix to distinguish
+                'request_number': complaint['complaint_number'],
+                'title': complaint['title'],
+                'description': complaint['description'],
+                'category': 'General',  # Map complaint category if needed
+                'priority': complaint['priority'],
+                'status': complaint['status'].replace('OPEN', 'SUBMITTED').replace('RESOLVED', 'COMPLETED'),
+                'source': 'GUEST_REQUEST',
+                'room': complaint.get('room'),
+                'room_number': complaint.get('room_number'),
+                'guest': complaint.get('guest'),
+                'guest_name': complaint.get('guest_name'),
+                'assigned_technician': complaint.get('assigned_to'),
+                'technician_notes': complaint.get('resolution'),
+                'requested_date': complaint['incident_date'],
+                'created_at': complaint['created_at'],
+                'updated_at': complaint['updated_at'],
+                'is_complaint': True,  # Flag to identify complaints
+                'complaint_id': complaint['id'],  # Original complaint ID
+            })
+
+        # Combine both lists
+        combined_results = list(maintenance_data) + complaints_as_maintenance
 
         # Calculate statistics
         all_requests = self.get_queryset()
+        all_complaints = engineering_complaints
 
         status_counters = {
-            'submitted': all_requests.filter(status='SUBMITTED').count(),
+            'submitted': all_requests.filter(status='SUBMITTED').count() + all_complaints.filter(status='OPEN').count(),
             'acknowledged': all_requests.filter(status='ACKNOWLEDGED').count(),
-            'in_progress': all_requests.filter(status='IN_PROGRESS').count(),
-            'completed': all_requests.filter(status='COMPLETED').count(),
-            'urgent': all_requests.filter(priority='URGENT', status__in=['SUBMITTED', 'ACKNOWLEDGED', 'IN_PROGRESS']).count(),
-            'total': all_requests.count(),
+            'in_progress': all_requests.filter(status='IN_PROGRESS').count() + all_complaints.filter(status='IN_PROGRESS').count(),
+            'completed': all_requests.filter(status='COMPLETED').count() + all_complaints.filter(status='RESOLVED').count(),
+            'urgent': all_requests.filter(priority='URGENT', status__in=['SUBMITTED', 'ACKNOWLEDGED', 'IN_PROGRESS']).count() + all_complaints.filter(priority='URGENT').exclude(status='RESOLVED').count(),
+            'total': all_requests.count() + all_complaints.count(),
         }
 
-        # Add counters to response
-        response.data['status_counters'] = status_counters
+        if page is not None:
+            return self.get_paginated_response({
+                'results': combined_results,
+                'status_counters': status_counters
+            })
 
-        return response
+        return Response({
+            'results': combined_results,
+            'status_counters': status_counters
+        })
 
     @action(detail=True, methods=['patch'])
     def acknowledge(self, request, pk=None):
@@ -129,6 +182,69 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(maintenance_request)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['patch'], url_path='complaint/(?P<complaint_id>[0-9]+)/(?P<action_name>[a-z_]+)')
+    def update_complaint(self, request, complaint_id=None, action_name=None):
+        """Update complaint status from maintenance page"""
+        try:
+            complaint = Complaint.objects.get(id=complaint_id)
+
+            if complaint.assigned_team != 'ENGINEERING':
+                return Response(
+                    {'error': 'This complaint is not assigned to Engineering team'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Map maintenance actions to complaint statuses
+            if action_name == 'acknowledge':
+                if complaint.status != 'OPEN':
+                    return Response(
+                        {'error': 'Only open complaints can be acknowledged'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                complaint.status = 'IN_PROGRESS'
+                complaint.save(update_fields=['status', 'updated_at'])
+
+            elif action_name == 'start_work':
+                if complaint.status not in ['OPEN', 'IN_PROGRESS']:
+                    return Response(
+                        {'error': 'Complaint must be open or in progress to start work'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                complaint.status = 'IN_PROGRESS'
+                complaint.save(update_fields=['status', 'updated_at'])
+
+            elif action_name == 'complete':
+                if complaint.status != 'IN_PROGRESS':
+                    return Response(
+                        {'error': 'Only in-progress complaints can be completed'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                complaint.status = 'RESOLVED'
+                complaint.resolved_at = timezone.now()
+
+                # Get resolution notes from request if provided
+                resolution = request.data.get('resolution')
+                if resolution:
+                    complaint.resolution = resolution
+
+                complaint.save(update_fields=['status', 'resolved_at', 'resolution', 'updated_at'])
+
+            else:
+                return Response(
+                    {'error': f'Invalid action: {action_name}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Return serialized complaint data
+            serializer = ComplaintSerializer(complaint)
+            return Response(serializer.data)
+
+        except Complaint.DoesNotExist:
+            return Response(
+                {'error': 'Complaint not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class MaintenanceTechnicianViewSet(viewsets.ModelViewSet):

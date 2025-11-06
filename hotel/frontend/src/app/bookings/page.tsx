@@ -1515,8 +1515,8 @@ const BookingsPage = () => {
               </div>
             </div>
           </div>
-          
-          
+
+
           <div className="overflow-x-auto">
             <div style={{ minWidth: `${280 + (getCalendarDates().length * 100)}px` }}>
               <table className="w-full border-collapse">
@@ -1696,7 +1696,15 @@ const BookingsPage = () => {
               <div>
                 <h3 className="text-3xl font-bold text-gray-900">All Reservations</h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  {totalCount} total reservations • Page {currentPage} of {getTotalPages()}
+                  {searchQuery ? (
+                    <>
+                      Found {totalCount} result{totalCount !== 1 ? 's' : ''} {totalCount > 0 && `• Page ${currentPage} of ${getTotalPages()}`}
+                    </>
+                  ) : (
+                    <>
+                      {totalCount} total reservations • Page {currentPage} of {getTotalPages()}
+                    </>
+                  )}
                 </p>
               </div>
               
@@ -1707,11 +1715,15 @@ const BookingsPage = () => {
                   <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search..."
+                    placeholder="Search all reservations..."
                     value={searchQuery || ''}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && loadReservations(1)}
-                    className="w-48 pl-10 pr-4 py-2 text-sm border border-gray-300 focus:border-[#005357] focus:ring-[#005357]"
+                    className={`w-56 pl-10 pr-4 py-2 text-sm border focus:ring-[#005357] ${
+                      searchQuery
+                        ? 'border-[#005357] bg-[#005357]/5'
+                        : 'border-gray-300 focus:border-[#005357]'
+                    }`}
                   />
                 </div>
 
@@ -1784,7 +1796,7 @@ const BookingsPage = () => {
           </div>
           
           {/* Advanced Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full border-collapse">
               <thead className="bg-[#005357]">
                 <tr>

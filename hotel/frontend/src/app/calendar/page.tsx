@@ -468,12 +468,13 @@ const CalendarPage = () => {
 
   return (
     <AppLayout>
-      <div className="flex space-x-6">
-        {/* Main Calendar Area */}
-        <div className="flex-1 space-y-6">
+      <div className="max-w-full overflow-hidden">
+        <div className="flex flex-col xl:flex-row gap-6">
+          {/* Main Calendar Area */}
+          <div className="flex-1 space-y-6 min-w-0">
           {/* Header */}
           <div className="bg-[#005357] text-white p-6 border border-gray-200">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-white">Calendar</h1>
                 <p className="text-white/80 mt-2">Manage your schedule and hotel events</p>
@@ -481,24 +482,22 @@ const CalendarPage = () => {
                   <p className="text-red-200 text-sm mt-1">{error}</p>
                 )}
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="px-3 py-2 bg-white/10 text-white placeholder-white/60 focus:bg-white/20 focus:outline-none transition-colors text-sm"
-                  >
-                    <option value="all" className="text-gray-900">All Events</option>
-                    <option value="MEETING" className="text-gray-900">Meetings</option>
-                    <option value="RESERVATION" className="text-gray-900">Reservations</option>
-                    <option value="MAINTENANCE" className="text-gray-900">Maintenance</option>
-                    <option value="HOUSEKEEPING" className="text-gray-900">Housekeeping</option>
-                    <option value="STAFF_SCHEDULE" className="text-gray-900">Staff Schedule</option>
-                    <option value="EVENT" className="text-gray-900">Hotel Events</option>
-                    <option value="EVENT_BOOKING" className="text-gray-900">Event Bookings</option>
-                  </select>
-                </div>
-                <button className="flex items-center space-x-2 px-4 py-2 bg-white/10 text-white hover:bg-white/20 transition-colors">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="px-3 py-2 bg-white/10 text-white placeholder-white/60 focus:bg-white/20 focus:outline-none transition-colors text-sm"
+                >
+                  <option value="all" className="text-gray-900">All Events</option>
+                  <option value="MEETING" className="text-gray-900">Meetings</option>
+                  <option value="RESERVATION" className="text-gray-900">Reservations</option>
+                  <option value="MAINTENANCE" className="text-gray-900">Maintenance</option>
+                  <option value="HOUSEKEEPING" className="text-gray-900">Housekeeping</option>
+                  <option value="STAFF_SCHEDULE" className="text-gray-900">Staff Schedule</option>
+                  <option value="EVENT" className="text-gray-900">Hotel Events</option>
+                  <option value="EVENT_BOOKING" className="text-gray-900">Event Bookings</option>
+                </select>
+                <button className="flex items-center justify-center space-x-2 px-4 py-2 bg-white/10 text-white hover:bg-white/20 transition-colors whitespace-nowrap">
                   <Add01Icon className="h-4 w-4" />
                   <span>Add Event</span>
                 </button>
@@ -509,7 +508,7 @@ const CalendarPage = () => {
           {/* Calendar Controls */}
         <div className="bg-white border border-gray-200">
           <div className="p-6 bg-[#005357] text-white">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => navigateMonth('prev')}
@@ -554,9 +553,9 @@ const CalendarPage = () => {
           </div>
 
           {/* Calendar Grid */}
-          <div className="p-6">
+          <div className="p-6 overflow-x-auto">
             {viewMode === 'month' && (
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-1 min-w-[600px]">
                 {/* Week day headers */}
                 {weekDays.map((day) => (
                   <div key={day} className="p-3 text-center text-sm font-medium text-gray-500">
@@ -572,7 +571,7 @@ const CalendarPage = () => {
                     <div
                       key={index}
                       onClick={() => setSelectedDate(day.fullDate)}
-                      className={`min-h-[100px] p-2 cursor-pointer transition-colors relative ${
+                      className={`min-h-[80px] max-h-[120px] p-1 cursor-pointer transition-colors relative border border-gray-200 overflow-hidden ${
                         !day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
                       } ${
                         isToday(day.fullDate) ? 'bg-blue-50' : ''
@@ -590,10 +589,10 @@ const CalendarPage = () => {
                       </div>
                       
                       {/* Display holidays */}
-                      {dayHolidays.map((holiday) => (
+                      {dayHolidays.slice(0, 1).map((holiday) => (
                         <div
                           key={holiday.id}
-                          className="px-1 py-0.5 text-xs bg-red-100 text-red-700 truncate mb-1 border-l-2 border-red-500"
+                          className="px-1 py-0.5 text-[10px] bg-red-100 text-red-700 truncate mb-0.5 border-l-2 border-red-500"
                           title={holiday.name_id}
                         >
                           {holiday.name}
@@ -601,7 +600,7 @@ const CalendarPage = () => {
                       ))}
                       
                       {/* Display events */}
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {dayEvents.slice(0, 2).map((event) => (
                           <div
                             key={event.id}
@@ -610,13 +609,13 @@ const CalendarPage = () => {
                               setSelectedEvent(event);
                               setShowEventDialog(true);
                             }}
-                            className={`px-1 py-0.5 text-xs text-white truncate cursor-pointer hover:opacity-80 ${getEventTypeColor(event.event_type)}`}
+                            className={`px-1 py-0.5 text-[10px] text-white truncate cursor-pointer hover:opacity-80 ${getEventTypeColor(event.event_type)}`}
                           >
-                            {formatTime(event.start_datetime)} {event.title}
+                            <span className="truncate block">{formatTime(event.start_datetime)} {event.title}</span>
                           </div>
                         ))}
                         {dayEvents.length > 2 && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-[10px] text-gray-500 px-1">
                             +{dayEvents.length - 2} more
                           </div>
                         )}
@@ -630,7 +629,7 @@ const CalendarPage = () => {
         </div>
 
         {/* Upcoming Events */}
-        <div className="bg-white border border-gray-200">
+        <div className="bg-white border border-gray-200 w-full xl:w-80 flex-shrink-0">
           <div className="p-6 bg-gray-50">
             <h3 className="text-lg font-semibold text-gray-900">Upcoming Events</h3>
             <p className="text-sm text-gray-500 mt-1">Next 7 days across all months</p>
@@ -874,7 +873,7 @@ const CalendarPage = () => {
         </div>
 
         {/* Right Sidebar */}
-        <div className="w-80 space-y-6">
+        <div className="xl:w-80 w-full space-y-6 flex-shrink-0">
           {/* Previous Month */}
           <MiniCalendar
             date={getPrevMonth()}
@@ -1082,6 +1081,7 @@ const CalendarPage = () => {
               )}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </AppLayout>

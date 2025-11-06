@@ -222,7 +222,7 @@ export default function PurchaseOrdersPage() {
             <h3 className="text-lg font-bold">Daftar Purchase Orders</h3>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>

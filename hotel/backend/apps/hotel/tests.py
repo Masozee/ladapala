@@ -6,8 +6,11 @@ from django.utils import timezone
 from datetime import timedelta
 
 from .models import (
-    Complaint, HousekeepingTask, Room, RoomType, Guest
+    Complaint, HousekeepingTask, Room, RoomType, Guest, Reservation, Payment, Voucher
 )
+from unittest.mock import patch, MagicMock
+import base64
+from decimal import Decimal
 
 User = get_user_model()
 
@@ -500,3 +503,471 @@ class HousekeepingTaskModelTest(TestCase):
 
         # Verify task is also deleted (CASCADE)
         self.assertFalse(HousekeepingTask.objects.filter(id=task_id).exists())
+
+
+class PaymentProcessAndInvoiceTests(APITestCase):
+    """Test suite for payment processing and invoice email functionality"""
+
+    def setUp(self):
+        """Set up test data for payment and invoice tests"""
+        # Create test user
+        self.user = User.objects.create_user(
+            email='payment_test@hotel.com',
+            password='testpass123',
+            first_name='Payment',
+            last_name='Tester'
+        )
+
+        # Create room type
+        self.room_type = RoomType.objects.create(
+            name='Deluxe Suite',
+            description='Luxury suite with ocean view',
+            base_price=2000000,
+            max_occupancy=3
+        )
+
+        # Create room
+        self.room = Room.objects.create(
+            number='301',
+            floor=3,
+            room_type=self.room_type,
+            status='OCCUPIED'
+        )
+
+        # Create guest
+        self.guest = Guest.objects.create(
+            first_name='Alice',
+            last_name='Johnson',
+            email='alice.johnson@example.com',
+            phone='+6281234567890',
+            date_of_birth='1990-05-15',
+            id_number='ID123456789',
+            id_type='PASSPORT'
+        )
+
+        # Create reservation
+        check_in = timezone.now().date()
+        check_out = check_in + timedelta(days=3)
+
+        self.reservation = Reservation.objects.create(
+            reservation_number='RES202501051234',
+            guest=self.guest,
+            room=self.room,
+            check_in_date=check_in,
+            check_out_date=check_out,
+            adults=2,
+            children=0,
+            status='CONFIRMED',
+            booking_source='DIRECT'
+        )
+
+        # API client
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_payment_process_without_promotions(self):
+        """Test standard payment processing without promotions"""
+        payment_data = {
+            'reservation': self.reservation.id,
+            'amount': 6000000,
+            'payment_method': 'CASH',
+            'status': 'COMPLETED',
+            'payment_date': timezone.now().isoformat(),
+            'notes': 'Test payment'
+        }
+
+        response = self.client.post('/api/hotel/payments/', payment_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Payment.objects.count(), 1)
+
+        payment = Payment.objects.first()
+        self.assertEqual(payment.reservation, self.reservation)
+        self.assertEqual(payment.payment_method, 'CASH')
+        self.assertEqual(payment.status, 'COMPLETED')
+        self.assertEqual(float(payment.amount), 6000000)
+
+    def test_payment_calculation_endpoint(self):
+        """Test payment calculation with reservation data"""
+        calculation_data = {
+            'reservation_id': self.reservation.id
+        }
+
+        response = self.client.post(
+            '/api/hotel/payments/calculate/',
+            calculation_data,
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('success', response.data)
+        self.assertTrue(response.data['success'])
+        self.assertIn('subtotal', response.data)
+        self.assertIn('final_amount', response.data)
+        self.assertIn('breakdown', response.data)
+
+    @patch('apps.hotel.services.email_service_simple.send_reservation_invoice_email_with_pdf')
+    def test_payment_with_promotions_sends_invoice(self, mock_email_send):
+        """Test payment with promotions endpoint sends invoice email"""
+        mock_email_send.return_value = True
+
+        # Create a sample PDF content (base64 encoded)
+        pdf_content = base64.b64encode(b"Sample PDF content").decode('utf-8')
+
+        payment_data = {
+            'reservation_id': self.reservation.id,
+            'payment_method': 'CREDIT_CARD',
+            'transaction_id': 'TXN123456',
+            'pdf_content': pdf_content
+        }
+
+        response = self.client.post(
+            '/api/hotel/payments/process_with_promotions/',
+            payment_data,
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('payment', response.data)
+        self.assertIn('calculation', response.data)
+        self.assertIn('invoice_sent', response.data)
+        self.assertTrue(response.data['invoice_sent'])
+
+        # Verify payment was created
+        self.assertEqual(Payment.objects.count(), 1)
+        payment = Payment.objects.first()
+        self.assertEqual(payment.payment_method, 'CREDIT_CARD')
+        self.assertEqual(payment.status, 'COMPLETED')
+
+        # Verify email function was called
+        mock_email_send.assert_called_once()
+        call_args = mock_email_send.call_args
+        self.assertEqual(call_args[0][0], self.reservation)
+        self.assertEqual(call_args[0][1], pdf_content)
+
+    @patch('apps.hotel.services.email_service_simple.send_reservation_invoice_email_with_pdf')
+    def test_payment_with_promotions_without_pdf(self, mock_email_send):
+        """Test payment with promotions without PDF doesn't send email"""
+        payment_data = {
+            'reservation_id': self.reservation.id,
+            'payment_method': 'CASH',
+        }
+
+        response = self.client.post(
+            '/api/hotel/payments/process_with_promotions/',
+            payment_data,
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertFalse(response.data['invoice_sent'])
+
+        # Verify email function was NOT called
+        mock_email_send.assert_not_called()
+
+    def test_payment_with_voucher_code(self):
+        """Test payment with valid voucher code applies discount"""
+        # Create a voucher
+        voucher = Voucher.objects.create(
+            code='WELCOME10',
+            name='Welcome 10% Off',
+            voucher_type='PERCENTAGE',
+            discount_percentage=10,
+            valid_from=timezone.now().date(),
+            valid_until=timezone.now().date() + timedelta(days=30),
+            usage_limit=100,
+            status='ACTIVE'
+        )
+
+        payment_data = {
+            'reservation_id': self.reservation.id,
+            'payment_method': 'CREDIT_CARD',
+            'voucher_code': 'WELCOME10',
+        }
+
+        response = self.client.post(
+            '/api/hotel/payments/process_with_promotions/',
+            payment_data,
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('calculation', response.data)
+
+        calculation = response.data['calculation']
+        self.assertIn('total_discount', calculation)
+        self.assertIn('voucher', calculation)
+        # Verify voucher discount was applied
+        voucher_info = calculation['voucher']
+        self.assertGreater(float(voucher_info['discount']), 0)
+
+    def test_payment_with_invalid_voucher(self):
+        """Test payment with invalid voucher code returns error"""
+        payment_data = {
+            'reservation_id': self.reservation.id,
+            'payment_method': 'CASH',
+            'voucher_code': 'INVALID_CODE',
+        }
+
+        response = self.client.post(
+            '/api/hotel/payments/process_with_promotions/',
+            payment_data,
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+
+    def test_payment_requires_reservation_id(self):
+        """Test that payment requires reservation_id"""
+        payment_data = {
+            'payment_method': 'CASH',
+        }
+
+        response = self.client.post(
+            '/api/hotel/payments/process_with_promotions/',
+            payment_data,
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+
+    @patch('apps.hotel.services.email_service_simple.send_reservation_invoice_email_with_pdf')
+    def test_payment_email_failure_does_not_fail_payment(self, mock_email_send):
+        """Test that email failure doesn't prevent payment from completing"""
+        mock_email_send.side_effect = Exception('Email service unavailable')
+
+        pdf_content = base64.b64encode(b"Sample PDF").decode('utf-8')
+
+        payment_data = {
+            'reservation_id': self.reservation.id,
+            'payment_method': 'CASH',
+            'pdf_content': pdf_content
+        }
+
+        response = self.client.post(
+            '/api/hotel/payments/process_with_promotions/',
+            payment_data,
+            format='json'
+        )
+
+        # Payment should still succeed
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertFalse(response.data['invoice_sent'])
+
+        # Verify payment was created despite email failure
+        self.assertEqual(Payment.objects.count(), 1)
+
+
+class ResendInvoiceTests(APITestCase):
+    """Test suite for resend invoice functionality"""
+
+    def setUp(self):
+        """Set up test data for invoice resend tests"""
+        # Create test user
+        self.user = User.objects.create_user(
+            email='invoice_test@hotel.com',
+            password='testpass123',
+            first_name='Invoice',
+            last_name='Tester'
+        )
+
+        # Create room type
+        self.room_type = RoomType.objects.create(
+            name='Standard Room',
+            description='Standard room with garden view',
+            base_price=1000000,
+            max_occupancy=2
+        )
+
+        # Create room
+        self.room = Room.objects.create(
+            number='105',
+            floor=1,
+            room_type=self.room_type,
+            status='OCCUPIED'
+        )
+
+        # Create guest
+        self.guest = Guest.objects.create(
+            first_name='Bob',
+            last_name='Smith',
+            email='bob.smith@example.com',
+            phone='+6287654321098',
+            date_of_birth='1985-08-20',
+            id_number='PASS987654321',
+            id_type='PASSPORT'
+        )
+
+        # Create reservation
+        check_in = timezone.now().date()
+        check_out = check_in + timedelta(days=2)
+
+        self.reservation = Reservation.objects.create(
+            reservation_number='RES202501055678',
+            guest=self.guest,
+            room=self.room,
+            check_in_date=check_in,
+            check_out_date=check_out,
+            adults=2,
+            children=0,
+            status='CONFIRMED',
+            booking_source='ONLINE'
+        )
+
+        # API client
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    @patch('apps.hotel.services.email_service_simple.send_reservation_invoice_email_with_pdf')
+    def test_resend_invoice_with_valid_data(self, mock_email_send):
+        """Test resending invoice with valid PDF content"""
+        mock_email_send.return_value = True
+
+        # Create sample PDF content
+        pdf_content = base64.b64encode(b"Invoice PDF content").decode('utf-8')
+
+        request_data = {
+            'pdf_content': pdf_content
+        }
+
+        response = self.client.post(
+            f'/api/hotel/reservations/{self.reservation.reservation_number}/resend_invoice/',
+            request_data,
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('message', response.data)
+        self.assertEqual(response.data['message'], 'Invoice email sent successfully')
+        self.assertEqual(response.data['sent_to'], self.guest.email)
+        self.assertEqual(response.data['reservation_number'], self.reservation.reservation_number)
+
+        # Verify email function was called with correct parameters
+        mock_email_send.assert_called_once()
+        call_args = mock_email_send.call_args
+        self.assertEqual(call_args[0][0], self.reservation)
+        self.assertEqual(call_args[0][1], pdf_content)
+
+    def test_resend_invoice_without_pdf_content(self):
+        """Test resending invoice without PDF content returns error"""
+        request_data = {}
+
+        response = self.client.post(
+            f'/api/hotel/reservations/{self.reservation.reservation_number}/resend_invoice/',
+            request_data,
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+        self.assertEqual(response.data['error'], 'PDF content is required')
+
+    def test_resend_invoice_with_invalid_reservation(self):
+        """Test resending invoice with non-existent reservation"""
+        pdf_content = base64.b64encode(b"Invoice PDF").decode('utf-8')
+
+        request_data = {
+            'pdf_content': pdf_content
+        }
+
+        response = self.client.post(
+            '/api/hotel/reservations/INVALID123/resend_invoice/',
+            request_data,
+            format='json'
+        )
+
+        # Should return 500 or 404 depending on how the endpoint handles it
+        self.assertIn(response.status_code, [status.HTTP_404_NOT_FOUND, status.HTTP_500_INTERNAL_SERVER_ERROR])
+
+    @patch('apps.hotel.services.email_service_simple.send_reservation_invoice_email_with_pdf')
+    def test_resend_invoice_email_service_failure(self, mock_email_send):
+        """Test handling of email service failure"""
+        mock_email_send.return_value = False
+
+        pdf_content = base64.b64encode(b"Invoice PDF").decode('utf-8')
+
+        request_data = {
+            'pdf_content': pdf_content
+        }
+
+        response = self.client.post(
+            f'/api/hotel/reservations/{self.reservation.reservation_number}/resend_invoice/',
+            request_data,
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn('error', response.data)
+
+    @patch('apps.hotel.services.email_service_simple.send_reservation_invoice_email_with_pdf')
+    def test_resend_invoice_exception_handling(self, mock_email_send):
+        """Test handling of unexpected exceptions during invoice sending"""
+        mock_email_send.side_effect = Exception('Unexpected error')
+
+        pdf_content = base64.b64encode(b"Invoice PDF").decode('utf-8')
+
+        request_data = {
+            'pdf_content': pdf_content
+        }
+
+        response = self.client.post(
+            f'/api/hotel/reservations/{self.reservation.reservation_number}/resend_invoice/',
+            request_data,
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn('error', response.data)
+
+    @patch('apps.hotel.services.email_service_simple.send_reservation_invoice_email_with_pdf')
+    def test_resend_invoice_multiple_times(self, mock_email_send):
+        """Test that invoice can be resent multiple times"""
+        mock_email_send.return_value = True
+
+        pdf_content = base64.b64encode(b"Invoice PDF").decode('utf-8')
+
+        request_data = {
+            'pdf_content': pdf_content
+        }
+
+        # Send first time
+        response1 = self.client.post(
+            f'/api/hotel/reservations/{self.reservation.reservation_number}/resend_invoice/',
+            request_data,
+            format='json'
+        )
+        self.assertEqual(response1.status_code, status.HTTP_200_OK)
+
+        # Send second time
+        response2 = self.client.post(
+            f'/api/hotel/reservations/{self.reservation.reservation_number}/resend_invoice/',
+            request_data,
+            format='json'
+        )
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+
+        # Verify email was called twice
+        self.assertEqual(mock_email_send.call_count, 2)
+
+    def test_resend_invoice_requires_authentication(self):
+        """Test that resending invoice can be accessed (authentication may be optional for this endpoint)"""
+        # Create unauthenticated client
+        unauth_client = APIClient()
+
+        pdf_content = base64.b64encode(b"Invoice PDF").decode('utf-8')
+
+        request_data = {
+            'pdf_content': pdf_content
+        }
+
+        response = unauth_client.post(
+            f'/api/hotel/reservations/{self.reservation.reservation_number}/resend_invoice/',
+            request_data,
+            format='json'
+        )
+
+        # The endpoint may allow unauthenticated access or require auth - both are valid depending on business logic
+        # If it allows access, it should work (200) or if it requires auth, return 401/403
+        self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])

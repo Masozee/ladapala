@@ -777,7 +777,7 @@ export default function AdminPage() {
               </div>
 
                 {/* Users Table */}
-                <div className="overflow-x-auto">
+                <div className="overflow-visible">
                   {loadingUsers ? (
                     <div className="flex items-center justify-center py-12 bg-white">
                       <div className="text-center">
@@ -1080,7 +1080,7 @@ export default function AdminPage() {
         {activeTab === 'logs' && (
           <div>
             {/* Logs Table */}
-            <div className="overflow-x-auto">
+            <div className="overflow-visible">
                   <table className="w-full border-collapse">
                     <thead className="bg-[#4E61D3]">
                       <tr>

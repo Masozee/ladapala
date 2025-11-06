@@ -319,6 +319,10 @@ class GuestLoyaltyPoints(models.Model):
         self.lifetime_points += points
         self.save()
 
+        # Also update Guest model for consistency
+        self.guest.loyalty_points = self.total_points
+        self.guest.save(update_fields=['loyalty_points'])
+
         # Create transaction record
         LoyaltyTransaction.objects.create(
             guest=self.guest,
@@ -337,6 +341,10 @@ class GuestLoyaltyPoints(models.Model):
 
         self.total_points -= points
         self.save()
+
+        # Also update Guest model for consistency
+        self.guest.loyalty_points = self.total_points
+        self.guest.save(update_fields=['loyalty_points'])
 
         # Create transaction record
         LoyaltyTransaction.objects.create(
@@ -371,7 +379,7 @@ class LoyaltyTransaction(models.Model):
     description = models.TextField()
 
     # Reference to related object (payment, reservation, etc)
-    reference_type = models.CharField(max_length=50, blank=True)
+    reference_type = models.CharField(max_length=50, blank=True, default='')
     reference_id = models.IntegerField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

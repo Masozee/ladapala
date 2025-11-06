@@ -13,7 +13,8 @@ import {
   MoreHorizontalIcon,
   EyeIcon,
   PencilEdit02Icon,
-  Delete02Icon
+  Delete02Icon,
+  Cancel01Icon
 } from '@/lib/icons';
 
 interface Employee {
@@ -54,6 +55,7 @@ interface Shift {
 
 interface EmployeeSchedule {
   employee_id: string;
+  employee_db_id: number; // The actual Employee model ID for API calls
   employee_name: string;
   department: string;
   shifts: { [date: string]: Shift[] };
@@ -66,8 +68,11 @@ function ScheduleTable() {
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [scrollLeft, setScrollLeft] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
+  const [openShiftMenuId, setOpenShiftMenuId] = useState<number | null>(null);
   const [newShift, setNewShift] = useState({
     shift_type: 'MORNING',
     start_time: '07:00',
@@ -93,19 +98,43 @@ function ScheduleTable() {
       const employeesRes = await fetch(buildApiUrl('user/employees/'), {
         credentials: 'include',
       });
+
+      if (!employeesRes.ok) {
+        console.error('Failed to fetch employees:', employeesRes.status);
+        return;
+      }
+
       const employeesData = await employeesRes.json();
-      const employees = employeesData.results || [];
+      const employees = employeesData.results || employeesData || [];
+      console.log(`[Schedule] Fetched ${employees.length} employees`);
 
       // Get shifts for the week
       const startDate = weekDates[0].toISOString().split('T')[0];
       const endDate = weekDates[6].toISOString().split('T')[0];
 
-      const shiftsRes = await fetch(
-        buildApiUrl(`user/shifts-manage/?from_date=${startDate}&to_date=${endDate}`),
-        { credentials: 'include' }
-      );
-      const shiftsData = await shiftsRes.json();
-      const shifts = shiftsData.results || shiftsData || [];
+      // Fetch ALL shifts by following pagination
+      let allShifts: Shift[] = [];
+      let nextUrl: string | null = buildApiUrl(`user/shifts-manage/?from_date=${startDate}&to_date=${endDate}`);
+
+      while (nextUrl) {
+        const shiftsRes = await fetch(nextUrl, { credentials: 'include' });
+
+        if (!shiftsRes.ok) {
+          console.error('Failed to fetch shifts:', shiftsRes.status);
+          return;
+        }
+
+        const shiftsData = await shiftsRes.json();
+        const pageShifts = shiftsData.results || shiftsData || [];
+        allShifts = allShifts.concat(pageShifts);
+
+        // Check if there's a next page
+        nextUrl = shiftsData.next || null;
+        console.log(`[Schedule] Fetched ${pageShifts.length} shifts, total so far: ${allShifts.length}, next: ${nextUrl ? 'yes' : 'no'}`);
+      }
+
+      const shifts = allShifts;
+      console.log(`[Schedule] Fetched ${shifts.length} total shifts for ${startDate} to ${endDate}`);
 
       // Organize shifts by employee and date
       const scheduleMap: { [empId: string]: EmployeeSchedule } = {};
@@ -113,12 +142,14 @@ function ScheduleTable() {
       employees.forEach((emp: Employee) => {
         scheduleMap[emp.employee_id] = {
           employee_id: emp.employee_id,
+          employee_db_id: emp.id, // Store the actual Employee model ID
           employee_name: emp.full_name,
           department: emp.department_name,
           shifts: {}
         };
       });
 
+      let assignedShifts = 0;
       shifts.forEach((shift: Shift) => {
         const employee = employees.find((e: Employee) => e.id === shift.employee);
         if (employee && scheduleMap[employee.employee_id]) {
@@ -127,10 +158,23 @@ function ScheduleTable() {
             scheduleMap[employee.employee_id].shifts[dateKey] = [];
           }
           scheduleMap[employee.employee_id].shifts[dateKey].push(shift);
+          assignedShifts++;
+        } else if (!employee) {
+          console.warn(`[Schedule] Shift ${shift.id} references non-existent employee ${shift.employee}`);
         }
       });
 
-      setSchedules(Object.values(scheduleMap));
+      console.log(`[Schedule] Assigned ${assignedShifts} shifts to employees`);
+      console.log(`[Schedule] Schedule map has ${Object.keys(scheduleMap).length} employees`);
+
+      // Debug: Log first few schedules with their employee_db_id
+      const schedulesArray = Object.values(scheduleMap);
+      console.log('[Schedule] First 3 schedules with employee_db_id:');
+      schedulesArray.slice(0, 3).forEach(sched => {
+        console.log(`  - ${sched.employee_name} (employee_id: ${sched.employee_id}, db_id: ${sched.employee_db_id})`);
+      });
+
+      setSchedules(schedulesArray);
     } catch (error) {
       console.error('Error fetching schedules:', error);
     } finally {
@@ -159,6 +203,7 @@ function ScheduleTable() {
   };
 
   const openAddShiftModal = (employeeId: number, date: string) => {
+    console.log('[OpenModal] Opening add shift modal for employee ID:', employeeId, 'date:', date);
     setSelectedEmployee(employeeId);
     setSelectedDate(date);
     setShowAddModal(true);
@@ -167,8 +212,20 @@ function ScheduleTable() {
   const handleAddShift = async () => {
     if (!selectedEmployee || !selectedDate) return;
 
+    console.log('[AddShift] Adding shift for employee ID:', selectedEmployee, 'date:', selectedDate);
+
     try {
       const csrfToken = getCsrfToken();
+      const payload = {
+        employee: selectedEmployee,
+        shift_date: selectedDate,
+        shift_type: newShift.shift_type,
+        start_time: newShift.start_time,
+        end_time: newShift.end_time,
+        notes: newShift.notes
+      };
+      console.log('[AddShift] Payload:', payload);
+
       const response = await fetch(buildApiUrl('user/shifts-manage/'), {
         method: 'POST',
         headers: {
@@ -176,17 +233,14 @@ function ScheduleTable() {
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
-        body: JSON.stringify({
-          employee: selectedEmployee,
-          shift_date: selectedDate,
-          shift_type: newShift.shift_type,
-          start_time: newShift.start_time,
-          end_time: newShift.end_time,
-          notes: newShift.notes
-        })
+        body: JSON.stringify(payload)
       });
 
+      console.log('[AddShift] Response status:', response.status);
+
       if (response.ok) {
+        const data = await response.json();
+        console.log('[AddShift] Success! Created shift:', data);
         setShowAddModal(false);
         setNewShift({
           shift_type: 'MORNING',
@@ -197,10 +251,11 @@ function ScheduleTable() {
         fetchSchedules(); // Refresh schedules
       } else {
         const error = await response.json();
-        alert('Gagal menambahkan shift: ' + (error.detail || 'Terjadi kesalahan'));
+        console.error('[AddShift] Error response:', error);
+        alert('Gagal menambahkan shift: ' + (error.detail || JSON.stringify(error) || 'Terjadi kesalahan'));
       }
     } catch (error) {
-      console.error('Error adding shift:', error);
+      console.error('[AddShift] Exception:', error);
       alert('Gagal menambahkan shift');
     }
   };
@@ -221,6 +276,100 @@ function ScheduleTable() {
       start_time: times.start,
       end_time: times.end
     }));
+  };
+
+  const openEditShiftModal = (shift: Shift) => {
+    setSelectedShift(shift);
+    setNewShift({
+      shift_type: shift.shift_type,
+      start_time: shift.start_time.substring(0, 5),
+      end_time: shift.end_time.substring(0, 5),
+      notes: shift.notes || ''
+    });
+    setShowEditModal(true);
+    setOpenShiftMenuId(null);
+  };
+
+  const handleEditShift = async () => {
+    if (!selectedShift) return;
+
+    console.log('[EditShift] Editing shift ID:', selectedShift.id);
+
+    try {
+      const csrfToken = getCsrfToken();
+      const payload = {
+        shift_type: newShift.shift_type,
+        start_time: newShift.start_time,
+        end_time: newShift.end_time,
+        notes: newShift.notes
+      };
+      console.log('[EditShift] Payload:', payload);
+
+      const response = await fetch(buildApiUrl(`user/shifts-manage/${selectedShift.id}/`), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+
+      console.log('[EditShift] Response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[EditShift] Success! Updated shift:', data);
+        setShowEditModal(false);
+        setSelectedShift(null);
+        setNewShift({
+          shift_type: 'MORNING',
+          start_time: '07:00',
+          end_time: '15:00',
+          notes: ''
+        });
+        fetchSchedules(); // Refresh schedules
+      } else {
+        const error = await response.json();
+        console.error('[EditShift] Error response:', error);
+        alert('Gagal mengubah shift: ' + (error.detail || JSON.stringify(error) || 'Terjadi kesalahan'));
+      }
+    } catch (error) {
+      console.error('[EditShift] Exception:', error);
+      alert('Gagal mengubah shift');
+    }
+  };
+
+  const handleDeleteShift = async (shiftId: number) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus shift ini?')) return;
+
+    console.log('[DeleteShift] Deleting shift ID:', shiftId);
+
+    try {
+      const csrfToken = getCsrfToken();
+      const response = await fetch(buildApiUrl(`user/shifts-manage/${shiftId}/`), {
+        method: 'DELETE',
+        headers: {
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+        },
+        credentials: 'include',
+      });
+
+      console.log('[DeleteShift] Response status:', response.status);
+
+      if (response.ok) {
+        console.log('[DeleteShift] Success! Deleted shift:', shiftId);
+        setOpenShiftMenuId(null);
+        fetchSchedules(); // Refresh schedules
+      } else {
+        const error = await response.json();
+        console.error('[DeleteShift] Error response:', error);
+        alert('Gagal menghapus shift: ' + (error.detail || 'Terjadi kesalahan'));
+      }
+    } catch (error) {
+      console.error('[DeleteShift] Exception:', error);
+      alert('Gagal menghapus shift');
+    }
   };
 
   const formatDate = (date: Date) => {
@@ -380,11 +529,8 @@ function ScheduleTable() {
                         <div
                           key={dateIndex}
                           onClick={() => {
-                            const employeeId = schedules.find(s => s.employee_id === schedule.employee_id)?.employee_id;
-                            if (employeeId) {
-                              const empIdNum = parseInt(employeeId.replace(/\D/g, ''));
-                              openAddShiftModal(empIdNum, dateKey);
-                            }
+                            // Use the actual Employee model ID (employee_db_id) instead of parsing employee_id string
+                            openAddShiftModal(schedule.employee_db_id, dateKey);
                           }}
                           className={`flex-shrink-0 w-[180px] px-3 py-3 border-r border-gray-200 last:border-r-0 cursor-pointer bg-white ${
                             isWeekend ? 'bg-gray-50' : ''
@@ -394,13 +540,46 @@ function ScheduleTable() {
                           {shifts.length > 0 ? (
                             <div className="space-y-1.5 h-full flex flex-col">
                               {shifts.map((shift, shiftIdx) => (
-                                <div key={shift.id} className={`flex items-center justify-between gap-2 ${shiftIdx > 0 ? 'pt-1.5 border-t border-gray-200' : ''}`}>
+                                <div key={shift.id} className={`flex items-center justify-between gap-1 relative ${shiftIdx > 0 ? 'pt-1.5 border-t border-gray-200' : ''}`}>
                                   <div className="flex-shrink-0">
                                     {getShiftBadge(shift.shift_type)}
                                   </div>
                                   <div className="text-xs font-semibold text-gray-900 whitespace-nowrap">
                                     {shift.start_time.substring(0, 5)}-{shift.end_time.substring(0, 5)}
                                   </div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenShiftMenuId(openShiftMenuId === shift.id ? null : shift.id);
+                                    }}
+                                    className="flex-shrink-0 p-0.5 hover:bg-gray-200 rounded transition-colors"
+                                  >
+                                    <MoreHorizontalIcon className="h-3 w-3 text-gray-500" />
+                                  </button>
+                                  {openShiftMenuId === shift.id && (
+                                    <div className="absolute right-0 top-6 w-32 bg-white border border-gray-200 shadow-lg rounded z-50">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          openEditShiftModal(shift);
+                                        }}
+                                        className="w-full px-3 py-1.5 text-xs text-left text-gray-700 hover:bg-gray-50 flex items-center space-x-1.5"
+                                      >
+                                        <PencilEdit02Icon className="h-3 w-3" />
+                                        <span>Edit</span>
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteShift(shift.id);
+                                        }}
+                                        className="w-full px-3 py-1.5 text-xs text-left text-red-600 hover:bg-red-50 flex items-center space-x-1.5"
+                                      >
+                                        <Delete02Icon className="h-3 w-3" />
+                                        <span>Hapus</span>
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -524,6 +703,92 @@ function ScheduleTable() {
                 className="px-4 py-2 text-sm font-medium text-white bg-[#4E61D3] rounded hover:bg-[#3d4fb5]"
               >
                 Tambah Shift
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Shift Modal */}
+      {showEditModal && selectedShift && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Shift</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                <input
+                  type="text"
+                  value={selectedShift.shift_date}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tipe Shift</label>
+                <select
+                  value={newShift.shift_type}
+                  onChange={(e) => handleShiftTypeChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                >
+                  <option value="MORNING">Pagi (07:00 - 15:00)</option>
+                  <option value="AFTERNOON">Siang (15:00 - 23:00)</option>
+                  <option value="EVENING">Sore (14:00 - 22:00)</option>
+                  <option value="NIGHT">Malam (23:00 - 07:00)</option>
+                  <option value="OVERTIME">Lembur (17:00 - 20:00)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Jam Mulai</label>
+                  <input
+                    type="time"
+                    value={newShift.start_time}
+                    onChange={(e) => setNewShift(prev => ({ ...prev, start_time: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Jam Selesai</label>
+                  <input
+                    type="time"
+                    value={newShift.end_time}
+                    onChange={(e) => setNewShift(prev => ({ ...prev, end_time: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
+                <textarea
+                  value={newShift.notes}
+                  onChange={(e) => setNewShift(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                  placeholder="Catatan tambahan..."
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setSelectedShift(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleEditShift}
+                className="px-4 py-2 text-sm font-medium text-white bg-[#4E61D3] rounded hover:bg-[#3d4fb5]"
+              >
+                Simpan Perubahan
               </button>
             </div>
           </div>
@@ -759,7 +1024,7 @@ export default function EmployeesPage() {
 
           {/* Employees Table */}
           <div className="bg-white border border-gray-200 mx-6 mb-6">
-            <div className="overflow-x-auto">
+            <div className="overflow-visible">
               {loading ? (
                 <div className="p-8 text-center text-gray-500">Memuat data...</div>
               ) : (

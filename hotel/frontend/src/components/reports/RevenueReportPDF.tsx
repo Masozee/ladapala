@@ -60,23 +60,55 @@ export const RevenueReportPDF: React.FC<RevenueReportPDFProps> = ({ data }) => {
   const limitedDailyRevenue = data.daily_revenue ? data.daily_revenue.slice(0, 15) : [];
   const totalDays = data.daily_revenue ? data.daily_revenue.length : 0;
 
+  // Calculate statistics
+  const averageDailyRevenue = totalDays > 0 ? data.total_revenue / totalDays : 0;
+  const highestDailyRevenue = data.daily_revenue && data.daily_revenue.length > 0
+    ? Math.max(...data.daily_revenue.map(d => d.revenue))
+    : 0;
+  const lowestDailyRevenue = data.daily_revenue && data.daily_revenue.length > 0
+    ? Math.min(...data.daily_revenue.map(d => d.revenue))
+    : 0;
+  const roomRevenuePercentage = data.total_revenue > 0
+    ? (data.room_revenue / data.total_revenue) * 100
+    : 0;
+  const otherRevenuePercentage = data.total_revenue > 0
+    ? (data.other_revenue / data.total_revenue) * 100
+    : 0;
+
   return (
     <PDFTemplate title="Laporan Pendapatan Hotel" period={getPeriodLabel(data.period)}>
-      {/* Metrik Kunci */}
+      {/* Summary Statistics */}
       <View style={pdfStyles.section}>
-        <Text style={pdfStyles.sectionTitle}>Metrik Kunci</Text>
-        <View style={pdfStyles.metricsGrid}>
-          <View style={pdfStyles.metricCard}>
-            <Text style={pdfStyles.metricLabel}>Total Pendapatan</Text>
-            <Text style={pdfStyles.metricValue}>{formatCurrency(data.total_revenue)}</Text>
+        <Text style={pdfStyles.sectionTitle}>Ringkasan Pendapatan</Text>
+        <View style={{ backgroundColor: '#F3F4F6', padding: 12, borderRadius: 4 }}>
+          <Text style={{ fontSize: 10, lineHeight: 1.6, color: '#374151' }}>
+            <Text style={{ fontWeight: 'bold' }}>Periode:</Text> {getPeriodLabel(data.period)} ({totalDays} hari){'\n'}
+            <Text style={{ fontWeight: 'bold' }}>Total Pendapatan:</Text> {formatCurrency(data.total_revenue)}{'\n'}
+            <Text style={{ fontWeight: 'bold' }}>Rata-rata Harian:</Text> {formatCurrency(averageDailyRevenue)}{'\n'}
+            <Text style={{ fontWeight: 'bold' }}>Pendapatan Tertinggi:</Text> {formatCurrency(highestDailyRevenue)}{'\n'}
+            <Text style={{ fontWeight: 'bold' }}>Pendapatan Terendah:</Text> {formatCurrency(lowestDailyRevenue)}
+          </Text>
+        </View>
+      </View>
+
+      {/* Key Metrics */}
+      <View style={pdfStyles.section}>
+        <Text style={pdfStyles.sectionTitle}>Metrik Kinerja</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={{ width: '32%', backgroundColor: '#F3F4F6', padding: 10, borderRadius: 4 }}>
+            <Text style={{ fontSize: 9, color: '#6B7280', marginBottom: 4 }}>Pendapatan Kamar</Text>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1f2937', marginBottom: 2 }}>{formatCurrency(data.room_revenue)}</Text>
+            <Text style={{ fontSize: 8, color: '#6B7280' }}>{roomRevenuePercentage.toFixed(1)}% dari total</Text>
           </View>
-          <View style={pdfStyles.metricCard}>
-            <Text style={pdfStyles.metricLabel}>Pendapatan Kamar</Text>
-            <Text style={pdfStyles.metricValue}>{formatCurrency(data.room_revenue)}</Text>
+          <View style={{ width: '32%', backgroundColor: '#F3F4F6', padding: 10, borderRadius: 4 }}>
+            <Text style={{ fontSize: 9, color: '#6B7280', marginBottom: 4 }}>Pendapatan Lainnya</Text>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1f2937', marginBottom: 2 }}>{formatCurrency(data.other_revenue)}</Text>
+            <Text style={{ fontSize: 8, color: '#6B7280' }}>{otherRevenuePercentage.toFixed(1)}% dari total</Text>
           </View>
-          <View style={pdfStyles.metricCard}>
-            <Text style={pdfStyles.metricLabel}>Pendapatan Lainnya</Text>
-            <Text style={pdfStyles.metricValue}>{formatCurrency(data.other_revenue)}</Text>
+          <View style={{ width: '32%', backgroundColor: '#F3F4F6', padding: 10, borderRadius: 4 }}>
+            <Text style={{ fontSize: 9, color: '#6B7280', marginBottom: 4 }}>Rata-rata Harian</Text>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#1f2937', marginBottom: 2 }}>{formatCurrency(averageDailyRevenue)}</Text>
+            <Text style={{ fontSize: 8, color: '#6B7280' }}>per hari</Text>
           </View>
         </View>
       </View>

@@ -36,7 +36,7 @@ import {
 } from '@/lib/icons';
 
 interface MaintenanceRequest {
-  id: number;
+  id: number | string;
   request_number: string;
   title: string;
   description: string;
@@ -66,6 +66,8 @@ interface MaintenanceRequest {
   efficiency_score?: number;
   created_at: string;
   updated_at: string;
+  is_complaint?: boolean;
+  complaint_id?: number;
 }
 
 interface Technician {
@@ -114,7 +116,9 @@ const MaintenancePage = () => {
         const response = await fetch(buildApiUrl('hotel/maintenance-requests/'));
         if (response.ok) {
           const data = await response.json();
-          setRequests(data.results || data || []);
+          // Handle nested results structure from combined maintenance + complaints
+          const results = data.results?.results || data.results || data || [];
+          setRequests(Array.isArray(results) ? results : []);
         }
       } catch (error) {
         console.error('Error fetching maintenance requests:', error);
@@ -148,7 +152,9 @@ const MaintenancePage = () => {
       const response = await fetch(buildApiUrl('hotel/maintenance-requests/'));
       if (response.ok) {
         const data = await response.json();
-        setRequests(data.results || data || []);
+        // Handle nested results structure from combined maintenance + complaints
+        const results = data.results?.results || data.results || data || [];
+        setRequests(Array.isArray(results) ? results : []);
       }
     } catch (error) {
       console.error('Error refreshing requests:', error);
@@ -218,11 +224,23 @@ const MaintenancePage = () => {
   };
 
   // Handle update status
-  const handleUpdateStatus = async (requestId: number, action: string) => {
+  const handleUpdateStatus = async (requestId: number | string, action: string) => {
     try {
       const csrfToken = getCsrfToken();
+      let endpoint: string;
+
+      // Check if this is a complaint (ID starts with "COMPLAINT_")
+      if (typeof requestId === 'string' && requestId.startsWith('COMPLAINT_')) {
+        // Extract complaint ID from "COMPLAINT_6" format
+        const complaintId = requestId.replace('COMPLAINT_', '');
+        endpoint = `hotel/maintenance-requests/complaint/${complaintId}/${action}/`;
+      } else {
+        // Regular maintenance request
+        endpoint = `hotel/maintenance-requests/${requestId}/${action}/`;
+      }
+
       const response = await fetch(
-        buildApiUrl(`hotel/maintenance-requests/${requestId}/${action}/`),
+        buildApiUrl(endpoint),
         {
           method: 'PATCH',
           headers: {
@@ -236,7 +254,8 @@ const MaintenancePage = () => {
       if (response.ok) {
         await refreshRequests();
         setOpenMenuId(null);
-        alert(`Request ${action.replace('_', ' ')} successfully!`);
+        const itemType = typeof requestId === 'string' && requestId.startsWith('COMPLAINT_') ? 'Complaint' : 'Request';
+        alert(`${itemType} ${action.replace('_', ' ')} successfully!`);
       } else {
         const errorData = await response.json();
         alert(errorData.error || `Failed to ${action.replace('_', ' ')}`);
@@ -500,6 +519,11 @@ const MaintenancePage = () => {
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getPriorityColor(request.priority)}`}>
                             {request.priority_display || request.priority}
                           </span>
+                          {request.is_complaint && (
+                            <span className="inline-flex px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-800">
+                              From Complaint
+                            </span>
+                          )}
                         </div>
                         <div className="font-bold text-sm text-gray-900">{request.request_number}</div>
                         <div className="text-sm text-gray-900 font-medium">{request.title}</div>
@@ -604,6 +628,16 @@ const MaintenancePage = () => {
                               >
                                 View Details
                               </button>
+                              {request.is_complaint && (
+                                <button
+                                  onClick={() => {
+                                    window.location.href = `/complaints`;
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-orange-700 hover:bg-orange-50 transition-colors border-t border-gray-100"
+                                >
+                                  View in Complaints
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>

@@ -509,7 +509,7 @@ def available_reports(request):
         },
         {
             'id': 'satisfaction',
-            'title': 'Survei Kepuasan',
+            'title': 'Laporan Kepuasan Tamu',
             'description': 'Rating dan review tamu, analisis feedback',
             'category': 'guest',
             'last_generated': (today - timedelta(days=3)).strftime('%Y-%m-%d'),
@@ -883,6 +883,22 @@ def satisfaction_report(request):
     else:
         satisfaction_score = 4.5
 
+    # Calculate average resolution time
+    resolved_with_time = complaints.filter(status='RESOLVED', resolved_at__isnull=False)
+    total_resolution_time = 0
+    resolution_count = 0
+
+    for complaint in resolved_with_time:
+        if complaint.resolved_at and complaint.created_at:
+            time_diff = complaint.resolved_at - complaint.created_at
+            total_resolution_time += time_diff.total_seconds() / 3600  # Convert to hours
+            resolution_count += 1
+
+    average_resolution_time = round(total_resolution_time / resolution_count, 1) if resolution_count > 0 else 0
+
+    # Complaint rate per 100 reservations
+    complaint_rate_per_100 = round((total_complaints / total_reservations * 100), 1) if total_reservations > 0 else 0
+
     # Daily breakdown
     daily_data = []
     current_date = start_date
@@ -914,6 +930,8 @@ def satisfaction_report(request):
         'resolution_rate': resolution_rate,
         'satisfaction_score': round(satisfaction_score, 1),
         'total_reservations': total_reservations,
+        'average_resolution_time': average_resolution_time,
+        'complaint_rate_per_100': complaint_rate_per_100,
         'complaints_by_category': [
             {
                 'category': item['category'],
@@ -954,6 +972,13 @@ def inventory_report(request):
         for item in items
     )
 
+    # Stock availability rate (items that are not out of stock)
+    in_stock_items = items.filter(current_stock__gt=0).count()
+    stock_availability_rate = round((in_stock_items / total_items * 100), 1) if total_items > 0 else 0
+
+    # Average item value
+    avg_item_value = total_value / total_items if total_items > 0 else 0
+
     # Items by category (category is ForeignKey, so get category name)
     items_by_category = items.values('category__name').annotate(
         count=Count('id'),
@@ -990,6 +1015,8 @@ def inventory_report(request):
         'low_stock_items': low_stock_items,
         'out_of_stock': out_of_stock,
         'total_value': total_value,
+        'stock_availability_rate': stock_availability_rate,
+        'avg_item_value': avg_item_value,
         'items_by_category': [
             {
                 'category': item['category__name'] or 'Uncategorized',
@@ -1057,6 +1084,12 @@ def maintenance_report(request):
     else:
         avg_resolution_time = 0
 
+    # Completion rate
+    completion_rate = round((completed / total_requests * 100), 1) if total_requests > 0 else 0
+
+    # Average cost per request
+    avg_cost_per_request = float(total_cost / total_requests) if total_requests > 0 else 0
+
     # Daily breakdown
     daily_data = []
     current_date = start_date
@@ -1091,6 +1124,8 @@ def maintenance_report(request):
         'pending': pending,
         'total_cost': float(total_cost),
         'average_resolution_time': avg_resolution_time,
+        'completion_rate': completion_rate,
+        'avg_cost_per_request': avg_cost_per_request,
         'by_priority': [
             {
                 'priority': item['priority'],
@@ -1121,8 +1156,9 @@ def tax_report(request):
     period = request.GET.get('period', '')
     start_date, end_date = parse_period_to_date_range(period)
 
-    start_datetime = datetime.combine(start_date, datetime.min.time())
-    end_datetime = datetime.combine(end_date, datetime.max.time())
+    # Create timezone-aware datetimes
+    start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+    end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
 
     # Tax rates (Indonesian hotel taxation)
     PPN_RATE = Decimal('0.11')  # PPN 11% (updated 2022)
@@ -1131,24 +1167,50 @@ def tax_report(request):
     PPh_FINAL_RATE = Decimal('0.10')  # PPh Final 10% on gross revenue
 
     # === 1. ROOM REVENUE FROM RESERVATIONS ===
+    # Get reservations that have payments in this period (when revenue is actually recognized)
+    paid_reservation_ids = Payment.objects.filter(
+        payment_date__range=[start_datetime, end_datetime],
+        status='COMPLETED'
+    ).values_list('reservation_id', flat=True).distinct()
+
     reservations = Reservation.objects.filter(
-        created_at__range=[start_datetime, end_datetime],
+        id__in=paid_reservation_ids,
         status__in=['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT']
     )
 
-    # Calculate taxes on the fly (since DB may not have tax fields yet)
-    room_subtotal = reservations.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    # Calculate taxes based on actual payments received (not reservation total_amount)
+    # This reflects actual revenue received in the period
+    room_payments_total = Payment.objects.filter(
+        payment_date__range=[start_datetime, end_datetime],
+        status='COMPLETED',
+        reservation__isnull=False
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+    # For tax calculation, we need to back-calculate the base amount before taxes
+    # Assuming grand_total = base + (base * 0.21) + (base * 0.10)
+    # grand_total = base * 1.31
+    # base = grand_total / 1.31
+    room_subtotal = room_payments_total / Decimal('1.31')
     room_tax_amount = room_subtotal * (PPN_RATE + HOTEL_TAX_RATE)  # 11% PPN + 10% Hotel Tax
     room_service_charge = room_subtotal * SERVICE_CHARGE_RATE
-    room_grand_total = room_subtotal + room_tax_amount + room_service_charge
+    room_grand_total = room_payments_total
 
     # Detail room reservations
     room_transactions = []
     for res in reservations[:100]:  # Limit for performance, paginate if needed
-        res_subtotal = res.total_amount or Decimal('0')
+        # Get actual payment amount for this reservation
+        res_payments_total = Payment.objects.filter(
+            payment_date__range=[start_datetime, end_datetime],
+            status='COMPLETED',
+            reservation=res
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+        # Back-calculate base amount from payment total (same as overall calculation)
+        # grand_total = base * 1.31 (includes 21% tax + 10% service)
+        res_subtotal = res_payments_total / Decimal('1.31')
         res_tax = res_subtotal * (PPN_RATE + HOTEL_TAX_RATE)
         res_service = res_subtotal * SERVICE_CHARGE_RATE
-        res_grand = res_subtotal + res_tax + res_service
+        res_grand = res_payments_total
 
         # Calculate nights
         nights = (res.check_out_date - res.check_in_date).days
@@ -1172,10 +1234,15 @@ def tax_report(request):
     try:
         from ..models import EventBooking
 
+        # Get event bookings that have payments in this period
         event_bookings = EventBooking.objects.filter(
             created_at__range=[start_datetime, end_datetime],
             status__in=['CONFIRMED', 'ONGOING', 'COMPLETED']
         )
+
+        # Note: Event bookings might not have Payment records linked,
+        # so we use created_at as a fallback
+        # TODO: Link event bookings to Payment model for better tracking
 
         event_subtotal = event_bookings.aggregate(total=Sum('subtotal'))['total'] or Decimal('0')
         event_tax_amount = event_bookings.aggregate(total=Sum('tax_amount'))['total'] or Decimal('0')
@@ -1229,20 +1296,31 @@ def tax_report(request):
     ]
 
     # === 4. DAILY TAX BREAKDOWN ===
-    # Use check-in date for rooms (when service is provided) and event_date for events
+    # Use payment_date for consistency (when revenue is actually received)
     daily_breakdown = []
     current_date = start_date
     while current_date <= end_date:
-        # Room revenue by check-in date
-        day_reservations = Reservation.objects.filter(
-            check_in_date=current_date,
-            status__in=['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT']
-        )
+        # Room revenue by payment date (timezone-aware)
+        day_start = timezone.make_aware(datetime.combine(current_date, datetime.min.time()))
+        day_end = timezone.make_aware(datetime.combine(current_date, datetime.max.time()))
 
-        day_room_subtotal = day_reservations.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+        day_paid_reservation_ids = Payment.objects.filter(
+            payment_date__range=[day_start, day_end],
+            status='COMPLETED'
+        ).values_list('reservation_id', flat=True).distinct()
+
+        # Use actual payment amounts for this day
+        day_room_payments = Payment.objects.filter(
+            payment_date__range=[day_start, day_end],
+            status='COMPLETED',
+            reservation__isnull=False
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+        # Back-calculate base amount from payment total
+        day_room_subtotal = day_room_payments / Decimal('1.31')
         day_room_tax = day_room_subtotal * (PPN_RATE + HOTEL_TAX_RATE)
         day_room_service = day_room_subtotal * SERVICE_CHARGE_RATE
-        day_room_total = day_room_subtotal + day_room_tax + day_room_service
+        day_room_total = day_room_payments
 
         # Event revenue by event date
         try:
