@@ -8,7 +8,8 @@ from .models import (
     Promotion, Schedule, Report, CashierSession,
     Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
     StockTransfer, Vendor,
-    Customer, LoyaltyTransaction, Reward, CustomerFeedback, MembershipTierBenefit
+    Customer, LoyaltyTransaction, Reward, CustomerFeedback, MembershipTierBenefit,
+    RestaurantSettings
 )
 
 User = get_user_model()
@@ -930,3 +931,36 @@ class MembershipTierBenefitSerializer(serializers.ModelSerializer):
             'description', 'color_code',
             'created_at', 'updated_at'
         ]
+
+
+class RestaurantSettingsSerializer(serializers.ModelSerializer):
+    """Serializer for Restaurant Settings"""
+    restaurant_name = serializers.CharField(source='restaurant.name', read_only=True)
+    restaurant_address = serializers.CharField(source='restaurant.address', read_only=True)
+    restaurant_phone = serializers.CharField(source='restaurant.phone', read_only=True)
+    restaurant_email = serializers.EmailField(source='restaurant.email', read_only=True)
+
+    class Meta:
+        model = RestaurantSettings
+        fields = [
+            'id', 'restaurant', 'restaurant_name', 'restaurant_address',
+            'restaurant_phone', 'restaurant_email',
+            # Restaurant Information
+            'tax_rate', 'currency', 'timezone',
+            # Notification Settings
+            'low_stock_alerts', 'new_order_alerts', 'email_notifications',
+            'sms_notifications', 'daily_reports', 'weekly_reports',
+            # System Settings
+            'auto_backup', 'backup_frequency', 'data_retention_days',
+            'enable_audit_log', 'session_timeout_minutes',
+            # Printer Settings
+            'kitchen_printer_ip', 'receipt_printer_ip', 'enable_auto_print',
+            'print_receipts', 'print_kitchen_orders',
+            # Security Settings
+            'min_password_length', 'password_expiry_days', 'require_special_chars',
+            'require_numbers', 'enable_two_factor', 'enable_ip_restriction',
+            'max_login_attempts', 'enable_data_encryption', 'anonymize_logs',
+            # Timestamps
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'restaurant', 'created_at', 'updated_at']

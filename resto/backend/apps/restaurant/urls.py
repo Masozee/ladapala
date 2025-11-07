@@ -8,7 +8,8 @@ from .viewsets import (
     ScheduleViewSet, DashboardViewSet, CashierSessionViewSet,
     RecipeViewSet, RecipeIngredientViewSet, PurchaseOrderViewSet, PurchaseOrderItemViewSet,
     StockTransferViewSet, VendorViewSet,
-    CustomerViewSet, LoyaltyTransactionViewSet, RewardViewSet, CustomerFeedbackViewSet, MembershipTierBenefitViewSet
+    CustomerViewSet, LoyaltyTransactionViewSet, RewardViewSet, CustomerFeedbackViewSet, MembershipTierBenefitViewSet,
+    RestaurantSettingsViewSet
 )
 from .reports import ReportViewSet
 
@@ -42,6 +43,7 @@ router.register(r'loyalty-transactions', LoyaltyTransactionViewSet)
 router.register(r'rewards', RewardViewSet)
 router.register(r'feedback', CustomerFeedbackViewSet)
 router.register(r'tier-benefits', MembershipTierBenefitViewSet)
+router.register(r'settings', RestaurantSettingsViewSet, basename='settings')
 
 app_name = 'restaurant'
 

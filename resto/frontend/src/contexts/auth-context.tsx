@@ -28,7 +28,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAuthenticated = user !== null;
 
-  // Check session on mount and refresh
+  // Check session on mount only
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await api.checkSession();
+        if (response.authenticated && response.user) {
+          setUser(response.user);
+          setEmployee(response.employee || null);
+          setProfile(response.profile || null);
+          setStaff(response.staff || null);
+        } else {
+          setUser(null);
+          setEmployee(null);
+          setProfile(null);
+          setStaff(null);
+        }
+      } catch (error) {
+        console.error('Session check failed:', error);
+        setUser(null);
+        setEmployee(null);
+        setProfile(null);
+        setStaff(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Manual refresh session function
   const refreshSession = useCallback(async () => {
     try {
       const response = await api.checkSession();
@@ -49,15 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setEmployee(null);
       setProfile(null);
       setStaff(null);
-    } finally {
-      setIsLoading(false);
     }
   }, []);
-
-  // Check session on mount
-  useEffect(() => {
-    refreshSession();
-  }, [refreshSession]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);

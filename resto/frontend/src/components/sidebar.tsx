@@ -15,7 +15,8 @@ import {
   MenuRestaurantIcon,
   CellsIcon,
   CreditCardIcon,
-  Menu02Icon
+  Menu02Icon,
+  ChefHatIcon
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import {
@@ -48,6 +49,11 @@ const mainItems: SidebarItem[] = [
     name: "Meja",
     href: "/table",
     icon: CellsIcon,
+  },
+  {
+    name: "Dapur",
+    href: "/kitchen",
+    icon: ChefHatIcon,
   },
   {
     name: "Transaksi",
@@ -201,8 +207,8 @@ export function Sidebar() {
                         className="flex items-center gap-3 px-4 py-3 min-h-[2.5rem] hover:bg-gray-50 transition-colors"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <HugeiconsIcon icon={LoginCircle01Icon} size={20} strokeWidth={2} className="text-green-600 size-5 min-w-[1.25rem] min-h-[1.25rem] flex-shrink-0" />
-                        <span className="text-sm text-green-600">Buka Kasir</span>
+                        <HugeiconsIcon icon={LoginCircle01Icon} size={20} strokeWidth={2} className="text-gray-600 size-5 min-w-[1.25rem] min-h-[1.25rem] flex-shrink-0" />
+                        <span className="text-sm text-gray-700">Buka Kasir</span>
                       </Link>
                     ) : (
                       <Link
@@ -210,11 +216,10 @@ export function Sidebar() {
                         className="flex items-center gap-3 px-4 py-3 min-h-[2.5rem] hover:bg-gray-50 transition-colors"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <HugeiconsIcon icon={LogoutCircle01Icon} size={20} strokeWidth={2} className="text-orange-600 size-5 min-w-[1.25rem] min-h-[1.25rem] flex-shrink-0" />
-                        <span className="text-sm text-orange-600">Tutup Kasir</span>
+                        <HugeiconsIcon icon={LogoutCircle01Icon} size={20} strokeWidth={2} className="text-gray-600 size-5 min-w-[1.25rem] min-h-[1.25rem] flex-shrink-0" />
+                        <span className="text-sm text-gray-700">Tutup Kasir</span>
                       </Link>
                     )}
-                    <div className="border-t border-gray-200 my-2" />
                   </>
                 )}
 

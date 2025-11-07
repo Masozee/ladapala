@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowLeft01Icon, Edit01Icon, Delete02Icon, MoneyBag02Icon,
-  AnalyticsDownIcon, ShoppingCart01Icon, TrendUpIcon, Calendar01Icon
+  AnalyticsDownIcon, ShoppingCart01Icon, ArrowUp01Icon, Calendar01Icon
 } from "@hugeicons/core-free-icons"
 
 interface MenuDetail {
@@ -109,7 +109,7 @@ export default function MenuDetailPage() {
         setMenu(menuData)
         setEditForm({
           name: menuData.name,
-          category: menuData.category.toString(),
+          category: menuData.category ? menuData.category.toString() : '',
           price: menuData.price,
           description: menuData.description || '',
           is_available: menuData.is_available
@@ -335,7 +335,7 @@ export default function MenuDetailPage() {
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Menu "{menu.name}"?</AlertDialogTitle>
+            <AlertDialogTitle>Hapus Menu &quot;{menu.name}&quot;?</AlertDialogTitle>
             <AlertDialogDescription>
               Tindakan ini tidak dapat dibatalkan. Menu akan dihapus permanen dari sistem.
               {salesData && salesData.total_orders > 0 && (
@@ -438,7 +438,7 @@ export default function MenuDetailPage() {
             <Card className="border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">7 Hari Terakhir</CardTitle>
-                <HugeiconsIcon icon={TrendUpIcon} size={16} strokeWidth={2} className="text-muted-foreground" />
+                <HugeiconsIcon icon={ArrowUp01Icon} size={16} strokeWidth={2} className="text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">Rp {parseFloat(salesData.last_7_days?.revenue || '0').toLocaleString('id-ID')}</div>

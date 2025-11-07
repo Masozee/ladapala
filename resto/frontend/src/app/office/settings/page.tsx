@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,6 +23,7 @@ import {
   CheckmarkCircle01Icon,
   Building02Icon
 } from "@hugeicons/core-free-icons"
+import { api, type RestaurantSettings as APISettings } from "@/lib/api"
 
 interface RestaurantSettings {
   name: string
@@ -51,12 +52,29 @@ interface SystemSettings {
   sessionTimeout: number
 }
 
+interface SecuritySettings {
+  minPasswordLength: number
+  passwordExpiryDays: number
+  requireSpecialChars: boolean
+  requireNumbers: boolean
+  enableTwoFactor: boolean
+  enableIpRestriction: boolean
+  maxLoginAttempts: number
+  enableDataEncryption: boolean
+  anonymizeLogs: boolean
+}
+
 export default function SettingsPage() {
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [settingsId, setSettingsId] = useState<number | null>(null)
+  const [restaurantId, setRestaurantId] = useState<number | null>(null)
+
   const [restaurantSettings, setRestaurantSettings] = useState<RestaurantSettings>({
-    name: "Ladapala Restaurant",
-    address: "Jl. Merdeka No. 123, Jakarta",
-    phone: "+62 21 1234 5678",
-    email: "info@ladapala.com",
+    name: "",
+    address: "",
+    phone: "",
+    email: "",
     taxRate: 11,
     currency: "IDR",
     timezone: "Asia/Jakarta"
@@ -80,23 +98,161 @@ export default function SettingsPage() {
   })
 
   const [printerSettings, setPrinterSettings] = useState({
-    kitchenPrinter: "192.168.1.100",
-    receiptPrinter: "192.168.1.101",
+    kitchenPrinter: "",
+    receiptPrinter: "",
     enableAutoPrint: true,
     printReceipts: true,
     printKitchenOrders: true
   })
 
-  const handleSave = () => {
-    // In a real app, this would save to backend
-    console.log("Settings saved:", {
-      restaurantSettings,
-      notifications,
-      systemSettings,
-      printerSettings
-    })
-    // Show success message
-    alert("Pengaturan berhasil disimpan!")
+  const [securitySettings, setSecuritySettings] = useState<SecuritySettings>({
+    minPasswordLength: 8,
+    passwordExpiryDays: 90,
+    requireSpecialChars: true,
+    requireNumbers: true,
+    enableTwoFactor: false,
+    enableIpRestriction: false,
+    maxLoginAttempts: 3,
+    enableDataEncryption: true,
+    anonymizeLogs: true
+  })
+
+  useEffect(() => {
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    try {
+      setLoading(true)
+      const data = await api.getCurrentSettings()
+      setSettingsId(data.id)
+      setRestaurantId(data.restaurant)
+
+      // Map API data to local state
+      setRestaurantSettings({
+        name: data.restaurant_name || "",
+        address: data.restaurant_address || "",
+        phone: data.restaurant_phone || "",
+        email: data.restaurant_email || "",
+        taxRate: parseFloat(data.tax_rate) || 11,
+        currency: data.currency || "IDR",
+        timezone: data.timezone || "Asia/Jakarta"
+      })
+
+      setNotifications({
+        lowStockAlerts: data.low_stock_alerts,
+        newOrderAlerts: data.new_order_alerts,
+        emailNotifications: data.email_notifications,
+        smsNotifications: data.sms_notifications,
+        dailyReports: data.daily_reports,
+        weeklyReports: data.weekly_reports
+      })
+
+      setSystemSettings({
+        autoBackup: data.auto_backup,
+        backupFrequency: data.backup_frequency,
+        dataRetention: data.data_retention_days,
+        enableAuditLog: data.enable_audit_log,
+        sessionTimeout: data.session_timeout_minutes
+      })
+
+      setPrinterSettings({
+        kitchenPrinter: data.kitchen_printer_ip || "",
+        receiptPrinter: data.receipt_printer_ip || "",
+        enableAutoPrint: data.enable_auto_print,
+        printReceipts: data.print_receipts,
+        printKitchenOrders: data.print_kitchen_orders
+      })
+
+      setSecuritySettings({
+        minPasswordLength: data.min_password_length,
+        passwordExpiryDays: data.password_expiry_days,
+        requireSpecialChars: data.require_special_chars,
+        requireNumbers: data.require_numbers,
+        enableTwoFactor: data.enable_two_factor,
+        enableIpRestriction: data.enable_ip_restriction,
+        maxLoginAttempts: data.max_login_attempts,
+        enableDataEncryption: data.enable_data_encryption,
+        anonymizeLogs: data.anonymize_logs
+      })
+    } catch (error) {
+      console.error('Error fetching settings:', error)
+      alert('Gagal memuat pengaturan')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!settingsId || !restaurantId) {
+      alert('Pengaturan belum dimuat')
+      return
+    }
+
+    try {
+      setSaving(true)
+
+      // Update restaurant info
+      await api.updateRestaurant(restaurantId, {
+        name: restaurantSettings.name,
+        address: restaurantSettings.address,
+        phone: restaurantSettings.phone,
+        email: restaurantSettings.email
+      })
+
+      // Map local state to API format for settings
+      const updateData: Partial<APISettings> = {
+        tax_rate: restaurantSettings.taxRate.toString(),
+        currency: restaurantSettings.currency,
+        timezone: restaurantSettings.timezone,
+        low_stock_alerts: notifications.lowStockAlerts,
+        new_order_alerts: notifications.newOrderAlerts,
+        email_notifications: notifications.emailNotifications,
+        sms_notifications: notifications.smsNotifications,
+        daily_reports: notifications.dailyReports,
+        weekly_reports: notifications.weeklyReports,
+        auto_backup: systemSettings.autoBackup,
+        backup_frequency: systemSettings.backupFrequency,
+        data_retention_days: systemSettings.dataRetention,
+        enable_audit_log: systemSettings.enableAuditLog,
+        session_timeout_minutes: systemSettings.sessionTimeout,
+        kitchen_printer_ip: printerSettings.kitchenPrinter,
+        receipt_printer_ip: printerSettings.receiptPrinter,
+        enable_auto_print: printerSettings.enableAutoPrint,
+        print_receipts: printerSettings.printReceipts,
+        print_kitchen_orders: printerSettings.printKitchenOrders,
+        min_password_length: securitySettings.minPasswordLength,
+        password_expiry_days: securitySettings.passwordExpiryDays,
+        require_special_chars: securitySettings.requireSpecialChars,
+        require_numbers: securitySettings.requireNumbers,
+        enable_two_factor: securitySettings.enableTwoFactor,
+        enable_ip_restriction: securitySettings.enableIpRestriction,
+        max_login_attempts: securitySettings.maxLoginAttempts,
+        enable_data_encryption: securitySettings.enableDataEncryption,
+        anonymize_logs: securitySettings.anonymizeLogs
+      }
+
+      await api.updateSettings(settingsId, updateData)
+      alert("Pengaturan berhasil disimpan!")
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      alert('Gagal menyimpan pengaturan')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#58ff34] mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Memuat pengaturan...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -107,12 +263,13 @@ export default function SettingsPage() {
           <h1 className="text-3xl font-bold">Pengaturan</h1>
           <p className="text-muted-foreground">Kelola konfigurasi sistem dan preferensi</p>
         </div>
-        <Button 
+        <Button
           onClick={handleSave}
+          disabled={saving}
           className="bg-[#58ff34] hover:bg-[#4de82a] text-black"
         >
           <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} strokeWidth={2} className="mr-2 h-4 w-4" />
-          Simpan Semua
+          {saving ? 'Menyimpan...' : 'Simpan Semua'}
         </Button>
       </div>
 
@@ -145,9 +302,9 @@ export default function SettingsPage() {
           <div className="bg-white p-6 rounded-lg">
             <div className="mb-6">
               <h2 className="text-lg font-semibold">Informasi Restoran</h2>
-              <p className="text-muted-foreground">Kelola informasi dasar restoran</p>
+              <p className="text-muted-foreground">Informasi dasar restoran</p>
             </div>
-            
+
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="restaurant-name">Nama Restoran</Label>
@@ -160,7 +317,7 @@ export default function SettingsPage() {
                   })}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="phone">Nomor Telepon</Label>
                 <Input
@@ -172,7 +329,7 @@ export default function SettingsPage() {
                   })}
                 />
               </div>
-              
+
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="address">Alamat</Label>
                 <Textarea
@@ -184,7 +341,7 @@ export default function SettingsPage() {
                   })}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -197,7 +354,7 @@ export default function SettingsPage() {
                   })}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="tax-rate">Pajak (%)</Label>
                 <Input
@@ -210,10 +367,10 @@ export default function SettingsPage() {
                   })}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="currency">Mata Uang</Label>
-                <Select 
+                <Select
                   value={restaurantSettings.currency}
                   onValueChange={(value) => setRestaurantSettings({
                     ...restaurantSettings,
@@ -230,10 +387,10 @@ export default function SettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="timezone">Zona Waktu</Label>
-                <Select 
+                <Select
                   value={restaurantSettings.timezone}
                   onValueChange={(value) => setRestaurantSettings({
                     ...restaurantSettings,
@@ -260,7 +417,7 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold">Pengaturan Notifikasi</h2>
               <p className="text-muted-foreground">Atur notifikasi dan peringatan sistem</p>
             </div>
-            
+
             <div className="space-y-6">
               <div className="space-y-4">
                 <h3 className="font-medium">Peringatan Operasional</h3>
@@ -278,7 +435,7 @@ export default function SettingsPage() {
                       })}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Pesanan Baru</Label>
@@ -294,7 +451,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="font-medium">Metode Notifikasi</h3>
                 <div className="space-y-3">
@@ -311,7 +468,7 @@ export default function SettingsPage() {
                       })}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>SMS</Label>
@@ -327,7 +484,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="font-medium">Laporan Otomatis</h3>
                 <div className="space-y-3">
@@ -344,7 +501,7 @@ export default function SettingsPage() {
                       })}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Laporan Mingguan</Label>
@@ -370,7 +527,7 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold">Pengaturan Sistem</h2>
               <p className="text-muted-foreground">Konfigurasi backup, penyimpanan, dan performa</p>
             </div>
-            
+
             <div className="space-y-6">
               <div className="space-y-4">
                 <h3 className="font-medium">Backup & Penyimpanan</h3>
@@ -388,11 +545,11 @@ export default function SettingsPage() {
                       })}
                     />
                   </div>
-                  
+
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label>Frekuensi Backup</Label>
-                      <Select 
+                      <Select
                         value={systemSettings.backupFrequency}
                         onValueChange={(value) => setSystemSettings({
                           ...systemSettings,
@@ -410,7 +567,7 @@ export default function SettingsPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>Retensi Data (hari)</Label>
                       <Input
@@ -425,7 +582,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="font-medium">Keamanan & Monitoring</h3>
                 <div className="space-y-3">
@@ -442,7 +599,7 @@ export default function SettingsPage() {
                       })}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>Timeout Sesi (menit)</Label>
                     <Input
@@ -466,7 +623,7 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold">Pengaturan Printer</h2>
               <p className="text-muted-foreground">Konfigurasi printer untuk kitchen dan kasir</p>
             </div>
-            
+
             <div className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -480,7 +637,7 @@ export default function SettingsPage() {
                     placeholder="192.168.1.100"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>IP Printer Kasir</Label>
                   <Input
@@ -493,7 +650,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="font-medium">Opsi Cetak</h3>
                 <div className="space-y-3">
@@ -510,7 +667,7 @@ export default function SettingsPage() {
                       })}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Cetak Struk</Label>
@@ -524,7 +681,7 @@ export default function SettingsPage() {
                       })}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Cetak Order Kitchen</Label>
@@ -540,7 +697,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
                 <Button variant="outline">Test Printer Kitchen</Button>
                 <Button variant="outline">Test Printer Kasir</Button>
@@ -555,7 +712,7 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold">Keamanan</h2>
               <p className="text-muted-foreground">Pengaturan keamanan dan akses pengguna</p>
             </div>
-            
+
             <div className="space-y-6">
               <div className="space-y-4">
                 <h3 className="font-medium">Kebijakan Password</h3>
@@ -563,27 +720,53 @@ export default function SettingsPage() {
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label>Panjang Minimum Password</Label>
-                      <Input type="number" defaultValue="8" />
+                      <Input
+                        type="number"
+                        value={securitySettings.minPasswordLength}
+                        onChange={(e) => setSecuritySettings({
+                          ...securitySettings,
+                          minPasswordLength: parseInt(e.target.value)
+                        })}
+                      />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>Masa Berlaku Password (hari)</Label>
-                      <Input type="number" defaultValue="90" />
+                      <Input
+                        type="number"
+                        value={securitySettings.passwordExpiryDays}
+                        onChange={(e) => setSecuritySettings({
+                          ...securitySettings,
+                          passwordExpiryDays: parseInt(e.target.value)
+                        })}
+                      />
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <Label>Wajib Karakter Khusus</Label>
-                    <Switch checked={true} onCheckedChange={() => {}} />
+                    <Switch
+                      checked={securitySettings.requireSpecialChars}
+                      onCheckedChange={(checked) => setSecuritySettings({
+                        ...securitySettings,
+                        requireSpecialChars: checked
+                      })}
+                    />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <Label>Wajib Angka</Label>
-                    <Switch checked={true} onCheckedChange={() => {}} />
+                    <Switch
+                      checked={securitySettings.requireNumbers}
+                      onCheckedChange={(checked) => setSecuritySettings({
+                        ...securitySettings,
+                        requireNumbers: checked
+                      })}
+                    />
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="font-medium">Akses & Kontrol</h3>
                 <div className="space-y-3">
@@ -592,24 +775,43 @@ export default function SettingsPage() {
                       <Label>Two-Factor Authentication</Label>
                       <p className="text-sm text-muted-foreground">Aktifkan autentikasi dua faktor</p>
                     </div>
-                    <Switch />
+                    <Switch
+                      checked={securitySettings.enableTwoFactor}
+                      onCheckedChange={(checked) => setSecuritySettings({
+                        ...securitySettings,
+                        enableTwoFactor: checked
+                      })}
+                    />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Login IP Restriction</Label>
                       <p className="text-sm text-muted-foreground">Batasi login dari IP tertentu</p>
                     </div>
-                    <Switch />
+                    <Switch
+                      checked={securitySettings.enableIpRestriction}
+                      onCheckedChange={(checked) => setSecuritySettings({
+                        ...securitySettings,
+                        enableIpRestriction: checked
+                      })}
+                    />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>Max Login Attempts</Label>
-                    <Input type="number" defaultValue="3" />
+                    <Input
+                      type="number"
+                      value={securitySettings.maxLoginAttempts}
+                      onChange={(e) => setSecuritySettings({
+                        ...securitySettings,
+                        maxLoginAttempts: parseInt(e.target.value)
+                      })}
+                    />
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="font-medium">Data Privacy</h3>
                 <div className="space-y-3">
@@ -618,15 +820,27 @@ export default function SettingsPage() {
                       <Label>Enkripsi Data</Label>
                       <p className="text-sm text-muted-foreground">Enkripsi data sensitif</p>
                     </div>
-                    <Switch checked={true} onCheckedChange={() => {}} />
+                    <Switch
+                      checked={securitySettings.enableDataEncryption}
+                      onCheckedChange={(checked) => setSecuritySettings({
+                        ...securitySettings,
+                        enableDataEncryption: checked
+                      })}
+                    />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Anonymize Logs</Label>
                       <p className="text-sm text-muted-foreground">Anonimkan data personal di logs</p>
                     </div>
-                    <Switch checked={true} onCheckedChange={() => {}} />
+                    <Switch
+                      checked={securitySettings.anonymizeLogs}
+                      onCheckedChange={(checked) => setSecuritySettings({
+                        ...securitySettings,
+                        anonymizeLogs: checked
+                      })}
+                    />
                   </div>
                 </div>
               </div>

@@ -1,6 +1,18 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 const BRANCH_ID = process.env.NEXT_PUBLIC_API_BRANCH_ID || '1';
 
+export interface Restaurant {
+  id: number;
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  logo: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -637,6 +649,51 @@ export interface MembershipTierBenefit {
   updated_at: string;
 }
 
+export interface RestaurantSettings {
+  id: number;
+  restaurant: number;
+  restaurant_name: string;
+  restaurant_address: string;
+  restaurant_phone: string;
+  restaurant_email: string;
+  // Restaurant Information
+  tax_rate: string;
+  currency: string;
+  timezone: string;
+  // Notification Settings
+  low_stock_alerts: boolean;
+  new_order_alerts: boolean;
+  email_notifications: boolean;
+  sms_notifications: boolean;
+  daily_reports: boolean;
+  weekly_reports: boolean;
+  // System Settings
+  auto_backup: boolean;
+  backup_frequency: string;
+  data_retention_days: number;
+  enable_audit_log: boolean;
+  session_timeout_minutes: number;
+  // Printer Settings
+  kitchen_printer_ip: string;
+  receipt_printer_ip: string;
+  enable_auto_print: boolean;
+  print_receipts: boolean;
+  print_kitchen_orders: boolean;
+  // Security Settings
+  min_password_length: number;
+  password_expiry_days: number;
+  require_special_chars: boolean;
+  require_numbers: boolean;
+  enable_two_factor: boolean;
+  enable_ip_restriction: boolean;
+  max_login_attempts: number;
+  enable_data_encryption: boolean;
+  anonymize_logs: boolean;
+  // Timestamps
+  created_at: string;
+  updated_at: string;
+}
+
 class ApiClient {
   private baseUrl: string;
   private branchId: string;
@@ -1236,7 +1293,7 @@ class ApiClient {
   }
 
   // Recipes
-  async getRecipes(params?: { branch?: number; product?: number; is_active?: boolean }): Promise<{ count: number; results: any[] }> {
+  async getRecipes(params?: { branch?: number; product?: number; is_active?: boolean }): Promise<{ count: number; results: unknown[] }> {
     const searchParams = new URLSearchParams();
     if (params?.branch) searchParams.set('branch', params.branch.toString());
     if (params?.product) searchParams.set('product', params.product.toString());
@@ -1246,18 +1303,18 @@ class ApiClient {
     return this.fetch(`/recipes/${query ? `?${query}` : ''}`);
   }
 
-  async getRecipe(id: number): Promise<any> {
+  async getRecipe(id: number): Promise<unknown> {
     return this.fetch(`/recipes/${id}/`);
   }
 
-  async createRecipe(data: any): Promise<any> {
+  async createRecipe(data: unknown): Promise<unknown> {
     return this.fetch('/recipes/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateRecipe(id: number, data: any): Promise<any> {
+  async updateRecipe(id: number, data: unknown): Promise<unknown> {
     return this.fetch(`/recipes/${id}/`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -1271,7 +1328,7 @@ class ApiClient {
   }
 
   // Recipe Ingredients
-  async getRecipeIngredients(params?: { recipe?: number }): Promise<{ count: number; results: any[] }> {
+  async getRecipeIngredients(params?: { recipe?: number }): Promise<{ count: number; results: unknown[] }> {
     const searchParams = new URLSearchParams();
     if (params?.recipe) searchParams.set('recipe', params.recipe.toString());
 
@@ -1279,14 +1336,14 @@ class ApiClient {
     return this.fetch(`/recipe-ingredients/${query ? `?${query}` : ''}`);
   }
 
-  async createRecipeIngredient(data: any): Promise<any> {
+  async createRecipeIngredient(data: unknown): Promise<unknown> {
     return this.fetch('/recipe-ingredients/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateRecipeIngredient(id: number, data: any): Promise<any> {
+  async updateRecipeIngredient(id: number, data: unknown): Promise<unknown> {
     return this.fetch(`/recipe-ingredients/${id}/`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -1308,7 +1365,7 @@ class ApiClient {
   }
 
   async getStockTransfers(params?: { branch?: number; from_warehouse?: number; to_kitchen?: number }): Promise<StockTransfer[]> {
-    const query = params ? `?${new URLSearchParams(params as any).toString()}` : '';
+    const query = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : '';
     return this.fetch(`/stock-transfers/${query}`);
   }
 
@@ -1346,7 +1403,7 @@ class ApiClient {
     branch?: number
     start_date?: string
     end_date?: string
-  }): Promise<any> {
+  }): Promise<unknown> {
     const searchParams = new URLSearchParams();
     searchParams.append('period', params.period);
     if (params.branch) searchParams.append('branch', params.branch.toString());
@@ -1361,7 +1418,7 @@ class ApiClient {
     branch?: number
     start_date?: string
     end_date?: string
-  }): Promise<any> {
+  }): Promise<unknown> {
     const searchParams = new URLSearchParams();
     searchParams.append('period', params.period);
     if (params.branch) searchParams.append('branch', params.branch.toString());
@@ -1377,7 +1434,7 @@ class ApiClient {
     start_date?: string
     end_date?: string
     limit?: number
-  }): Promise<any> {
+  }): Promise<unknown> {
     const searchParams = new URLSearchParams();
     searchParams.append('period', params.period);
     if (params.branch) searchParams.append('branch', params.branch.toString());
@@ -1393,7 +1450,7 @@ class ApiClient {
     branch?: number
     start_date?: string
     end_date?: string
-  }): Promise<any> {
+  }): Promise<unknown> {
     const searchParams = new URLSearchParams();
     searchParams.append('period', params.period);
     if (params.branch) searchParams.append('branch', params.branch.toString());
@@ -1610,6 +1667,30 @@ class ApiClient {
 
   async updateTierBenefit(id: number, data: Partial<MembershipTierBenefit>): Promise<MembershipTierBenefit> {
     return this.fetch(`/tier-benefits/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+
+  // Settings APIs
+  async getCurrentSettings(): Promise<RestaurantSettings> {
+    return this.fetch('/settings/current/');
+  }
+
+  async updateSettings(id: number, data: Partial<RestaurantSettings>): Promise<RestaurantSettings> {
+    return this.fetch(`/settings/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+
+  // Restaurant APIs
+  async getCurrentRestaurant(): Promise<Restaurant> {
+    return this.fetch('/restaurants/current/');
+  }
+
+  async updateRestaurant(id: number, data: Partial<Restaurant>): Promise<Restaurant> {
+    return this.fetch(`/restaurants/${id}/`, {
       method: 'PATCH',
       body: JSON.stringify(data)
     });

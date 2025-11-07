@@ -141,7 +141,7 @@ export default function RecipePage() {
         }).then(r => r.json())
       ])
 
-      setRecipes(Array.isArray(recipesRes) ? recipesRes : recipesRes.results || [])
+      setRecipes(Array.isArray(recipesRes) ? recipesRes as Recipe[] : (recipesRes as { results: Recipe[] }).results || [])
       setProducts(productsRes.results || [])
       setKitchenInventory(inventoryRes.results || [])
       setCategories(categoriesRes.results || [])
@@ -326,7 +326,7 @@ export default function RecipePage() {
 
   // Filtered and sorted recipes
   const filteredRecipes = useMemo(() => {
-    let filtered = recipes.filter(recipe => {
+    const filtered = recipes.filter(recipe => {
       // Search filter
       const matchesSearch = recipe.product_name.toLowerCase().includes(searchQuery.toLowerCase())
 
@@ -381,7 +381,7 @@ export default function RecipePage() {
 
   // Filtered menus
   const filteredMenus = useMemo(() => {
-    let filtered = products.filter(product => {
+    const filtered = products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(menuSearchQuery.toLowerCase())
       const matchesCategory = filterCategory === 'all' || product.category.toString() === filterCategory
       return matchesSearch && matchesCategory
@@ -401,7 +401,7 @@ export default function RecipePage() {
   const uniqueCategories = useMemo(() => {
     const categoryMap = new Map<number, string>()
     products.forEach(p => {
-      if (!categoryMap.has(p.category)) {
+      if (p.category && p.category_name && !categoryMap.has(p.category)) {
         categoryMap.set(p.category, p.category_name)
       }
     })

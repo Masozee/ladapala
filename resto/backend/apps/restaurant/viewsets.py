@@ -15,7 +15,8 @@ from .models import (
     Promotion, Schedule, Report, CashierSession,
     Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
     StockTransfer,
-    Customer, LoyaltyTransaction, Reward, CustomerFeedback, MembershipTierBenefit
+    Customer, LoyaltyTransaction, Reward, CustomerFeedback, MembershipTierBenefit,
+    RestaurantSettings
 )
 from .serializers import (
     RestaurantSerializer, BranchSerializer, StaffSerializer,
@@ -29,7 +30,8 @@ from .serializers import (
     PurchaseOrderSerializer, PurchaseOrderCreateSerializer, PurchaseOrderItemSerializer,
     StockTransferSerializer, StockTransferCreateSerializer,
     CustomerSerializer, CustomerCreateSerializer, LoyaltyTransactionSerializer,
-    RewardSerializer, CustomerFeedbackSerializer, MembershipTierBenefitSerializer
+    RewardSerializer, CustomerFeedbackSerializer, MembershipTierBenefitSerializer,
+    RestaurantSettingsSerializer
 )
 from .permissions import IsManagerOrAdmin, IsKitchenStaff, IsWarehouseStaff
 
@@ -41,6 +43,21 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     search_fields = ['name', 'address']
     filterset_fields = ['is_active']
+
+    @action(detail=False, methods=['get'])
+    def current(self, request):
+        """Get restaurant for current user"""
+        user = request.user
+
+        if not hasattr(user, 'staff'):
+            return Response(
+                {'error': 'User is not associated with any restaurant'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        restaurant = user.staff.branch.restaurant
+        serializer = self.get_serializer(restaurant)
+        return Response(serializer.data)
 
 
 class BranchViewSet(viewsets.ModelViewSet):
@@ -2176,7 +2193,7 @@ class CustomerFeedbackViewSet(viewsets.ModelViewSet):
 
     Endpoints:
     - list: GET /api/feedback/
-    - create: POST /api/feedback/
+    - create: POST /api/feedback/ (public - no auth required)
     - retrieve: GET /api/feedback/{id}/
     - update: PATCH /api/feedback/{id}/
     - respond: POST /api/feedback/{id}/respond/
@@ -2189,6 +2206,12 @@ class CustomerFeedbackViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status', 'customer', 'order']
     ordering_fields = ['created_at', 'overall_rating']
     ordering = ['-created_at']
+
+    def get_permissions(self):
+        """Allow unauthenticated POST (create) for public feedback"""
+        if self.action == 'create':
+            return [AllowAny()]
+        return super().get_permissions()
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -2265,4 +2288,52 @@ class MembershipTierBenefitViewSet(viewsets.ModelViewSet):
     serializer_class = MembershipTierBenefitSerializer
     permission_classes = [IsAuthenticated]
     ordering = ['min_total_spent']
+
+
+class RestaurantSettingsViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Restaurant Settings
+
+    Endpoints:
+    - list: GET /api/settings/
+    - retrieve: GET /api/settings/{id}/
+    - update: PUT/PATCH /api/settings/{id}/
+    - current: GET /api/settings/current/ - Get settings for current user's restaurant
+    """
+    queryset = RestaurantSettings.objects.all()
+    serializer_class = RestaurantSettingsSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'put', 'patch']  # No create/delete, only read and update
+
+    def get_queryset(self):
+        """Filter settings based on user's restaurant if staff"""
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        # If user is staff, filter by their branch's restaurant
+        if hasattr(user, 'staff'):
+            queryset = queryset.filter(restaurant=user.staff.branch.restaurant)
+
+        return queryset
+
+    @action(detail=False, methods=['get'])
+    def current(self, request):
+        """Get settings for current user's restaurant"""
+        user = request.user
+
+        if not hasattr(user, 'staff'):
+            return Response(
+                {'error': 'User is not associated with any restaurant'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        restaurant = user.staff.branch.restaurant
+
+        # Get or create settings for this restaurant
+        settings, created = RestaurantSettings.objects.get_or_create(
+            restaurant=restaurant
+        )
+
+        serializer = self.get_serializer(settings)
+        return Response(serializer.data)
 

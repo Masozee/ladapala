@@ -1303,3 +1303,65 @@ class MembershipTierBenefit(models.Model):
         ordering = ['min_total_spent']
         verbose_name = "Membership Tier Benefit"
         verbose_name_plural = "Membership Tier Benefits"
+
+
+class RestaurantSettings(models.Model):
+    """Restaurant-wide settings and configurations"""
+    restaurant = models.OneToOneField(Restaurant, on_delete=models.CASCADE, related_name='settings')
+
+    # Restaurant Information
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=11.00, help_text='Tax percentage (e.g., 11.00 for 11%)')
+    currency = models.CharField(max_length=3, default='IDR', help_text='Currency code (e.g., IDR, USD)')
+    timezone = models.CharField(max_length=50, default='Asia/Jakarta', help_text='Timezone for the restaurant')
+
+    # Notification Settings
+    low_stock_alerts = models.BooleanField(default=True)
+    new_order_alerts = models.BooleanField(default=True)
+    email_notifications = models.BooleanField(default=True)
+    sms_notifications = models.BooleanField(default=False)
+    daily_reports = models.BooleanField(default=True)
+    weekly_reports = models.BooleanField(default=True)
+
+    # System Settings
+    auto_backup = models.BooleanField(default=True)
+    backup_frequency = models.CharField(
+        max_length=20,
+        default='daily',
+        choices=[
+            ('hourly', 'Hourly'),
+            ('daily', 'Daily'),
+            ('weekly', 'Weekly'),
+            ('monthly', 'Monthly')
+        ]
+    )
+    data_retention_days = models.IntegerField(default=365, help_text='Number of days to retain data')
+    enable_audit_log = models.BooleanField(default=True)
+    session_timeout_minutes = models.IntegerField(default=30, help_text='Session timeout in minutes')
+
+    # Printer Settings
+    kitchen_printer_ip = models.CharField(max_length=15, blank=True, help_text='IP address of kitchen printer')
+    receipt_printer_ip = models.CharField(max_length=15, blank=True, help_text='IP address of receipt printer')
+    enable_auto_print = models.BooleanField(default=True)
+    print_receipts = models.BooleanField(default=True)
+    print_kitchen_orders = models.BooleanField(default=True)
+
+    # Security Settings
+    min_password_length = models.IntegerField(default=8)
+    password_expiry_days = models.IntegerField(default=90)
+    require_special_chars = models.BooleanField(default=True)
+    require_numbers = models.BooleanField(default=True)
+    enable_two_factor = models.BooleanField(default=False)
+    enable_ip_restriction = models.BooleanField(default=False)
+    max_login_attempts = models.IntegerField(default=3)
+    enable_data_encryption = models.BooleanField(default=True)
+    anonymize_logs = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Settings for {self.restaurant.name}"
+
+    class Meta:
+        verbose_name = "Restaurant Settings"
+        verbose_name_plural = "Restaurant Settings"
