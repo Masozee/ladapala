@@ -67,6 +67,7 @@ export default function AdminPage() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [hotelInfo, setHotelInfo] = useState({
     hotelName: '',
     hotelDescription: '',
@@ -303,6 +304,18 @@ export default function AdminPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Handle clicking outside to close menu
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenMenuId(null);
+    };
+
+    if (openMenuId !== null) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openMenuId]);
+
   // Fetch users from API
   useEffect(() => {
     const fetchUsers = async () => {
@@ -360,6 +373,34 @@ export default function AdminPage() {
 
     fetchHotelInfo();
   }, [activeTab]);
+
+  // Handle menu toggle
+  const toggleMenu = (userId: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setOpenMenuId(openMenuId === userId ? null : userId);
+  };
+
+  // Handle user actions
+  const handleViewUser = (userId: number) => {
+    console.log('View user:', userId);
+    router.push(`/office/employees/${userId}`);
+    setOpenMenuId(null);
+  };
+
+  const handleEditUser = (userId: number) => {
+    console.log('Edit user:', userId);
+    router.push(`/office/employees/${userId}/edit`);
+    setOpenMenuId(null);
+  };
+
+  const handleDeleteUser = (userId: number) => {
+    console.log('Delete user:', userId);
+    if (confirm('Are you sure you want to delete this user?')) {
+      // TODO: Implement delete functionality
+      alert('Delete functionality will be implemented');
+    }
+    setOpenMenuId(null);
+  };
 
   // Save hotel information
   const handleSaveHotelInfo = async () => {
@@ -907,27 +948,39 @@ export default function AdminPage() {
 
                           <td className="border border-gray-200 px-6 py-4">
                             <div className="flex items-center justify-end">
-                              <div className="relative group">
+                              <div className="relative">
                                 <button
+                                  onClick={(e) => toggleMenu(user.id, e)}
                                   className="p-2 text-gray-400 hover:text-[#4E61D3] hover:bg-gray-100 transition-colors rounded"
                                   title="Actions"
                                 >
                                   <MoreHorizontalIcon className="h-5 w-5" />
                                 </button>
-                                <div className="hidden group-hover:block absolute right-0 mt-1 w-48 bg-white border border-gray-200 shadow-lg z-10">
-                                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
-                                    <EyeIcon className="h-4 w-4" />
-                                    <span>Lihat Detail</span>
-                                  </button>
-                                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
-                                    <PencilEdit02Icon className="h-4 w-4" />
-                                    <span>Edit Pengguna</span>
-                                  </button>
-                                  <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2">
-                                    <Delete02Icon className="h-4 w-4" />
-                                    <span>Hapus Pengguna</span>
-                                  </button>
-                                </div>
+                                {openMenuId === user.id && (
+                                  <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 shadow-lg z-10 rounded">
+                                    <button
+                                      onClick={() => handleViewUser(user.id)}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 rounded-t"
+                                    >
+                                      <EyeIcon className="h-4 w-4" />
+                                      <span>Lihat Detail</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleEditUser(user.id)}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                                    >
+                                      <PencilEdit02Icon className="h-4 w-4" />
+                                      <span>Edit Pengguna</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteUser(user.id)}
+                                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 rounded-b"
+                                    >
+                                      <Delete02Icon className="h-4 w-4" />
+                                      <span>Hapus Pengguna</span>
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </td>
