@@ -73,8 +73,8 @@ export default function TransactionPage() {
       // Only show TODAY's orders (filter out old orders from previous days)
       const today = new Date().toDateString()
       const activeOrders = response.results.filter(order => {
-        const hasActiveStatus = ['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status)
-        const hasCompletedPayment = order.payments && order.payments.some((p: any) => p.status === 'COMPLETED')
+        const hasActiveStatus = order.status && ['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status)
+        const hasCompletedPayment = order.payments && order.payments.some((p: unknown) => (p as { status: string }).status === 'COMPLETED')
         const orderDate = new Date(order.created_at!).toDateString()
         const isToday = orderDate === today
         return hasActiveStatus && !hasCompletedPayment && isToday
@@ -324,31 +324,13 @@ export default function TransactionPage() {
   const hasCompletedPayment = selectedOrder?.payments?.some((p: any) => p.status === 'COMPLETED')
   const canVoid = hasCompletedPayment && staff?.role && ['MANAGER', 'ADMIN'].includes(staff.role)
 
-  if (loading) {
-    return (
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center h-96">
-          <p className="text-gray-500">Memuat pesanan aktif...</p>
-        </div>
+  return loading ? (
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex items-center justify-center h-96">
+        <p className="text-gray-500">Memuat pesanan aktif...</p>
       </div>
-    )
-  }
-
-  if (pendingOrders.length === 0) {
-    return (
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <HugeiconsIcon icon={Invoice01Icon} size={64} strokeWidth={2} className="mx-auto mb-4 text-gray-300" />
-            <p className="text-xl text-gray-600">Tidak ada pesanan aktif</p>
-            <p className="text-sm text-gray-500 mt-2">Pesanan baru akan muncul di sini</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
+    </div>
+  ) : (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Transaksi</h1>
@@ -448,7 +430,13 @@ export default function TransactionPage() {
           </CardHeader>
           <CardContent className="p-0 flex-1 overflow-hidden">
             <div className="overflow-y-auto h-full">
-              {!selectedOrder || selectedOrder.items.length === 0 ? (
+              {pendingOrders.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <HugeiconsIcon icon={Invoice01Icon} size={48} strokeWidth={2} className="mx-auto mb-3 text-gray-300" />
+                  <p className="text-lg font-medium">Tidak ada pesanan aktif</p>
+                  <p className="text-sm mt-2">Pesanan baru akan muncul di sini</p>
+                </div>
+              ) : !selectedOrder || selectedOrder.items.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
                   <HugeiconsIcon icon={Invoice01Icon} size={32} strokeWidth={2} className="mx-auto mb-3 text-gray-300" />
                   <p>Belum ada item</p>

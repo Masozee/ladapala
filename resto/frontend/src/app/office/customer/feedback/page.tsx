@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { SparklesIcon, MessageAdd01Icon, Analytics01Icon, Send01Icon, ArrowLeft01Icon, Cancel01Icon } from '@hugeicons/core-free-icons'
+import { SparklesIcon, MessageAdd01Icon, Analytics01Icon, ArrowLeft01Icon, Cancel01Icon } from '@hugeicons/core-free-icons'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -108,7 +108,7 @@ export default function FeedbackPage() {
         service_rating: serviceRating,
         ambiance_rating: ambianceRating,
         value_rating: valueRating,
-        comments: comments || undefined,
+        comment: comments || undefined,
       })
 
       toast({
@@ -141,10 +141,7 @@ export default function FeedbackPage() {
     if (!selectedFeedback || !staffResponse) return
 
     try {
-      await api.respondToFeedback(selectedFeedback.id, {
-        staff_response: staffResponse,
-        responded_by: staff?.id || 0,
-      })
+      await api.respondToFeedback(selectedFeedback.id, staffResponse)
 
       toast({
         title: 'Berhasil',
@@ -372,7 +369,7 @@ export default function FeedbackPage() {
                             })}
                           </TableCell>
                           <TableCell className="font-medium">
-                            {feedback.customer_details?.name || '-'}
+                            {feedback.customer_name || '-'}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
@@ -550,7 +547,7 @@ export default function FeedbackPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Pelanggan</p>
-                      <p className="font-medium">{selectedFeedback.customer_details?.name || '-'}</p>
+                      <p className="font-medium">{selectedFeedback.customer_name || '-'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Tanggal</p>
@@ -612,13 +609,13 @@ export default function FeedbackPage() {
               </Card>
 
               {/* Comments */}
-              {selectedFeedback.comments && (
+              {selectedFeedback.comment && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Komentar</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-700">{selectedFeedback.comments}</p>
+                    <p className="text-gray-700">{selectedFeedback.comment}</p>
                   </CardContent>
                 </Card>
               )}
@@ -632,10 +629,10 @@ export default function FeedbackPage() {
                   {selectedFeedback.staff_response ? (
                     <div className="space-y-2">
                       <p className="text-gray-700">{selectedFeedback.staff_response}</p>
-                      {selectedFeedback.response_date && (
+                      {selectedFeedback.responded_at && (
                         <p className="text-sm text-gray-500">
                           Direspon pada{' '}
-                          {new Date(selectedFeedback.response_date).toLocaleDateString('id-ID', {
+                          {new Date(selectedFeedback.responded_at).toLocaleDateString('id-ID', {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric',
@@ -652,7 +649,7 @@ export default function FeedbackPage() {
                         rows={4}
                       />
                       <Button onClick={handleSubmitResponse} disabled={!staffResponse}>
-                        <HugeiconsIcon icon={Send01Icon} size={20} strokeWidth={2} className="mr-2" />
+                        <HugeiconsIcon icon={MessageAdd01Icon} size={20} strokeWidth={2} className="mr-2" />
                         Kirim Respon
                       </Button>
                     </div>

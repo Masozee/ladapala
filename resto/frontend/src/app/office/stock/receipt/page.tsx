@@ -79,9 +79,7 @@ export default function ReceiptPage() {
     try {
       const response = await api.getInventoryTransactions({
         branch: staff.branch.id,
-        transaction_type: 'IN',
-        ordering: '-created_at',
-        limit: 50
+        transaction_type: 'IN'
       })
       setReceiptHistory(response.results || [])
     } catch (error) {
@@ -233,11 +231,11 @@ export default function ReceiptPage() {
       setReceivedQuantities({})
       fetchApprovedPOs()
       fetchReceiptHistory()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error receiving PO:', error)
       toast({
         title: "Error",
-        description: error.message || "Gagal menerima Purchase Order",
+        description: error instanceof Error ? error.message : String(error) || "Gagal menerima Purchase Order",
         variant: "destructive"
       })
     } finally {

@@ -108,9 +108,7 @@ export default function AdjustmentPage() {
     try {
       const response = await api.getInventoryTransactions({
         branch: staff.branch.id,
-        transaction_type: 'ADJUST',
-        ordering: '-created_at',
-        limit: 50
+        transaction_type: 'ADJUST'
       })
       setAdjustmentHistory(response.results || [])
     } catch (error) {
@@ -196,11 +194,11 @@ export default function AdjustmentPage() {
 
       fetchInventory()
       fetchAdjustmentHistory()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adjusting stock:', error)
       toast({
         title: "Error",
-        description: error.message || "Gagal koreksi stok",
+        description: error instanceof Error ? error.message : String(error) || "Gagal koreksi stok",
         variant: "destructive"
       })
     } finally {
@@ -448,7 +446,6 @@ export default function AdjustmentPage() {
                     <TableRow className="bg-gray-50 hover:bg-gray-50">
                       <TableHead className="font-semibold text-gray-900 py-4 px-6">Tanggal & Waktu</TableHead>
                       <TableHead className="font-semibold text-gray-900 py-4 px-6">Item</TableHead>
-                      <TableHead className="font-semibold text-gray-900 py-4 px-6">Lokasi</TableHead>
                       <TableHead className="font-semibold text-gray-900 py-4 px-6">Jenis</TableHead>
                       <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Jumlah</TableHead>
                       <TableHead className="font-semibold text-gray-900 py-4 px-6">Oleh</TableHead>
@@ -471,11 +468,6 @@ export default function AdjustmentPage() {
                             })}
                           </TableCell>
                           <TableCell className="font-medium py-4 px-6">{adjustment.inventory_name}</TableCell>
-                          <TableCell className="py-4 px-6">
-                            <Badge variant="outline" className="font-normal">
-                              {adjustment.inventory_location === 'WAREHOUSE' ? 'Gudang' : 'Dapur'}
-                            </Badge>
-                          </TableCell>
                           <TableCell className="py-4 px-6">
                             <Badge className={isAddition ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}>
                               {isAddition ? 'Penambahan (+)' : 'Pengurangan (-)'}

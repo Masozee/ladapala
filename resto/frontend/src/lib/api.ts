@@ -7,6 +7,7 @@ export interface Restaurant {
   address: string;
   phone: string;
   email: string;
+  serial_number: string;
   logo: string | null;
   is_active: boolean;
   created_at: string;
@@ -656,6 +657,7 @@ export interface RestaurantSettings {
   restaurant_address: string;
   restaurant_phone: string;
   restaurant_email: string;
+  restaurant_serial_number: string;
   // Restaurant Information
   tax_rate: string;
   currency: string;

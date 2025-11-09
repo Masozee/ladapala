@@ -141,15 +141,24 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 status=http_status.HTTP_400_BAD_REQUEST
             )
 
-        # If payment successful and PDF provided, send invoice email
+        # If payment successful and PDF provided, send invoice email (Phase 2 - only when fully paid)
         email_sent = False
         if payment.status == 'COMPLETED' and pdf_content:
-            try:
-                from apps.hotel.services.email_service_simple import send_reservation_invoice_email_with_pdf
-                email_sent = send_reservation_invoice_email_with_pdf(reservation, pdf_content)
-            except Exception as e:
-                # Log error but don't fail the payment
-                print(f"Error sending invoice email: {str(e)}")
+            # Check if reservation is now fully paid
+            reservation.refresh_from_db()  # Refresh to get updated payment status
+            is_fully_paid = reservation.is_fully_paid() if hasattr(reservation, 'is_fully_paid') else False
+
+            # Only send invoice email if reservation is FULLY PAID
+            if is_fully_paid:
+                try:
+                    from apps.hotel.services.email_service_simple import send_reservation_invoice_email_with_pdf
+                    email_sent = send_reservation_invoice_email_with_pdf(reservation, pdf_content)
+                    print(f"✅ Phase 2 Email: Invoice sent to {reservation.guest.email} - Fully Paid")
+                except Exception as e:
+                    # Log error but don't fail the payment
+                    print(f"Error sending invoice email: {str(e)}")
+            else:
+                print(f"ℹ️ Payment recorded but not fully paid yet. Invoice will be sent after full payment.")
 
         # Return payment data with calculation details
         serializer = self.get_serializer(payment)

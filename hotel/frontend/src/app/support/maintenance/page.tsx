@@ -93,7 +93,7 @@ const MaintenancePage = () => {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
 

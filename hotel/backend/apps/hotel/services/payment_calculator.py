@@ -312,6 +312,12 @@ class PaymentCalculator:
             total_paid = self.reservation.get_total_paid()
             final_amount = final_amount - total_paid
 
+        # Recalculate points based on actual payment amount for partial payments
+        actual_points_to_earn = self.points_to_earn
+        if payment_type in ['DEPOSIT', 'BALANCE']:
+            # For partial payments, recalculate points based on actual amount paid
+            actual_points_to_earn = self.calculate_points_to_earn(final_amount)
+
         # Create payment
         payment = Payment.objects.create(
             reservation=self.reservation,
@@ -329,7 +335,7 @@ class PaymentCalculator:
             discount_amount=self.auto_discount_amount,
             loyalty_points_redeemed=self.points_to_redeem,
             loyalty_points_value=self.points_redeemed_value,
-            loyalty_points_earned=self.points_to_earn,
+            loyalty_points_earned=actual_points_to_earn,
         )
 
         # Create voucher usage record
@@ -365,15 +371,15 @@ class PaymentCalculator:
                 self.guest.loyalty_points -= self.points_to_redeem
                 self.guest.save(update_fields=['loyalty_points'])
 
-            # Award points
-            if self.points_to_earn > 0:
+            # Award points (use actual_points_to_earn which accounts for partial payments)
+            if actual_points_to_earn > 0:
                 loyalty_account.add_points(
-                    points=self.points_to_earn,
+                    points=actual_points_to_earn,
                     description=f"Earned from reservation {self.reservation.reservation_number}",
                     expiry_date=timezone.now() + timezone.timedelta(days=program.points_expiry_days) if program.points_expiry_days else None
                 )
                 # Sync to Guest model
-                self.guest.loyalty_points += self.points_to_earn
+                self.guest.loyalty_points += actual_points_to_earn
                 self.guest.save(update_fields=['loyalty_points'])
 
         except LoyaltyProgram.DoesNotExist:

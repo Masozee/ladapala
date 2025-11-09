@@ -35,9 +35,9 @@ export default function CustomerPage() {
 
       setStats({
         totalMembers: customersResponse.count || 0,
-        activeFeedbacks: feedbackStats.total_feedbacks || 0,
+        activeFeedbacks: feedbackStats.total_count || 0,
         activeRewards: rewardsResponse.count || 0,
-        averageRating: feedbackStats.overall_avg || 0
+        averageRating: feedbackStats.average_ratings?.avg_overall || 0
       })
     } catch (error) {
       console.error('Error fetching customer stats:', error)

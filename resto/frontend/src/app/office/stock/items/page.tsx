@@ -153,11 +153,11 @@ export default function ItemMasterPage() {
       resetForm()
       setIsAddOpen(false)
       fetchInventory()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding item:', error)
       toast({
         title: "Error",
-        description: error.message || "Gagal menambah item",
+        description: error instanceof Error ? error.message : String(error) || "Gagal menambah item",
         variant: "destructive"
       })
     }
@@ -195,11 +195,11 @@ export default function ItemMasterPage() {
       setIsEditOpen(false)
       resetForm()
       fetchInventory()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating item:', error)
       toast({
         title: "Error",
-        description: error.message || "Gagal memperbarui item",
+        description: error instanceof Error ? error.message : String(error) || "Gagal memperbarui item",
         variant: "destructive"
       })
     }
@@ -215,11 +215,11 @@ export default function ItemMasterPage() {
         description: "Item berhasil dihapus",
       })
       fetchInventory()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting item:', error)
       toast({
         title: "Error",
-        description: error.message || "Gagal menghapus item",
+        description: error instanceof Error ? error.message : String(error) || "Gagal menghapus item",
         variant: "destructive"
       })
     }

@@ -180,9 +180,9 @@ export default function MenuPage() {
       setAvailableTables(tablesResponse.results)
 
       alert("Pesanan berhasil dibuat!")
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating order:', error)
-      const errorMessage = error?.message || "Gagal membuat pesanan. Silakan coba lagi."
+      const errorMessage = error instanceof Error ? error.message : "Gagal membuat pesanan. Silakan coba lagi."
       alert(errorMessage)
     }
   }

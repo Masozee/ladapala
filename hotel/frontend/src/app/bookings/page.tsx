@@ -2120,7 +2120,12 @@ const BookingsPage = () => {
                                             // Refresh data
                                             await loadReservations(currentPage);
                                             setOpenMenuId(null);
-                                            alert(result.message || 'Reservation confirmed and room assigned!');
+
+                                            // Show success message with email status
+                                            const emailStatus = result.email_sent
+                                              ? '\n✅ Confirmation email sent to guest.'
+                                              : '\n⚠️ Confirmation successful but email could not be sent.';
+                                            alert((result.message || 'Reservation confirmed!') + emailStatus);
                                           } catch (error) {
                                             alert('Failed to confirm reservation. Please try again.');
                                           } finally {

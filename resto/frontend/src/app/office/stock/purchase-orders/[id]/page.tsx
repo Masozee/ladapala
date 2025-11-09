@@ -13,7 +13,7 @@ import {
   Delete02Icon,
   Edit01Icon,
   PackageReceiveIcon,
-  Send01Icon
+  MessageAdd01Icon
 } from "@hugeicons/core-free-icons"
 import {
   Table,
@@ -107,10 +107,10 @@ export default function PurchaseOrderDetailPage() {
         description: "Purchase order berhasil diajukan"
       })
       fetchPurchaseOrder()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Gagal mengajukan purchase order",
+        description: error instanceof Error ? error.message : String(error) || "Gagal mengajukan purchase order",
         variant: "destructive"
       })
     } finally {
@@ -129,10 +129,10 @@ export default function PurchaseOrderDetailPage() {
         description: "Purchase order berhasil disetujui"
       })
       fetchPurchaseOrder()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Gagal menyetujui purchase order",
+        description: error instanceof Error ? error.message : String(error) || "Gagal menyetujui purchase order",
         variant: "destructive"
       })
     } finally {
@@ -166,10 +166,10 @@ export default function PurchaseOrderDetailPage() {
 
       setShowReceiveModal(false)
       fetchPurchaseOrder()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Gagal menerima purchase order",
+        description: error instanceof Error ? error.message : String(error) || "Gagal menerima purchase order",
         variant: "destructive"
       })
     } finally {
@@ -192,10 +192,10 @@ export default function PurchaseOrderDetailPage() {
         description: "Purchase order berhasil dibatalkan"
       })
       fetchPurchaseOrder()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Gagal membatalkan purchase order",
+        description: error instanceof Error ? error.message : String(error) || "Gagal membatalkan purchase order",
         variant: "destructive"
       })
     } finally {
@@ -289,7 +289,7 @@ export default function PurchaseOrderDetailPage() {
                   onClick={handleSubmit}
                   disabled={isActionLoading}
                 >
-                  <HugeiconsIcon icon={Send01Icon} size={18} strokeWidth={2} className="mr-2" />
+                  <HugeiconsIcon icon={MessageAdd01Icon} size={18} strokeWidth={2} className="mr-2" />
                   Ajukan
                 </Button>
               </>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -35,7 +35,7 @@ import { RoleGuard } from "@/components/role-guard"
 import { StockActionTabs } from "@/components/stock-action-tabs"
 import { api, type Inventory } from "@/lib/api"
 
-export default function StockMovementsPage() {
+function StockMovementsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { staff } = useAuth()
@@ -111,7 +111,7 @@ export default function StockMovementsPage() {
       // Create transfer transaction for warehouse (OUT)
       await api.createInventoryTransaction({
         inventory: warehouseItem.id,
-        transaction_type: 'TRANSFER',
+        transaction_type: 'OUT',
         quantity: parseFloat(transferForm.quantity),
         unit_cost: warehouseItem.cost_per_unit,
         notes: `Transfer ke dapur: ${transferForm.notes}`
@@ -120,7 +120,7 @@ export default function StockMovementsPage() {
       // Create transfer transaction for kitchen (IN)
       await api.createInventoryTransaction({
         inventory: kitchenItem.id,
-        transaction_type: 'TRANSFER',
+        transaction_type: 'IN',
         quantity: parseFloat(transferForm.quantity),
         unit_cost: warehouseItem.cost_per_unit,
         notes: `Transfer dari gudang: ${transferForm.notes}`
@@ -602,5 +602,14 @@ export default function StockMovementsPage() {
         </Dialog>
       </div>
     </RoleGuard>
+  )
+}
+
+
+export default function StockMovementsPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto p-8">Loading...</div>}>
+      <StockMovementsContent />
+    </Suspense>
   )
 }

@@ -54,12 +54,22 @@ interface Transaction {
   time: string;
   description: string;
   guest: string | null;
-  type: 'revenue' | 'expense';
-  category: string;
+  reservation?: string;
+  type?: 'revenue' | 'expense';
+  category?: string;
   amount: number;
-  paymentMethod: string;
+  paymentMethod?: string;
   status: string;
-  reference: string;
+  reference?: string;
+  dueDate?: string;
+  paid_amount?: number;
+  balance?: number;
+  items?: {
+    description: string;
+    quantity: number;
+    rate: number;
+    total: number;
+  }[];
 }
 
 interface FinancialOverview {
@@ -246,11 +256,11 @@ export default function FinancialPage() {
     }
   };
 
-  const getTypeColor = (type: string) => {
+  const getTypeColor = (type?: string) => {
     return type === 'revenue' ? 'text-green-600' : 'text-red-600';
   };
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (type?: string) => {
     return type === 'revenue' ?
       <ArrowUp01Icon className="h-4 w-4 text-green-600" /> :
       <ArrowUp01Icon className="h-4 w-4 text-red-600" />;
@@ -858,7 +868,7 @@ export default function FinancialPage() {
                                 {getStatusLabel(invoice.status)}
                               </span>
                               <div className="text-sm text-gray-600 mt-1">
-                                Jatuh tempo: {formatDate(invoice.dueDate)}
+                                Jatuh tempo: {invoice.dueDate ? formatDate(invoice.dueDate) : '-'}
                               </div>
                             </div>
                           </td>

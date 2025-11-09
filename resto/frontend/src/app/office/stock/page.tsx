@@ -222,7 +222,6 @@ export default function StockDashboard() {
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">
                     <TableHead className="font-semibold text-gray-900 py-4 px-6">Nama Item</TableHead>
-                    <TableHead className="font-semibold text-gray-900 py-4 px-6">Supplier</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Stok Tersedia</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Min. Stok</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Rata² Harga</TableHead>
@@ -234,12 +233,11 @@ export default function StockDashboard() {
                   {warehouseInventory.map((item, index) => (
                     <TableRow key={item.id} className="hover:bg-gray-50 border-b">
                       <TableCell className="font-medium py-4 px-6">{item.name}</TableCell>
-                      <TableCell className="text-muted-foreground py-4 px-6">{item.supplier || '-'}</TableCell>
                       <TableCell className={`text-right font-semibold py-4 px-6 ${item.needs_restock ? 'text-red-600' : 'text-green-600'}`}>
-                        {parseFloat(item.quantity).toLocaleString('id-ID')} {item.unit}
+                        {Number(item.quantity).toLocaleString('id-ID')} {item.unit}
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground py-4 px-6">
-                        {parseFloat(item.min_quantity).toLocaleString('id-ID')} {item.unit}
+                        {Number(item.min_quantity).toLocaleString('id-ID')} {item.unit}
                       </TableCell>
                       <TableCell className="text-right py-4 px-6">
                         Rp {parseFloat(item.cost_per_unit || '0').toLocaleString('id-ID')}
@@ -349,7 +347,6 @@ export default function StockDashboard() {
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">
                     <TableHead className="font-semibold text-gray-900 py-4 px-6">Nama Item</TableHead>
-                    <TableHead className="font-semibold text-gray-900 py-4 px-6">Supplier</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Stok Tersedia</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Min. Stok</TableHead>
                     <TableHead className="font-semibold text-gray-900 text-right py-4 px-6">Rata² Harga</TableHead>
@@ -361,12 +358,11 @@ export default function StockDashboard() {
                   {kitchenInventory.map((item, index) => (
                     <TableRow key={item.id} className="hover:bg-gray-50 border-b">
                       <TableCell className="font-medium py-4 px-6">{item.name}</TableCell>
-                      <TableCell className="text-muted-foreground py-4 px-6">{item.supplier || '-'}</TableCell>
                       <TableCell className={`text-right font-semibold py-4 px-6 ${item.needs_restock ? 'text-red-600' : 'text-green-600'}`}>
-                        {parseFloat(item.quantity).toLocaleString('id-ID')} {item.unit}
+                        {Number(item.quantity).toLocaleString('id-ID')} {item.unit}
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground py-4 px-6">
-                        {parseFloat(item.min_quantity).toLocaleString('id-ID')} {item.unit}
+                        {Number(item.min_quantity).toLocaleString('id-ID')} {item.unit}
                       </TableCell>
                       <TableCell className="text-right py-4 px-6">
                         Rp {parseFloat(item.cost_per_unit || '0').toLocaleString('id-ID')}

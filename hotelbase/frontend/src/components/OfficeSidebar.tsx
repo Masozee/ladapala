@@ -23,8 +23,7 @@ import {
   PackageIcon,
   CircleArrowReload01Icon,
   SparklesIcon,
-  PieChartIcon,
-  Alert01Icon
+  PieChartIcon
 } from '@/lib/icons';
 
 interface MenuItem {
@@ -77,7 +76,6 @@ const OfficeSidebar = () => {
     { name: 'Event Bookings', icon: SparklesIcon, href: '/office/events' },
     { name: 'Housekeeping', icon: CircleArrowReload01Icon, href: '/office/housekeeping', badge: housekeepingCount > 0 ? housekeepingCount.toString() : undefined },
     { name: 'Financial', icon: CreditCardIcon, href: '/office/financial' },
-    { name: 'Promotions', icon: Alert01Icon, href: '/office/promotions' },
     { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse', badge: lowStockCount > 0 ? lowStockCount.toString() : undefined },
     { name: 'Reports', icon: File01Icon, href: '/office/reports' },
   ];

@@ -56,7 +56,7 @@ export default function VendorPage() {
   // Filter vendors
   const filteredVendors = vendors.filter(vendor => {
     const matchesSearch = vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         vendor.contact_person?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         vendor.contact?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          vendor.email?.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesSearch
   })

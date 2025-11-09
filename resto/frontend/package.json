@@ -3,10 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "NODE_ENV=production node server.js",
+    "preview": "npm run build && npm run start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "production:install": "npm ci --only=production",
+    "production:build": "NODE_ENV=production npm run build",
+    "clean": "rm -rf .next && rm -rf out"
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "^1.1.0",
@@ -26,7 +32,8 @@
     "next": "15.5.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "typescript": "^5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -37,7 +44,6 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "tailwindcss": "^4",
-    "tw-animate-css": "^1.3.8",
-    "typescript": "^5"
+    "tw-animate-css": "^1.3.8"
   }
 }

@@ -102,10 +102,9 @@ export default function LoyaltyPage() {
         name: rewardName,
         reward_type: rewardType,
         points_required: parseInt(pointsCost),
-        reward_value: rewardValue || undefined,
+        voucher_value: rewardValue || undefined,
         description: rewardDescription || undefined,
         stock_quantity: stockQuantity ? parseInt(stockQuantity) : undefined,
-        valid_days: validDays ? parseInt(validDays) : undefined,
       })
 
       toast({
@@ -147,9 +146,9 @@ export default function LoyaltyPage() {
     try {
       await api.createTierBenefit({
         tier: tierName,
-        minimum_points: parseInt(minPoints),
+        min_total_spent: minPoints,
         points_multiplier: parseFloat(pointsMultiplier),
-        benefits: tierBenefitsText || undefined,
+        description: tierBenefitsText || '',
       })
 
       toast({
@@ -341,7 +340,7 @@ export default function LoyaltyPage() {
                             <Badge>{getRewardTypeLabel(reward.reward_type)}</Badge>
                           </TableCell>
                           <TableCell className="py-4 px-6">
-                            {reward.reward_value || '-'}
+                            {reward.voucher_value || '-'}
                           </TableCell>
                           <TableCell className="text-right font-semibold text-green-600 py-4 px-6">
                             {reward.points_required.toLocaleString('id-ID')}
@@ -356,7 +355,7 @@ export default function LoyaltyPage() {
                             )}
                           </TableCell>
                           <TableCell className="text-center py-4 px-6">
-                            {reward.valid_days ? `${reward.valid_days} hari` : '-'}
+                            {reward.valid_until ? new Date(reward.valid_until).toLocaleDateString('id-ID') : '-'}
                           </TableCell>
                           <TableCell className="text-center py-4 px-6">
                             {reward.is_active ? (
@@ -427,7 +426,7 @@ export default function LoyaltyPage() {
                   <div>
                     <p className="text-sm text-gray-500">Minimum Poin</p>
                     <p className="text-2xl font-bold text-blue-600">
-                      {tier.minimum_points.toLocaleString('id-ID')}
+                      Rp {parseFloat(tier.min_total_spent).toLocaleString('id-ID')}
                     </p>
                   </div>
 
@@ -436,10 +435,10 @@ export default function LoyaltyPage() {
                     <p className="text-xl font-bold text-green-600">{tier.points_multiplier}x</p>
                   </div>
 
-                  {tier.benefits && (
+                  {tier.description && (
                     <div>
                       <p className="text-sm text-gray-500 mb-2">Benefits</p>
-                      <p className="text-sm text-gray-700">{tier.benefits}</p>
+                      <p className="text-sm text-gray-700">{tier.description}</p>
                     </div>
                   )}
                 </CardContent>
@@ -470,7 +469,7 @@ export default function LoyaltyPage() {
                 <Label>Pilih Reward</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
                   {rewards
-                    .filter((r) => r.is_active && (r.stock_quantity === null || r.stock_quantity > 0))
+                    .filter((r) => r.is_active && (r.stock_quantity === null || r.stock_quantity === undefined || r.stock_quantity > 0))
                     .map((reward) => (
                       <Card
                         key={reward.id}

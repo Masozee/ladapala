@@ -118,11 +118,11 @@ export default function TransferPage() {
       setDialogOpen(false)
       fetchInventory()
       fetchTransferHistory()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error transferring stock:', error)
       toast({
         title: "Error",
-        description: error.message || "Gagal transfer stok",
+        description: error instanceof Error ? error.message : String(error) || "Gagal transfer stok",
         variant: "destructive"
       })
     } finally {

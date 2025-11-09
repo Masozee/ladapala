@@ -53,12 +53,23 @@ export function TopNavbar() {
   })
 
   useEffect(() => {
-    fetchActiveSession()
-    const interval = setInterval(fetchActiveSession, 30000)
-    return () => clearInterval(interval)
-  }, [])
+    // Only fetch active session if user is authenticated
+    if (user) {
+      fetchActiveSession()
+      const interval = setInterval(fetchActiveSession, 30000)
+      return () => clearInterval(interval)
+    } else {
+      setLoading(false)
+    }
+  }, [user])
 
   const fetchActiveSession = async () => {
+    // Double check authentication before making API call
+    if (!user) {
+      setLoading(false)
+      return
+    }
+
     try {
       const sessions = await api.getActiveCashierSession()
       if (sessions.length > 0) {
@@ -67,7 +78,12 @@ export function TopNavbar() {
         setSession(null)
       }
     } catch (error) {
-      console.error('Error fetching session:', error)
+      // Silently handle 401 errors (user not authenticated)
+      if (error instanceof Error && error.message.includes('401')) {
+        setSession(null)
+      } else {
+        console.error('Error fetching session:', error)
+      }
     } finally {
       setLoading(false)
     }

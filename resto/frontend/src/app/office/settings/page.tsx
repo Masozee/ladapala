@@ -30,6 +30,7 @@ interface RestaurantSettings {
   address: string
   phone: string
   email: string
+  serialNumber: string
   taxRate: number
   currency: string
   timezone: string
@@ -75,6 +76,7 @@ export default function SettingsPage() {
     address: "",
     phone: "",
     email: "",
+    serialNumber: "",
     taxRate: 11,
     currency: "IDR",
     timezone: "Asia/Jakarta"
@@ -134,6 +136,7 @@ export default function SettingsPage() {
         address: data.restaurant_address || "",
         phone: data.restaurant_phone || "",
         email: data.restaurant_email || "",
+        serialNumber: data.restaurant_serial_number || "",
         taxRate: parseFloat(data.tax_rate) || 11,
         currency: data.currency || "IDR",
         timezone: data.timezone || "Asia/Jakarta"
@@ -197,7 +200,8 @@ export default function SettingsPage() {
         name: restaurantSettings.name,
         address: restaurantSettings.address,
         phone: restaurantSettings.phone,
-        email: restaurantSettings.email
+        email: restaurantSettings.email,
+        serial_number: restaurantSettings.serialNumber
       })
 
       // Map local state to API format for settings
@@ -352,6 +356,19 @@ export default function SettingsPage() {
                     ...restaurantSettings,
                     email: e.target.value
                   })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="serial-number">Nomor Seri</Label>
+                <Input
+                  id="serial-number"
+                  value={restaurantSettings.serialNumber}
+                  onChange={(e) => setRestaurantSettings({
+                    ...restaurantSettings,
+                    serialNumber: e.target.value
+                  })}
+                  placeholder="SN-XXXXX-XXXXX"
                 />
               </div>
 

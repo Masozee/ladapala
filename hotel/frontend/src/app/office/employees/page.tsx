@@ -117,7 +117,7 @@ function ScheduleTable() {
       let nextUrl: string | null = buildApiUrl(`user/shifts-manage/?from_date=${startDate}&to_date=${endDate}`);
 
       while (nextUrl) {
-        const shiftsRes = await fetch(nextUrl, { credentials: 'include' });
+        const shiftsRes: Response = await fetch(nextUrl, { credentials: 'include' });
 
         if (!shiftsRes.ok) {
           console.error('Failed to fetch shifts:', shiftsRes.status);

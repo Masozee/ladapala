@@ -112,10 +112,10 @@ export default function ExpiryManagementPage() {
 
       setShowDisposeModal(false)
       fetchBatches()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Gagal membuang batch",
+        description: error instanceof Error ? error.message : String(error) || "Gagal membuang batch",
         variant: "destructive"
       })
     } finally {

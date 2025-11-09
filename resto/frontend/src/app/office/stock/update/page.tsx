@@ -11,7 +11,7 @@ import {
   Search01Icon,
   Edit01Icon,
   Package01Icon,
-  Save01Icon,
+  PencilEdit02Icon,
 } from "@hugeicons/core-free-icons"
 import {
   Table,
@@ -134,11 +134,11 @@ export default function StockUpdatePage() {
       })
 
       fetchInventory()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating stock:', error)
       toast({
         title: "Error",
-        description: error.message || "Gagal memperbarui stok",
+        description: error instanceof Error ? error.message : String(error) || "Gagal memperbarui stok",
         variant: "destructive"
       })
     } finally {
@@ -276,7 +276,7 @@ export default function StockUpdatePage() {
                                       onClick={() => handleSaveClick(item.id)}
                                       disabled={savingItems[item.id]}
                                     >
-                                      <HugeiconsIcon icon={Save01Icon} size={16} strokeWidth={2} className="mr-2" />
+                                      <HugeiconsIcon icon={PencilEdit02Icon} size={16} strokeWidth={2} className="mr-2" />
                                       Simpan
                                     </Button>
                                   </div>
@@ -380,7 +380,7 @@ export default function StockUpdatePage() {
                                       onClick={() => handleSaveClick(item.id)}
                                       disabled={savingItems[item.id]}
                                     >
-                                      <HugeiconsIcon icon={Save01Icon} size={16} strokeWidth={2} className="mr-2" />
+                                      <HugeiconsIcon icon={PencilEdit02Icon} size={16} strokeWidth={2} className="mr-2" />
                                       Simpan
                                     </Button>
                                   </div>

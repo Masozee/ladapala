@@ -13,6 +13,7 @@ class Restaurant(models.Model):
     address = models.TextField()
     phone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
+    serial_number = models.CharField(max_length=50, blank=True, help_text='Restaurant serial number')
     logo = models.ImageField(upload_to='restaurant_logos/', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -20,10 +20,14 @@ import {
 } from '@hugeicons/core-free-icons';
 
 // Helper function to create icon components with consistent props
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createIconComponent = (iconData: any) => {
-  return React.forwardRef<SVGSVGElement, Omit<HugeiconsProps, 'icon'>>((props, ref) => (
+  const IconComponent = React.forwardRef<SVGSVGElement, Omit<HugeiconsProps, 'icon'>>((props, ref) => (
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     <HugeiconsIcon {...props} icon={iconData} strokeWidth={2} ref={ref} />
   ));
+  IconComponent.displayName = 'HugeIcon';
+  return IconComponent;
 };
 
 // Export wrapped icons

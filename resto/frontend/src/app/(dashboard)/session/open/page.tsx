@@ -456,7 +456,7 @@ export default function OpenSessionPage() {
 
           {/* Action Button */}
           <Button
-            onClick={handleOpenSession}
+            onClick={() => handleOpenSession()}
             disabled={!openingCash || parseFloat(openingCash) < 0 || processing}
             className="w-full bg-green-600 hover:bg-green-700"
             size="lg"

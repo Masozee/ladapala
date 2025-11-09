@@ -205,6 +205,217 @@ def send_event_invoice_email_with_pdf(event_booking, pdf_base64_content):
         return False
 
 
+def send_reservation_confirmation_email(reservation):
+    """
+    Send booking confirmation email when reservation is confirmed (Phase 1)
+    This is sent WITHOUT payment - just order confirmation
+
+    Args:
+        reservation: Reservation instance
+
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        # Email subject
+        subject = f"Konfirmasi Pesanan - {reservation.reservation_number}"
+
+        # Recipient email
+        recipient_email = reservation.guest.email
+
+        # Calculate nights
+        nights = (reservation.check_out_date - reservation.check_in_date).days
+
+        # Get room info
+        room_info = f"{reservation.room.room_type.name} - Room {reservation.room.number}" if reservation.room else "Room will be assigned"
+
+        # Email body (HTML)
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                .header {{
+                    background-color: #005357;
+                    color: white;
+                    padding: 30px 20px;
+                    text-align: center;
+                }}
+                .header h1 {{
+                    margin: 0;
+                    font-size: 28px;
+                }}
+                .content {{
+                    padding: 30px 20px;
+                    background-color: #f9f9f9;
+                }}
+                .details {{
+                    background-color: white;
+                    padding: 20px;
+                    margin: 20px 0;
+                    border-radius: 5px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }}
+                .details-row {{
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 12px 0;
+                    border-bottom: 1px solid #eee;
+                }}
+                .details-row:last-child {{
+                    border-bottom: none;
+                }}
+                .label {{
+                    font-weight: bold;
+                    color: #005357;
+                }}
+                .highlight {{
+                    background-color: #FFF3CD;
+                    border-left: 4px solid #FFC107;
+                    padding: 15px;
+                    margin: 20px 0;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding: 20px;
+                    color: #666;
+                    font-size: 12px;
+                }}
+                .payment-info {{
+                    background-color: #D1ECF1;
+                    border-left: 4px solid #0C5460;
+                    padding: 15px;
+                    margin: 20px 0;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Hotel Kapulaga</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 18px;">Pesanan Anda Telah Dikonfirmasi!</p>
+                </div>
+
+                <div class="content">
+                    <p>Dear <strong>{reservation.guest.full_name}</strong>,</p>
+
+                    <p>Terima kasih telah memesan di Hotel Kapulaga! Kami senang mengonfirmasi bahwa pesanan Anda telah kami terima dan sedang diproses.</p>
+
+                    <div class="details">
+                        <h3 style="margin-top: 0; color: #005357;">Detail Pesanan:</h3>
+                        <div class="details-row">
+                            <span class="label">Nomor Booking:</span>
+                            <span><strong>{reservation.reservation_number}</strong></span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Nama Tamu:</span>
+                            <span>{reservation.guest.full_name}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Check-in:</span>
+                            <span>{reservation.check_in_date.strftime('%d %B %Y')}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Check-out:</span>
+                            <span>{reservation.check_out_date.strftime('%d %B %Y')}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Lama Menginap:</span>
+                            <span>{nights} malam</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Tipe Kamar:</span>
+                            <span>{room_info}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Jumlah Tamu:</span>
+                            <span>{reservation.adults} dewasa{f', {reservation.children} anak' if reservation.children > 0 else ''}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Total Pembayaran:</span>
+                            <span><strong style="color: #005357; font-size: 18px;">Rp {reservation.get_grand_total():,.0f}</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="payment-info">
+                        <h4 style="margin-top: 0; color: #0C5460;">💳 Informasi Pembayaran</h4>
+                        <p style="margin: 5px 0;">Status: <strong>Menunggu Pembayaran</strong></p>
+                        <p style="margin: 5px 0;">Setelah Anda melakukan pembayaran di hotel, kami akan mengirimkan invoice/bukti pembayaran ke email Anda.</p>
+                    </div>
+
+                    <div class="highlight">
+                        <h4 style="margin-top: 0;">📌 Informasi Penting:</h4>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Waktu Check-in: <strong>14:00 (2:00 PM)</strong></li>
+                            <li>Waktu Check-out: <strong>12:00 (12:00 PM)</strong></li>
+                            <li>Harap membawa KTP/identitas valid saat check-in</li>
+                            <li>Untuk pertanyaan, hubungi kami di <strong>info@kapulaga.net</strong></li>
+                        </ul>
+                    </div>
+
+                    {f'''
+                    <div style="background-color: #F0F0F0; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                        <p style="margin: 0;"><strong>Catatan Khusus:</strong></p>
+                        <p style="margin: 5px 0 0 0;">{reservation.special_requests}</p>
+                    </div>
+                    ''' if reservation.special_requests else ''}
+
+                    <p style="margin-top: 30px;">Kami sangat menantikan kedatangan Anda di Hotel Kapulaga!</p>
+
+                    <p>
+                        <strong>Salam Hangat,<br/>
+                        Tim Hotel Kapulaga</strong><br/>
+                        <span style="color: #666;">Telepon: +62 812 3456 7890<br/>
+                        Email: info@kapulaga.net</span>
+                    </p>
+                </div>
+
+                <div class="footer">
+                    <p>Hotel Kapulaga<br/>
+                    Jl. Hotel Kapulaga No. 123, Jakarta<br/>
+                    Telepon: (021) 1234-5678 | Email: info@kapulaga.net</p>
+                    <p style="font-size: 10px; color: #999; margin-top: 10px;">
+                        Email ini dikirim secara otomatis. Mohon tidak membalas email ini.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        # Create email message
+        email = EmailMessage(
+            subject=subject,
+            body=html_content,
+            from_email=settings.EMAIL_HOST_USER,
+            to=[recipient_email],
+        )
+        email.content_subtype = 'html'
+
+        # Send email
+        email.send()
+
+        print(f"Reservation confirmation email sent successfully to {recipient_email}")
+        return True
+
+    except Exception as e:
+        print(f"Error sending reservation confirmation email: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def send_reservation_invoice_email_with_pdf(reservation, pdf_base64_content):
     """
     Send reservation invoice email with PDF attachment (PDF generated by frontend)

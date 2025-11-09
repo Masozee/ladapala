@@ -276,11 +276,11 @@ export default function CreatePurchaseOrderPage() {
       })
 
       router.push('/office/stock/purchase-orders')
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating PO:', error)
       toast({
         title: "Error",
-        description: error.message || "Gagal membuat PO",
+        description: error instanceof Error ? error.message : String(error) || "Gagal membuat PO",
         variant: "destructive"
       })
     } finally {
@@ -448,7 +448,6 @@ export default function CreatePurchaseOrderPage() {
                           <div>
                             <h3 className="font-semibold text-sm text-gray-500 mb-2">DARI:</h3>
                             <p className="font-bold text-lg">{staff?.branch?.name || 'Restaurant Name'}</p>
-                            <p className="text-sm text-gray-600 mt-1">{staff?.branch?.address || ''}</p>
                           </div>
                           {/* To */}
                           <div>

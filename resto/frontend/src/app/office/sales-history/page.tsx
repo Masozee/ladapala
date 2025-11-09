@@ -150,7 +150,7 @@ export default function SalesHistoryPage() {
     }
 
     // Must be from today
-    return isToday(order.created_at)
+    return order.created_at ? isToday(order.created_at) : false
   }
 
   const handleVoidClick = (order: Order, e: React.MouseEvent) => {
@@ -449,7 +449,7 @@ export default function SalesHistoryPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total:</span>
-                    <span className="font-medium">{formatCurrency(selectedOrder.total_amount)}</span>
+                    <span className="font-medium">{formatCurrency(selectedOrder.total_amount || '0')}</span>
                   </div>
                 </div>
               </div>

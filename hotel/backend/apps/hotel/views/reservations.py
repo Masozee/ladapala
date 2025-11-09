@@ -139,7 +139,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def confirm(self, request, reservation_number=None):
-        """Confirm a pending reservation"""
+        """Confirm a pending reservation and send confirmation email (Phase 1)"""
         reservation = self.get_object()
 
         if reservation.status != 'PENDING':
@@ -149,10 +149,20 @@ class ReservationViewSet(viewsets.ModelViewSet):
         reservation.status = 'CONFIRMED'
         reservation.save(update_fields=['status', 'updated_at'])
 
+        # Send confirmation email (Phase 1 - Order Confirmation)
+        email_sent = False
+        try:
+            from apps.hotel.services.email_service_simple import send_reservation_confirmation_email
+            email_sent = send_reservation_confirmation_email(reservation)
+        except Exception as e:
+            # Log error but don't fail the confirmation
+            print(f"Error sending confirmation email: {str(e)}")
+
         serializer = ReservationSerializer(reservation)
         return Response({
             'message': 'Reservation confirmed successfully',
-            'reservation': serializer.data
+            'reservation': serializer.data,
+            'email_sent': email_sent
         })
 
     @action(detail=True, methods=['patch'])

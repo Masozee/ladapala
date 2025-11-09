@@ -58,7 +58,8 @@ import {
   Delete02Icon,
   MoreHorizontalIcon,
   Search02Icon,
-  PrinterIcon
+  PrinterIcon,
+  Mail01Icon
 } from '@/lib/icons';
 
 interface LineItem {
@@ -152,6 +153,13 @@ const PaymentsPage = () => {
   const [calculationResult, setCalculationResult] = useState<any>(null);
   const [applyingVoucher, setApplyingVoucher] = useState(false);
   const [voucherError, setVoucherError] = useState('');
+
+  // Email notification states
+  const [emailNotification, setEmailNotification] = useState<{
+    show: boolean;
+    type: 'invoice' | 'pending' | null;
+    message: string;
+  }>({ show: false, type: null, message: '' });
 
   const paymentMethods: PaymentMethod[] = [
     { id: 'cash', name: 'Cash', icon: CreditCardIcon, enabled: true },
@@ -504,15 +512,29 @@ const PaymentsPage = () => {
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({ error: 'Payment with promotions failed' }));
           throw new Error(errorData.error || 'Payment with promotions failed');
         }
 
         const data = await response.json();
         paymentResult = data.payment;
         console.log('Payment with promotions created:', paymentResult);
+
+        // Check if invoice email was sent (Phase 2 - only if fully paid)
         if (data.invoice_sent) {
-          console.log('Invoice email sent to guest');
+          console.log('✅ Invoice email sent to guest - Fully Paid');
+          setEmailNotification({
+            show: true,
+            type: 'invoice',
+            message: '📧 Invoice email sent to guest'
+          });
+        } else if (data.calculation && data.calculation.success) {
+          console.log('ℹ️ Payment recorded. Invoice will be sent after full payment.');
+          setEmailNotification({
+            show: true,
+            type: 'pending',
+            message: 'ℹ️ Payment recorded. Invoice will be sent after full payment.'
+          });
         }
       } else {
         // Standard payment without promotions
@@ -538,7 +560,8 @@ const PaymentsPage = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Payment failed');
+          const errorData = await response.json().catch(() => ({ error: 'Payment failed' }));
+          throw new Error(errorData.error || 'Payment failed');
         }
 
         paymentResult = await response.json();
@@ -567,6 +590,7 @@ const PaymentsPage = () => {
         }
       }
 
+      // Only mark as completed if we reach here without errors
       setPaymentStatus('completed');
       setShowReceipt(true);
 
@@ -745,6 +769,25 @@ const PaymentsPage = () => {
     return 0;
   };
 
+  // Calculate correct points to earn based on payment type
+  const getPointsToEarn = () => {
+    if (!calculationResult?.loyalty_points?.to_earn) return 0;
+
+    const basePoints = calculationResult.loyalty_points.to_earn;
+
+    // For partial payments, calculate proportional points
+    if (paymentType === 'DEPOSIT') {
+      // 30% deposit = 30% of points
+      return Math.floor(basePoints * 0.30);
+    } else if (paymentType === 'BALANCE') {
+      // Balance payment = remaining 70% of points
+      return Math.floor(basePoints * 0.70);
+    }
+
+    // Full payment gets all points
+    return basePoints;
+  };
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: printStyles }} />
@@ -775,6 +818,36 @@ const PaymentsPage = () => {
               Riwayat Transaksi
             </button>
           </div>
+
+          {/* Email Notification Banner */}
+          {emailNotification.show && paymentStatus === 'completed' && (
+            <div className={`mb-4 p-4 rounded-lg border ${
+              emailNotification.type === 'invoice'
+                ? 'bg-green-50 border-green-200'
+                : 'bg-blue-50 border-blue-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  {emailNotification.type === 'invoice' ? (
+                    <Mail01Icon className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <Clock01Icon className="h-5 w-5 text-blue-600" />
+                  )}
+                  <span className={`text-sm font-medium ${
+                    emailNotification.type === 'invoice' ? 'text-green-800' : 'text-blue-800'
+                  }`}>
+                    {emailNotification.message}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setEmailNotification({ show: false, type: null, message: '' })}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <Cancel01Icon className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Page Title and Actions */}
           <div className="flex items-center justify-between">
@@ -1087,10 +1160,19 @@ const PaymentsPage = () => {
                     </div>
 
                     {/* Points to Earn */}
-                    {calculationResult && calculationResult.loyalty_points?.to_earn > 0 && (
+                    {calculationResult && getPointsToEarn() > 0 && (
                       <div className="p-2 bg-blue-50 border border-blue-200 text-center mt-2">
-                        <p className="text-xs text-blue-700">You will earn</p>
-                        <p className="text-sm font-bold text-blue-800">+{calculationResult.loyalty_points.to_earn.toLocaleString()} points</p>
+                        <p className="text-xs text-blue-700">
+                          {paymentType === 'DEPOSIT' ? 'You will earn (deposit)' :
+                           paymentType === 'BALANCE' ? 'You will earn (balance)' :
+                           'You will earn'}
+                        </p>
+                        <p className="text-sm font-bold text-blue-800">+{getPointsToEarn().toLocaleString()} points</p>
+                        {paymentType === 'DEPOSIT' && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            (+{Math.floor(calculationResult.loyalty_points.to_earn * 0.70).toLocaleString()} more on balance payment)
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1427,10 +1509,10 @@ const PaymentsPage = () => {
               <span>TOTAL:</span>
               <span>{formatCurrency(calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount)}</span>
             </div>
-            {calculationResult && calculationResult.loyalty_points?.to_earn > 0 && (
+            {calculationResult && getPointsToEarn() > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px', fontSize: '12px', color: '#2563eb' }}>
-                <span>Points Earned:</span>
-                <span>+{calculationResult.loyalty_points.to_earn.toLocaleString()} pts</span>
+                <span>Points Earned{paymentType !== 'FULL' ? ` (${paymentType.toLowerCase()})` : ''}:</span>
+                <span>+{getPointsToEarn().toLocaleString()} pts</span>
               </div>
             )}
           </div>

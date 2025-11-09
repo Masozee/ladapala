@@ -174,13 +174,13 @@ export default function StockReportsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-semibold text-red-600 py-4 px-6">
-                        {parseFloat(item.quantity).toLocaleString('id-ID')} {item.unit}
+                        {Number(item.quantity).toLocaleString('id-ID')} {item.unit}
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground py-4 px-6">
                         {item.min_quantity} {item.unit}
                       </TableCell>
                       <TableCell className="text-right font-semibold text-yellow-600 py-4 px-6">
-                        {(item.min_quantity - parseFloat(item.quantity)).toLocaleString('id-ID')} {item.unit}
+                        {(item.min_quantity - Number(item.quantity)).toLocaleString('id-ID')} {item.unit}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -282,26 +282,24 @@ export default function StockReportsPage() {
                         {new Date(transaction.created_at).toLocaleDateString('id-ID')}
                       </TableCell>
                       <TableCell className="font-medium py-4 px-6">
-                        {inventory.find(i => i.id === transaction.item)?.name || '-'}
+                        {transaction.inventory_name || '-'}
                       </TableCell>
                       <TableCell className="py-4 px-6">
                         <Badge
                           variant={
-                            transaction.transaction_type === 'RECEIPT' ? 'default' :
-                            transaction.transaction_type === 'TRANSFER_IN' ? 'secondary' :
-                            transaction.transaction_type === 'TRANSFER_OUT' ? 'outline' :
-                            'destructive'
+                            transaction.transaction_type === 'IN' ? 'default' :
+                            transaction.transaction_type === 'OUT' ? 'outline' :
+                            'secondary'
                           }
                         >
-                          {transaction.transaction_type === 'RECEIPT' && 'Penerimaan'}
-                          {transaction.transaction_type === 'TRANSFER_IN' && 'Transfer Masuk'}
-                          {transaction.transaction_type === 'TRANSFER_OUT' && 'Transfer Keluar'}
-                          {transaction.transaction_type === 'ADJUSTMENT' && 'Koreksi'}
-                          {transaction.transaction_type === 'USAGE' && 'Pemakaian'}
+                          {transaction.transaction_type === 'IN' && 'Masuk'}
+                          {transaction.transaction_type === 'OUT' && 'Keluar'}
+                          {transaction.transaction_type === 'ADJUST' && 'Koreksi'}
+                          {transaction.transaction_type === 'WASTE' && 'Waste'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-semibold py-4 px-6">
-                        {parseFloat(transaction.quantity).toLocaleString('id-ID')}
+                        {Number(transaction.quantity).toLocaleString('id-ID')}
                       </TableCell>
                       <TableCell className="text-muted-foreground py-4 px-6">
                         {transaction.notes || '-'}

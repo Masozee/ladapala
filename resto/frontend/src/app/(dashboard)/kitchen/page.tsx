@@ -18,11 +18,18 @@ import { api, Order } from '@/lib/api'
 export default function KitchenDisplayPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<'ALL' | 'CONFIRMED' | 'PREPARING' | 'READY'>('ALL')
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (isRefresh = false) => {
     try {
-      setLoading(true)
+      // Only show loading spinner on initial load, not on refresh
+      if (!isRefresh) {
+        setLoading(true)
+      } else {
+        setRefreshing(true)
+      }
+
       const response = await api.getOrders({
         status: filter === 'ALL' ? undefined : filter
       })
@@ -40,6 +47,7 @@ export default function KitchenDisplayPage() {
       console.error('Error fetching orders:', error)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -47,18 +55,33 @@ export default function KitchenDisplayPage() {
     fetchOrders()
 
     // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchOrders, 30000)
+    const interval = setInterval(() => fetchOrders(true), 30000)
 
     return () => clearInterval(interval)
   }, [filter])
 
   const handleStatusUpdate = async (orderId: number, newStatus: string) => {
     try {
+      // Optimistic update - update UI immediately
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === orderId ? { ...order, status: newStatus as any } : order
+        ).filter(order =>
+          // Remove if status is no longer kitchen-relevant
+          ['CONFIRMED', 'PREPARING', 'READY'].includes(order.status || '')
+        )
+      )
+
+      // Then update backend
       await api.updateOrderStatus(orderId, newStatus)
-      await fetchOrders() // Refresh the list
+
+      // Silently refresh in background to sync any other changes
+      await fetchOrders(true)
     } catch (error) {
       console.error('Error updating order status:', error)
       alert('Gagal mengubah status pesanan')
+      // Revert on error
+      await fetchOrders()
     }
   }
 
@@ -121,12 +144,17 @@ export default function KitchenDisplayPage() {
           </div>
         </div>
         <Button
-          onClick={fetchOrders}
+          onClick={() => fetchOrders(true)}
           variant="outline"
           className="gap-2"
+          disabled={refreshing}
         >
-          <HugeiconsIcon icon={Loading03Icon} className="h-4 w-4" strokeWidth={2} />
-          Refresh
+          <HugeiconsIcon
+            icon={Loading03Icon}
+            className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`}
+            strokeWidth={2}
+          />
+          {refreshing ? 'Refreshing...' : 'Refresh'}
         </Button>
       </div>
 
@@ -236,9 +264,9 @@ export default function KitchenDisplayPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {orders.map((order) => (
-            <Card key={order.id} className="border-2 hover:shadow-lg transition-shadow">
+            <Card key={order.id} className="border shadow-none">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">

@@ -174,7 +174,7 @@ export default function ReportPage() {
               <SelectItem value="2">Cabang Barat</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+          <Select value={selectedPeriod} onValueChange={(value) => setSelectedPeriod(value as 'today' | 'week' | 'month' | 'year')}>
             <SelectTrigger className="w-[150px]">
               <SelectValue />
             </SelectTrigger>
