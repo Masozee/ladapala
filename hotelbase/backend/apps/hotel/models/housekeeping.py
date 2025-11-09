@@ -224,19 +224,68 @@ class AmenityUsage(models.Model):
         return f'{self.inventory_item.name} x{self.quantity_used} - {self.housekeeping_task.task_number}'
 
     def save(self, *args, **kwargs):
-        """Automatically deduct stock when amenity usage is recorded"""
+        """Automatically deduct stock from department buffer when amenity usage is recorded"""
+        from .inventory import DepartmentInventory, StockMovement
+        from django.db import transaction
+
         is_new = self.pk is None
 
         if is_new and not self.stock_deducted:
-            # Deduct from inventory
-            if self.inventory_item.current_stock >= self.quantity_used:
-                self.inventory_item.current_stock -= self.quantity_used
-                self.inventory_item.save()
-                self.stock_deducted = True
-            else:
-                # Log warning but still save the record
-                print(f'WARNING: Insufficient stock for {self.inventory_item.name}. '
-                      f'Available: {self.inventory_item.current_stock}, Required: {self.quantity_used}')
+            # Try to deduct from HOUSEKEEPING department buffer first
+            try:
+                dept_buffer = DepartmentInventory.objects.get(
+                    department='HOUSEKEEPING',
+                    inventory_item=self.inventory_item,
+                    is_active=True
+                )
+
+                # Check if department has enough stock
+                if dept_buffer.current_stock >= self.quantity_used:
+                    with transaction.atomic():
+                        # Deduct from department buffer
+                        dept_buffer.current_stock -= self.quantity_used
+                        dept_buffer.save(update_fields=['current_stock'])
+
+                        # Create stock movement record
+                        StockMovement.objects.create(
+                            inventory_item=self.inventory_item,
+                            movement_type='DEPARTMENT_TO_GUEST',
+                            quantity=-self.quantity_used,
+                            balance_after=int(dept_buffer.current_stock),
+                            from_department='HOUSEKEEPING',
+                            department_inventory=dept_buffer,
+                            reference=f'Amenity for {self.housekeeping_task.task_number}',
+                            notes=f'Used {self.quantity_used} {self.inventory_item.unit_of_measurement}',
+                            created_by=self.recorded_by
+                        )
+
+                        self.stock_deducted = True
+                else:
+                    print(f'WARNING: Insufficient stock in Housekeeping buffer for {self.inventory_item.name}. '
+                          f'Available: {dept_buffer.current_stock}, Required: {self.quantity_used}')
+
+            except DepartmentInventory.DoesNotExist:
+                # Fallback to main warehouse if department buffer doesn't exist
+                print(f'INFO: No Housekeeping buffer found for {self.inventory_item.name}, using main warehouse')
+                if self.inventory_item.current_stock >= self.quantity_used:
+                    self.inventory_item.current_stock -= self.quantity_used
+                    self.inventory_item.save()
+
+                    # Create stock movement for warehouse deduction
+                    StockMovement.objects.create(
+                        inventory_item=self.inventory_item,
+                        movement_type='USAGE',
+                        quantity=-self.quantity_used,
+                        balance_after=self.inventory_item.current_stock,
+                        reference=f'Direct usage for {self.housekeeping_task.task_number}',
+                        notes='No department buffer configured, deducted from main warehouse',
+                        created_by=self.recorded_by
+                    )
+
+                    self.stock_deducted = True
+                else:
+                    print(f'WARNING: Insufficient stock in warehouse for {self.inventory_item.name}. '
+                          f'Available: {self.inventory_item.current_stock}, Required: {self.quantity_used}')
 
         super().save(*args, **kwargs)
 
