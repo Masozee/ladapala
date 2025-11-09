@@ -1,0 +1,215 @@
+"""
+Email Service using Gmail SMTP
+"""
+import base64
+from django.core.mail import EmailMessage
+from django.conf import settings
+from .pdf_generator import generate_event_invoice_pdf
+
+
+def send_event_invoice_email(event_booking):
+    """
+    Send invoice email with PDF attachment when event is fully paid
+
+    Args:
+        event_booking: EventBooking instance with full_payment_paid=True
+
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+
+        # Generate PDF invoice
+        pdf_buffer = generate_event_invoice_pdf(event_booking)
+        pdf_content = pdf_buffer.getvalue()
+
+        # Email subject
+        subject = f"Invoice Pembayaran Event - {event_booking.event_name}"
+
+        # Recipient email - FOR DEVELOPMENT: Send all emails to test address
+        recipient_email = "nurojilukmansyah@gmail.com"  # Development test email
+        # recipient_email = event_booking.guest.email  # Uncomment for production
+
+        # Email body (HTML)
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                .header {{
+                    background-color: #005357;
+                    color: white;
+                    padding: 20px;
+                    text-align: center;
+                }}
+                .content {{
+                    padding: 30px 20px;
+                    background-color: #f9f9f9;
+                }}
+                .details {{
+                    background-color: white;
+                    padding: 20px;
+                    margin: 20px 0;
+                    border-radius: 5px;
+                }}
+                .details-row {{
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 10px 0;
+                    border-bottom: 1px solid #eee;
+                }}
+                .details-row:last-child {{
+                    border-bottom: none;
+                }}
+                .label {{
+                    font-weight: bold;
+                    color: #005357;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding: 20px;
+                    color: #666;
+                    font-size: 12px;
+                }}
+                .button {{
+                    display: inline-block;
+                    padding: 12px 30px;
+                    background-color: #005357;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    margin: 20px 0;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Hotel Kapulaga</h1>
+                    <p>Terima Kasih atas Pembayaran Anda</p>
+                </div>
+
+                <div class="content">
+                    <h2>Dear {event_booking.guest.full_name},</h2>
+
+                    <p>Terima kasih atas pembayaran penuh untuk booking event Anda. Kami dengan senang hati mengkonfirmasi bahwa pembayaran telah kami terima dengan lengkap.</p>
+
+                    <div class="details">
+                        <div class="details-row">
+                            <span class="label">No. Booking:</span>
+                            <span>{event_booking.booking_number}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Nama Event:</span>
+                            <span>{event_booking.event_name}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Jenis Event:</span>
+                            <span>{event_booking.get_event_type_display()}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Tanggal Event:</span>
+                            <span>{event_booking.event_date.strftime('%d %B %Y')}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Waktu:</span>
+                            <span>{event_booking.start_time.strftime('%H:%M')} - {event_booking.end_time.strftime('%H:%M')}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="label">Total Pembayaran:</span>
+                            <span><strong>Rp {event_booking.grand_total:,.0f}</strong></span>
+                        </div>
+                    </div>
+
+                    <p>
+                        Bukti pembayaran terlampir dalam file PDF. Silakan simpan email ini sebagai referensi Anda.
+                    </p>
+
+                    <p>
+                        Jika Anda memiliki pertanyaan atau memerlukan bantuan lebih lanjut, jangan ragu untuk menghubungi kami.
+                    </p>
+
+                    <p>Kami menantikan acara Anda di Hotel Kapulaga!</p>
+
+                    <p>
+                        <strong>Best regards,<br/>
+                        Hotel Kapulaga Team</strong>
+                    </p>
+                </div>
+
+                <div class="footer">
+                    <p>
+                        Hotel Kapulaga<br/>
+                        Email: info@kapulaga.net | Telepon: (021) 1234-5678<br/>
+                        Jl. Hotel Kapulaga No. 123, Jakarta
+                    </p>
+                    <p style="font-size: 10px; color: #999;">
+                        Email ini dikirim secara otomatis. Mohon tidak membalas email ini.
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        # Plain text version
+        text_content = f"""
+        Dear {event_booking.guest.full_name},
+
+        Terima kasih atas pembayaran penuh untuk booking event Anda.
+
+        Detail Booking:
+        - No. Booking: {event_booking.booking_number}
+        - Nama Event: {event_booking.event_name}
+        - Jenis Event: {event_booking.get_event_type_display()}
+        - Tanggal Event: {event_booking.event_date.strftime('%d %B %Y')}
+        - Waktu: {event_booking.start_time.strftime('%H:%M')} - {event_booking.end_time.strftime('%H:%M')}
+        - Total Pembayaran: Rp {event_booking.grand_total:,.0f}
+
+        Bukti pembayaran terlampir dalam file PDF.
+
+        Terima kasih,
+        Hotel Kapulaga Team
+        Email: info@kapulaga.net | Telepon: (021) 1234-5678
+        """
+
+        # Create email using Django's EmailMessage
+        email = EmailMessage(
+            subject=subject,
+            body=html_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[recipient_email],
+        )
+
+        # Set content type to HTML
+        email.content_subtype = "html"
+
+        # Attach PDF
+        email.attach(
+            filename=f"Invoice_{event_booking.booking_number}.pdf",
+            content=pdf_content,
+            mimetype='application/pdf'
+        )
+
+        # Send email
+        email.send()
+
+        print(f"Invoice email sent successfully to {recipient_email}")
+        return True
+
+    except Exception as e:
+        print(f"Error sending invoice email: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False

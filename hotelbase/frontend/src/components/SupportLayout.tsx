@@ -1,0 +1,194 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import SupportSidebar from './SupportSidebar';
+import DepartmentGuard from './DepartmentGuard';
+import { buildApiUrl } from '@/lib/config';
+import {
+  Notification02Icon,
+  Cancel01Icon,
+  ChevronRightIcon,
+  Logout01Icon,
+  Calendar01Icon,
+  Clock01Icon
+} from '@/lib/icons';
+
+interface SupportLayoutProps {
+  children: React.ReactNode;
+  breadcrumb?: { label: string; href?: string }[];
+}
+
+export const SupportHeaderActions = () => {
+  return (
+    <div className="flex items-center space-x-4">
+      {/* Notifications */}
+      <button className={`relative p-2 hover:bg-gray-100 transition-colors text-gray-600`}>
+        <Notification02Icon className="h-5 w-5" />
+        <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center">
+          5
+        </span>
+      </button>
+
+      {/* Logout Button */}
+      <button
+        onClick={async () => {
+          try {
+            // Get CSRF token from cookies
+            const getCookie = (name: string) => {
+              const value = `; ${document.cookie}`;
+              const parts = value.split(`; ${name}=`);
+              if (parts.length === 2) return parts.pop()?.split(';').shift();
+              return null;
+            };
+
+            const csrfToken = getCookie('csrftoken');
+
+            // Call logout API
+            const response = await fetch(buildApiUrl('user/logout/'), {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+              },
+            });
+
+            if (response.ok) {
+              // Clear any local storage
+              if (typeof window !== 'undefined') {
+                localStorage.clear();
+                sessionStorage.clear();
+              }
+              // Redirect to login
+              window.location.href = '/login';
+            } else {
+              console.error('Logout failed:', response.status, await response.text());
+              // Force logout on client side anyway
+              if (typeof window !== 'undefined') {
+                localStorage.clear();
+                sessionStorage.clear();
+              }
+              window.location.href = '/login';
+            }
+          } catch (error) {
+            console.error('Logout error:', error);
+            // Force logout on client side anyway
+            if (typeof window !== 'undefined') {
+              localStorage.clear();
+              sessionStorage.clear();
+            }
+            window.location.href = '/login';
+          }
+        }}
+        className="p-2 hover:bg-red-100 transition-colors text-red-600"
+        title="Logout"
+      >
+        <Logout01Icon className="h-5 w-5" />
+      </button>
+    </div>
+  );
+};
+
+const SupportLayout = ({ children, breadcrumb }: SupportLayoutProps) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const pathname = usePathname();
+
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Generate default breadcrumb if not provided
+  const defaultBreadcrumb = () => {
+    const paths = pathname.split('/').filter(Boolean);
+    const crumbs = [{ label: 'Support', href: '/support' }];
+    
+    // Skip the first 'support' segment since we already have it as root
+    paths.slice(1).forEach((path, index) => {
+      const href = '/support/' + paths.slice(1, index + 2).join('/');
+      const label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
+      crumbs.push({ label, href });
+    });
+    
+    return crumbs;
+  };
+
+  const breadcrumbItems = breadcrumb || defaultBreadcrumb();
+
+  return (
+    <DepartmentGuard requiredAccess="support">
+        <div className={`flex h-screen bg-gray-50`}>
+          <SupportSidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Top Navbar */}
+          <header className="sticky top-0 z-10 bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/50 h-16 flex items-center justify-between px-6">
+            {/* Breadcrumb */}
+            <nav className="flex items-center space-x-2 text-sm">
+              {breadcrumbItems.map((item, index) => (
+                <div key={index} className="flex items-center">
+                  {index > 0 && <ChevronRightIcon className="h-4 w-4 text-gray-400 mx-2" />}
+                  {item.href && index < breadcrumbItems.length - 1 ? (
+                    <Link href={item.href} className="text-gray-600 hover:text-[#005357] transition-colors">
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <span className={index === breadcrumbItems.length - 1 ? 'text-gray-900 font-medium' : 'text-gray-600'}>
+                      {item.label}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </nav>
+
+            {/* Right Side: Date/Time & Header Actions */}
+            <div className="flex items-center space-x-6">
+              {/* Today's Date & Time */}
+              <div className="flex items-center space-x-3 text-sm text-gray-600 border-r border-gray-300 pr-6">
+                <Calendar01Icon className="h-4 w-4" />
+                <div className="flex flex-col">
+                  <span className="font-medium">
+                    {currentTime.toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </span>
+                  <div className="flex items-center space-x-1 text-xs text-gray-500">
+                    <Clock01Icon className="h-3 w-3" />
+                    <span>
+                      {currentTime.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Header Actions */}
+              <SupportHeaderActions />
+            </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto">
+            <div className="p-6">
+              <div className="container mx-auto max-w-7xl">
+                {children}
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </DepartmentGuard>
+  );
+};
+
+export default SupportLayout;
