@@ -6,6 +6,7 @@ import {
   HeadphonesIcon as HugeHeadphones,
   HotelIcon as HugeHotel,
   Calendar01Icon as HugeCalendar01,
+  CalendarAdd01Icon as HugeCalendarAdd01,
   CreditCardIcon as HugeCreditCard,
   File01Icon as HugeFile01,
   Settings02Icon as HugeSettings02,
@@ -78,6 +79,7 @@ export const UserMultiple02Icon = createIconComponent(HugeUserMultiple02);
 export const HeadphonesIcon = createIconComponent(HugeHeadphones);
 export const HotelIcon = createIconComponent(HugeHotel);
 export const Calendar01Icon = createIconComponent(HugeCalendar01);
+export const CalendarAdd01Icon = createIconComponent(HugeCalendarAdd01);
 export const CreditCardIcon = createIconComponent(HugeCreditCard);
 export const File01Icon = createIconComponent(HugeFile01);
 export const Settings02Icon = createIconComponent(HugeSettings02);
@@ -162,6 +164,7 @@ UserMultiple02Icon.displayName = 'UserMultiple02Icon';
 HeadphonesIcon.displayName = 'HeadphonesIcon';
 HotelIcon.displayName = 'HotelIcon';
 Calendar01Icon.displayName = 'Calendar01Icon';
+CalendarAdd01Icon.displayName = 'CalendarAdd01Icon';
 CreditCardIcon.displayName = 'CreditCardIcon';
 File01Icon.displayName = 'File01Icon';
 Settings02Icon.displayName = 'Settings02Icon';

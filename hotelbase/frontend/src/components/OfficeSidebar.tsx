@@ -18,11 +18,11 @@ import {
   Home01Icon,
   UserIcon,
   Calendar01Icon,
+  CalendarAdd01Icon,
   Shield01Icon,
   ChevronLeftIcon,
   PackageIcon,
   CircleArrowReload01Icon,
-  SparklesIcon,
   PieChartIcon
 } from '@/lib/icons';
 
@@ -88,7 +88,7 @@ const OfficeSidebar = () => {
     { name: 'Guest Database', icon: UserMultipleIcon, href: '/office/guests', badge: guestsCount > 0 ? guestsCount.toString() : undefined },
     { name: 'Employees', icon: UserSettings01Icon, href: '/office/employees', badge: employeesCount > 0 ? employeesCount.toString() : undefined },
     { name: 'Occupancy', icon: PieChartIcon, href: '/office/occupancy', badge: occupancyCount > 0 ? occupancyCount.toString() : undefined },
-    { name: 'Events', icon: SparklesIcon, href: '/office/events', badge: eventsCount > 0 ? eventsCount.toString() : undefined },
+    { name: 'Events', icon: CalendarAdd01Icon, href: '/office/events', badge: eventsCount > 0 ? eventsCount.toString() : undefined },
     { name: 'Housekeeping', icon: CircleArrowReload01Icon, href: '/office/housekeeping', badge: housekeepingCount > 0 ? housekeepingCount.toString() : undefined },
     { name: 'Financial', icon: CreditCardIcon, href: '/office/financial', badge: financialCount > 0 ? financialCount.toString() : undefined },
     { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse', badge: warehouseCount > 0 ? warehouseCount.toString() : undefined },
