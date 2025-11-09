@@ -19,6 +19,7 @@ try:
     from .views.warehouse import PurchaseOrderViewSet, PurchaseOrderItemViewSet, StockMovementViewSet
     from .views.stock_opname import StockOpnameViewSet, StockOpnameItemViewSet
     from .views.audit import WarehouseAuditLogViewSet
+    from .views.department_inventory import DepartmentInventoryViewSet
     from .views.maintenance import MaintenanceRequestViewSet, MaintenanceTechnicianViewSet
     from .views.settings import HotelSettingsViewSet
     from .views.sidebar_counts import sidebar_counts
@@ -60,6 +61,7 @@ if LEGACY_VIEWS:
     router.register(r'checkins', CheckInViewSet, basename='hotel-checkins')
     router.register(r'holidays', HolidayViewSet, basename='hotel-holidays')
     router.register(r'inventory', InventoryItemViewSet, basename='hotel-inventory')
+    router.register(r'department-inventory', DepartmentInventoryViewSet, basename='hotel-department-inventory')
     router.register(r'purchase-orders', PurchaseOrderViewSet, basename='hotel-purchase-orders')
     router.register(r'purchase-order-items', PurchaseOrderItemViewSet, basename='hotel-purchase-order-items')
     router.register(r'stock-movements', StockMovementViewSet, basename='hotel-stock-movements')

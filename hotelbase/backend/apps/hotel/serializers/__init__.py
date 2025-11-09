@@ -5,7 +5,7 @@ from ..models import (
     CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, Supplier,
     MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
     FinancialTransaction, Invoice, InvoiceItem, AmenityRequest, AmenityCategory, HotelSettings,
-    EventPackage, FoodPackage, EventBooking, EventPayment, EventAddOn
+    EventPackage, FoodPackage, EventBooking, EventPayment, EventAddOn, DepartmentInventory
 )
 
 
@@ -746,6 +746,7 @@ class StockMovementSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'inventory_item', 'inventory_item_name', 'inventory_item_unit',
             'movement_type', 'movement_type_display', 'quantity', 'balance_after',
+            'from_department', 'to_department', 'department_inventory',
             'reference', 'notes', 'movement_date', 'created_by', 'created_by_name',
             'created_at'
         ]
@@ -755,6 +756,29 @@ class StockMovementSerializer(serializers.ModelSerializer):
         if obj.created_by:
             return f"{obj.created_by.first_name} {obj.created_by.last_name}".strip() or obj.created_by.username
         return None
+
+
+class DepartmentInventorySerializer(serializers.ModelSerializer):
+    """Serializer for department inventory buffers"""
+    inventory_item_name = serializers.CharField(source='inventory_item.name', read_only=True)
+    inventory_item_category = serializers.CharField(source='inventory_item.category.name', read_only=True)
+    unit_of_measurement = serializers.CharField(source='inventory_item.unit_of_measurement', read_only=True)
+    department_display = serializers.CharField(source='get_department_display', read_only=True)
+    stock_status = serializers.CharField(read_only=True)
+    is_low_stock = serializers.BooleanField(read_only=True)
+    suggested_restock_quantity = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = DepartmentInventory
+        fields = [
+            'id', 'department', 'department_display', 'inventory_item', 'inventory_item_name',
+            'inventory_item_category', 'unit_of_measurement', 'current_stock', 'min_stock',
+            'max_stock', 'location', 'last_restocked', 'is_active', 'stock_status',
+            'is_low_stock', 'suggested_restock_quantity', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'stock_status', 'is_low_stock',
+                           'suggested_restock_quantity', 'inventory_item_name',
+                           'inventory_item_category', 'unit_of_measurement', 'department_display']
 
 
 # List serializers for simplified views

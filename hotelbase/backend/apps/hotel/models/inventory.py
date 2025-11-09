@@ -126,19 +126,92 @@ class PurchaseOrderItem(models.Model):
         return max(0, self.quantity_ordered - self.quantity_received)
 
 
+class DepartmentInventory(models.Model):
+    """Buffer stock allocated to each department"""
+    DEPARTMENT_CHOICES = [
+        ('HOUSEKEEPING', 'Housekeeping'),
+        ('F&B', 'Food & Beverage'),
+        ('MAINTENANCE', 'Maintenance'),
+        ('FRONT_DESK', 'Front Desk'),
+        ('ENGINEERING', 'Engineering'),
+        ('LAUNDRY', 'Laundry'),
+    ]
+
+    department = models.CharField(max_length=20, choices=DEPARTMENT_CHOICES)
+    inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='department_buffers')
+    current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text='Current buffer quantity')
+    min_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text='Minimum buffer level')
+    max_stock = models.DecimalField(max_digits=10, decimal_places=2, default=100, help_text='Maximum buffer capacity')
+    location = models.CharField(max_length=100, blank=True, null=True, help_text='Physical storage location in department')
+    last_restocked = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['department', 'inventory_item__name']
+        unique_together = ['department', 'inventory_item']
+        verbose_name = 'Department Inventory'
+        verbose_name_plural = 'Department Inventories'
+
+    def __str__(self):
+        return f'{self.department} - {self.inventory_item.name} ({self.current_stock})'
+
+    @property
+    def is_low_stock(self):
+        """Check if department buffer is running low"""
+        return self.current_stock <= self.min_stock
+
+    @property
+    def stock_status(self):
+        """Get stock status for department buffer"""
+        if self.is_low_stock:
+            return 'Low Stock'
+        elif self.current_stock >= self.max_stock:
+            return 'At Capacity'
+        else:
+            return 'Normal'
+
+    @property
+    def suggested_restock_quantity(self):
+        """Calculate suggested quantity to restock to max level"""
+        return max(0, float(self.max_stock - self.current_stock))
+
+    def can_fulfill(self, quantity):
+        """Check if department has enough stock to fulfill request"""
+        return self.current_stock >= quantity
+
+
 class StockMovement(models.Model):
     MOVEMENT_TYPE_CHOICES = [
         ('PURCHASE', 'Purchase Order'),
         ('ADJUSTMENT', 'Stock Adjustment'),
         ('USAGE', 'Usage'),
         ('RETURN', 'Return'),
+        ('WAREHOUSE_TO_DEPARTMENT', 'Warehouse to Department'),
+        ('DEPARTMENT_TO_GUEST', 'Department to Guest'),
+        ('DEPARTMENT_TO_WAREHOUSE', 'Department to Warehouse'),
+        ('DEPARTMENT_TO_DEPARTMENT', 'Department to Department'),
     ]
 
     inventory_item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='movements')
-    movement_type = models.CharField(max_length=20, choices=MOVEMENT_TYPE_CHOICES)
+    movement_type = models.CharField(max_length=30, choices=MOVEMENT_TYPE_CHOICES)
     quantity = models.IntegerField()  # Can be negative for usage
     balance_after = models.PositiveIntegerField()
-    reference = models.CharField(max_length=50, blank=True, null=True)  # PO number, etc.
+
+    # Department-related fields
+    from_department = models.CharField(max_length=20, blank=True, null=True, help_text='Source department (if applicable)')
+    to_department = models.CharField(max_length=20, blank=True, null=True, help_text='Destination department (if applicable)')
+    department_inventory = models.ForeignKey(
+        DepartmentInventory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='movements',
+        help_text='Related department inventory record'
+    )
+
+    reference = models.CharField(max_length=50, blank=True, null=True)  # PO number, reservation number, etc.
     notes = models.TextField(blank=True, null=True)
     movement_date = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
@@ -148,7 +221,15 @@ class StockMovement(models.Model):
         ordering = ['-movement_date', '-created_at']
 
     def __str__(self):
-        return f'{self.inventory_item.name} - {self.movement_type} ({self.quantity:+d})'
+        dept_info = ''
+        if self.from_department and self.to_department:
+            dept_info = f' ({self.from_department} → {self.to_department})'
+        elif self.to_department:
+            dept_info = f' (→ {self.to_department})'
+        elif self.from_department:
+            dept_info = f' ({self.from_department} →)'
+
+        return f'{self.inventory_item.name} - {self.movement_type}{dept_info} ({self.quantity:+d})'
 
 
 class StockOpname(models.Model):
