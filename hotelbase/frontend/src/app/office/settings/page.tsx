@@ -45,15 +45,17 @@ interface ApiUser {
   email: string;
   first_name: string;
   last_name: string;
+  full_name: string;
   role: string;
+  role_display: string;
   phone: string;
   is_active: boolean;
+  is_staff: boolean;
+  is_superuser: boolean;
   date_joined: string;
   last_login: string | null;
-  employee?: {
-    department: string;
-    position: string;
-  };
+  groups?: string[];
+  user_permissions?: string[];
 }
 
 export default function AdminPage() {
@@ -144,48 +146,76 @@ export default function AdminPage() {
     }
   ];
 
+  // Generate login logs from API users
+  const loginLogs = apiUsers
+    .filter(user => user.last_login) // Only users who have logged in
+    .map(user => {
+      // Determine permissions text
+      let permissionsText = '';
+      if (user.is_superuser) {
+        permissionsText = 'All Access (Superuser)';
+      } else if (user.is_staff) {
+        permissionsText = 'Staff Access, Admin Panel';
+      } else {
+        const rolePermissions: Record<string, string> = {
+          'ADMIN': 'All Access',
+          'MANAGER': 'Reservations, Guests, Reports, Financial',
+          'SUPERVISOR': 'Reservations, Guests, Reports',
+          'RECEPTIONIST': 'Reservations, Check-in/out',
+          'HOUSEKEEPING': 'Housekeeping Tasks, Inventory',
+          'MAINTENANCE': 'Maintenance Requests, Inventory',
+          'STAFF': 'Basic Access'
+        };
+        permissionsText = rolePermissions[user.role] || 'Limited Access';
+      }
+
+      return {
+        id: user.id,
+        timestamp: user.last_login || user.date_joined,
+        level: 'info',
+        category: 'Auth',
+        message: `User login: ${user.email}`,
+        user: user.full_name,
+        role: user.role_display,
+        permissions: permissionsText
+      };
+    })
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 20); // Show last 20 logins
+
   const systemLogs = [
+    ...loginLogs,
     {
-      id: 1,
-      timestamp: '2024-08-28 10:15:23',
-      level: 'info',
-      category: 'Auth',
-      message: 'User login successful: maria.santos@kapulaga.com',
-      user: 'Maria Santos'
-    },
-    {
-      id: 2,
+      id: 999,
       timestamp: '2024-08-28 10:10:45',
       level: 'warning',
       category: 'System',
       message: 'High memory usage detected: 78%',
-      user: 'System'
+      user: 'System',
+      role: 'System',
+      permissions: 'N/A'
     },
     {
-      id: 3,
+      id: 998,
       timestamp: '2024-08-28 09:55:12',
       level: 'error',
       category: 'Database',
       message: 'Connection timeout to backup server',
-      user: 'System'
+      user: 'System',
+      role: 'System',
+      permissions: 'N/A'
     },
     {
-      id: 4,
+      id: 997,
       timestamp: '2024-08-28 09:30:05',
       level: 'info',
       category: 'Backup',
       message: 'Daily backup completed successfully',
-      user: 'System'
-    },
-    {
-      id: 5,
-      timestamp: '2024-08-28 08:15:33',
-      level: 'info',
-      category: 'Auth',
-      message: 'Password changed for user: ahmad.susanto@kapulaga.com',
-      user: 'Ahmad Susanto'
+      user: 'System',
+      role: 'System',
+      permissions: 'N/A'
     }
-  ];
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -371,16 +401,39 @@ export default function AdminPage() {
   };
 
   // Transform API users to match the UI format
-  const transformedUsers = apiUsers.map(user => ({
-    id: user.id,
-    name: `${user.first_name} ${user.last_name}`,
-    email: user.email,
-    role: user.role.toLowerCase(),
-    department: user.employee?.department || 'N/A',
-    status: user.is_active ? 'active' : 'inactive',
-    lastLogin: user.last_login || user.date_joined,
-    permissions: user.role === 'ADMIN' ? ['all'] : ['basic']
-  }));
+  const transformedUsers = apiUsers.map(user => {
+    // Determine permissions based on role and superuser status
+    let permissions: string[] = [];
+    if (user.is_superuser) {
+      permissions = ['All Access (Superuser)'];
+    } else if (user.is_staff) {
+      permissions = ['Staff Access', 'Admin Panel'];
+    } else {
+      // Map role to permissions
+      const rolePermissions: Record<string, string[]> = {
+        'ADMIN': ['All Access'],
+        'MANAGER': ['Reservations', 'Guests', 'Reports', 'Financial'],
+        'SUPERVISOR': ['Reservations', 'Guests', 'Reports'],
+        'RECEPTIONIST': ['Reservations', 'Check-in/out'],
+        'HOUSEKEEPING': ['Housekeeping Tasks', 'Inventory'],
+        'MAINTENANCE': ['Maintenance Requests', 'Inventory'],
+        'STAFF': ['Basic Access']
+      };
+      permissions = rolePermissions[user.role] || ['Limited Access'];
+    }
+
+    return {
+      id: user.id,
+      name: user.full_name,
+      email: user.email,
+      role: user.role_display,
+      department: user.role_display, // Using role_display as department since there's no separate department field
+      status: user.is_active ? 'active' : 'inactive',
+      lastLogin: user.last_login || user.date_joined,
+      permissions: permissions,
+      rawRole: user.role
+    };
+  });
 
   const filteredUsers = transformedUsers.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -853,25 +906,29 @@ export default function AdminPage() {
                           </td>
 
                           <td className="border border-gray-200 px-6 py-4">
-                            <div className="flex items-center justify-end space-x-2">
-                              <button 
-                                className="p-2 text-gray-400 hover:text-[#4E61D3] hover:bg-gray-100 transition-colors rounded"
-                                title="Lihat Detail"
-                              >
-                                <EyeIcon className="h-4 w-4" />
-                              </button>
-                              <button 
-                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded"
-                                title="Edit Pengguna"
-                              >
-                                <PencilEdit02Icon className="h-4 w-4" />
-                              </button>
-                              <button 
-                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors rounded"
-                                title="Hapus Pengguna"
-                              >
-                                <Delete02Icon className="h-4 w-4" />
-                              </button>
+                            <div className="flex items-center justify-end">
+                              <div className="relative group">
+                                <button
+                                  className="p-2 text-gray-400 hover:text-[#4E61D3] hover:bg-gray-100 transition-colors rounded"
+                                  title="Actions"
+                                >
+                                  <MoreHorizontalIcon className="h-5 w-5" />
+                                </button>
+                                <div className="hidden group-hover:block absolute right-0 mt-1 w-48 bg-white border border-gray-200 shadow-lg z-10">
+                                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
+                                    <EyeIcon className="h-4 w-4" />
+                                    <span>Lihat Detail</span>
+                                  </button>
+                                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
+                                    <PencilEdit02Icon className="h-4 w-4" />
+                                    <span>Edit Pengguna</span>
+                                  </button>
+                                  <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2">
+                                    <Delete02Icon className="h-4 w-4" />
+                                    <span>Hapus Pengguna</span>
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -1097,7 +1154,10 @@ export default function AdminPage() {
                           Message
                         </th>
                         <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
-                          UserIcon
+                          User & Role
+                        </th>
+                        <th className="border border-gray-300 text-left py-4 px-6 text-sm font-bold text-white uppercase tracking-wider">
+                          Permissions
                         </th>
                       </tr>
                     </thead>
@@ -1119,7 +1179,11 @@ export default function AdminPage() {
                             <div className="text-sm text-gray-900">{log.message}</div>
                           </td>
                           <td className="border border-gray-200 px-6 py-4">
-                            <div className="text-sm text-gray-900">{log.user}</div>
+                            <div className="text-sm font-medium text-gray-900">{log.user}</div>
+                            {log.role && <div className="text-xs text-gray-600 mt-1">{log.role}</div>}
+                          </td>
+                          <td className="border border-gray-200 px-6 py-4">
+                            <div className="text-xs text-gray-600">{log.permissions}</div>
                           </td>
                         </tr>
                       ))}
