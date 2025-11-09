@@ -23,6 +23,15 @@ export default function WarehouseDashboardPage() {
       stats: 'Lihat & kelola semua item'
     },
     {
+      title: 'Department Buffers',
+      description: 'Stok buffer tiap departemen',
+      icon: PackageIcon,
+      href: '/office/warehouse/department-buffers',
+      color: 'bg-orange-500',
+      stats: 'Transfer & monitor stok departemen',
+      badge: 'NEW'
+    },
+    {
       title: 'Suppliers',
       description: 'Kelola data supplier',
       icon: UserMultipleIcon,
@@ -78,9 +87,16 @@ export default function WarehouseDashboardPage() {
                     <ArrowRightIcon className="h-5 w-5 text-gray-400 group-hover:text-[#4E61D3] group-hover:translate-x-1 transition-all" />
                   </div>
 
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-[#4E61D3] transition-colors">
-                    {item.title}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-[#4E61D3] transition-colors">
+                      {item.title}
+                    </h3>
+                    {item.badge && (
+                      <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-600 rounded font-medium">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
 
                   <p className="text-sm text-gray-600 mb-3">
                     {item.description}
