@@ -35,8 +35,13 @@ interface MenuItem {
 
 const OfficeSidebar = () => {
   const pathname = usePathname();
+  const [guestsCount, setGuestsCount] = useState<number>(0);
+  const [employeesCount, setEmployeesCount] = useState<number>(0);
+  const [occupancyCount, setOccupancyCount] = useState<number>(0);
+  const [eventsCount, setEventsCount] = useState<number>(0);
   const [housekeepingCount, setHousekeepingCount] = useState<number>(0);
-  const [lowStockCount, setLowStockCount] = useState<number>(0);
+  const [financialCount, setFinancialCount] = useState<number>(0);
+  const [warehouseCount, setWarehouseCount] = useState<number>(0);
 
   // Fetch sidebar counts
   useEffect(() => {
@@ -48,13 +53,23 @@ const OfficeSidebar = () => {
 
         if (response.ok) {
           const data = await response.json();
+          setGuestsCount(data.office_sidebar?.new_guests || 0);
+          setEmployeesCount(data.office_sidebar?.inactive_employees || 0);
+          setOccupancyCount(data.office_sidebar?.checked_in_today || 0);
+          setEventsCount(data.office_sidebar?.unconfirmed_events || 0);
           setHousekeepingCount(data.office_sidebar?.unfinished_housekeeping || 0);
-          setLowStockCount(data.office_sidebar?.low_stock_items || 0);
+          setFinancialCount(data.office_sidebar?.pending_financial || 0);
+          setWarehouseCount(data.office_sidebar?.low_stock_items || 0);
         }
       } catch (error) {
         console.error('Error fetching sidebar counts:', error);
+        setGuestsCount(0);
+        setEmployeesCount(0);
+        setOccupancyCount(0);
+        setEventsCount(0);
         setHousekeepingCount(0);
-        setLowStockCount(0);
+        setFinancialCount(0);
+        setWarehouseCount(0);
       }
     };
 
@@ -70,13 +85,13 @@ const OfficeSidebar = () => {
   ];
 
   const officeActions: MenuItem[] = [
-    { name: 'Guest Database', icon: UserMultipleIcon, href: '/office/guests' },
-    { name: 'Employees', icon: UserSettings01Icon, href: '/office/employees' },
-    { name: 'Occupancy', icon: PieChartIcon, href: '/office/occupancy' },
-    { name: 'Event Bookings', icon: SparklesIcon, href: '/office/events' },
+    { name: 'Guest Database', icon: UserMultipleIcon, href: '/office/guests', badge: guestsCount > 0 ? guestsCount.toString() : undefined },
+    { name: 'Employees', icon: UserSettings01Icon, href: '/office/employees', badge: employeesCount > 0 ? employeesCount.toString() : undefined },
+    { name: 'Occupancy', icon: PieChartIcon, href: '/office/occupancy', badge: occupancyCount > 0 ? occupancyCount.toString() : undefined },
+    { name: 'Events', icon: SparklesIcon, href: '/office/events', badge: eventsCount > 0 ? eventsCount.toString() : undefined },
     { name: 'Housekeeping', icon: CircleArrowReload01Icon, href: '/office/housekeeping', badge: housekeepingCount > 0 ? housekeepingCount.toString() : undefined },
-    { name: 'Financial', icon: CreditCardIcon, href: '/office/financial' },
-    { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse', badge: lowStockCount > 0 ? lowStockCount.toString() : undefined },
+    { name: 'Financial', icon: CreditCardIcon, href: '/office/financial', badge: financialCount > 0 ? financialCount.toString() : undefined },
+    { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse', badge: warehouseCount > 0 ? warehouseCount.toString() : undefined },
     { name: 'Reports', icon: File01Icon, href: '/office/reports' },
   ];
 
