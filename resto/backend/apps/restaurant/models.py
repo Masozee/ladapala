@@ -131,6 +131,7 @@ class Product(models.Model):
 class InventoryLocation(models.TextChoices):
     WAREHOUSE = 'WAREHOUSE', 'Gudang'
     KITCHEN = 'KITCHEN', 'Dapur'
+    BAR = 'BAR', 'Bar'
 
 
 class Inventory(models.Model):
@@ -530,6 +531,68 @@ class Order(models.Model):
     def total_amount(self):
         return sum(item.subtotal for item in self.items.all())
 
+    def deduct_inventory(self):
+        """
+        Deduct inventory based on recipes when order is confirmed/preparing.
+        Returns (success: bool, message: str)
+        """
+        from decimal import Decimal
+
+        if self.status not in ['CONFIRMED', 'PREPARING']:
+            return False, "Order must be CONFIRMED or PREPARING to deduct inventory"
+
+        deductions = []
+        errors = []
+
+        for order_item in self.items.all():
+            try:
+                # Get recipe for this product
+                recipe = Recipe.objects.filter(product=order_item.product, is_active=True).first()
+
+                if not recipe:
+                    errors.append(f"No active recipe found for {order_item.product.name}")
+                    continue
+
+                # Deduct each ingredient
+                for ingredient in recipe.ingredients.all():
+                    required_qty = Decimal(str(ingredient.quantity)) * order_item.quantity
+                    inventory_item = ingredient.inventory_item
+
+                    # Check sufficient stock
+                    if inventory_item.quantity < required_qty:
+                        errors.append(
+                            f"Insufficient stock for {inventory_item.name} in {inventory_item.location}: "
+                            f"need {required_qty} {inventory_item.unit}, have {inventory_item.quantity}"
+                        )
+                        continue
+
+                    # Deduct inventory
+                    inventory_item.quantity -= required_qty
+                    inventory_item.save()
+
+                    # Create transaction record
+                    InventoryTransaction.objects.create(
+                        inventory=inventory_item,
+                        transaction_type='USAGE',
+                        quantity=-required_qty,
+                        unit_cost=inventory_item.cost_per_unit,
+                        reference_number=self.order_number,
+                        performed_by=self.created_by.user if self.created_by else None,
+                        notes=f"Used for Order {self.order_number} - {order_item.product.name} x{order_item.quantity}"
+                    )
+
+                    deductions.append(
+                        f"{inventory_item.name} ({inventory_item.location}): -{required_qty} {inventory_item.unit}"
+                    )
+
+            except Exception as e:
+                errors.append(f"Error processing {order_item.product.name}: {str(e)}")
+
+        if errors:
+            return False, "; ".join(errors)
+
+        return True, f"Deducted {len(deductions)} ingredients"
+
     def __str__(self):
         return f"Order {self.order_number} - {self.status}"
 
@@ -538,23 +601,53 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
+    ITEM_STATUS = [
+        ('PENDING', 'Pending'),
+        ('PREPARING', 'Preparing'),
+        ('READY', 'Ready'),
+        ('PARTIALLY_SERVED', 'Partially Served'),
+        ('SERVED', 'Served'),
+    ]
+
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
+    quantity_served = models.IntegerField(default=0)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=ITEM_STATUS, default='PENDING')
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
     def subtotal(self):
         return (self.unit_price * self.quantity) - self.discount_amount
 
+    @property
+    def quantity_remaining(self):
+        return self.quantity - self.quantity_served
+
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
 
     class Meta:
         ordering = ['created_at']
+
+
+class ServingHistory(models.Model):
+    order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name='serving_history')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='serving_history')
+    quantity_served = models.IntegerField()
+    served_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, related_name='served_orders')
+    served_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.order.order_number} - {self.order_item.product.name} x{self.quantity_served}"
+
+    class Meta:
+        ordering = ['-served_at']
+        verbose_name_plural = 'Serving Histories'
 
 
 class Payment(models.Model):

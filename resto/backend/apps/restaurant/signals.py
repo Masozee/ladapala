@@ -2,6 +2,9 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.db import transaction
 from .models import Order, KitchenOrder, KitchenOrderItem, Inventory, PurchaseOrder
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Kitchen order creation is now handled in OrderCreateSerializer.create()
@@ -76,3 +79,40 @@ def update_inventory_costs_on_po_received(sender, instance, **kwargs):
 
         except PurchaseOrder.DoesNotExist:
             pass  # New instance, do nothing
+
+
+@receiver(pre_save, sender=Order)
+def deduct_inventory_on_status_change(sender, instance, **kwargs):
+    """
+    Automatically deduct inventory when order status changes to PREPARING.
+    This happens once per order to avoid double deduction.
+    """
+    # Only process if order already exists (not a new order)
+    if instance.pk is None:
+        return
+
+    try:
+        # Get the old status from database
+        old_order = Order.objects.get(pk=instance.pk)
+        old_status = old_order.status
+        new_status = instance.status
+
+        # Trigger inventory deduction when transitioning to PREPARING
+        # (and only if it hasn't been done before)
+        if old_status in ['PENDING', 'CONFIRMED'] and new_status == 'PREPARING':
+            logger.info(f"Order {instance.order_number}: Status changed {old_status} → {new_status}, deducting inventory...")
+
+            success, message = instance.deduct_inventory()
+
+            if success:
+                logger.info(f"Order {instance.order_number}: Inventory deducted successfully - {message}")
+            else:
+                logger.error(f"Order {instance.order_number}: Inventory deduction failed - {message}")
+                # Note: We don't prevent the save, but log the error
+                # You could raise an exception here if you want to prevent the status change
+
+    except Order.DoesNotExist:
+        # This shouldn't happen, but just in case
+        pass
+    except Exception as e:
+        logger.error(f"Error in inventory deduction signal for order {instance.order_number}: {str(e)}")
