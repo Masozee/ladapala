@@ -206,7 +206,10 @@ export default function RecipeDetailPage() {
       })
       if (res.ok) {
         const data = await res.json()
+        console.log('Inventory items loaded:', data)
         setInventoryItems(data.results || data)
+      } else {
+        console.error('Failed to fetch inventory:', res.status, res.statusText)
       }
     } catch (error) {
       console.error('Error fetching inventory:', error)
@@ -214,6 +217,7 @@ export default function RecipeDetailPage() {
   }
 
   const handleAddIngredient = () => {
+    console.log('Add ingredient clicked, inventory items:', inventoryItems.length)
     setIngredientForm({ inventory_item: '', quantity: '', notes: '' })
     setIsAddIngredientOpen(true)
   }
@@ -221,6 +225,13 @@ export default function RecipeDetailPage() {
   const handleSaveNewIngredient = async () => {
     if (!ingredientForm.inventory_item || !ingredientForm.quantity) {
       alert('Pilih bahan dan masukkan jumlah')
+      return
+    }
+
+    // Find the selected inventory item to get its unit
+    const selectedItem = inventoryItems.find(item => item.id.toString() === ingredientForm.inventory_item)
+    if (!selectedItem) {
+      alert('Bahan tidak ditemukan')
       return
     }
 
@@ -237,6 +248,7 @@ export default function RecipeDetailPage() {
           recipe: params.id,
           inventory_item: parseInt(ingredientForm.inventory_item),
           quantity: parseFloat(ingredientForm.quantity),
+          unit: selectedItem.unit,  // Add unit from selected inventory item
           notes: ingredientForm.notes
         })
       })
