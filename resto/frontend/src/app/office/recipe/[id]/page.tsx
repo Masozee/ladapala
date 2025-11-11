@@ -12,9 +12,9 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  PackageSentIcon, ChefHatIcon, Time01Icon,
-  ArrowLeft01Icon, Edit01Icon, Delete02Icon, MoneyBag02Icon
+  ArrowLeft01Icon, Edit01Icon, Delete02Icon, Add01Icon
 } from "@hugeicons/core-free-icons"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface RecipeIngredient {
   id: number
@@ -50,6 +50,13 @@ interface Recipe {
   updated_at: string
 }
 
+interface InventoryItem {
+  id: number
+  name: string
+  unit: string
+  location: string
+}
+
 export default function RecipeDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -65,9 +72,21 @@ export default function RecipeDetailPage() {
     is_active: true
   })
 
+  // Ingredient management states
+  const [isAddIngredientOpen, setIsAddIngredientOpen] = useState(false)
+  const [isEditIngredientOpen, setIsEditIngredientOpen] = useState(false)
+  const [editingIngredient, setEditingIngredient] = useState<RecipeIngredient | null>(null)
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
+  const [ingredientForm, setIngredientForm] = useState({
+    inventory_item: '',
+    quantity: '',
+    notes: ''
+  })
+
   useEffect(() => {
     if (params.id) {
       fetchRecipe()
+      fetchInventoryItems()
     }
   }, [params.id])
 
@@ -180,6 +199,136 @@ export default function RecipeDetailPage() {
     return null
   }
 
+  const fetchInventoryItems = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventory/`, {
+        credentials: 'include'
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setInventoryItems(data.results || data)
+      }
+    } catch (error) {
+      console.error('Error fetching inventory:', error)
+    }
+  }
+
+  const handleAddIngredient = () => {
+    setIngredientForm({ inventory_item: '', quantity: '', notes: '' })
+    setIsAddIngredientOpen(true)
+  }
+
+  const handleSaveNewIngredient = async () => {
+    if (!ingredientForm.inventory_item || !ingredientForm.quantity) {
+      alert('Pilih bahan dan masukkan jumlah')
+      return
+    }
+
+    try {
+      const csrfToken = getCsrfToken()
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipe-ingredients/`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken || ''
+        },
+        body: JSON.stringify({
+          recipe: params.id,
+          inventory_item: parseInt(ingredientForm.inventory_item),
+          quantity: parseFloat(ingredientForm.quantity),
+          notes: ingredientForm.notes
+        })
+      })
+
+      if (res.ok) {
+        alert('Bahan berhasil ditambahkan')
+        setIsAddIngredientOpen(false)
+        fetchRecipe()
+      } else {
+        const error = await res.json().catch(() => ({}))
+        alert('Gagal menambah bahan: ' + JSON.stringify(error))
+      }
+    } catch (error) {
+      console.error('Error adding ingredient:', error)
+      alert('Terjadi kesalahan saat menambah bahan')
+    }
+  }
+
+  const handleEditIngredient = (ingredient: RecipeIngredient) => {
+    setEditingIngredient(ingredient)
+    setIngredientForm({
+      inventory_item: ingredient.inventory_item.toString(),
+      quantity: ingredient.quantity,
+      notes: ingredient.notes
+    })
+    setIsEditIngredientOpen(true)
+  }
+
+  const handleUpdateIngredient = async () => {
+    if (!editingIngredient || !ingredientForm.quantity) {
+      alert('Masukkan jumlah yang valid')
+      return
+    }
+
+    try {
+      const csrfToken = getCsrfToken()
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipe-ingredients/${editingIngredient.id}/`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken || ''
+        },
+        body: JSON.stringify({
+          quantity: parseFloat(ingredientForm.quantity),
+          notes: ingredientForm.notes
+        })
+      })
+
+      if (res.ok) {
+        alert('Bahan berhasil diupdate')
+        setIsEditIngredientOpen(false)
+        setEditingIngredient(null)
+        fetchRecipe()
+      } else {
+        const error = await res.json().catch(() => ({}))
+        alert('Gagal update bahan: ' + JSON.stringify(error))
+      }
+    } catch (error) {
+      console.error('Error updating ingredient:', error)
+      alert('Terjadi kesalahan saat update bahan')
+    }
+  }
+
+  const handleDeleteIngredient = async (ingredientId: number) => {
+    if (!confirm('Yakin ingin menghapus bahan ini?')) {
+      return
+    }
+
+    try {
+      const csrfToken = getCsrfToken()
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recipe-ingredients/${ingredientId}/`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'X-CSRFToken': csrfToken || ''
+        }
+      })
+
+      if (res.ok || res.status === 204) {
+        alert('Bahan berhasil dihapus')
+        fetchRecipe()
+      } else {
+        const error = await res.json().catch(() => ({}))
+        alert('Gagal menghapus bahan: ' + JSON.stringify(error))
+      }
+    } catch (error) {
+      console.error('Error deleting ingredient:', error)
+      alert('Terjadi kesalahan saat menghapus bahan')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -215,15 +364,13 @@ export default function RecipeDetailPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="rounded" onClick={handleEdit}>
-            <HugeiconsIcon icon={Edit01Icon} size={16} strokeWidth={2} className="mr-2" />
             Edit Resep
           </Button>
           <Button
             variant="outline"
-            className="rounded text-red-600 border-red-600 hover:bg-red-50"
+            className="rounded"
             onClick={handleDelete}
           >
-            <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} className="mr-2" />
             Hapus
           </Button>
         </div>
@@ -236,7 +383,7 @@ export default function RecipeDetailPage() {
             <CardTitle className="text-sm text-muted-foreground">Harga Jual</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-600">
+            <p className="text-2xl font-bold">
               Rp {parseFloat(recipe.product_price).toLocaleString('id-ID')}
             </p>
             <p className="text-xs text-muted-foreground mt-1">Per porsi</p>
@@ -248,7 +395,7 @@ export default function RecipeDetailPage() {
             <CardTitle className="text-sm text-muted-foreground">Biaya Bahan</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-orange-600">
+            <p className="text-2xl font-bold">
               Rp {parseFloat(recipe.cost_per_serving).toLocaleString('id-ID')}
             </p>
             <p className="text-xs text-muted-foreground mt-1">Cost per serving</p>
@@ -260,7 +407,7 @@ export default function RecipeDetailPage() {
             <CardTitle className="text-sm text-muted-foreground">Profit</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600">
+            <p className="text-2xl font-bold">
               Rp {profit.toLocaleString('id-ID')}
             </p>
             <p className="text-xs text-muted-foreground mt-1">Per porsi</p>
@@ -269,14 +416,14 @@ export default function RecipeDetailPage() {
 
         <Card className="border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-muted-foreground">Margin Profit</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Margin</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-2xl font-bold ${recipe.profit_margin >= 70 ? 'text-green-600' : recipe.profit_margin >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+            <p className="text-2xl font-bold">
               {recipe.profit_margin.toFixed(1)}%
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {recipe.profit_margin >= 70 ? 'Margin Tinggi' : recipe.profit_margin >= 40 ? 'Margin Sedang' : 'Margin Rendah'}
+              {recipe.profit_margin >= 70 ? 'Tinggi' : recipe.profit_margin >= 40 ? 'Sedang' : 'Rendah'}
             </p>
           </CardContent>
         </Card>
@@ -286,7 +433,7 @@ export default function RecipeDetailPage() {
             <CardTitle className="text-sm text-muted-foreground">Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge variant={recipe.is_active ? "default" : "secondary"}>
+            <Badge variant={recipe.is_active ? "default" : "secondary"} className="text-xs">
               {recipe.is_active ? 'Aktif' : 'Nonaktif'}
             </Badge>
             <p className="text-xs text-muted-foreground mt-2">{recipe.serving_size} porsi</p>
@@ -298,44 +445,24 @@ export default function RecipeDetailPage() {
       <Card className="border">
         <CardContent className="pt-6">
           <div className="grid grid-cols-4 gap-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-gray-100 p-3 rounded">
-                <HugeiconsIcon icon={PackageSentIcon} size={20} strokeWidth={2} className="text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Porsi per Resep</p>
-                <p className="text-xl font-semibold">{recipe.serving_size}</p>
-              </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Porsi per Resep</p>
+              <p className="text-xl font-semibold">{recipe.serving_size}</p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="bg-gray-100 p-3 rounded">
-                <HugeiconsIcon icon={Time01Icon} size={20} strokeWidth={2} className="text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Waktu Persiapan</p>
-                <p className="text-xl font-semibold">{recipe.preparation_time || 0} menit</p>
-              </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Waktu Persiapan</p>
+              <p className="text-xl font-semibold">{recipe.preparation_time || 0} menit</p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="bg-gray-100 p-3 rounded">
-                <HugeiconsIcon icon={ChefHatIcon} size={20} strokeWidth={2} className="text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Waktu Memasak</p>
-                <p className="text-xl font-semibold">{recipe.cooking_time || 0} menit</p>
-              </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Waktu Memasak</p>
+              <p className="text-xl font-semibold">{recipe.cooking_time || 0} menit</p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="bg-gray-100 p-3 rounded">
-                <HugeiconsIcon icon={MoneyBag02Icon} size={20} strokeWidth={2} className="text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Waktu</p>
-                <p className="text-xl font-semibold">{totalTime} menit</p>
-              </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Total Waktu</p>
+              <p className="text-xl font-semibold">{totalTime} menit</p>
             </div>
           </div>
         </CardContent>
@@ -343,9 +470,11 @@ export default function RecipeDetailPage() {
 
       {/* Ingredients Table */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <HugeiconsIcon icon={PackageSentIcon} size={20} strokeWidth={2} />
-          <h2 className="text-xl font-semibold">Daftar Bahan ({recipe.ingredients.length} item)</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Daftar Bahan ({recipe.ingredients.length})</h2>
+          <Button onClick={handleAddIngredient} className="rounded bg-[#58ff34] hover:bg-[#4de82a] text-black">
+            Tambah Bahan
+          </Button>
         </div>
         <div className="rounded-lg border bg-white overflow-hidden">
           <Table>
@@ -359,6 +488,7 @@ export default function RecipeDetailPage() {
                 <TableHead className="font-semibold text-gray-900 text-right">Biaya per Unit</TableHead>
                 <TableHead className="font-semibold text-gray-900 text-right">Total Biaya</TableHead>
                 <TableHead className="font-semibold text-gray-900">Catatan</TableHead>
+                <TableHead className="font-semibold text-gray-900 text-center w-28">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -370,10 +500,8 @@ export default function RecipeDetailPage() {
                   <TableCell className="text-center">
                     <Badge variant="outline">{ing.unit}</Badge>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant={ing.inventory_item_location === 'KITCHEN' ? "default" : "secondary"}>
-                      {ing.inventory_item_location === 'KITCHEN' ? 'Dapur' : 'Gudang'}
-                    </Badge>
+                  <TableCell className="text-center text-sm">
+                    {ing.inventory_item_location === 'KITCHEN' ? 'Dapur' : ing.inventory_item_location === 'BAR' ? 'Bar' : 'Gudang'}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">
                     Rp {(parseFloat(ing.total_cost) / parseFloat(ing.quantity)).toLocaleString('id-ID')}
@@ -382,14 +510,34 @@ export default function RecipeDetailPage() {
                     Rp {parseFloat(ing.total_cost).toLocaleString('id-ID')}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground italic">{ing.notes || '-'}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditIngredient(ing)}
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
+                      >
+                        <HugeiconsIcon icon={Edit01Icon} size={14} strokeWidth={2} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteIngredient(ing.id)}
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
+                      >
+                        <HugeiconsIcon icon={Delete02Icon} size={14} strokeWidth={2} />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
-              <TableRow className="bg-orange-50 font-semibold">
+              <TableRow className="bg-gray-50 font-semibold">
                 <TableCell colSpan={6} className="text-right">Total Biaya Bahan:</TableCell>
-                <TableCell className="text-right text-orange-600">
+                <TableCell className="text-right">
                   Rp {parseFloat(recipe.total_cost).toLocaleString('id-ID')}
                 </TableCell>
-                <TableCell></TableCell>
+                <TableCell colSpan={2}></TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -403,8 +551,8 @@ export default function RecipeDetailPage() {
             <CardTitle>Instruksi Memasak</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-              <p className="whitespace-pre-line">{recipe.instructions}</p>
+            <div className="bg-gray-50 border-l-4 border-gray-300 p-4 rounded">
+              <p className="whitespace-pre-line text-sm">{recipe.instructions}</p>
             </div>
           </CardContent>
         </Card>
@@ -417,8 +565,8 @@ export default function RecipeDetailPage() {
             <CardTitle>Catatan</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-              <p className="whitespace-pre-line">{recipe.notes}</p>
+            <div className="bg-gray-50 border-l-4 border-gray-300 p-4 rounded">
+              <p className="whitespace-pre-line text-sm">{recipe.notes}</p>
             </div>
           </CardContent>
         </Card>
@@ -504,6 +652,125 @@ export default function RecipeDetailPage() {
               Batal
             </Button>
             <Button onClick={handleSaveEdit} className="bg-[#58ff34] hover:bg-[#4de82a] text-black">
+              Simpan Perubahan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Ingredient Dialog */}
+      <Dialog open={isAddIngredientOpen} onOpenChange={setIsAddIngredientOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tambah Bahan</DialogTitle>
+            <DialogDescription>
+              Tambahkan bahan baru ke resep {recipe?.product_name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Bahan dari Inventory</Label>
+              <Select value={ingredientForm.inventory_item} onValueChange={(value) => setIngredientForm({ ...ingredientForm, inventory_item: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih bahan..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {inventoryItems.map((item) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {item.name} ({item.unit}) - {item.location}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Jumlah</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={ingredientForm.quantity}
+                onChange={(e) => setIngredientForm({ ...ingredientForm, quantity: e.target.value })}
+                placeholder="0.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Catatan (Opsional)</Label>
+              <Textarea
+                value={ingredientForm.notes}
+                onChange={(e) => setIngredientForm({ ...ingredientForm, notes: e.target.value })}
+                rows={2}
+                placeholder="Catatan tambahan..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddIngredientOpen(false)}>
+              Batal
+            </Button>
+            <Button onClick={handleSaveNewIngredient} className="bg-[#58ff34] hover:bg-[#4de82a] text-black">
+              Tambah Bahan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Ingredient Dialog */}
+      <Dialog open={isEditIngredientOpen} onOpenChange={setIsEditIngredientOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Bahan</DialogTitle>
+            <DialogDescription>
+              Edit jumlah dan catatan bahan
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Bahan</Label>
+              <Input
+                value={editingIngredient?.inventory_item_name || ''}
+                disabled
+                className="bg-gray-50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Jumlah</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={ingredientForm.quantity}
+                onChange={(e) => setIngredientForm({ ...ingredientForm, quantity: e.target.value })}
+                placeholder="0.5"
+              />
+              <p className="text-xs text-muted-foreground">
+                Satuan: {editingIngredient?.unit}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Catatan (Opsional)</Label>
+              <Textarea
+                value={ingredientForm.notes}
+                onChange={(e) => setIngredientForm({ ...ingredientForm, notes: e.target.value })}
+                rows={2}
+                placeholder="Catatan tambahan..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsEditIngredientOpen(false)
+              setEditingIngredient(null)
+            }}>
+              Batal
+            </Button>
+            <Button onClick={handleUpdateIngredient} className="bg-[#58ff34] hover:bg-[#4de82a] text-black">
               Simpan Perubahan
             </Button>
           </DialogFooter>
