@@ -9,7 +9,7 @@ from .models import (
     Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
     StockTransfer, Vendor,
     Customer, LoyaltyTransaction, Reward, CustomerFeedback, MembershipTierBenefit,
-    RestaurantSettings
+    RestaurantSettings, ServingHistory
 )
 
 User = get_user_model()
@@ -141,6 +141,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     payment_status = serializers.SerializerMethodField()
     total = serializers.DecimalField(source='subtotal', max_digits=10, decimal_places=2, read_only=True)
     price = serializers.DecimalField(source='unit_price', max_digits=10, decimal_places=2, read_only=True)
+    quantity_remaining = serializers.ReadOnlyField()
 
     def get_payment_status(self, obj):
         """Get payment status from order's payments"""
@@ -153,7 +154,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = '__all__'
-        read_only_fields = ['created_at', 'subtotal']
+        read_only_fields = ['created_at', 'subtotal', 'quantity_remaining']
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -162,11 +163,25 @@ class OrderSerializer(serializers.ModelSerializer):
     total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     created_by_name = serializers.CharField(source='created_by.user.username', read_only=True)
     table_number = serializers.CharField(source='table.number', read_only=True)
+    customer_info = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = '__all__'
         read_only_fields = ['order_number', 'created_at', 'updated_at', 'total_amount']
+
+    def get_customer_info(self, obj):
+        """Return customer membership info if linked"""
+        if obj.customer:
+            return {
+                'id': obj.customer.id,
+                'name': obj.customer.name,
+                'phone_number': obj.customer.phone_number,
+                'membership_tier': obj.customer.membership_tier,
+                'points_balance': obj.customer.points_balance,
+                'membership_number': obj.customer.membership_number
+            }
+        return None
 
     def get_payments(self, obj):
         from .models import Payment
@@ -196,9 +211,10 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['branch', 'table', 'order_type', 'customer_name', 'customer_phone',
-                 'delivery_address', 'notes', 'created_by', 'items']
+                 'customer', 'delivery_address', 'notes', 'created_by', 'items']
         extra_kwargs = {
             'table': {'required': False, 'allow_null': True},
+            'customer': {'required': False, 'allow_null': True},
             'delivery_address': {'required': False, 'allow_blank': True},
             'notes': {'required': False, 'allow_blank': True},
             'created_by': {'required': False, 'allow_null': True}
@@ -636,7 +652,8 @@ class StockTransferSerializer(serializers.ModelSerializer):
 class StockTransferCreateSerializer(serializers.Serializer):
     """Serializer for creating stock transfers with automatic unit/price conversion"""
     warehouse_item_id = serializers.IntegerField(required=True)
-    kitchen_item_id = serializers.IntegerField(required=True)
+    kitchen_item_id = serializers.IntegerField(required=False, allow_null=True)
+    bar_item_id = serializers.IntegerField(required=False, allow_null=True)
     quantity = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
     notes = serializers.CharField(required=False, allow_blank=True)
 
@@ -646,8 +663,19 @@ class StockTransferCreateSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
-        """Validate warehouse and kitchen items exist and have sufficient stock"""
+        """Validate warehouse and destination items exist and have sufficient stock"""
         from decimal import Decimal
+
+        # Validate that either kitchen_item_id or bar_item_id is provided
+        if not data.get('kitchen_item_id') and not data.get('bar_item_id'):
+            raise serializers.ValidationError({
+                'kitchen_item_id': 'Either kitchen_item_id or bar_item_id must be provided'
+            })
+
+        if data.get('kitchen_item_id') and data.get('bar_item_id'):
+            raise serializers.ValidationError({
+                'kitchen_item_id': 'Only one destination (kitchen or bar) can be specified'
+            })
 
         try:
             warehouse_item = Inventory.objects.get(
@@ -659,20 +687,30 @@ class StockTransferCreateSerializer(serializers.Serializer):
                 'warehouse_item_id': 'Warehouse item not found'
             })
 
+        # Determine destination (kitchen or bar)
+        if data.get('kitchen_item_id'):
+            destination_location = 'KITCHEN'
+            destination_item_id = data['kitchen_item_id']
+            destination_field = 'kitchen_item_id'
+        else:
+            destination_location = 'BAR'
+            destination_item_id = data['bar_item_id']
+            destination_field = 'bar_item_id'
+
         try:
-            kitchen_item = Inventory.objects.get(
-                id=data['kitchen_item_id'],
-                location='KITCHEN'
+            destination_item = Inventory.objects.get(
+                id=destination_item_id,
+                location=destination_location
             )
         except Inventory.DoesNotExist:
             raise serializers.ValidationError({
-                'kitchen_item_id': 'Kitchen item not found'
+                destination_field: f'{destination_location.capitalize()} item not found'
             })
 
         # Verify same item (same name)
-        if warehouse_item.name != kitchen_item.name:
+        if warehouse_item.name != destination_item.name:
             raise serializers.ValidationError({
-                'kitchen_item_id': f'Kitchen item must be "{warehouse_item.name}", not "{kitchen_item.name}"'
+                destination_field: f'{destination_location.capitalize()} item must be "{warehouse_item.name}", not "{destination_item.name}"'
             })
 
         # Verify sufficient warehouse stock
@@ -683,7 +721,8 @@ class StockTransferCreateSerializer(serializers.Serializer):
 
         # Store items for create method
         data['warehouse_item'] = warehouse_item
-        data['kitchen_item'] = kitchen_item
+        data['destination_item'] = destination_item
+        data['destination_location'] = destination_location
 
         return data
 
@@ -692,55 +731,56 @@ class StockTransferCreateSerializer(serializers.Serializer):
         from decimal import Decimal
 
         warehouse_item = validated_data['warehouse_item']
-        kitchen_item = validated_data['kitchen_item']
+        destination_item = validated_data['destination_item']
+        destination_location = validated_data['destination_location']
         transfer_quantity = validated_data['quantity']
         notes = validated_data.get('notes', '')
         user = self.context['request'].user
 
         # Calculate unit conversion factor (if needed)
         warehouse_unit = warehouse_item.unit.lower()
-        kitchen_unit = kitchen_item.unit.lower()
+        destination_unit = destination_item.unit.lower()
 
         # Conversion logic for kg→gram and liter→ml
         conversion_factor = Decimal('1')
-        if warehouse_unit in ['kg', 'kilogram'] and kitchen_unit in ['gram', 'g']:
+        if warehouse_unit in ['kg', 'kilogram'] and destination_unit in ['gram', 'g']:
             conversion_factor = Decimal('1000')
-        elif warehouse_unit in ['liter', 'l', 'litre'] and kitchen_unit in ['ml', 'milliliter']:
+        elif warehouse_unit in ['liter', 'l', 'litre'] and destination_unit in ['ml', 'milliliter']:
             conversion_factor = Decimal('1000')
-        elif warehouse_unit != kitchen_unit:
+        elif warehouse_unit != destination_unit:
             raise serializers.ValidationError({
-                'unit': f'Cannot convert {warehouse_unit} to {kitchen_unit}'
+                'unit': f'Cannot convert {warehouse_unit} to {destination_unit}'
             })
 
-        # Calculate kitchen quantity (with conversion)
-        kitchen_quantity = transfer_quantity * conversion_factor
+        # Calculate destination quantity (with conversion)
+        destination_quantity = transfer_quantity * conversion_factor
 
-        # Calculate kitchen cost per unit (with conversion)
-        # If warehouse is Rp 45,000/kg and kitchen is gram, cost = 45,000 / 1000 = Rp 45/gram
-        kitchen_cost_per_unit = warehouse_item.cost_per_unit / conversion_factor
+        # Calculate destination cost per unit (with conversion)
+        # If warehouse is Rp 45,000/kg and destination is gram, cost = 45,000 / 1000 = Rp 45/gram
+        destination_cost_per_unit = warehouse_item.cost_per_unit / conversion_factor
 
-        # Update kitchen inventory with moving average
-        kitchen_item.update_cost_moving_average(
-            new_quantity=kitchen_quantity,
-            new_unit_cost=kitchen_cost_per_unit
+        # Update destination inventory with moving average
+        destination_item.update_cost_moving_average(
+            new_quantity=destination_quantity,
+            new_unit_cost=destination_cost_per_unit
         )
-        kitchen_item.quantity += kitchen_quantity
-        kitchen_item.save()
+        destination_item.quantity += destination_quantity
+        destination_item.save()
 
         # Deduct from warehouse
         warehouse_item.quantity -= transfer_quantity
         warehouse_item.save()
 
-        # Create transfer record
+        # Create transfer record (maintain backward compatibility with to_kitchen field)
         transfer = StockTransfer.objects.create(
             branch=warehouse_item.branch,
             item_name=warehouse_item.name,
             quantity=transfer_quantity,
             unit=warehouse_item.unit,
             from_warehouse=warehouse_item,
-            to_kitchen=kitchen_item,
+            to_kitchen=destination_item,  # Store in to_kitchen regardless of destination for now
             transferred_by=user,
-            notes=notes or f'Transferred {transfer_quantity} {warehouse_unit} = {kitchen_quantity} {kitchen_unit}'
+            notes=notes or f'Transferred {transfer_quantity} {warehouse_unit} to {destination_location}: {destination_quantity} {destination_unit}'
         )
 
         # Create inventory transactions for audit trail
@@ -755,10 +795,10 @@ class StockTransferCreateSerializer(serializers.Serializer):
         )
 
         InventoryTransaction.objects.create(
-            inventory=kitchen_item,
+            inventory=destination_item,
             transaction_type='TRANSFER',
-            quantity=kitchen_quantity,
-            unit_cost=kitchen_cost_per_unit,
+            quantity=destination_quantity,
+            unit_cost=destination_cost_per_unit,
             reference_number=f'TRF-{transfer.id}',
             performed_by=user,
             notes=f'Transfer dari gudang: {transfer.notes}'
@@ -964,3 +1004,20 @@ class RestaurantSettingsSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'restaurant', 'created_at', 'updated_at']
+
+
+class ServingHistorySerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='order_item.product.name', read_only=True)
+    served_by_name = serializers.SerializerMethodField()
+    order_number = serializers.CharField(source='order.order_number', read_only=True)
+
+    class Meta:
+        model = ServingHistory
+        fields = ['id', 'order', 'order_number', 'order_item', 'product_name',
+                  'quantity_served', 'served_by', 'served_by_name', 'served_at', 'notes']
+        read_only_fields = ['id', 'served_at']
+
+    def get_served_by_name(self, obj):
+        if obj.served_by and obj.served_by.user:
+            return obj.served_by.user.get_full_name() or obj.served_by.user.email
+        return 'Unknown'

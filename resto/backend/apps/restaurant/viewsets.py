@@ -351,6 +351,9 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:
             return [IsAuthenticated()]
+        # Allow serve_items and serving_history without authentication for now
+        if self.action in ['serve_items', 'serving_history']:
+            return [AllowAny()]
         return [AllowAny()]
     
     def get_serializer_class(self):
@@ -442,6 +445,147 @@ class OrderViewSet(viewsets.ModelViewSet):
             'count': orders.count(),
             'results': serializer.data
         })
+
+    @action(detail=True, methods=['post'])
+    def serve_items(self, request, pk=None):
+        """
+        Serve specific quantities of order items
+
+        POST /api/orders/{id}/serve_items/
+        Body: {
+            "items": [
+                {"order_item_id": 1, "quantity": 2},
+                {"order_item_id": 2, "quantity": 1}
+            ],
+            "notes": "Served to table"
+        }
+        """
+        from django.db import transaction
+        from .models import OrderItem, ServingHistory
+
+        order = self.get_object()
+        items_to_serve = request.data.get('items', [])
+        notes = request.data.get('notes', '')
+
+        if not items_to_serve:
+            return Response(
+                {'error': 'No items specified'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            with transaction.atomic():
+                served_items = []
+
+                for item_data in items_to_serve:
+                    order_item_id = item_data.get('order_item_id')
+                    quantity_to_serve = item_data.get('quantity', 0)
+
+                    if quantity_to_serve <= 0:
+                        return Response(
+                            {'error': f'Invalid quantity for item {order_item_id}'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    try:
+                        order_item = OrderItem.objects.select_for_update().get(
+                            id=order_item_id,
+                            order=order
+                        )
+                    except OrderItem.DoesNotExist:
+                        return Response(
+                            {'error': f'Order item {order_item_id} not found'},
+                            status=status.HTTP_404_NOT_FOUND
+                        )
+
+                    # Validate quantity
+                    if order_item.quantity_served + quantity_to_serve > order_item.quantity:
+                        return Response(
+                            {'error': f'Cannot serve more than ordered for {order_item.product.name}. '
+                                     f'Ordered: {order_item.quantity}, Already served: {order_item.quantity_served}, '
+                                     f'Trying to serve: {quantity_to_serve}'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    # Update order item
+                    order_item.quantity_served += quantity_to_serve
+
+                    # Update status
+                    if order_item.quantity_served == order_item.quantity:
+                        order_item.status = 'SERVED'
+                    elif order_item.quantity_served > 0:
+                        order_item.status = 'PARTIALLY_SERVED'
+
+                    order_item.save()
+
+                    # Get the staff who is serving
+                    served_by = None
+                    if request.user.is_authenticated and hasattr(request.user, 'staff'):
+                        served_by = request.user.staff
+
+                    # Create serving history
+                    serving_history = ServingHistory.objects.create(
+                        order_item=order_item,
+                        order=order,
+                        quantity_served=quantity_to_serve,
+                        served_by=served_by,
+                        notes=notes
+                    )
+
+                    served_items.append({
+                        'order_item_id': order_item.id,
+                        'product_name': order_item.product.name,
+                        'quantity_served': quantity_to_serve,
+                        'total_served': order_item.quantity_served,
+                        'total_quantity': order_item.quantity,
+                        'status': order_item.status
+                    })
+
+                # Check if all items are served
+                all_served = all(
+                    item.status == 'SERVED'
+                    for item in order.items.all()
+                )
+
+                if all_served:
+                    order.status = 'COMPLETED'
+                    order.save()
+
+                    # Free up table if dine-in
+                    if order.table:
+                        order.table.is_available = True
+                        order.table.save()
+
+                return Response({
+                    'message': 'Items served successfully',
+                    'order_status': order.status,
+                    'served_items': served_items,
+                    'all_served': all_served
+                }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=['get'])
+    def serving_history(self, request, pk=None):
+        """
+        Get serving history for an order
+
+        GET /api/orders/{id}/serving_history/
+        """
+        from .models import ServingHistory
+        from .serializers import ServingHistorySerializer
+
+        order = self.get_object()
+        history = ServingHistory.objects.filter(order=order).select_related(
+            'order_item__product', 'served_by__user'
+        ).order_by('-served_at')
+
+        serializer = ServingHistorySerializer(history, many=True)
+        return Response(serializer.data)
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
@@ -2021,6 +2165,30 @@ class CustomerViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         except Customer.DoesNotExist:
             return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['post'])
+    def quick_register(self, request):
+        """Quick customer registration at POS - minimal info required"""
+        phone = request.data.get('phone_number')
+        name = request.data.get('name')
+
+        if not phone or not name:
+            return Response({'error': 'Phone number and name are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if customer already exists
+        if Customer.objects.filter(phone_number=phone).exists():
+            return Response({'error': 'Customer with this phone number already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create new customer with minimal info
+        customer = Customer.objects.create(
+            phone_number=phone,
+            name=name,
+            email=request.data.get('email', ''),
+            membership_tier='BRONZE'  # Start at bronze
+        )
+
+        serializer = self.get_serializer(customer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'])
     def stats(self, request, pk=None):

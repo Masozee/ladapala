@@ -43,6 +43,16 @@ export default function TransactionPage() {
   const [managerPassword, setManagerPassword] = useState("")
   const [isVoiding, setIsVoiding] = useState(false)
 
+  // Member lookup state
+  const [showMemberLookup, setShowMemberLookup] = useState(false)
+  const [memberPhone, setMemberPhone] = useState("")
+  const [memberData, setMemberData] = useState<any>(null)
+  const [memberSearchError, setMemberSearchError] = useState("")
+  const [isSearchingMember, setIsSearchingMember] = useState(false)
+  const [showRegisterForm, setShowRegisterForm] = useState(false)
+  const [registerName, setRegisterName] = useState("")
+  const [registerEmail, setRegisterEmail] = useState("")
+
   useEffect(() => {
     // Initial fetch with loading state
     fetchPendingOrders(false)
@@ -246,6 +256,81 @@ export default function TransactionPage() {
   const cashReceived = parseFloat(cashAmount) || 0
   const change = cashReceived - total
 
+  // Member lookup handlers
+  const handleMemberSearch = async () => {
+    if (!memberPhone.trim()) {
+      setMemberSearchError("Masukkan nomor telepon")
+      return
+    }
+
+    try {
+      setIsSearchingMember(true)
+      setMemberSearchError("")
+      const customer = await api.lookupCustomer(memberPhone)
+      setMemberData(customer)
+      setMemberSearchError("")
+    } catch (error: any) {
+      if (error.message?.includes('not found')) {
+        setMemberSearchError("Member tidak ditemukan")
+        setShowRegisterForm(true)
+      } else {
+        setMemberSearchError("Gagal mencari member: " + error.message)
+      }
+      setMemberData(null)
+    } finally {
+      setIsSearchingMember(false)
+    }
+  }
+
+  const handleQuickRegister = async () => {
+    if (!memberPhone.trim() || !registerName.trim()) {
+      alert("Nomor telepon dan nama harus diisi!")
+      return
+    }
+
+    try {
+      const customer = await api.quickRegisterCustomer({
+        phone_number: memberPhone,
+        name: registerName,
+        email: registerEmail
+      })
+      setMemberData(customer)
+      setShowRegisterForm(false)
+      setRegisterName("")
+      setRegisterEmail("")
+      alert(`Member baru terdaftar! Membership: ${customer.membership_number}`)
+    } catch (error: any) {
+      alert("Gagal mendaftar: " + error.message)
+    }
+  }
+
+  const handleLinkMember = async () => {
+    if (!selectedOrder || !memberData) return
+
+    try {
+      await api.linkCustomerToOrder(selectedOrder.id, memberData.id)
+      setShowMemberLookup(false)
+      alert(`Member ${memberData.name} berhasil ditautkan ke pesanan ini`)
+      // Refresh order to get updated customer info
+      fetchPendingOrders(true)
+    } catch (error: any) {
+      alert("Gagal menautkan member: " + error.message)
+    }
+  }
+
+  const calculatePointsToEarn = () => {
+    if (!memberData) return 0
+    // Get tier multiplier (default to 1.0 for BRONZE)
+    const multipliers: Record<string, number> = {
+      'BRONZE': 1.0,
+      'SILVER': 1.2,
+      'GOLD': 1.5,
+      'PLATINUM': 2.0
+    }
+    const multiplier = multipliers[memberData.membership_tier] || 1.0
+    return Math.floor((total * multiplier) / 1000)
+  }
+
   // Prepare receipt data for printing
   const prepareReceiptData = (): ReceiptData | null => {
     if (!selectedOrder) return null
@@ -422,6 +507,144 @@ export default function TransactionPage() {
             className="rounded-none"
           />
         </div>
+
+        {/* Member Benefits Section */}
+        {!showMemberLookup && !selectedOrder?.customer_info && (
+          <div className="mb-4">
+            <Button
+              onClick={() => setShowMemberLookup(true)}
+              variant="outline"
+              size="sm"
+              className="w-full"
+            >
+              Tambah Member (Earn Points)
+            </Button>
+          </div>
+        )}
+
+        {/* Member Linked Info */}
+        {selectedOrder?.customer_info && (
+          <Card className="mb-4 bg-green-50 border-green-200">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-green-800">
+                    Member: {selectedOrder.customer_info.name}
+                  </p>
+                  <p className="text-xs text-green-700">
+                    {selectedOrder.customer_info.membership_tier} • {selectedOrder.customer_info.points_balance} pts
+                  </p>
+                </div>
+                <Badge className="bg-green-600">
+                  +{(() => {
+                    const multipliers: Record<string, number> = { 'BRONZE': 1.0, 'SILVER': 1.2, 'GOLD': 1.5, 'PLATINUM': 2.0 }
+                    const multiplier = multipliers[selectedOrder.customer_info.membership_tier] || 1.0
+                    return Math.floor((total * multiplier) / 1000)
+                  })()} pts
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Member Lookup Card */}
+        {showMemberLookup && (
+          <Card className="mb-4 border-blue-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-900">Member Lookup</h3>
+                <Button
+                  onClick={() => {
+                    setShowMemberLookup(false)
+                    setMemberData(null)
+                    setMemberPhone("")
+                    setMemberSearchError("")
+                    setShowRegisterForm(false)
+                  }}
+                  variant="ghost"
+                  size="sm"
+                >
+                  X
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    type="tel"
+                    placeholder="08123456789"
+                    value={memberPhone}
+                    onChange={(e) => setMemberPhone(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleMemberSearch()}
+                  />
+                  <Button
+                    onClick={handleMemberSearch}
+                    disabled={isSearchingMember}
+                  >
+                    {isSearchingMember ? 'Cari...' : 'Cari'}
+                  </Button>
+                </div>
+
+                {memberSearchError && (
+                  <p className="text-sm text-red-600">{memberSearchError}</p>
+                )}
+
+                {memberData && (
+                  <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                    <p className="font-semibold text-blue-900">{memberData.name}</p>
+                    <p className="text-sm text-blue-700">
+                      {memberData.membership_tier} • {memberData.points_balance} points
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Member sejak: {new Date(memberData.join_date).toLocaleDateString('id-ID')}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-sm font-semibold text-green-700">
+                        Akan dapat: {calculatePointsToEarn()} points
+                      </p>
+                      <Button
+                        onClick={handleLinkMember}
+                        size="sm"
+                        className="bg-blue-600"
+                      >
+                        Link ke Pesanan
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {showRegisterForm && (
+                  <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                    <p className="text-sm font-semibold text-yellow-900 mb-2">
+                      Daftar Member Baru
+                    </p>
+                    <div className="space-y-2">
+                      <Input
+                        type="text"
+                        placeholder="Nama Lengkap"
+                        value={registerName}
+                        onChange={(e) => setRegisterName(e.target.value)}
+                      />
+                      <Input
+                        type="email"
+                        placeholder="Email (opsional)"
+                        value={registerEmail}
+                        onChange={(e) => setRegisterEmail(e.target.value)}
+                      />
+                      <Button
+                        onClick={handleQuickRegister}
+                        size="sm"
+                        className="w-full bg-yellow-600"
+                      >
+                        Daftar Sekarang
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Order Items */}
         <Card className="flex-1 rounded-lg overflow-hidden border">

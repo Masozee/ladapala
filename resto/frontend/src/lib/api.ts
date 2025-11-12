@@ -68,10 +68,31 @@ export interface OrderItem {
   product: number;
   product_name?: string;
   quantity: number;
+  quantity_served?: number;
+  quantity_remaining?: number;
   unit_price: string;
   discount_amount?: string;
   notes?: string;
   subtotal?: string;
+  status?: 'PENDING' | 'PREPARING' | 'READY' | 'PARTIALLY_SERVED' | 'SERVED';
+}
+
+export interface ServeItemRequest {
+  order_item_id: number;
+  quantity: number;
+}
+
+export interface ServingHistoryEntry {
+  id: number;
+  order: number;
+  order_number: string;
+  order_item: number;
+  product_name: string;
+  quantity_served: number;
+  served_by: number | null;
+  served_by_name: string;
+  served_at: string;
+  notes: string;
 }
 
 export interface Order {
@@ -883,11 +904,45 @@ class ApiClient {
     });
   }
 
+  async linkCustomerToOrder(orderId: number, customerId: number): Promise<Order> {
+    return this.fetch(`/orders/${orderId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify({ customer: customerId }),
+    });
+  }
+
   async addOrderItem(orderId: number, item: OrderItem): Promise<OrderItem> {
     return this.fetch(`/orders/${orderId}/add_item/`, {
       method: 'POST',
       body: JSON.stringify(item),
     });
+  }
+
+  async serveOrderItems(
+    orderId: number,
+    items: ServeItemRequest[],
+    notes?: string
+  ): Promise<{
+    message: string;
+    order_status: string;
+    served_items: Array<{
+      order_item_id: number;
+      product_name: string;
+      quantity_served: number;
+      total_served: number;
+      total_quantity: number;
+      status: string;
+    }>;
+    all_served: boolean;
+  }> {
+    return this.fetch(`/orders/${orderId}/serve_items/`, {
+      method: 'POST',
+      body: JSON.stringify({ items, notes }),
+    });
+  }
+
+  async getServingHistory(orderId: number): Promise<ServingHistoryEntry[]> {
+    return this.fetch(`/orders/${orderId}/serving_history/`);
   }
 
   // Dashboard
@@ -1505,6 +1560,13 @@ class ApiClient {
 
   async lookupCustomer(phone: string): Promise<Customer> {
     return this.fetch(`/customers/lookup/?phone=${phone}`);
+  }
+
+  async quickRegisterCustomer(data: { phone_number: string; name: string; email?: string }): Promise<Customer> {
+    return this.fetch('/customers/quick_register/', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
   }
 
   async getCustomerStats(id: number): Promise<{

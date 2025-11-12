@@ -80,7 +80,12 @@ export default function LoyaltyPage() {
   const fetchTierBenefits = async () => {
     try {
       const data = await api.getTierBenefits()
-      setTierBenefits(Array.isArray(data) ? data : [])
+      // Handle paginated response
+      if (data && typeof data === 'object' && 'results' in data) {
+        setTierBenefits(Array.isArray(data.results) ? data.results : [])
+      } else {
+        setTierBenefits(Array.isArray(data) ? data : [])
+      }
     } catch (error) {
       console.error('Error fetching tier benefits:', error)
       setTierBenefits([])

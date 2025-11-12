@@ -514,8 +514,14 @@ class Order(models.Model):
     table = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     order_type = models.CharField(max_length=20, choices=ORDER_TYPES)
     status = models.CharField(max_length=20, choices=ORDER_STATUS, default='CONFIRMED')
+
+    # Customer info (for non-members or legacy orders)
     customer_name = models.CharField(max_length=100, blank=True)
     customer_phone = models.CharField(max_length=20, blank=True)
+
+    # Link to member (optional - only if customer wants loyalty benefits)
+    customer = models.ForeignKey('Customer', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+
     delivery_address = models.TextField(blank=True)
     notes = models.TextField(blank=True)
     created_by = models.ForeignKey('Staff', on_delete=models.SET_NULL, null=True, related_name='created_orders')
