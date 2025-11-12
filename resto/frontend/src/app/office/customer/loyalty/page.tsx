@@ -98,7 +98,7 @@ export default function LoyaltyPage() {
     }
 
     try {
-      await api.createReward({
+      console.log('Creating reward with data:', {
         name: rewardName,
         reward_type: rewardType,
         points_required: parseInt(pointsCost),
@@ -106,6 +106,17 @@ export default function LoyaltyPage() {
         description: rewardDescription || undefined,
         stock_quantity: stockQuantity ? parseInt(stockQuantity) : undefined,
       })
+
+      const result = await api.createReward({
+        name: rewardName,
+        reward_type: rewardType,
+        points_required: parseInt(pointsCost),
+        voucher_value: rewardValue ? parseFloat(rewardValue) : undefined,
+        description: rewardDescription || undefined,
+        stock_quantity: stockQuantity ? parseInt(stockQuantity) : undefined,
+      })
+
+      console.log('Reward created successfully:', result)
 
       toast({
         title: 'Berhasil',
@@ -125,9 +136,10 @@ export default function LoyaltyPage() {
       fetchRewards()
     } catch (error: any) {
       console.error('Error creating reward:', error)
+      console.error('Error details:', error.response || error)
       toast({
         title: 'Error',
-        description: error.message || 'Gagal membuat reward',
+        description: error.message || error.detail || 'Gagal membuat reward',
         variant: 'destructive',
       })
     }
@@ -559,13 +571,15 @@ export default function LoyaltyPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reward-value">Nilai Reward (opsional)</Label>
+              <Label htmlFor="reward-value">Nilai Voucher (Rp, opsional)</Label>
               <Input
                 id="reward-value"
-                placeholder="Contoh: 10% atau Rp 50.000"
+                type="number"
+                placeholder="50000"
                 value={rewardValue}
                 onChange={(e) => setRewardValue(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">Masukkan nilai dalam Rupiah (tanpa Rp atau titik)</p>
             </div>
 
             <div className="space-y-2">
