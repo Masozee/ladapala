@@ -369,7 +369,7 @@ export default function FeedbackPage() {
                             })}
                           </TableCell>
                           <TableCell className="font-medium">
-                            {feedback.customer_name || '-'}
+                            {feedback.customer_name || feedback.contact_name || '-'}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
@@ -547,7 +547,13 @@ export default function FeedbackPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Pelanggan</p>
-                      <p className="font-medium">{selectedFeedback.customer_name || '-'}</p>
+                      <p className="font-medium">{selectedFeedback.customer_name || selectedFeedback.contact_name || '-'}</p>
+                      {selectedFeedback.contact_phone && (
+                        <p className="text-sm text-gray-500 mt-1">{selectedFeedback.contact_phone}</p>
+                      )}
+                      {selectedFeedback.contact_email && (
+                        <p className="text-sm text-gray-500">{selectedFeedback.contact_email}</p>
+                      )}
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Tanggal</p>
