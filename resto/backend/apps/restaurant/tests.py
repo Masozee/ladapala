@@ -5,7 +5,7 @@ from apps.restaurant.models import (
     Restaurant, Branch, Staff, StaffRole,
     Category, Product, Inventory, InventoryTransaction,
     Recipe, RecipeIngredient, StockTransfer,
-    Order, OrderItem, Payment, CashierSession
+    Order, OrderItem, Payment, CashierSession, StaffSession, Schedule
 )
 
 User = get_user_model()

@@ -92,15 +92,29 @@ export default function TablePage() {
       setProcessingOrders(processingResponse.results)
 
       // Get bookings from localStorage
-      // Filter to only show today's or future bookings (not past bookings)
+      // Filter to only show ACTIVE bookings (today + within booking time window)
       const bookings = JSON.parse(localStorage.getItem('tableBookings') || '[]')
-      const todayBookings = bookings.filter((b: any) => {
-        if (!b.booking_date) return false
-        const bookingDate = new Date(b.booking_date).toDateString()
-        const todayDate = new Date().toDateString()
-        return bookingDate >= todayDate
-      })
-      const reservedTableIds = todayBookings.map((b: any) => b.table_id)
+      const now = new Date()
+      const todayDate = now.toDateString()
+
+      // Only consider bookings as "reserved" if they are happening TODAY and within time window
+      const activeReservedTableIds = bookings
+        .filter((b: any) => {
+          if (!b.booking_date) return false
+
+          const bookingDateTime = new Date(b.booking_date)
+          const bookingDate = bookingDateTime.toDateString()
+
+          // Only process today's bookings
+          if (bookingDate !== todayDate) return false
+
+          // Assume booking lasts 2 hours
+          const bookingEndTime = new Date(bookingDateTime.getTime() + 2 * 60 * 60 * 1000)
+
+          // Check if current time is within booking window (booking time to booking time + 2 hours)
+          return now >= bookingDateTime && now <= bookingEndTime
+        })
+        .map((b: any) => b.table_id)
 
       // Group orders by table
       const ordersByTable = activeOrders.reduce((acc, order) => {
@@ -130,16 +144,17 @@ export default function TablePage() {
         const currentGuests = tableOrders.length > 0 ? Math.min(tableOrders.length * 2, table.capacity) : 0
 
         // Determine table status
-        // Priority: 1) Reservations, 2) Active orders (today), 3) Default to available
+        // Priority: 1) Active reservations (today + time window), 2) Active orders (today), 3) Default to available
         let status: 'occupied' | 'available' | 'reserved' | 'cleaning' = 'available'
-        if (reservedTableIds.includes(table.id)) {
+        if (activeReservedTableIds.includes(table.id)) {
+          // Only reserved if booking is active RIGHT NOW
           status = 'reserved'
         } else if (tableOrders.length > 0) {
           // Has active orders (today) - definitely occupied
           status = 'occupied'
         } else {
-          // No active orders today - available
-          // We ignore backend is_available flag as it may be stale from yesterday
+          // No active orders today and no active reservation - available
+          // Table availability is now daily-based, resets each day
           status = 'available'
         }
 

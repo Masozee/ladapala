@@ -50,7 +50,10 @@ class StaffRole(models.TextChoices):
     ADMIN = 'ADMIN', 'Administrator'
     MANAGER = 'MANAGER', 'Manager'
     CASHIER = 'CASHIER', 'Cashier'
+    CHEF = 'CHEF', 'Chef'
     KITCHEN = 'KITCHEN', 'Kitchen Staff'
+    BAR = 'BAR', 'Bar Staff'
+    WAITRESS = 'WAITRESS', 'Waitress'
     WAREHOUSE = 'WAREHOUSE', 'Warehouse Staff'
 
 
@@ -110,6 +113,15 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Promo & Seasonal fields
+    is_seasonal = models.BooleanField(default=False, help_text="Is this a seasonal menu item?")
+    is_promo = models.BooleanField(default=False, help_text="Is this item on promotion?")
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Discount percentage (0-100)")
+    promo_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Promotional price (overrides discount_percentage if set)")
+    promo_label = models.CharField(max_length=100, blank=True, help_text="Custom promo label (e.g. 'Buy 1 Get 1', 'Limited Time')")
+    valid_from = models.DateField(null=True, blank=True, help_text="Promo valid from date")
+    valid_until = models.DateField(null=True, blank=True, help_text="Promo valid until date")
+
     def save(self, *args, **kwargs):
         if not self.sku:
             self.sku = f"PRD{uuid.uuid4().hex[:8].upper()}"
@@ -120,6 +132,49 @@ class Product(models.Model):
         if self.price > 0:
             return ((self.price - self.cost) / self.price) * 100
         return 0
+
+    @property
+    def effective_price(self):
+        """Get the effective price considering promos"""
+        from django.utils import timezone
+        from decimal import Decimal
+
+        # Check if promo is active
+        if self.is_promo:
+            today = timezone.now().date()
+
+            # Check validity dates
+            if self.valid_from and today < self.valid_from:
+                return self.price
+            if self.valid_until and today > self.valid_until:
+                return self.price
+
+            # Use promo_price if set, otherwise calculate from discount_percentage
+            if self.promo_price:
+                return self.promo_price
+            elif self.discount_percentage:
+                discount = self.price * (self.discount_percentage / Decimal('100'))
+                return self.price - discount
+
+        return self.price
+
+    @property
+    def is_promo_active(self):
+        """Check if promo is currently active"""
+        from django.utils import timezone
+
+        if not self.is_promo:
+            return False
+
+        today = timezone.now().date()
+
+        # Check validity dates
+        if self.valid_from and today < self.valid_from:
+            return False
+        if self.valid_until and today > self.valid_until:
+            return False
+
+        return True
 
     def __str__(self):
         return f"{self.name} - ${self.price}"
@@ -132,6 +187,27 @@ class InventoryLocation(models.TextChoices):
     WAREHOUSE = 'WAREHOUSE', 'Gudang'
     KITCHEN = 'KITCHEN', 'Dapur'
     BAR = 'BAR', 'Bar'
+
+
+class InventoryItemType(models.TextChoices):
+    CONSUMABLE = 'CONSUMABLE', 'Consumable (Food/Beverage)'
+    UTILITY = 'UTILITY', 'Utility (Non-food)'
+    EQUIPMENT = 'EQUIPMENT', 'Equipment (Durable)'
+
+
+class InventoryCategory(models.TextChoices):
+    # Food & Beverage
+    FOOD = 'FOOD', 'Food Ingredient'
+    BEVERAGE = 'BEVERAGE', 'Beverage'
+
+    # Utilities
+    CLEANING = 'CLEANING', 'Cleaning Supplies'
+    SERVING = 'SERVING', 'Serving Items'
+    PACKAGING = 'PACKAGING', 'Packaging'
+    KITCHEN_TOOLS = 'KITCHEN_TOOLS', 'Kitchen Tools'
+    DISPOSABLES = 'DISPOSABLES', 'Disposables'
+    MAINTENANCE = 'MAINTENANCE', 'Maintenance'
+    OTHER = 'OTHER', 'Other'
 
 
 class Inventory(models.Model):
@@ -153,7 +229,51 @@ class Inventory(models.Model):
         default=InventoryLocation.WAREHOUSE,
         help_text="Storage location: Warehouse for raw materials, Kitchen for ready-to-use items"
     )
-    # Expiry tracking fields
+
+    # Item type and category
+    item_type = models.CharField(
+        max_length=20,
+        choices=InventoryItemType.choices,
+        default=InventoryItemType.CONSUMABLE,
+        help_text="Type of inventory item",
+        db_index=True
+    )
+    category = models.CharField(
+        max_length=20,
+        choices=InventoryCategory.choices,
+        default=InventoryCategory.FOOD,
+        help_text="Category of inventory item",
+        db_index=True
+    )
+
+    # Utility-specific fields
+    is_durable = models.BooleanField(
+        default=False,
+        help_text="Is this a durable item (e.g., plates, cutlery)?"
+    )
+    par_stock_level = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Optimal stock level to maintain (for utilities)"
+    )
+    lifespan_days = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Expected lifespan in days (for durable items)"
+    )
+    breakage_count = models.IntegerField(
+        default=0,
+        help_text="Total count of breakage/loss (for durable utilities)"
+    )
+    last_restock_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date of last stock replenishment"
+    )
+
+    # Expiry tracking fields (for consumables only)
     earliest_expiry_date = models.DateField(
         null=True,
         blank=True,
@@ -163,12 +283,36 @@ class Inventory(models.Model):
         default=False,
         help_text="Flag indicating if any batches are expiring within 30 days"
     )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def needs_restock(self):
+        """Check if item needs restocking (for consumables uses min_quantity, for utilities uses par_stock_level)"""
+        if self.item_type == InventoryItemType.UTILITY and self.par_stock_level:
+            return self.quantity <= self.par_stock_level
         return self.quantity <= self.min_quantity
+
+    @property
+    def below_par_stock(self):
+        """Check if utility item is below par stock level"""
+        if self.item_type == InventoryItemType.UTILITY and self.par_stock_level:
+            return self.quantity < self.par_stock_level
+        return False
+
+    @property
+    def breakage_rate(self):
+        """Calculate breakage rate as percentage of total handled"""
+        if self.item_type != InventoryItemType.UTILITY or not self.is_durable:
+            return 0
+        # Calculate based on transactions
+        total_received = self.transactions.filter(transaction_type='IN').aggregate(
+            total=models.Sum('quantity')
+        )['total'] or 0
+        if total_received == 0:
+            return 0
+        return (self.breakage_count / float(total_received)) * 100
 
     @property
     def average_cost(self):
@@ -229,6 +373,7 @@ class InventoryTransaction(models.Model):
         ('ADJUST', 'Adjustment'),     # Stock correction
         ('WASTE', 'Waste'),           # Damaged/expired items
         ('TRANSFER', 'Transfer'),     # Warehouse to kitchen transfer
+        ('BREAKAGE', 'Breakage'),     # Breakage/loss for durable utilities
     ]
 
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='transactions')
@@ -499,7 +644,7 @@ class Order(models.Model):
         ('TAKEAWAY', 'Takeaway'),
         ('DELIVERY', 'Delivery'),
     ]
-    
+
     ORDER_STATUS = [
         ('PENDING', 'Pending'),
         ('CONFIRMED', 'Confirmed'),
@@ -508,7 +653,7 @@ class Order(models.Model):
         ('COMPLETED', 'Completed'),
         ('CANCELLED', 'Cancelled'),
     ]
-    
+
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='orders')
     order_number = models.CharField(max_length=50, unique=True, blank=True)
     table = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
@@ -525,6 +670,49 @@ class Order(models.Model):
     delivery_address = models.TextField(blank=True)
     notes = models.TextField(blank=True)
     created_by = models.ForeignKey('Staff', on_delete=models.SET_NULL, null=True, related_name='created_orders')
+
+    # Staff tracking - who handled this order at each stage
+    order_taken_by = models.ForeignKey(
+        'Staff',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='orders_taken',
+        help_text='Waitress who took the order'
+    )
+    prepared_by = models.ForeignKey(
+        'Staff',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='orders_prepared',
+        help_text='Chef/Bar staff who prepared the order'
+    )
+    served_by = models.ForeignKey(
+        'Staff',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='orders_served',
+        help_text='Waitress who served the order'
+    )
+
+    # Session tracking
+    waitress_session = models.ForeignKey(
+        'StaffSession',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='orders_taken_in_session',
+        help_text='Waitress session when order was taken'
+    )
+
+    # Timestamps for order lifecycle
+    taken_at = models.DateTimeField(null=True, blank=True, help_text='When order was taken')
+    preparation_started_at = models.DateTimeField(null=True, blank=True, help_text='When chef/bar claimed it')
+    preparation_completed_at = models.DateTimeField(null=True, blank=True, help_text='When marked READY')
+    served_at = models.DateTimeField(null=True, blank=True, help_text='When marked COMPLETED')
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -623,6 +811,21 @@ class OrderItem(models.Model):
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     notes = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=ITEM_STATUS, default='PENDING')
+
+    # Per-item staff tracking
+    prepared_by = models.ForeignKey(
+        Staff,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='prepared_items',
+        help_text='Chef/Bar staff who prepared this specific item'
+    )
+
+    # Per-item timestamps
+    preparation_started_at = models.DateTimeField(null=True, blank=True)
+    preparation_completed_at = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
@@ -833,6 +1036,141 @@ class Schedule(models.Model):
     class Meta:
         ordering = ['date', 'start_time']
         unique_together = ['staff', 'date', 'shift_type']
+
+
+class StaffSession(models.Model):
+    """
+    Session tracking for WAITRESS, BAR, CHEF, and KITCHEN staff.
+    Tracks when staff start/end their shift and performance metrics.
+    """
+    SESSION_STATUS = [
+        ('OPEN', 'Open'),
+        ('CLOSED', 'Closed'),
+    ]
+
+    staff = models.ForeignKey(
+        Staff,
+        on_delete=models.CASCADE,
+        related_name='staff_sessions',
+        help_text='Staff member (WAITRESS, BAR, CHEF, or KITCHEN)'
+    )
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='staff_sessions')
+    schedule = models.ForeignKey(
+        Schedule,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='staff_sessions',
+        help_text='Link to schedule for this session'
+    )
+    shift_type = models.CharField(max_length=20, choices=Schedule.SHIFT_TYPES)
+
+    # Session tracking
+    opened_at = models.DateTimeField(auto_now_add=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=SESSION_STATUS, default='OPEN')
+
+    # Override tracking (for staff without schedule)
+    override_by = models.ForeignKey(
+        Staff,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='staff_session_overrides',
+        help_text='Manager who authorized session without schedule'
+    )
+    override_reason = models.TextField(blank=True, help_text='Reason for override')
+
+    # Performance tracking
+    orders_taken_count = models.IntegerField(default=0, help_text='For waitress - orders taken')
+    orders_prepared_count = models.IntegerField(default=0, help_text='For kitchen/bar - orders prepared')
+    orders_served_count = models.IntegerField(default=0, help_text='For waitress - orders served')
+    items_prepared_count = models.IntegerField(default=0, help_text='For kitchen/bar - individual items prepared')
+
+    # Session notes
+    notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        # Validate only one open session per staff
+        if self.status == 'OPEN' and not self.pk:
+            existing_open = StaffSession.objects.filter(
+                staff=self.staff,
+                status='OPEN'
+            ).exists()
+            if existing_open:
+                raise ValidationError(f"{self.staff} already has an open session")
+
+        # Validate schedule exists for today if no override
+        if not self.override_by and not self.schedule:
+            from datetime import date
+            today = date.today()
+            schedule = Schedule.objects.filter(
+                staff=self.staff,
+                date=today,
+                is_confirmed=True
+            ).first()
+            if not schedule:
+                raise ValidationError(
+                    f"{self.staff} does not have a confirmed schedule for today. "
+                    "Manager override is required."
+                )
+
+    def close_session(self):
+        """Close this session and calculate final metrics"""
+        if self.status == 'CLOSED':
+            raise ValidationError("Session is already closed")
+
+        self.status = 'CLOSED'
+        self.closed_at = timezone.now()
+        self.save()
+
+    @property
+    def duration(self):
+        """Calculate session duration in hours"""
+        if not self.closed_at:
+            end_time = timezone.now()
+        else:
+            end_time = self.closed_at
+
+        duration = end_time - self.opened_at
+        return duration.total_seconds() / 3600  # Convert to hours
+
+    @property
+    def average_prep_time(self):
+        """Calculate average preparation time for orders (kitchen/bar staff)"""
+        if self.orders_prepared_count == 0:
+            return 0
+
+        from django.db.models import Avg, F
+        from datetime import timedelta
+
+        avg = Order.objects.filter(
+            prepared_by=self.staff,
+            preparation_started_at__isnull=False,
+            preparation_completed_at__isnull=False,
+            preparation_started_at__gte=self.opened_at
+        ).annotate(
+            prep_duration=F('preparation_completed_at') - F('preparation_started_at')
+        ).aggregate(avg_duration=Avg('prep_duration'))
+
+        if avg['avg_duration']:
+            return avg['avg_duration'].total_seconds() / 60  # Return in minutes
+        return 0
+
+    def __str__(self):
+        return f"{self.staff.user.get_full_name()} - {self.shift_type} - {self.opened_at.date()} ({self.status})"
+
+    class Meta:
+        ordering = ['-opened_at']
+        verbose_name = "Staff Session"
+        verbose_name_plural = "Staff Sessions"
+        indexes = [
+            models.Index(fields=['staff', 'status']),
+            models.Index(fields=['branch', 'opened_at']),
+        ]
 
 
 class CashierSession(models.Model):
@@ -1440,6 +1778,7 @@ class RestaurantSettings(models.Model):
 
     # Printer Settings
     kitchen_printer_ip = models.CharField(max_length=15, blank=True, help_text='IP address of kitchen printer')
+    bar_printer_ip = models.CharField(max_length=15, blank=True, help_text='IP address of bar printer')
     receipt_printer_ip = models.CharField(max_length=15, blank=True, help_text='IP address of receipt printer')
     enable_auto_print = models.BooleanField(default=True)
     print_receipts = models.BooleanField(default=True)

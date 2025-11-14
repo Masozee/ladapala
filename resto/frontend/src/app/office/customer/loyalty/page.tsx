@@ -116,7 +116,7 @@ export default function LoyaltyPage() {
         name: rewardName,
         reward_type: rewardType,
         points_required: parseInt(pointsCost),
-        voucher_value: rewardValue ? parseFloat(rewardValue) : undefined,
+        voucher_value: rewardValue ? parseFloat(rewardValue).toString() : undefined,
         description: rewardDescription || undefined,
         stock_quantity: stockQuantity ? parseInt(stockQuantity) : undefined,
       })

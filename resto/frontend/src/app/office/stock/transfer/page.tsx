@@ -43,13 +43,16 @@ export default function TransferPage() {
 
   const [warehouseInventory, setWarehouseInventory] = useState<Inventory[]>([])
   const [kitchenInventory, setKitchenInventory] = useState<Inventory[]>([])
+  const [barInventory, setBarInventory] = useState<Inventory[]>([])
   const [transferHistory, setTransferHistory] = useState<StockTransfer[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [destinationLocation, setDestinationLocation] = useState<'KITCHEN' | 'BAR'>('KITCHEN')
 
   const [transferForm, setTransferForm] = useState({
     warehouse_item_id: '',
     kitchen_item_id: '',
+    bar_item_id: '',
     quantity: '',
     notes: ''
   })
@@ -63,12 +66,14 @@ export default function TransferPage() {
     if (!staff?.branch) return
 
     try {
-      const [warehouse, kitchen] = await Promise.all([
+      const [warehouse, kitchen, bar] = await Promise.all([
         api.getAllInventory({ branch: staff.branch.id, location: 'WAREHOUSE' }),
-        api.getAllInventory({ branch: staff.branch.id, location: 'KITCHEN' })
+        api.getAllInventory({ branch: staff.branch.id, location: 'KITCHEN' }),
+        api.getAllInventory({ branch: staff.branch.id, location: 'BAR' })
       ])
       setWarehouseInventory(warehouse)
       setKitchenInventory(kitchen)
+      setBarInventory(bar)
     } catch (error) {
       console.error('Error fetching inventory:', error)
       toast({
@@ -95,12 +100,23 @@ export default function TransferPage() {
     setSubmitting(true)
 
     try {
-      await api.createStockTransfer({
+      const destinationItemId = destinationLocation === 'KITCHEN'
+        ? parseInt(transferForm.kitchen_item_id)
+        : parseInt(transferForm.bar_item_id)
+
+      const transferData: any = {
         warehouse_item_id: parseInt(transferForm.warehouse_item_id),
-        kitchen_item_id: parseInt(transferForm.kitchen_item_id),
         quantity: parseFloat(transferForm.quantity),
         notes: transferForm.notes || undefined
-      })
+      }
+
+      if (destinationLocation === 'KITCHEN') {
+        transferData.kitchen_item_id = destinationItemId
+      } else {
+        transferData.bar_item_id = destinationItemId
+      }
+
+      await api.createStockTransfer(transferData)
 
       toast({
         title: "Berhasil",
@@ -111,6 +127,7 @@ export default function TransferPage() {
       setTransferForm({
         warehouse_item_id: '',
         kitchen_item_id: '',
+        bar_item_id: '',
         quantity: '',
         notes: ''
       })
@@ -131,7 +148,11 @@ export default function TransferPage() {
   }
 
   const selectedWarehouseItem = warehouseInventory.find(i => i.id === parseInt(transferForm.warehouse_item_id))
-  const selectedKitchenItem = kitchenInventory.find(i => i.id === parseInt(transferForm.kitchen_item_id))
+  const selectedDestinationItemId = destinationLocation === 'KITCHEN'
+    ? parseInt(transferForm.kitchen_item_id)
+    : parseInt(transferForm.bar_item_id)
+  const destinationInventory = destinationLocation === 'KITCHEN' ? kitchenInventory : barInventory
+  const selectedKitchenItem = destinationInventory.find(i => i.id === selectedDestinationItemId)
 
   // Calculate converted quantity if units differ
   const getConvertedQuantity = () => {
@@ -192,10 +213,14 @@ export default function TransferPage() {
                     value={transferForm.warehouse_item_id}
                     onValueChange={(value) => {
                       const item = warehouseInventory.find(i => i.id === parseInt(value))
+                      const destInventory = destinationLocation === 'KITCHEN' ? kitchenInventory : barInventory
+                      const destItemId = destInventory.find(k => k.name === item?.name)?.id.toString() || ''
+
                       setTransferForm({
                         ...transferForm,
                         warehouse_item_id: value,
-                        kitchen_item_id: kitchenInventory.find(k => k.name === item?.name)?.id.toString() || ''
+                        kitchen_item_id: destinationLocation === 'KITCHEN' ? destItemId : '',
+                        bar_item_id: destinationLocation === 'BAR' ? destItemId : ''
                       })
                     }}
                     required
@@ -214,10 +239,42 @@ export default function TransferPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="kitchen_item">Item di Dapur *</Label>
+                  <Label htmlFor="destination">Tujuan Transfer *</Label>
                   <Select
-                    value={transferForm.kitchen_item_id}
-                    onValueChange={(value) => setTransferForm({...transferForm, kitchen_item_id: value})}
+                    value={destinationLocation}
+                    onValueChange={(value: 'KITCHEN' | 'BAR') => {
+                      setDestinationLocation(value)
+                      setTransferForm({
+                        ...transferForm,
+                        kitchen_item_id: '',
+                        bar_item_id: ''
+                      })
+                    }}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih tujuan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="KITCHEN">Dapur (Kitchen)</SelectItem>
+                      <SelectItem value="BAR">Bar</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="destination_item">
+                    Item di {destinationLocation === 'KITCHEN' ? 'Dapur' : 'Bar'} *
+                  </Label>
+                  <Select
+                    value={destinationLocation === 'KITCHEN' ? transferForm.kitchen_item_id : transferForm.bar_item_id}
+                    onValueChange={(value) => {
+                      if (destinationLocation === 'KITCHEN') {
+                        setTransferForm({...transferForm, kitchen_item_id: value})
+                      } else {
+                        setTransferForm({...transferForm, bar_item_id: value})
+                      }
+                    }}
                     required
                     disabled={!transferForm.warehouse_item_id}
                   >
@@ -225,7 +282,7 @@ export default function TransferPage() {
                       <SelectValue placeholder={transferForm.warehouse_item_id ? "Pilih item tujuan" : "Pilih item gudang dulu"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {kitchenInventory
+                      {(destinationLocation === 'KITCHEN' ? kitchenInventory : barInventory)
                         .filter(k => k.name === selectedWarehouseItem?.name)
                         .map(item => (
                           <SelectItem key={item.id} value={item.id.toString()}>
@@ -316,7 +373,7 @@ export default function TransferPage() {
                   <Button
                     type="submit"
                     className="flex-1 rounded bg-[#58ff34] hover:bg-[#4de82a] text-black"
-                    disabled={submitting || !transferForm.warehouse_item_id || !transferForm.kitchen_item_id}
+                    disabled={submitting || !transferForm.warehouse_item_id || (!transferForm.kitchen_item_id && !transferForm.bar_item_id)}
                   >
                     <HugeiconsIcon icon={ArrowRight01Icon} size={18} strokeWidth={2} className="mr-2" />
                     {submitting ? 'Memproses...' : 'Transfer Sekarang'}

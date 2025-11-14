@@ -12,7 +12,7 @@ from .models import (
     Category, Product, Inventory, InventoryTransaction, InventoryBatch,
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
-    Promotion, Schedule, Report, CashierSession,
+    Promotion, Schedule, Report, CashierSession, StaffSession,
     Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
     StockTransfer,
     Customer, LoyaltyTransaction, Reward, CustomerFeedback, MembershipTierBenefit,
@@ -26,7 +26,8 @@ from .serializers import (
     KitchenOrderSerializer, KitchenOrderItemSerializer,
     PromotionSerializer, ScheduleSerializer, ReportSerializer,
     DashboardSerializer, CashierSessionSerializer, CashierSessionOpenSerializer,
-    CashierSessionCloseSerializer, RecipeSerializer, RecipeIngredientSerializer,
+    CashierSessionCloseSerializer, StaffSessionSerializer, StaffSessionCreateSerializer,
+    RecipeSerializer, RecipeIngredientSerializer,
     PurchaseOrderSerializer, PurchaseOrderCreateSerializer, PurchaseOrderItemSerializer,
     StockTransferSerializer, StockTransferCreateSerializer,
     CustomerSerializer, CustomerCreateSerializer, LoyaltyTransactionSerializer,
@@ -170,9 +171,9 @@ class InventoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description']
-    filterset_fields = ['branch', 'location']
+    filterset_fields = ['branch', 'location', 'item_type', 'category', 'is_durable']
     ordering_fields = ['name', 'quantity']
-    
+
     @action(detail=False, methods=['get'])
     def low_stock(self, request):
         low_stock_items = self.get_queryset().filter(
@@ -180,7 +181,84 @@ class InventoryViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(low_stock_items, many=True)
         return Response(serializer.data)
-    
+
+    @action(detail=False, methods=['get'])
+    def below_par_stock(self, request):
+        """Get utility items that are below their par stock level"""
+        from .models import InventoryItemType
+
+        utility_items = self.get_queryset().filter(
+            item_type=InventoryItemType.UTILITY,
+            par_stock_level__isnull=False,
+            quantity__lt=F('par_stock_level')
+        )
+        serializer = self.get_serializer(utility_items, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def consumables(self, request):
+        """Get consumable items (food/beverage)"""
+        from .models import InventoryItemType
+
+        items = self.get_queryset().filter(item_type=InventoryItemType.CONSUMABLE)
+        serializer = self.get_serializer(items, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def utilities(self, request):
+        """Get utility items (non-food)"""
+        from .models import InventoryItemType
+
+        items = self.get_queryset().filter(item_type=InventoryItemType.UTILITY)
+        serializer = self.get_serializer(items, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def equipment(self, request):
+        """Get equipment items"""
+        from .models import InventoryItemType
+
+        items = self.get_queryset().filter(item_type=InventoryItemType.EQUIPMENT)
+        serializer = self.get_serializer(items, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def record_breakage(self, request, pk=None):
+        """Record breakage for durable utility items"""
+        item = self.get_object()
+        quantity = Decimal(request.data.get('quantity', 0))
+        notes = request.data.get('notes', '')
+
+        if quantity <= 0:
+            return Response(
+                {'error': 'Quantity must be greater than 0'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if item.quantity < quantity:
+            return Response(
+                {'error': f'Insufficient quantity. Available: {item.quantity}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create breakage transaction
+        InventoryTransaction.objects.create(
+            inventory=item,
+            transaction_type='BREAKAGE',
+            quantity=quantity,
+            unit_cost=item.cost_per_unit,
+            notes=notes,
+            performed_by=request.user
+        )
+
+        # Update item
+        item.quantity -= quantity
+        item.breakage_count += int(quantity)
+        item.save()
+
+        serializer = self.get_serializer(item)
+        return Response(serializer.data)
+
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsWarehouseStaff()]
@@ -347,6 +425,25 @@ class OrderViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['branch', 'order_type', 'status', 'table']
     ordering = ['-created_at']
+
+    def get_queryset(self):
+        """
+        Filter orders by date for daily operations.
+        By default shows only TODAY's orders for kitchen, bar, cashier, waitress.
+        Use ?show_all=true for reports to see all orders.
+        """
+        queryset = super().get_queryset()
+
+        # Get query parameters
+        show_all = self.request.query_params.get('show_all', 'false').lower() == 'true'
+
+        # By default, only show today's orders for daily operations
+        # Reports can use show_all=true to see historical data
+        if not show_all:
+            today = timezone.now().date()
+            queryset = queryset.filter(created_at__date=today)
+
+        return queryset
 
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:
@@ -587,6 +684,141 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = ServingHistorySerializer(history, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['post'])
+    def claim(self, request, pk=None):
+        """
+        Claim an order for preparation by current staff (chef/bar).
+        Sets prepared_by to current user and updates timestamps.
+
+        POST /api/orders/{id}/claim/
+        """
+        order = self.get_object()
+        user = request.user
+
+        if not hasattr(user, 'staff'):
+            return Response(
+                {'error': 'User is not associated with any staff'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        staff = user.staff
+
+        # Verify staff role is chef, kitchen, or bar
+        if staff.role not in ['CHEF', 'KITCHEN', 'BAR']:
+            return Response(
+                {'error': 'Only kitchen/bar staff can claim orders'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check if order is already claimed
+        if order.prepared_by:
+            return Response(
+                {'error': f'Order already claimed by {order.prepared_by.user.get_full_name()}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Claim the order
+        order.prepared_by = staff
+        order.preparation_started_at = timezone.now()
+
+        # Update status if still CONFIRMED
+        if order.status == 'CONFIRMED':
+            order.status = 'PREPARING'
+
+        order.save()
+
+        # Update staff session counter
+        active_session = StaffSession.objects.filter(
+            staff=staff,
+            status='OPEN'
+        ).first()
+
+        if active_session:
+            active_session.orders_prepared_count += 1
+            active_session.save()
+
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def assign(self, request, pk=None):
+        """
+        Assign an order to a specific staff member.
+        Used by helpers to distribute orders to chefs/bar staff.
+
+        POST /api/orders/{id}/assign/
+        Body: { "staff_id": 5 }
+        """
+        order = self.get_object()
+        staff_id = request.data.get('staff_id')
+
+        if not staff_id:
+            return Response(
+                {'error': 'staff_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            staff = Staff.objects.get(id=staff_id)
+        except Staff.DoesNotExist:
+            return Response(
+                {'error': 'Staff not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Verify staff role
+        if staff.role not in ['CHEF', 'KITCHEN', 'BAR']:
+            return Response(
+                {'error': 'Can only assign to kitchen/bar staff'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check if order is already claimed
+        if order.prepared_by:
+            return Response(
+                {'error': f'Order already assigned to {order.prepared_by.user.get_full_name()}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Assign the order
+        order.prepared_by = staff
+        order.preparation_started_at = timezone.now()
+
+        # Update status if still CONFIRMED
+        if order.status == 'CONFIRMED':
+            order.status = 'PREPARING'
+
+        order.save()
+
+        # Update staff session counter
+        active_session = StaffSession.objects.filter(
+            staff=staff,
+            status='OPEN'
+        ).first()
+
+        if active_session:
+            active_session.orders_prepared_count += 1
+            active_session.save()
+
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def unassigned(self, request):
+        """
+        Get orders that haven't been claimed yet.
+        Filters by CONFIRMED or PREPARING status with no prepared_by.
+
+        GET /api/orders/unassigned/
+        """
+        queryset = self.get_queryset().filter(
+            status__in=['CONFIRMED', 'PREPARING'],
+            prepared_by__isnull=True
+        ).order_by('created_at')
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
@@ -599,11 +831,20 @@ class PaymentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Get active cashier session for the current user
         from .models import CashierSession
+        from rest_framework.exceptions import ValidationError
+
         staff = self.request.user.staff
         active_session = CashierSession.objects.filter(
             cashier=staff,
             status='OPEN'
         ).first()
+
+        # Validate that cashier has an open session (MANDATORY for CASHIER role)
+        if staff.role == 'CASHIER' and not active_session:
+            raise ValidationError({
+                'error': 'Kasir harus membuka sesi kasir terlebih dahulu',
+                'detail': 'Anda harus membuka sesi kasir sebelum dapat memproses pembayaran. Silakan buka sesi kasir di menu Session > Open Session.'
+            })
 
         # Save payment with processed_by and cashier_session
         payment = serializer.save(
@@ -2441,6 +2682,78 @@ class CustomerFeedbackViewSet(viewsets.ModelViewSet):
         })
 
 
+class KitchenTicketViewSet(viewsets.ViewSet):
+    """
+    ViewSet for Kitchen and Bar order tickets (PDFs)
+
+    Endpoints:
+    - list: GET /api/kitchen-tickets/?station=KITCHEN|BAR
+    - retrieve: GET /api/kitchen-tickets/{filename}/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        """List available kitchen/bar order tickets"""
+        import os
+        from django.conf import settings
+
+        station = request.query_params.get('station', 'KITCHEN').upper()
+
+        if station not in ['KITCHEN', 'BAR']:
+            return Response({'error': 'Invalid station. Use KITCHEN or BAR'}, status=status.HTTP_400_BAD_REQUEST)
+
+        folder = 'kitchen_orders' if station == 'KITCHEN' else 'bar_orders'
+        folder_path = os.path.join(settings.MEDIA_ROOT, folder)
+
+        if not os.path.exists(folder_path):
+            return Response([])
+
+        # List all PDF files, sorted by modification time (newest first)
+        files = []
+        for filename in os.listdir(folder_path):
+            if filename.endswith('.pdf'):
+                filepath = os.path.join(folder_path, filename)
+                mtime = os.path.getmtime(filepath)
+                files.append({
+                    'filename': filename,
+                    'url': f'/media/{folder}/{filename}',
+                    'modified': mtime,
+                    'station': station
+                })
+
+        # Sort by modification time (newest first)
+        files.sort(key=lambda x: x['modified'], reverse=True)
+
+        return Response(files)
+
+    def retrieve(self, request, pk=None):
+        """Get URL for a specific ticket PDF"""
+        import os
+        from django.conf import settings
+
+        # pk is the filename
+        filename = pk
+
+        # Try kitchen folder first
+        kitchen_path = os.path.join(settings.MEDIA_ROOT, 'kitchen_orders', filename)
+        bar_path = os.path.join(settings.MEDIA_ROOT, 'bar_orders', filename)
+
+        if os.path.exists(kitchen_path):
+            return Response({
+                'filename': filename,
+                'url': f'/media/kitchen_orders/{filename}',
+                'station': 'KITCHEN'
+            })
+        elif os.path.exists(bar_path):
+            return Response({
+                'filename': filename,
+                'url': f'/media/bar_orders/{filename}',
+                'station': 'BAR'
+            })
+        else:
+            return Response({'error': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
 class MembershipTierBenefitViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Membership Tier Benefits configuration
@@ -2484,6 +2797,71 @@ class RestaurantSettingsViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @action(detail=False, methods=['post'])
+    def test_printer(self, request):
+        """Test printer connection by pinging IP address"""
+        import subprocess
+        import platform
+
+        ip_address = request.data.get('ip_address')
+        if not ip_address:
+            return Response(
+                {'error': 'IP address is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate IP format
+        import re
+        ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+        if not re.match(ip_pattern, ip_address):
+            return Response(
+                {'error': 'Invalid IP address format'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Determine ping command based on OS
+            param = '-n' if platform.system().lower() == 'windows' else '-c'
+
+            # Ping with 1 packet, 2 second timeout
+            command = ['ping', param, '1', '-W', '2', ip_address]
+
+            # Execute ping
+            result = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=5,
+                text=True
+            )
+
+            # Check if ping was successful
+            if result.returncode == 0:
+                return Response({
+                    'success': True,
+                    'message': f'Printer at {ip_address} is reachable',
+                    'ip_address': ip_address
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'message': f'Printer at {ip_address} is not reachable',
+                    'ip_address': ip_address
+                })
+
+        except subprocess.TimeoutExpired:
+            return Response({
+                'success': False,
+                'message': f'Connection timeout to {ip_address}',
+                'ip_address': ip_address
+            })
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': f'Error testing connection: {str(e)}',
+                'ip_address': ip_address
+            })
+
     @action(detail=False, methods=['get'])
     def current(self, request):
         """Get settings for current user's restaurant"""
@@ -2504,4 +2882,185 @@ class RestaurantSettingsViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(settings)
         return Response(serializer.data)
+
+
+class StaffSessionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing staff sessions (WAITRESS, BAR, CHEF, KITCHEN).
+    Supports session start/end and performance tracking.
+    """
+    queryset = StaffSession.objects.all()
+    serializer_class = StaffSessionSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['staff', 'branch', 'status', 'shift_type']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return StaffSessionCreateSerializer
+        return StaffSessionSerializer
+
+    def get_queryset(self):
+        """Filter sessions based on user role"""
+        user = self.request.user
+        queryset = super().get_queryset()
+
+        # If staff, show only their sessions (unless manager/admin)
+        if hasattr(user, 'staff'):
+            staff = user.staff
+            if staff.role in ['MANAGER', 'ADMIN']:
+                # Managers can see all sessions in their branch
+                return queryset.filter(branch=staff.branch)
+            else:
+                # Staff can only see their own sessions
+                return queryset.filter(staff=staff)
+
+        return queryset
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Get current user's active session"""
+        user = request.user
+
+        if not hasattr(user, 'staff'):
+            return Response(
+                {'error': 'User is not associated with any staff'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        active_session = StaffSession.objects.filter(
+            staff=user.staff,
+            status='OPEN'
+        ).first()
+
+        if not active_session:
+            return Response(
+                {'message': 'No active session found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = self.get_serializer(active_session)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def start(self, request):
+        """Start a new session for the current user"""
+        user = request.user
+
+        if not hasattr(user, 'staff'):
+            return Response(
+                {'error': 'User is not associated with any staff'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        staff = user.staff
+
+        # Check if already has an open session
+        existing_open = StaffSession.objects.filter(
+            staff=staff,
+            status='OPEN'
+        ).exists()
+
+        if existing_open:
+            return Response(
+                {'error': f'You already have an open session. Please close it first.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Get shift type from request or determine from schedule
+        shift_type = request.data.get('shift_type')
+        override_by = request.data.get('override_by')
+        override_reason = request.data.get('override_reason', '')
+
+        # Find today's schedule if no shift type provided
+        if not shift_type:
+            from datetime import date
+            today = date.today()
+            schedule = Schedule.objects.filter(
+                staff=staff,
+                date=today,
+                is_confirmed=True
+            ).first()
+
+            if schedule:
+                shift_type = schedule.shift_type
+            elif not override_by:
+                return Response(
+                    {'error': 'No schedule found for today and no shift type provided'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Create session data
+        session_data = {
+            'staff': staff.id,
+            'branch': staff.branch.id,
+            'shift_type': shift_type,
+            'override_by': override_by,
+            'override_reason': override_reason
+        }
+
+        serializer = StaffSessionCreateSerializer(data=session_data)
+        if serializer.is_valid():
+            session = serializer.save()
+            response_serializer = StaffSessionSerializer(session)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def end(self, request, pk=None):
+        """End a staff session"""
+        session = self.get_object()
+
+        if session.status == 'CLOSED':
+            return Response(
+                {'error': 'Session is already closed'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Close the session
+        session.close_session()
+
+        serializer = self.get_serializer(session)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def active_staff(self, request):
+        """
+        Get list of all active staff in the same role and branch.
+        Used for kitchen/bar to see who's currently working.
+        """
+        user = request.user
+
+        if not hasattr(user, 'staff'):
+            return Response(
+                {'error': 'User is not associated with any staff'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        staff = user.staff
+        role_filter = request.query_params.get('role', staff.role)
+
+        # Get all active sessions for this role and branch
+        active_sessions = StaffSession.objects.filter(
+            branch=staff.branch,
+            staff__role=role_filter,
+            status='OPEN'
+        ).select_related('staff__user').order_by('-orders_prepared_count', '-items_prepared_count')
+
+        # Prepare response data
+        active_staff_list = []
+        for session in active_sessions:
+            active_staff_list.append({
+                'id': session.id,
+                'staff_id': session.staff.id,
+                'staff_name': session.staff.user.get_full_name() or session.staff.user.email,
+                'staff_role': session.staff.role,
+                'shift_type': session.shift_type,
+                'orders_prepared_count': session.orders_prepared_count,
+                'items_prepared_count': session.items_prepared_count,
+                'opened_at': session.opened_at,
+                'duration': session.duration
+            })
+
+        return Response(active_staff_list)
 

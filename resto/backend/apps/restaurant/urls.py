@@ -5,11 +5,11 @@ from .viewsets import (
     CategoryViewSet, ProductViewSet, InventoryViewSet,
     InventoryTransactionViewSet, InventoryBatchViewSet, OrderViewSet, OrderItemViewSet, PaymentViewSet,
     TableViewSet, KitchenOrderViewSet, PromotionViewSet,
-    ScheduleViewSet, DashboardViewSet, CashierSessionViewSet,
+    ScheduleViewSet, DashboardViewSet, CashierSessionViewSet, StaffSessionViewSet,
     RecipeViewSet, RecipeIngredientViewSet, PurchaseOrderViewSet, PurchaseOrderItemViewSet,
     StockTransferViewSet, VendorViewSet,
     CustomerViewSet, LoyaltyTransactionViewSet, RewardViewSet, CustomerFeedbackViewSet, MembershipTierBenefitViewSet,
-    RestaurantSettingsViewSet
+    KitchenTicketViewSet, RestaurantSettingsViewSet
 )
 from .reports import ReportViewSet
 
@@ -32,6 +32,7 @@ router.register(r'schedules', ScheduleViewSet)
 router.register(r'reports', ReportViewSet, basename='reports')
 router.register(r'dashboard', DashboardViewSet, basename='dashboard')
 router.register(r'cashier-sessions', CashierSessionViewSet)
+router.register(r'staff-sessions', StaffSessionViewSet)
 router.register(r'recipes', RecipeViewSet)
 router.register(r'recipe-ingredients', RecipeIngredientViewSet)
 router.register(r'purchase-orders', PurchaseOrderViewSet)
@@ -43,6 +44,7 @@ router.register(r'loyalty-transactions', LoyaltyTransactionViewSet)
 router.register(r'rewards', RewardViewSet)
 router.register(r'feedback', CustomerFeedbackViewSet)
 router.register(r'tier-benefits', MembershipTierBenefitViewSet)
+router.register(r'kitchen-tickets', KitchenTicketViewSet, basename='kitchen-tickets')
 router.register(r'settings', RestaurantSettingsViewSet, basename='settings')
 
 app_name = 'restaurant'

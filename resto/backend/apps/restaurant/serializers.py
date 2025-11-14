@@ -5,7 +5,7 @@ from .models import (
     Category, Product, Inventory, InventoryTransaction, InventoryBatch,
     Order, OrderItem, Payment, Table,
     KitchenOrder, KitchenOrderItem,
-    Promotion, Schedule, Report, CashierSession,
+    Promotion, Schedule, Report, CashierSession, StaffSession,
     Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
     StockTransfer, Vendor,
     Customer, LoyaltyTransaction, Reward, CustomerFeedback, MembershipTierBenefit,
@@ -64,22 +64,26 @@ class CategorySerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     profit_margin = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
-    
+    effective_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    is_promo_active = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = Product
         fields = '__all__'
-        read_only_fields = ['sku', 'created_at', 'updated_at', 'profit_margin']
+        read_only_fields = ['sku', 'created_at', 'updated_at', 'profit_margin', 'effective_price', 'is_promo_active']
 
 
 class InventorySerializer(serializers.ModelSerializer):
     needs_restock = serializers.BooleanField(read_only=True)
     average_cost = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     total_value = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    below_par_stock = serializers.BooleanField(read_only=True)
+    breakage_rate = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Inventory
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at', 'needs_restock', 'average_cost', 'total_value']
+        read_only_fields = ['created_at', 'updated_at', 'needs_restock', 'average_cost', 'total_value', 'below_par_stock', 'breakage_rate']
 
 
 class InventoryTransactionSerializer(serializers.ModelSerializer):
@@ -165,10 +169,30 @@ class OrderSerializer(serializers.ModelSerializer):
     table_number = serializers.CharField(source='table.number', read_only=True)
     customer_info = serializers.SerializerMethodField()
 
+    # Staff tracking info
+    order_taken_by_name = serializers.SerializerMethodField()
+    prepared_by_name = serializers.SerializerMethodField()
+    served_by_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Order
         fields = '__all__'
         read_only_fields = ['order_number', 'created_at', 'updated_at', 'total_amount']
+
+    def get_order_taken_by_name(self, obj):
+        if obj.order_taken_by:
+            return obj.order_taken_by.user.get_full_name()
+        return None
+
+    def get_prepared_by_name(self, obj):
+        if obj.prepared_by:
+            return obj.prepared_by.user.get_full_name()
+        return None
+
+    def get_served_by_name(self, obj):
+        if obj.served_by:
+            return obj.served_by.user.get_full_name()
+        return None
 
     def get_customer_info(self, obj):
         """Return customer membership info if linked"""
@@ -994,7 +1018,7 @@ class RestaurantSettingsSerializer(serializers.ModelSerializer):
             'auto_backup', 'backup_frequency', 'data_retention_days',
             'enable_audit_log', 'session_timeout_minutes',
             # Printer Settings
-            'kitchen_printer_ip', 'receipt_printer_ip', 'enable_auto_print',
+            'kitchen_printer_ip', 'bar_printer_ip', 'receipt_printer_ip', 'enable_auto_print',
             'print_receipts', 'print_kitchen_orders',
             # Security Settings
             'min_password_length', 'password_expiry_days', 'require_special_chars',
@@ -1021,3 +1045,106 @@ class ServingHistorySerializer(serializers.ModelSerializer):
         if obj.served_by and obj.served_by.user:
             return obj.served_by.user.get_full_name() or obj.served_by.user.email
         return 'Unknown'
+
+
+class StaffSessionSerializer(serializers.ModelSerializer):
+    """Serializer for StaffSession model"""
+    staff_name = serializers.SerializerMethodField()
+    staff_role = serializers.CharField(source='staff.role', read_only=True)
+    staff_email = serializers.CharField(source='staff.user.email', read_only=True)
+    branch_name = serializers.CharField(source='branch.name', read_only=True)
+    schedule_info = serializers.SerializerMethodField()
+    duration = serializers.FloatField(read_only=True)
+    average_prep_time = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = StaffSession
+        fields = [
+            'id', 'staff', 'staff_name', 'staff_role', 'staff_email',
+            'branch', 'branch_name', 'schedule', 'schedule_info',
+            'shift_type', 'opened_at', 'closed_at', 'status',
+            'override_by', 'override_reason',
+            'orders_taken_count', 'orders_prepared_count',
+            'orders_served_count', 'items_prepared_count',
+            'notes', 'duration', 'average_prep_time',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'opened_at', 'created_at', 'updated_at',
+            'staff_name', 'staff_role', 'staff_email',
+            'branch_name', 'schedule_info', 'duration', 'average_prep_time'
+        ]
+
+    def get_staff_name(self, obj):
+        return obj.staff.user.get_full_name() or obj.staff.user.email
+
+    def get_schedule_info(self, obj):
+        if obj.schedule:
+            return {
+                'id': obj.schedule.id,
+                'date': obj.schedule.date,
+                'shift_type': obj.schedule.shift_type,
+                'start_time': obj.schedule.start_time,
+                'end_time': obj.schedule.end_time
+            }
+        return None
+
+
+class StaffSessionCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating a new staff session"""
+
+    class Meta:
+        model = StaffSession
+        fields = ['staff', 'branch', 'shift_type', 'override_by', 'override_reason', 'notes']
+
+    def validate(self, data):
+        """Validate session creation"""
+        from datetime import date
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        staff = data.get('staff')
+        override_by = data.get('override_by')
+
+        # Check if staff already has an open session
+        existing_open = StaffSession.objects.filter(
+            staff=staff,
+            status='OPEN'
+        ).exists()
+
+        if existing_open:
+            raise serializers.ValidationError(
+                f"{staff.user.get_full_name()} already has an open session. Please close it first."
+            )
+
+        # Check if staff has a schedule for today (unless override is provided)
+        if not override_by:
+            today = date.today()
+            schedule = Schedule.objects.filter(
+                staff=staff,
+                date=today,
+                is_confirmed=True
+            ).first()
+
+            if not schedule:
+                raise serializers.ValidationError(
+                    f"{staff.user.get_full_name()} does not have a confirmed schedule for today. "
+                    "Manager override is required."
+                )
+
+            # Auto-assign the schedule
+            data['schedule'] = schedule
+
+        return data
+
+
+class ActiveStaffSerializer(serializers.Serializer):
+    """Serializer for active staff list view"""
+    id = serializers.IntegerField()
+    staff_id = serializers.IntegerField()
+    staff_name = serializers.CharField()
+    staff_role = serializers.CharField()
+    shift_type = serializers.CharField()
+    orders_prepared_count = serializers.IntegerField()
+    items_prepared_count = serializers.IntegerField()
+    opened_at = serializers.DateTimeField()
+    duration = serializers.FloatField()

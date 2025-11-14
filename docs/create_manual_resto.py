@@ -16,7 +16,7 @@ def create_manual():
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     # Version info
-    version = doc.add_paragraph('Versi 1.0 - November 2025')
+    version = doc.add_paragraph('Versi 1.1 - November 2025')
     version.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     doc.add_page_break()
@@ -891,28 +891,122 @@ def create_manual():
         doc.add_paragraph(item, style='List Bullet')
 
     doc.add_paragraph()
-    doc.add_paragraph('B. Membership/Loyalty Program', style='Heading 4')
-    doc.add_paragraph('Akses: Customer → Membership')
-    membership = [
-        'Manage membership tiers (Bronze, Silver, Gold, Platinum)',
-        'Set benefits per tier (discount, points, dll)',
-        'Member card management',
-        'Points accumulation rules',
-        'Redeem points',
+    doc.add_paragraph()
+    doc.add_paragraph('B. Program Loyalitas Customer', style='Heading 4')
+    doc.add_paragraph('Akses: Customer → Loyalty')
+
+    doc.add_paragraph()
+    doc.add_paragraph('Membership Tiers:', style='Heading 5')
+    tier_table_data = [
+        ('Tier', 'Minimum Spent', 'Points Multiplier', 'Benefits'),
+        ('Bronze', 'Rp 0', '1.0x', 'Rewards dasar'),
+        ('Silver', 'Rp 2,000,000', '1.2x', '20% lebih banyak poin'),
+        ('Gold', 'Rp 5,000,000', '1.5x', '50% lebih banyak poin'),
+        ('Platinum', 'Rp 15,000,000', '2.0x', 'Poin ganda'),
     ]
-    for item in membership:
+    for row in tier_table_data:
+        p = doc.add_paragraph()
+        if row == tier_table_data[0]:
+            p.add_run(' | '.join(row)).bold = True
+        else:
+            p.add_run(' | '.join(row))
+
+    doc.add_paragraph()
+    doc.add_paragraph('Points Earning:', style='Heading 5')
+    points_earning = [
+        'Customer mendapat 1 poin per Rp 1,000 yang dibelanjakan',
+        'Dikalikan dengan tier multiplier',
+        'Contoh transaksi Rp 50,000:',
+        '   - Bronze: 50 poin (50,000 × 1.0 / 1,000)',
+        '   - Gold: 75 poin (50,000 × 1.5 / 1,000)',
+        '   - Platinum: 100 poin (50,000 × 2.0 / 1,000)',
+        'Poin otomatis dikreditkan saat pembayaran selesai',
+        'Poin expire setelah 1 tahun',
+    ]
+    for item in points_earning:
+        if item.startswith('   '):
+            doc.add_paragraph(item.strip(), style='List Bullet 2')
+        else:
+            doc.add_paragraph(item, style='List Bullet')
+
+    doc.add_paragraph()
+    doc.add_paragraph('Member Lookup di Kasir:', style='Heading 5')
+    member_lookup = [
+        'Saat proses pembayaran, klik "Tambah Member (Earn Points)"',
+        'Masukkan nomor telepon customer',
+        'Sistem menampilkan info member: Nama, tier, saldo poin',
+        'Badge menunjukkan poin yang akan didapat dari transaksi',
+        'Klik "Link ke Pesanan" untuk hubungkan member ke order',
+        'Proses pembayaran seperti biasa',
+        'Poin otomatis dikreditkan setelah pembayaran berhasil',
+        'Tier otomatis upgrade jika mencapai threshold',
+    ]
+    for i, item in enumerate(member_lookup, 1):
+        doc.add_paragraph(f'{item}', style='List Number')
+
+    doc.add_paragraph()
+    doc.add_paragraph('Quick Registration:', style='Heading 5')
+    quick_register = [
+        'Jika nomor telepon tidak ditemukan, form registrasi muncul',
+        'Required: Nomor telepon dan nama',
+        'Optional: Email',
+        'Customer langsung terdaftar sebagai member Bronze',
+        'Bisa langsung link ke pesanan dan dapat poin',
+        'Membership number auto-generated: MBR-YYYYMM-####',
+    ]
+    for item in quick_register:
+        doc.add_paragraph(item, style='List Bullet')
+
+    doc.add_paragraph()
+    doc.add_paragraph('Rewards Catalog:', style='Heading 5')
+    rewards = [
+        'Tab "Katalog Reward" menampilkan rewards yang bisa ditukar',
+        'Jenis reward: Discount, Free Item, Voucher',
+        'Tambah reward baru: Nama, tipe, poin required, nilai voucher',
+        'Tab "Penukaran": Proses penukaran poin customer',
+        'Input nomor telepon customer',
+        'Pilih reward dari daftar',
+        'Poin otomatis terpotong saat redeem',
+    ]
+    for item in rewards:
+        doc.add_paragraph(item, style='List Bullet')
+
+    doc.add_paragraph()
+    doc.add_paragraph('Tier Benefits Configuration:', style='Heading 5')
+    tier_benefits = [
+        'Tab "Tier Benefits" menampilkan 4 tier dalam bentuk kartu',
+        'Setiap tier menunjukkan: Minimum spending, Multiplier, Deskripsi',
+        'Tambah tier benefit baru: Pilih tier, set threshold dan multiplier',
+        'System automatically references tier benefits for points calculation',
+    ]
+    for item in tier_benefits:
+        doc.add_paragraph(item, style='List Bullet')
+
+    doc.add_paragraph()
+    doc.add_paragraph('Loyalty Transactions:', style='Heading 5')
+    loyalty_txn = [
+        'EARN: Poin didapat dari pembelian',
+        'REDEEM: Poin ditukar dengan reward',
+        'EXPIRE: Poin kadaluarsa (1 tahun)',
+        'ADJUST: Penyesuaian manual oleh staff',
+        'History lengkap per customer dengan audit trail',
+    ]
+    for item in loyalty_txn:
         doc.add_paragraph(item, style='List Bullet')
 
     doc.add_paragraph()
     doc.add_paragraph('C. Customer Feedback', style='Heading 4')
     doc.add_paragraph('Akses: Customer → Feedback')
     feedback = [
-        'Daftar feedback/review dari pelanggan',
-        'Rating: 1-5 bintang',
-        'Kategori: Food, Service, Ambience, Price',
-        'Comments',
-        'Respond to feedback',
-        'Analisis sentiment dan trends',
+        'Public form feedback: http://localhost:3000/feedback',
+        'Tidak perlu login untuk submit feedback',
+        'Rating kategori: Food (1-5), Service (1-5), Ambiance (1-5), Value (1-5)',
+        'Kolom komentar: What they liked, disliked, suggestions',
+        'Contact info opsional: Nama, telepon, email',
+        'Link ke order jika customer adalah member',
+        'Management dashboard untuk lihat dan respond feedback',
+        'Filter berdasarkan status: New, Acknowledged, Resolved',
+        'Statistik dan trends customer satisfaction',
     ]
     for item in feedback:
         doc.add_paragraph(item, style='List Bullet')
@@ -958,11 +1052,43 @@ def create_manual():
     doc.add_paragraph('Fungsi:', style='Heading 3')
     doc.add_paragraph('Generate berbagai laporan untuk analisis bisnis dan decision making.')
 
-    doc.add_paragraph('Jenis-jenis Laporan:', style='Heading 3')
+    doc.add_paragraph('Dashboard Overview (4 Kartu Metrik Utama):', style='Heading 3')
+
+    main_metrics = [
+        ('Total Pendapatan', 'Total revenue dalam periode yang dipilih, dengan growth percentage vs periode sebelumnya. Format dalam jutaan (jt).'),
+        ('Total Pesanan', 'Jumlah order dalam periode, dengan growth indicator (hijau/merah).'),
+        ('Laba Bersih', 'Revenue dikurangi expenses, dengan profit margin percentage. Color-coded: hijau (profit) atau merah (loss).'),
+        ('CATATAN', 'Dashboard sekarang menampilkan 4 metrik utama saja (sebelumnya 5). Kartu "Rata-rata Pesanan" dan "Total Pengeluaran" telah dihapus untuk visual clarity.'),
+    ]
+
+    for metric_name, description in main_metrics:
+        p = doc.add_paragraph()
+        if metric_name == 'CATATAN':
+            p.add_run(f'{metric_name}: ').bold = True
+            p.add_run(description).italic = True
+        else:
+            p.add_run(f'{metric_name}: ').bold = True
+            p.add_run(description)
+
+    doc.add_paragraph()
+    doc.add_paragraph('Tabs Laporan:', style='Heading 3')
+
+    report_tabs = [
+        ('Penjualan', 'Total revenue, order count, daily breakdown dengan trends, period comparison.'),
+        ('Pengeluaran', 'Total expenses per kategori, visual progress bars, breakdown percentages.'),
+        ('Produk', 'Top 5 selling products, revenue contribution dengan visual bars, ranking badges (Top 1, Top 2, Top 3).'),
+        ('Tren', 'Daily revenue bar charts (10 hari), order volume, period comparison dengan growth badges.'),
+    ]
+
+    for tab_name, description in report_tabs:
+        p = doc.add_paragraph()
+        p.add_run(f'Tab {tab_name}: ').bold = True
+        p.add_run(description)
+
+    doc.add_paragraph()
+    doc.add_paragraph('Jenis-jenis Laporan Tambahan:', style='Heading 3')
 
     report_types = [
-        ('Sales Report',
-         'Laporan penjualan per periode dengan breakdown per menu, kategori, payment method, dan cashier.'),
         ('Daily Sales Summary',
          'Ringkasan penjualan harian: total sales, total orders, average order value, top selling items.'),
         ('Cashier Performance Report',
@@ -974,7 +1100,7 @@ def create_manual():
         ('Menu Performance Report',
          'Analisis menu: best sellers, slow movers, contribution margin, popularity trends.'),
         ('Customer Analytics',
-         'Customer behavior: repeat rate, average visit frequency, customer lifetime value.'),
+         'Customer behavior: repeat rate, average visit frequency, customer lifetime value, loyalty points trends.'),
         ('Financial Statement',
          'Income statement, revenue vs cost, profit margin.'),
     ]
@@ -1388,15 +1514,23 @@ def create_manual():
     footer_text = footer.add_run(
         '\n\n───────────────────────────────────────\n'
         'PANDUAN PENGGUNAAN SISTEM POS RESTORAN LADAPALA\n'
-        'Versi 1.0 - November 2025\n'
+        'Versi 1.1 - November 2025\n'
         '© 2025 Ladapala Restaurant. All rights reserved.\n'
-        '───────────────────────────────────────'
+        '───────────────────────────────────────\n\n'
+        'UPDATE TERBARU (v1.1):\n'
+        '- Sistem Loyalitas Customer dengan 4 tier membership\n'
+        '- Member lookup dan quick registration di kasir\n'
+        '- Automatic points earning dan tier upgrades\n'
+        '- Rewards catalog dan redemption system\n'
+        '- Customer feedback system dengan ratings\n'
+        '- Dashboard laporan disederhanakan (4 metrik utama)\n'
+        '- Bug fixes: tier benefits pagination, voucher validation\n'
     )
     footer_text.font.size = Pt(9)
     footer_text.font.color.rgb = RGBColor(128, 128, 128)
 
     # Save document
-    output_path = '/Users/pro/Dev/ladapala/Panduan_Sistem_POS_Restoran_Ladapala.docx'
+    output_path = '/Users/pro/Dev/ladapala/docs/Panduan_Sistem_POS_Restoran_Ladapala.docx'
     doc.save(output_path)
     print(f'✓ Manual restoran berhasil dibuat: {output_path}')
     return output_path

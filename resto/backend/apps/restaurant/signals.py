@@ -8,6 +8,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Import kitchen printer utility
+try:
+    from .kitchen_printer import generate_kitchen_bar_tickets
+    KITCHEN_PRINTER_AVAILABLE = True
+except ImportError:
+    logger.warning("Kitchen printer module not available")
+    KITCHEN_PRINTER_AVAILABLE = False
+
 
 # Kitchen order creation is now handled in OrderCreateSerializer.create()
 # to ensure proper ordering of operations and avoid timing issues with OrderItems
@@ -189,3 +197,123 @@ def award_loyalty_points_on_payment(sender, instance, created, **kwargs):
 
     except Exception as e:
         logger.error(f"Error awarding loyalty points for payment {instance.transaction_id}: {str(e)}")
+
+
+@receiver(post_save, sender=Order)
+def generate_kitchen_bar_tickets_on_order(sender, instance, created, **kwargs):
+    """
+    Automatically generate kitchen and bar order tickets (PDFs) when a new order is created.
+    PDFs are saved to media/kitchen_orders/ and media/bar_orders/
+    """
+    # Only generate for new orders with CONFIRMED status
+    if not created:
+        return
+
+    if instance.status != 'CONFIRMED':
+        return
+
+    # Check if kitchen printer is available
+    if not KITCHEN_PRINTER_AVAILABLE:
+        logger.warning(f"Kitchen printer not available, skipping ticket generation for order {instance.order_number}")
+        return
+
+    # Check restaurant settings
+    try:
+        settings = instance.restaurant.settings
+
+        # Check if auto-print is enabled
+        if not settings.enable_auto_print:
+            logger.info(f"Auto-print disabled for restaurant {instance.restaurant.name}, skipping ticket generation")
+            return
+
+        # Check if kitchen orders should be printed
+        if not settings.print_kitchen_orders:
+            logger.info(f"Kitchen orders printing disabled for restaurant {instance.restaurant.name}, skipping ticket generation")
+            return
+    except Exception as e:
+        logger.warning(f"Could not check restaurant settings: {str(e)}, proceeding with ticket generation")
+
+    try:
+        # Generate tickets
+        result = generate_kitchen_bar_tickets(instance)
+
+        if result['success']:
+            logger.info(f"Kitchen/Bar tickets generated for order {instance.order_number}")
+            if result['kitchen_pdf']:
+                logger.info(f"  - Kitchen PDF: {result['kitchen_pdf']}")
+            if result['bar_pdf']:
+                logger.info(f"  - Bar PDF: {result['bar_pdf']}")
+        else:
+            logger.info(f"No tickets generated for order {instance.order_number}: {result['message']}")
+
+    except Exception as e:
+        logger.error(f"Error generating kitchen/bar tickets for order {instance.order_number}: {str(e)}")
+
+
+@receiver(post_save, sender=Order)
+def deduct_utility_items_for_packaging(sender, instance, created, **kwargs):
+    """
+    Automatically deduct utility items (packaging) when takeaway/delivery orders are created.
+    Deducts: takeaway boxes, plastic bags, etc.
+    """
+    # Only process new orders
+    if not created:
+        return
+
+    # Only for TAKEAWAY and DELIVERY orders
+    if instance.order_type not in ['TAKEAWAY', 'DELIVERY']:
+        return
+
+    try:
+        from .models import InventoryTransaction, InventoryCategory, InventoryItemType, InventoryLocation
+        from decimal import Decimal
+
+        # Get total items in order
+        total_items = instance.items.count()
+
+        if total_items == 0:
+            return
+
+        # Find packaging items in warehouse
+        packaging_items = Inventory.objects.filter(
+            branch=instance.branch,
+            item_type=InventoryItemType.UTILITY,
+            category=InventoryCategory.PACKAGING,
+            location=InventoryLocation.WAREHOUSE
+        )
+
+        # Standard packaging deduction rules
+        deductions = []
+
+        # Box takeaway: 1 box per 2 items (rounded up)
+        boxes_needed = (total_items + 1) // 2  # Round up division
+        box = packaging_items.filter(name__icontains='box').first()
+        if box and box.quantity >= boxes_needed:
+            deductions.append((box, boxes_needed, 'Takeaway boxes'))
+
+        # Plastic bag: 1 bag per order
+        bag = packaging_items.filter(name__icontains='kantong').first()
+        if bag and bag.quantity >= 1:
+            deductions.append((bag, 1, 'Plastic bag'))
+
+        # Perform deductions
+        for item, quantity, description in deductions:
+            # Create transaction
+            InventoryTransaction.objects.create(
+                inventory=item,
+                transaction_type='OUT',
+                quantity=Decimal(quantity),
+                unit_cost=item.cost_per_unit,
+                reference_number=instance.order_number,
+                notes=f'Auto-deduct for {instance.get_order_type_display()} order - {description}',
+                performed_by=instance.created_by.user if instance.created_by else None
+            )
+
+            # Update quantity
+            item.quantity -= Decimal(quantity)
+            item.save()
+
+            logger.info(f"Order {instance.order_number}: Auto-deducted {quantity} {item.unit} of {item.name}")
+
+    except Exception as e:
+        logger.error(f"Error auto-deducting utility items for order {instance.order_number}: {str(e)}")

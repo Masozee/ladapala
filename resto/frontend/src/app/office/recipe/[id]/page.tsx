@@ -358,21 +358,30 @@ export default function RecipeDetailPage() {
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 space-y-6">
-      {/* Header with Back Button */}
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+        <button
+          onClick={() => router.push('/office')}
+          className="hover:text-foreground transition-colors"
+        >
+          Office
+        </button>
+        <span>/</span>
+        <button
+          onClick={() => router.push('/office/recipe')}
+          className="hover:text-foreground transition-colors"
+        >
+          Resep
+        </button>
+        <span>/</span>
+        <span className="text-foreground font-medium">{recipe.product_name}</span>
+      </nav>
+
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => router.push('/office/recipe')}
-            className="rounded"
-          >
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={20} strokeWidth={2} />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{recipe.product_name}</h1>
-            <p className="text-sm text-muted-foreground">Detail Resep & Bill of Materials</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold">{recipe.product_name}</h1>
+          <p className="text-sm text-muted-foreground">Detail Resep & Bill of Materials</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="rounded" onClick={handleEdit}>
@@ -388,97 +397,65 @@ export default function RecipeDetailPage() {
         </div>
       </div>
 
-      {/* Cost Analysis Cards */}
-      <div className="grid grid-cols-5 gap-4">
-        <Card className="border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-muted-foreground">Harga Jual</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
-              Rp {parseFloat(recipe.product_price).toLocaleString('id-ID')}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">Per porsi</p>
-          </CardContent>
-        </Card>
+      {/* Recipe Information - 2 Column Layout */}
+      <div className="border rounded-lg p-6 bg-white">
+        <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+          {/* Left Column */}
+          <div className="flex justify-between items-center border-b pb-3">
+            <p className="text-sm text-muted-foreground">Harga Jual</p>
+            <p className="text-lg font-semibold">Rp {parseFloat(recipe.product_price).toLocaleString('id-ID')}</p>
+          </div>
 
-        <Card className="border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-muted-foreground">Biaya Bahan</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
-              Rp {parseFloat(recipe.cost_per_serving).toLocaleString('id-ID')}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">Cost per serving</p>
-          </CardContent>
-        </Card>
+          <div className="flex justify-between items-center border-b pb-3">
+            <p className="text-sm text-muted-foreground">Biaya Bahan</p>
+            <p className="text-lg font-semibold">Rp {parseFloat(recipe.cost_per_serving).toLocaleString('id-ID')}</p>
+          </div>
 
-        <Card className="border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-muted-foreground">Profit</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
-              Rp {profit.toLocaleString('id-ID')}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">Per porsi</p>
-          </CardContent>
-        </Card>
+          <div className="flex justify-between items-center border-b pb-3">
+            <p className="text-sm text-muted-foreground">Profit per Porsi</p>
+            <p className="text-lg font-semibold">Rp {profit.toLocaleString('id-ID')}</p>
+          </div>
 
-        <Card className="border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-muted-foreground">Margin</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+          <div className="flex justify-between items-center border-b pb-3">
+            <p className="text-sm text-muted-foreground">Margin</p>
+            <p className="text-lg font-semibold">
               {recipe.profit_margin.toFixed(1)}%
+              <span className="text-xs text-muted-foreground ml-2">
+                ({recipe.profit_margin >= 70 ? 'Tinggi' : recipe.profit_margin >= 40 ? 'Sedang' : 'Rendah'})
+              </span>
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {recipe.profit_margin >= 70 ? 'Tinggi' : recipe.profit_margin >= 40 ? 'Sedang' : 'Rendah'}
-            </p>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-muted-foreground">Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Badge variant={recipe.is_active ? "default" : "secondary"} className="text-xs">
-              {recipe.is_active ? 'Aktif' : 'Nonaktif'}
-            </Badge>
-            <p className="text-xs text-muted-foreground mt-2">{recipe.serving_size} porsi</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Production Info */}
-      <Card className="border">
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-4 gap-6">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Porsi per Resep</p>
-              <p className="text-xl font-semibold">{recipe.serving_size}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Waktu Persiapan</p>
-              <p className="text-xl font-semibold">{recipe.preparation_time || 0} menit</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Waktu Memasak</p>
-              <p className="text-xl font-semibold">{recipe.cooking_time || 0} menit</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Total Waktu</p>
-              <p className="text-xl font-semibold">{totalTime} menit</p>
+          <div className="flex justify-between items-center border-b pb-3">
+            <p className="text-sm text-muted-foreground">Status</p>
+            <div className="flex items-center gap-2">
+              <Badge variant={recipe.is_active ? "default" : "secondary"} className="text-xs">
+                {recipe.is_active ? 'Aktif' : 'Nonaktif'}
+              </Badge>
             </div>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="flex justify-between items-center border-b pb-3">
+            <p className="text-sm text-muted-foreground">Porsi per Resep</p>
+            <p className="text-lg font-semibold">{recipe.serving_size}</p>
+          </div>
+
+          <div className="flex justify-between items-center border-b pb-3">
+            <p className="text-sm text-muted-foreground">Waktu Persiapan</p>
+            <p className="text-lg font-semibold">{recipe.preparation_time || 0} menit</p>
+          </div>
+
+          <div className="flex justify-between items-center border-b pb-3">
+            <p className="text-sm text-muted-foreground">Waktu Memasak</p>
+            <p className="text-lg font-semibold">{recipe.cooking_time || 0} menit</p>
+          </div>
+
+          <div className="flex justify-between items-center border-b pb-3">
+            <p className="text-sm text-muted-foreground">Total Waktu</p>
+            <p className="text-lg font-semibold">{totalTime} menit</p>
+          </div>
+        </div>
+      </div>
 
       {/* Ingredients Table */}
       <div>

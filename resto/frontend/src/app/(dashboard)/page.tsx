@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   UserIcon,
@@ -28,6 +29,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { api, type Order, type DashboardData } from "@/lib/api"
 import { useAuth } from "@/contexts/auth-context"
+import { useCashierSessionEnforcement } from "@/hooks/useCashierSessionEnforcement"
 
 interface StatCard {
   title: string
@@ -38,6 +40,7 @@ interface StatCard {
 }
 
 export default function HomePage() {
+  const router = useRouter()
   const { staff, isAuthenticated, isLoading: authLoading } = useAuth()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [unpaidOrders, setUnpaidOrders] = useState<Order[]>([])
@@ -49,7 +52,16 @@ export default function HomePage() {
   const [expiringCount, setExpiringCount] = useState(0)
   const [expiredCount, setExpiredCount] = useState(0)
 
+  // Enforce cashier session opening/closing based on shift
+  const { checking: checkingSession, shouldOpenSession, shouldCloseSession, currentShift } = useCashierSessionEnforcement(staff)
+
   useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login')
+      return
+    }
+
     // Only fetch data if authenticated
     if (!authLoading && isAuthenticated) {
       fetchData()
@@ -63,7 +75,7 @@ export default function HomePage() {
 
       return () => clearInterval(interval)
     }
-  }, [authLoading, isAuthenticated])
+  }, [authLoading, isAuthenticated, router])
 
   const fetchExpiryData = async () => {
     try {
@@ -216,6 +228,38 @@ export default function HomePage() {
       const mins = diffMins % 60
       return `${hours} jam ${mins} menit`
     }
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-500">Memeriksa autentikasi...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // If not authenticated, show nothing (will redirect)
+  if (!isAuthenticated) {
+    return null
+  }
+
+  // Show loading while checking cashier session enforcement
+  if (checkingSession) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-500">Memeriksa jadwal shift...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // If session needs to be opened/closed, show nothing (will redirect)
+  if (shouldOpenSession || shouldCloseSession) {
+    return null
   }
 
   if (loading) {

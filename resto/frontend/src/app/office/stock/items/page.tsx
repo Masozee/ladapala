@@ -71,7 +71,7 @@ export default function ItemMasterPage() {
     description: "",
     unit: "pcs",
     min_quantity: 0,
-    location: "WAREHOUSE" as 'WAREHOUSE' | 'KITCHEN'
+    location: "WAREHOUSE" as 'WAREHOUSE' | 'KITCHEN' | 'BAR'
   })
 
   const canModify = staff && ['ADMIN', 'MANAGER', 'WAREHOUSE'].includes(staff.role)

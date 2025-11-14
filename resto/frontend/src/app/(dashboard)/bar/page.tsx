@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
-  ChefHatIcon,
   CheckmarkCircle01Icon,
   Loading03Icon,
   Cancel01Icon,
@@ -26,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-export default function KitchenDisplayPage() {
+export default function BarDisplayPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -54,19 +53,19 @@ export default function KitchenDisplayPage() {
 
       const ordersList = Array.isArray(response) ? response : (response.results || [])
 
-      // Filter to show only kitchen-relevant orders
-      let kitchenOrders = ordersList.filter((order: Order) =>
+      // Filter to show only bar-relevant orders
+      let barOrders = ordersList.filter((order: Order) =>
         ['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status || '')
       )
 
       // Apply MY_ORDERS filter if active
       if (filter === 'MY_ORDERS' && session) {
-        kitchenOrders = kitchenOrders.filter((order: Order) =>
+        barOrders = barOrders.filter((order: Order) =>
           order.prepared_by === session.staff
         )
       }
 
-      setOrders(kitchenOrders)
+      setOrders(barOrders)
     } catch (error) {
       console.error('Error fetching orders:', error)
     } finally {
@@ -77,10 +76,9 @@ export default function KitchenDisplayPage() {
 
   const fetchActiveStaff = async () => {
     try {
-      // Fetch active staff with CHEF or KITCHEN role
-      const staff = await api.getActiveStaff('CHEF')
-      const kitchenStaff = await api.getActiveStaff('KITCHEN')
-      setActiveStaff([...staff, ...kitchenStaff])
+      // Fetch active staff with BAR role
+      const staff = await api.getActiveStaff('BAR')
+      setActiveStaff(staff)
     } catch (error) {
       console.error('Error fetching active staff:', error)
     }
@@ -178,7 +176,7 @@ export default function KitchenDisplayPage() {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'CONFIRMED': return 'Dikonfirmasi'
-      case 'PREPARING': return 'Sedang Dimasak'
+      case 'PREPARING': return 'Sedang Dibuat'
       case 'READY': return 'Siap Disajikan'
       case 'COMPLETED': return 'Selesai'
       default: return status
@@ -212,9 +210,9 @@ export default function KitchenDisplayPage() {
     return drinkCategories.some(cat => categoryName.toLowerCase().includes(cat))
   }
 
-  // Filter orders to only show orders with kitchen items
+  // Filter orders to only show orders with drink items
   const allFilteredOrders = orders.filter(order => {
-    return order.items.some(item => !isDrink(item.product_name || ''))
+    return order.items.some(item => isDrink(item.product_name || ''))
   })
 
   const unassignedOrders = allFilteredOrders.filter(o => !o.prepared_by && o.status === 'CONFIRMED')
@@ -239,10 +237,10 @@ export default function KitchenDisplayPage() {
             <CardHeader>
               <div className="flex justify-center mb-4">
                 <div className="p-4 bg-[#58ff34]/20 rounded-full">
-                  <HugeiconsIcon icon={ChefHatIcon} className="h-12 w-12 text-[#58ff34]" strokeWidth={2} />
+                  <HugeiconsIcon icon={RestaurantIcon} className="h-12 w-12 text-[#58ff34]" strokeWidth={2} />
                 </div>
               </div>
-              <CardTitle className="text-center text-2xl">Kitchen Display System</CardTitle>
+              <CardTitle className="text-center text-2xl">Bar Display System</CardTitle>
               <p className="text-center text-muted-foreground mt-2">
                 Mulai sesi untuk melihat pesanan
               </p>
@@ -273,16 +271,16 @@ export default function KitchenDisplayPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-[#58ff34]/20 rounded-lg">
-              <HugeiconsIcon icon={ChefHatIcon} className="h-8 w-8 text-[#58ff34]" strokeWidth={2} />
+              <HugeiconsIcon icon={RestaurantIcon} className="h-8 w-8 text-[#58ff34]" strokeWidth={2} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Kitchen Display System</h1>
+              <h1 className="text-3xl font-bold">Bar Display System</h1>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>Sesi: {session?.staff_name}</span>
                 <span>•</span>
                 <span>{session?.shift_type}</span>
                 <span>•</span>
-                <span>{session?.orders_prepared_count} pesanan dimasak</span>
+                <span>{session?.orders_prepared_count} minuman dibuat</span>
               </div>
             </div>
           </div>
@@ -319,7 +317,7 @@ export default function KitchenDisplayPage() {
         {activeStaff.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Staf Aktif ({activeStaff.length})</CardTitle>
+              <CardTitle className="text-sm font-medium">Staf Bar Aktif ({activeStaff.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
@@ -370,7 +368,7 @@ export default function KitchenDisplayPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Sedang Dimasak</p>
+                  <p className="text-sm font-medium text-muted-foreground">Sedang Dibuat</p>
                   <p className="text-3xl font-bold">{preparingOrders.length}</p>
                 </div>
               </div>
@@ -440,7 +438,7 @@ export default function KitchenDisplayPage() {
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            Sedang Dimasak ({preparingOrders.length})
+            Sedang Dibuat ({preparingOrders.length})
           </button>
           <button
             onClick={() => setFilter('READY')}
@@ -473,7 +471,7 @@ export default function KitchenDisplayPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredOrders.map((order) => {
-              const relevantItems = order.items.filter(item => !isDrink(item.product_name || ''))
+              const relevantItems = order.items.filter(item => isDrink(item.product_name || ''))
               const isMyOrder = order.prepared_by === session?.staff
               const isUnassigned = !order.prepared_by
 
@@ -498,7 +496,7 @@ export default function KitchenDisplayPage() {
                         )}
                         {order.prepared_by_name && (
                           <div className="text-xs font-medium text-[#58ff34]">
-                            Dimasak oleh: {order.prepared_by_name}
+                            Dibuat oleh: {order.prepared_by_name}
                             {isMyOrder && ' (Anda)'}
                           </div>
                         )}
@@ -543,7 +541,7 @@ export default function KitchenDisplayPage() {
                             onClick={() => handleClaimOrder(order.id!)}
                             className="w-full gap-2 bg-[#58ff34] hover:bg-[#4de02c] text-black"
                           >
-                            <HugeiconsIcon icon={ChefHatIcon} className="h-4 w-4" strokeWidth={2} />
+                            <HugeiconsIcon icon={RestaurantIcon} className="h-4 w-4" strokeWidth={2} />
                             Ambil Pesanan
                           </Button>
 
@@ -593,8 +591,8 @@ export default function KitchenDisplayPage() {
                           onClick={() => handleStatusUpdate(order.id!, 'PREPARING')}
                           className="w-full gap-2"
                         >
-                          <HugeiconsIcon icon={ChefHatIcon} className="h-4 w-4" strokeWidth={2} />
-                          Mulai Memasak
+                          <HugeiconsIcon icon={RestaurantIcon} className="h-4 w-4" strokeWidth={2} />
+                          Mulai Membuat
                         </Button>
                       )}
 

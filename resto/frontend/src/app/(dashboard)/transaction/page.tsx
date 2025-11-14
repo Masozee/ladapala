@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { CreditCardIcon, SmartPhone01Icon, DollarCircleIcon, Invoice01Icon, Add01Icon, Remove01Icon, Delete01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -18,7 +19,8 @@ import { Receipt, type ReceiptData } from "@/components/receipt"
 import { useAuth } from "@/contexts/auth-context"
 
 export default function TransactionPage() {
-  const { staff } = useAuth()
+  const router = useRouter()
+  const { staff, isLoading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState("payment")
   const [pendingOrders, setPendingOrders] = useState<Order[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -29,6 +31,8 @@ export default function TransactionPage() {
   const [loading, setLoading] = useState(true)
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
   const [shouldPrint, setShouldPrint] = useState(false)
+  const [printReceipts, setPrintReceipts] = useState(true) // Default to true
+  const [hasActiveSession, setHasActiveSession] = useState(true) // Track if cashier has active session
 
   // Transaction list state
   const [transactions, setTransactions] = useState<any[]>([])
@@ -54,6 +58,40 @@ export default function TransactionPage() {
   const [registerEmail, setRegisterEmail] = useState("")
 
   useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!authLoading && !staff) {
+      router.push('/login')
+      return
+    }
+
+    if (!staff) return
+
+    // Fetch restaurant settings
+    const fetchSettings = async () => {
+      try {
+        const settings = await api.getCurrentSettings()
+        setPrintReceipts(settings.print_receipts)
+      } catch (error) {
+        console.error('Failed to fetch settings:', error)
+        // Keep default value (true)
+      }
+    }
+    fetchSettings()
+
+    // Check if cashier has active session
+    const checkCashierSession = async () => {
+      if (staff?.role === 'CASHIER') {
+        try {
+          const sessions = await api.getActiveCashierSession()
+          setHasActiveSession(sessions.length > 0)
+        } catch (error) {
+          console.error('Failed to check cashier session:', error)
+          setHasActiveSession(false)
+        }
+      }
+    }
+    checkCashierSession()
+
     // Initial fetch with loading state
     fetchPendingOrders(false)
 
@@ -64,7 +102,7 @@ export default function TransactionPage() {
 
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [staff, authLoading, router])
 
   const fetchPendingOrders = async (keepSelection = true) => {
     try {
@@ -118,8 +156,16 @@ export default function TransactionPage() {
           setCustomerName(orderToSelect.customer_name)
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching active orders:', error)
+
+      // Check if it's an authentication error
+      if (error?.message?.includes('logged in') || error?.message?.includes('authentication')) {
+        console.log('Authentication error detected, redirecting to login...')
+        router.push('/login')
+        return
+      }
+
       if (!keepSelection) {
         alert('Gagal memuat pesanan aktif: ' + (error as Error).message)
       }
@@ -305,7 +351,7 @@ export default function TransactionPage() {
   }
 
   const handleLinkMember = async () => {
-    if (!selectedOrder || !memberData) return
+    if (!selectedOrder || !selectedOrder.id || !memberData) return
 
     try {
       await api.linkCustomerToOrder(selectedOrder.id, memberData.id)
@@ -366,6 +412,12 @@ export default function TransactionPage() {
       return
     }
 
+    // Check if cashier has active session
+    if (staff?.role === 'CASHIER' && !hasActiveSession) {
+      alert("Anda harus membuka sesi kasir terlebih dahulu!\n\nSilakan buka sesi kasir di menu Session > Open Session.")
+      return
+    }
+
     try {
       // Create payment via API
       // Backend automatically updates order status when payment is COMPLETED
@@ -378,11 +430,13 @@ export default function TransactionPage() {
         status: 'COMPLETED'
       })
 
-      // Prepare and trigger receipt printing
-      const receipt = prepareReceiptData()
-      if (receipt) {
-        setReceiptData(receipt)
-        setShouldPrint(true)
+      // Prepare and trigger receipt printing (if enabled in settings)
+      if (printReceipts) {
+        const receipt = prepareReceiptData()
+        if (receipt) {
+          setReceiptData(receipt)
+          setShouldPrint(true)
+        }
       }
 
       // Show success message briefly
@@ -399,15 +453,41 @@ export default function TransactionPage() {
         setShouldPrint(false)
         setReceiptData(null)
       }, 2000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment error:', error)
-      alert("Gagal memproses pembayaran. Silakan coba lagi.")
+
+      // Handle cashier session error specifically
+      if (error?.error === 'Kasir harus membuka sesi kasir terlebih dahulu') {
+        alert("⚠️ SESI KASIR BELUM DIBUKA\n\n" + error.detail)
+        setHasActiveSession(false)
+        return
+      }
+
+      // Generic error message
+      const errorMsg = error?.detail || error?.message || "Gagal memproses pembayaran. Silakan coba lagi."
+      alert(errorMsg)
     }
   }
 
   // Check if order has completed payment (can be voided)
   const hasCompletedPayment = selectedOrder?.payments?.some((p: any) => p.status === 'COMPLETED')
   const canVoid = hasCompletedPayment && staff?.role && ['MANAGER', 'ADMIN'].includes(staff.role)
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-96">
+          <p className="text-gray-500">Memeriksa autentikasi...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If not authenticated, show nothing (will redirect)
+  if (!staff) {
+    return null
+  }
 
   return loading ? (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
@@ -419,6 +499,32 @@ export default function TransactionPage() {
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Transaksi</h1>
+
+        {/* Cashier Session Warning */}
+        {staff?.role === 'CASHIER' && !hasActiveSession && (
+          <div className="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-red-800 mb-1">⚠️ Sesi Kasir Belum Dibuka</h3>
+                <p className="text-sm text-red-700 mb-3">
+                  Anda harus membuka sesi kasir terlebih dahulu sebelum dapat memproses pembayaran.
+                </p>
+                <Button
+                  onClick={() => window.location.href = '/session/open'}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  size="sm"
+                >
+                  Buka Sesi Kasir Sekarang
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-2">
@@ -437,7 +543,7 @@ export default function TransactionPage() {
                       onClick={() => fetchPendingOrders(true)}
                       variant="outline"
                       size="sm"
-                      className="rounded"
+                      className="rounded-lg"
                     >
                       Refresh
                     </Button>
@@ -447,7 +553,7 @@ export default function TransactionPage() {
               <p className="text-sm text-gray-600">
                 {selectedOrder.table_number ? `Meja ${selectedOrder.table_number}` : 'Takeaway'} • ID: {selectedOrder.order_number}
               </p>
-              <span className={`text-xs px-2 py-1 rounded ${
+              <span className={`text-xs px-2 py-1 rounded-full ${
                 selectedOrder.status === 'COMPLETED'
                   ? 'bg-green-100 text-green-700'
                   : selectedOrder.status === 'READY'
@@ -471,7 +577,7 @@ export default function TransactionPage() {
               Pilih Pesanan ({pendingOrders.filter(o => o.status === 'READY').length} siap bayar):
             </label>
             <select
-              className="w-full p-2 border border-gray-300 rounded"
+              className="w-full p-2 border border-gray-300 rounded-lg"
               value={selectedOrder?.id}
               onChange={(e) => {
                 const order = pendingOrders.find(o => o.id === parseInt(e.target.value))
@@ -504,7 +610,7 @@ export default function TransactionPage() {
             placeholder="Nama Pelanggan"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
-            className="rounded-none"
+            className="rounded-lg"
           />
         </div>
 
@@ -524,7 +630,7 @@ export default function TransactionPage() {
 
         {/* Member Linked Info */}
         {selectedOrder?.customer_info && (
-          <Card className="mb-4 bg-green-50 border-green-200">
+          <Card className="mb-4 bg-green-50 border-green-200 shadow-none">
             <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -549,7 +655,7 @@ export default function TransactionPage() {
 
         {/* Member Lookup Card */}
         {showMemberLookup && (
-          <Card className="mb-4 border-blue-200">
+          <Card className="mb-4 border-blue-200 shadow-none">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-gray-900">Member Lookup</h3>
@@ -576,6 +682,7 @@ export default function TransactionPage() {
                     value={memberPhone}
                     onChange={(e) => setMemberPhone(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleMemberSearch()}
+                    className="rounded-lg"
                   />
                   <Button
                     onClick={handleMemberSearch}
@@ -590,7 +697,7 @@ export default function TransactionPage() {
                 )}
 
                 {memberData && (
-                  <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                     <p className="font-semibold text-blue-900">{memberData.name}</p>
                     <p className="text-sm text-blue-700">
                       {memberData.membership_tier} • {memberData.points_balance} points
@@ -614,7 +721,7 @@ export default function TransactionPage() {
                 )}
 
                 {showRegisterForm && (
-                  <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                  <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                     <p className="text-sm font-semibold text-yellow-900 mb-2">
                       Daftar Member Baru
                     </p>
@@ -624,12 +731,14 @@ export default function TransactionPage() {
                         placeholder="Nama Lengkap"
                         value={registerName}
                         onChange={(e) => setRegisterName(e.target.value)}
+                        className="rounded-lg"
                       />
                       <Input
                         type="email"
                         placeholder="Email (opsional)"
                         value={registerEmail}
                         onChange={(e) => setRegisterEmail(e.target.value)}
+                        className="rounded-lg"
                       />
                       <Button
                         onClick={handleQuickRegister}
@@ -647,7 +756,7 @@ export default function TransactionPage() {
         )}
 
         {/* Order Items */}
-        <Card className="flex-1 rounded-lg overflow-hidden border">
+        <Card className="flex-1 rounded-lg overflow-hidden border shadow-none">
           <CardHeader className="pb-3 bg-gray-50">
             <CardTitle className="text-lg">Daftar Pesanan</CardTitle>
           </CardHeader>
@@ -696,7 +805,7 @@ export default function TransactionPage() {
         </Card>
 
         {/* Totals */}
-        <Card className="mt-4 rounded-lg border">
+        <Card className="mt-4 rounded-lg border shadow-none">
           <CardContent className="p-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -727,7 +836,7 @@ export default function TransactionPage() {
             <Button
               variant={paymentMethod === "cash" ? "default" : "outline"}
               onClick={() => setPaymentMethod("cash")}
-              className="flex flex-col items-center p-3 h-auto rounded-none"
+              className="flex flex-col items-center p-3 h-auto rounded-lg"
             >
               <HugeiconsIcon icon={DollarCircleIcon} size={32} strokeWidth={2} className="mb-1" />
               <span className="text-xs">Tunai</span>
@@ -735,7 +844,7 @@ export default function TransactionPage() {
             <Button
               variant={paymentMethod === "card" ? "default" : "outline"}
               onClick={() => setPaymentMethod("card")}
-              className="flex flex-col items-center p-3 h-auto rounded-none"
+              className="flex flex-col items-center p-3 h-auto rounded-lg"
             >
               <HugeiconsIcon icon={CreditCardIcon} size={32} strokeWidth={2} className="mb-1" />
               <span className="text-xs">Kartu</span>
@@ -743,7 +852,7 @@ export default function TransactionPage() {
             <Button
               variant={paymentMethod === "qris" ? "default" : "outline"}
               onClick={() => setPaymentMethod("qris")}
-              className="flex flex-col items-center p-3 h-auto rounded-none"
+              className="flex flex-col items-center p-3 h-auto rounded-lg"
             >
               <HugeiconsIcon icon={SmartPhone01Icon} size={32} strokeWidth={2} className="mb-1" />
               <span className="text-xs">QRIS</span>
@@ -754,7 +863,7 @@ export default function TransactionPage() {
         {paymentMethod === "cash" && (
           <>
             {/* Cash Amount Display */}
-            <Card className="mb-4 rounded-lg border">
+            <Card className="mb-4 rounded-lg border shadow-none">
               <CardContent className="p-4">
                 <div className="mb-2">
                   <label className="text-sm text-gray-600">Uang Diterima:</label>
@@ -763,7 +872,7 @@ export default function TransactionPage() {
                   </div>
                 </div>
                 {cashReceived >= total && (
-                  <div className="mt-3 p-3 bg-green-50 border border-green-200">
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="text-sm text-green-800">
                       <strong>Kembalian:</strong>
                       <div className="text-xl font-bold">
@@ -781,28 +890,28 @@ export default function TransactionPage() {
                 <Button
                   variant="outline"
                   onClick={() => handleQuickCash(100000)}
-                  className="rounded text-sm py-3"
+                  className="rounded-lg text-sm py-3"
                 >
                   100.000
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleQuickCash(50000)}
-                  className="rounded text-sm py-3"
+                  className="rounded-lg text-sm py-3"
                 >
                   50.000
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleQuickCash(20000)}
-                  className="rounded text-sm py-3"
+                  className="rounded-lg text-sm py-3"
                 >
                   20.000
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleQuickCash(10000)}
-                  className="rounded text-sm py-3"
+                  className="rounded-lg text-sm py-3"
                 >
                   10.000
                 </Button>
@@ -816,7 +925,7 @@ export default function TransactionPage() {
                   key={num}
                   variant="outline"
                   onClick={() => handleNumberPad(num.toString())}
-                  className="h-14 rounded-none text-lg font-semibold"
+                  className="h-14 rounded-lg text-lg font-semibold"
                 >
                   {num}
                 </Button>
@@ -824,21 +933,21 @@ export default function TransactionPage() {
               <Button
                 variant="outline"
                 onClick={() => handleNumberPad('0')}
-                className="h-14 rounded-none text-lg font-semibold"
+                className="h-14 rounded-lg text-lg font-semibold"
               >
                 0
               </Button>
               <Button
                 variant="outline"
                 onClick={() => handleNumberPad('00')}
-                className="h-14 rounded-none text-lg font-semibold"
+                className="h-14 rounded-lg text-lg font-semibold"
               >
                 00
               </Button>
               <Button
                 variant="outline"
                 onClick={() => handleNumberPad('000')}
-                className="h-14 rounded-none text-lg font-semibold"
+                className="h-14 rounded-lg text-lg font-semibold"
               >
                 000
               </Button>
@@ -849,14 +958,14 @@ export default function TransactionPage() {
               <Button
                 variant="outline"
                 onClick={() => handleNumberPad('C')}
-                className="rounded bg-red-50 hover:bg-red-100 text-red-600"
+                className="rounded-lg bg-red-50 hover:bg-red-100 text-red-600"
               >
                 Clear
               </Button>
               <Button
                 variant="outline"
                 onClick={() => handleNumberPad('DEL')}
-                className="rounded bg-orange-50 hover:bg-orange-100 text-orange-600"
+                className="rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600"
               >
                 Delete
               </Button>
@@ -865,7 +974,7 @@ export default function TransactionPage() {
         )}
 
         {paymentMethod === "card" && (
-          <Card className="mb-4 rounded-lg border flex-1">
+          <Card className="mb-4 rounded-lg border flex-1 shadow-none">
             <CardContent className="p-4">
               <div className="h-full flex flex-col items-center justify-center text-center">
                 <HugeiconsIcon icon={CreditCardIcon} size={32} strokeWidth={2} className="text-[#58ff34] mb-4" />
@@ -882,7 +991,7 @@ export default function TransactionPage() {
         )}
 
         {paymentMethod === "qris" && (
-          <Card className="mb-4 rounded-lg border flex-1">
+          <Card className="mb-4 rounded-lg border flex-1 shadow-none">
             <CardContent className="p-4">
               <div className="h-full flex flex-col items-center justify-center text-center">
                 <div className="w-40 h-40 bg-white border-2 border-dashed border-purple-300 mb-4 flex items-center justify-center">
@@ -902,7 +1011,7 @@ export default function TransactionPage() {
 
         {/* Status Warning for orders not yet delivered */}
         {selectedOrder && selectedOrder.status !== 'COMPLETED' && (
-          <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded">
+          <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
             <p className="text-sm text-orange-800 mb-3">
               <strong>⚠️ Pesanan belum diantar ke pelanggan</strong>
               <br />
@@ -978,12 +1087,15 @@ export default function TransactionPage() {
               selectedOrder.items.length === 0 ||
               !customerName.trim() ||
               (paymentMethod === "cash" && cashReceived < total) ||
-              selectedOrder.status !== 'COMPLETED'
+              selectedOrder.status !== 'COMPLETED' ||
+              (staff?.role === 'CASHIER' && !hasActiveSession)
             }
-            className="w-full h-14 rounded bg-green-600 hover:bg-green-700 text-white text-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full h-14 rounded-lg bg-green-600 hover:bg-green-700 text-white text-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <HugeiconsIcon icon={Invoice01Icon} size={32} strokeWidth={2} className="mr-2" />
-            {selectedOrder && selectedOrder.status === 'COMPLETED' ? 'BAYAR' : 'BELUM DIANTAR'}
+            {staff?.role === 'CASHIER' && !hasActiveSession
+              ? 'BUKA SESI KASIR DAHULU'
+              : selectedOrder && selectedOrder.status === 'COMPLETED' ? 'BAYAR' : 'BELUM DIANTAR'}
           </Button>
 
           {/* Void Payment Button - Only for MANAGER/ADMIN */}
@@ -1003,7 +1115,7 @@ export default function TransactionPage() {
       {/* Success Modal */}
       {showPaymentSuccess && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl text-center">
+          <div className="bg-white p-8 rounded-lg border text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <HugeiconsIcon icon={Invoice01Icon} size={32} strokeWidth={2} className="text-green-600" />
             </div>
@@ -1032,7 +1144,7 @@ export default function TransactionPage() {
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
-            <Card>
+            <Card className="shadow-none">
               <CardHeader>
                 <CardTitle>Daftar Transaksi Hari Ini</CardTitle>
                 <CardDescription>Menampilkan semua transaksi hari ini dari semua sesi</CardDescription>
@@ -1047,15 +1159,15 @@ export default function TransactionPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Waktu</TableHead>
-                          <TableHead>ID Transaksi</TableHead>
-                          <TableHead>No. Pesanan</TableHead>
-                          <TableHead className="text-right">Jumlah</TableHead>
-                          <TableHead>Metode</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Kasir</TableHead>
-                          <TableHead>Sesi</TableHead>
-                          <TableHead className="text-right">Aksi</TableHead>
+                          <TableHead className="text-center">Waktu</TableHead>
+                          <TableHead className="text-center">ID Transaksi</TableHead>
+                          <TableHead className="text-center">No. Pesanan</TableHead>
+                          <TableHead className="text-center">Jumlah</TableHead>
+                          <TableHead className="text-center">Metode</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                          <TableHead className="text-center">Kasir</TableHead>
+                          <TableHead className="text-center">Sesi</TableHead>
+                          <TableHead className="text-center">Aksi</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1068,7 +1180,7 @@ export default function TransactionPage() {
                         ) : (
                           transactions.map((payment) => (
                             <TableRow key={payment.id}>
-                              <TableCell className="text-sm">
+                              <TableCell className="text-sm text-center">
                                 {new Date(payment.created_at).toLocaleString('id-ID', {
                                   day: '2-digit',
                                   month: 'short',
@@ -1076,19 +1188,19 @@ export default function TransactionPage() {
                                   minute: '2-digit'
                                 })}
                               </TableCell>
-                              <TableCell className="font-mono text-xs">
+                              <TableCell className="font-mono text-xs text-center">
                                 {payment.transaction_id}
                               </TableCell>
-                              <TableCell className="font-medium">
+                              <TableCell className="font-medium text-center">
                                 {payment.order_number || '-'}
                               </TableCell>
-                              <TableCell className="text-right font-semibold">
+                              <TableCell className="text-center font-semibold">
                                 Rp {parseFloat(payment.amount).toLocaleString('id-ID')}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="text-center">
                                 <Badge variant="outline">{payment.payment_method}</Badge>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="text-center">
                                 <Badge variant={
                                   payment.status === 'COMPLETED' ? 'default' :
                                   payment.status === 'REFUNDED' ? 'destructive' :
@@ -1097,10 +1209,10 @@ export default function TransactionPage() {
                                   {payment.status === 'REFUNDED' ? 'VOID' : payment.status}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-sm">
+                              <TableCell className="text-sm text-center">
                                 {payment.processed_by_name || '-'}
                               </TableCell>
-                              <TableCell className="text-sm">
+                              <TableCell className="text-sm text-center">
                                 {payment.cashier_session ? (
                                   <Badge variant="secondary" className="font-normal">
                                     {payment.cashier_session.shift_type}
@@ -1109,7 +1221,7 @@ export default function TransactionPage() {
                                   <span className="text-gray-400">-</span>
                                 )}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-center">
                                 {payment.status === 'COMPLETED' && (
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -1160,6 +1272,7 @@ export default function TransactionPage() {
                 value={managerEmail}
                 onChange={(e) => setManagerEmail(e.target.value)}
                 placeholder="manager@example.com"
+                className="rounded-lg"
               />
             </div>
             <div className="space-y-2">
@@ -1170,6 +1283,7 @@ export default function TransactionPage() {
                 value={managerPassword}
                 onChange={(e) => setManagerPassword(e.target.value)}
                 placeholder="••••••••"
+                className="rounded-lg"
               />
             </div>
           </div>
@@ -1209,7 +1323,7 @@ export default function TransactionPage() {
 
           <div className="space-y-4 py-4">
             {selectedOrder && (
-              <div className="bg-gray-50 p-4 rounded space-y-2">
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">No. Pesanan:</span>
                   <span className="font-semibold">{selectedOrder.order_number}</span>

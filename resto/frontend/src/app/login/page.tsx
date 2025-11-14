@@ -50,17 +50,12 @@ const LoginForm = () => {
   return (
     <div className="min-h-screen bg-neutral-50 flex">
       {/* Left Side - Login Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
+      <div className="w-1/2 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div>
-            <div className="flex items-center space-x-3 mb-8">
-              <div className="w-12 h-12 bg-neutral-900 rounded-lg flex items-center justify-center">
-                <span className="text-3xl">🍽️</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-neutral-900">Ladapala POS</h1>
-                <p className="text-sm text-neutral-600">Sistem Point of Sale Restoran</p>
-              </div>
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-neutral-900">Ladapala POS</h1>
+              <p className="text-sm text-neutral-600">Sistem Point of Sale Restoran</p>
             </div>
 
             <div className="mb-8">
@@ -168,22 +163,13 @@ const LoginForm = () => {
               </div>
             </div>
 
-            {/* Demo Credentials */}
-            <Card className="mt-6 p-4 bg-blue-50 border-blue-200">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">Kredensial Demo:</h4>
-              <div className="space-y-1 text-xs text-blue-800">
-                <div><strong>Admin:</strong> budi.admin@ladapala.co.id / password123</div>
-                <div><strong>Manager:</strong> siti.manager@ladapala.co.id / password123</div>
-                <div><strong>Kasir:</strong> sari.kasir@ladapala.co.id / password123</div>
-              </div>
-            </Card>
           </div>
         </div>
       </div>
 
       {/* Right Side - Features */}
-      <div className="hidden lg:block relative w-0 flex-1">
-        <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 to-neutral-700">
+      <div className="w-1/2 relative">
+        <div className="absolute inset-0 bg-[#58ff34]">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-10"
                style={{
@@ -193,69 +179,48 @@ const LoginForm = () => {
           </div>
 
           {/* Content */}
-          <div className="relative h-full flex flex-col justify-center p-12 text-white">
+          <div className="relative h-full flex flex-col justify-center p-12 text-black">
             <div className="max-w-lg">
               <h2 className="text-4xl font-bold mb-6">
                 Tingkatkan Operasional Restoran Anda
               </h2>
-              <p className="text-xl text-neutral-100 mb-12">
+              <p className="text-xl text-neutral-900 mb-12">
                 Rasakan kekuatan sistem POS modern dengan Ladapala -
                 di mana efisiensi bertemu keunggulan dalam layanan kuliner.
               </p>
 
               {/* Features List */}
               <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-3xl">
-                      🍽️
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">Manajemen Restoran Lengkap</h3>
-                    <p className="text-neutral-100 text-sm">Kelola menu, meja, pesanan, dan pembayaran dari satu platform terpadu</p>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Manajemen Restoran Lengkap</h3>
+                  <p className="text-neutral-900 text-sm">Kelola menu, meja, pesanan, dan pembayaran dari satu platform terpadu</p>
                 </div>
 
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-3xl">
-                      ⚡
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">Cepat & Efisien</h3>
-                    <p className="text-neutral-100 text-sm">Proses pesanan dengan cepat dan tingkatkan produktivitas hingga 40%</p>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Cepat & Efisien</h3>
+                  <p className="text-neutral-900 text-sm">Proses pesanan dengan cepat dan tingkatkan produktivitas hingga 40%</p>
                 </div>
 
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-3xl">
-                      🔒
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">Aman & Terpercaya</h3>
-                    <p className="text-neutral-100 text-sm">Keamanan tingkat enterprise dengan enkripsi data untuk melindungi bisnis Anda</p>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Aman & Terpercaya</h3>
+                  <p className="text-neutral-900 text-sm">Keamanan tingkat enterprise dengan enkripsi data untuk melindungi bisnis Anda</p>
                 </div>
               </div>
 
               {/* Stats */}
-              <div className="mt-12 pt-8 border-t border-white/20">
+              <div className="mt-12 pt-8 border-t border-black/20">
                 <div className="grid grid-cols-3 gap-8 text-center">
                   <div>
                     <div className="text-3xl font-bold">40%</div>
-                    <div className="text-sm text-neutral-100">Peningkatan Efisiensi</div>
+                    <div className="text-sm text-neutral-900">Peningkatan Efisiensi</div>
                   </div>
                   <div>
                     <div className="text-3xl font-bold">99.9%</div>
-                    <div className="text-sm text-neutral-100">Uptime</div>
+                    <div className="text-sm text-neutral-900">Uptime</div>
                   </div>
                   <div>
                     <div className="text-3xl font-bold">24/7</div>
-                    <div className="text-sm text-neutral-100">Dukungan</div>
+                    <div className="text-sm text-neutral-900">Dukungan</div>
                   </div>
                 </div>
               </div>
@@ -263,8 +228,8 @@ const LoginForm = () => {
           </div>
 
           {/* Decorative Elements */}
-          <div className="absolute top-20 right-20 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 left-20 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute top-20 right-20 w-32 h-32 bg-black/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-20 w-40 h-40 bg-black/5 rounded-full blur-3xl"></div>
         </div>
       </div>
     </div>

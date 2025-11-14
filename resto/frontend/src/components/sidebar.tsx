@@ -16,7 +16,8 @@ import {
   CellsIcon,
   CreditCardIcon,
   Menu02Icon,
-  ChefHatIcon
+  ChefHatIcon,
+  RestaurantIcon
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import {
@@ -54,6 +55,16 @@ const mainItems: SidebarItem[] = [
     name: "Dapur",
     href: "/kitchen",
     icon: ChefHatIcon,
+  },
+  {
+    name: "Bar",
+    href: "/bar",
+    icon: RestaurantIcon,
+  },
+  {
+    name: "Waitress",
+    href: "/waitress",
+    icon: UserIcon,
   },
   {
     name: "Transaksi",

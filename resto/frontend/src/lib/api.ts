@@ -27,6 +27,16 @@ export interface Product {
   category: number;
   category_name: string;
   profit_margin: string;
+  // Promo fields
+  is_seasonal?: boolean;
+  is_promo?: boolean;
+  discount_percentage?: string;
+  promo_price?: string;
+  promo_label?: string;
+  valid_from?: string;
+  valid_until?: string;
+  effective_price?: string;
+  is_promo_active?: boolean;
 }
 
 export interface ProductAvailability {
@@ -105,6 +115,13 @@ export interface Order {
   status?: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED';
   customer_name: string;
   customer_phone: string;
+  customer_info?: {
+    id: number;
+    name: string;
+    phone_number: string;
+    membership_tier: string;
+    points_balance: number;
+  };
   delivery_address?: string;
   notes?: string;
   items: OrderItem[];
@@ -112,6 +129,21 @@ export interface Order {
   created_at?: string;
   updated_at?: string;
   payments?: Payment[];
+
+  // Staff tracking
+  order_taken_by?: number | null;
+  order_taken_by_name?: string | null;
+  prepared_by?: number | null;
+  prepared_by_name?: string | null;
+  served_by?: number | null;
+  served_by_name?: string | null;
+  waitress_session?: number | null;
+
+  // Timestamps
+  taken_at?: string | null;
+  preparation_started_at?: string | null;
+  preparation_completed_at?: string | null;
+  served_at?: string | null;
 }
 
 export interface DashboardData {
@@ -293,6 +325,9 @@ export interface ScheduleCheck {
   warning?: string;
 }
 
+export type InventoryItemType = 'CONSUMABLE' | 'UTILITY' | 'EQUIPMENT';
+export type InventoryCategory = 'FOOD' | 'BEVERAGE' | 'CLEANING' | 'SERVING' | 'PACKAGING' | 'KITCHEN_TOOLS' | 'DISPOSABLES' | 'MAINTENANCE' | 'OTHER';
+
 export interface Inventory {
   id: number;
   branch: number;
@@ -302,7 +337,7 @@ export interface Inventory {
   quantity: number;
   min_quantity: number;
   cost_per_unit: string;
-  location: 'WAREHOUSE' | 'KITCHEN';
+  location: 'WAREHOUSE' | 'KITCHEN' | 'BAR';
   average_cost: string;
   total_value: string;
   needs_restock: boolean;
@@ -310,6 +345,16 @@ export interface Inventory {
   has_expiring_items: boolean;
   created_at: string;
   updated_at: string;
+  // Utility inventory fields
+  item_type?: InventoryItemType;
+  category?: InventoryCategory;
+  is_durable?: boolean;
+  par_stock_level?: number;
+  lifespan_days?: number;
+  breakage_count?: number;
+  last_restock_date?: string;
+  below_par_stock?: boolean;
+  breakage_rate?: number;
 }
 
 export interface InventoryCreate {
@@ -318,7 +363,7 @@ export interface InventoryCreate {
   description?: string;
   unit: string;
   min_quantity: number;
-  location: 'WAREHOUSE' | 'KITCHEN';
+  location: 'WAREHOUSE' | 'KITCHEN' | 'BAR';
 }
 
 export interface InventoryUpdate {
@@ -326,7 +371,7 @@ export interface InventoryUpdate {
   description?: string;
   unit?: string;
   min_quantity?: number;
-  location?: 'WAREHOUSE' | 'KITCHEN';
+  location?: 'WAREHOUSE' | 'KITCHEN' | 'BAR';
 }
 
 export interface InventoryTransaction {
@@ -335,7 +380,7 @@ export interface InventoryTransaction {
   inventory_name: string;
   branch: number;
   branch_name: string;
-  transaction_type: 'IN' | 'OUT' | 'ADJUST' | 'WASTE';
+  transaction_type: 'IN' | 'OUT' | 'ADJUST' | 'WASTE' | 'TRANSFER' | 'BREAKAGE';
   transaction_type_display: string;
   quantity: number;
   unit_cost: string;
@@ -698,6 +743,7 @@ export interface RestaurantSettings {
   session_timeout_minutes: number;
   // Printer Settings
   kitchen_printer_ip: string;
+  bar_printer_ip: string;
   receipt_printer_ip: string;
   enable_auto_print: boolean;
   print_receipts: boolean;
@@ -715,6 +761,51 @@ export interface RestaurantSettings {
   // Timestamps
   created_at: string;
   updated_at: string;
+}
+
+export interface StaffSession {
+  id: number;
+  staff: number;
+  staff_name: string;
+  staff_role: string;
+  staff_email: string;
+  branch: number;
+  branch_name: string;
+  schedule: number | null;
+  schedule_info: {
+    id: number;
+    date: string;
+    shift_type: string;
+    start_time: string;
+    end_time: string;
+  } | null;
+  shift_type: 'MORNING' | 'EVENING';
+  opened_at: string;
+  closed_at: string | null;
+  status: 'OPEN' | 'CLOSED';
+  override_by: number | null;
+  override_reason: string;
+  orders_taken_count: number;
+  orders_prepared_count: number;
+  orders_served_count: number;
+  items_prepared_count: number;
+  notes: string;
+  duration: number;
+  average_prep_time: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActiveStaff {
+  id: number;
+  staff_id: number;
+  staff_name: string;
+  staff_role: string;
+  shift_type: string;
+  orders_prepared_count: number;
+  items_prepared_count: number;
+  opened_at: string;
+  duration: number;
 }
 
 class ApiClient {
@@ -1155,7 +1246,7 @@ class ApiClient {
     return this.fetch(`/inventory/${query ? `?${query}` : ''}`);
   }
 
-  async getAllInventory(params?: { branch?: number; search?: string; status?: string; location?: string }): Promise<Inventory[]> {
+  async getAllInventory(params?: { branch?: number; search?: string; status?: string; location?: string; item_type?: string }): Promise<Inventory[]> {
     let allResults: Inventory[] = [];
     let page = 1;
     let hasMore = true;
@@ -1165,6 +1256,7 @@ class ApiClient {
       if (params?.branch) searchParams.set('branch', params.branch.toString());
       if (params?.search) searchParams.set('search', params.search);
       if (params?.location) searchParams.set('location', params.location);
+      if (params?.item_type) searchParams.set('item_type', params.item_type);
       if (params?.status) {
         if (params.status === 'low') {
           searchParams.set('needs_restock', 'true');
@@ -1215,6 +1307,40 @@ class ApiClient {
   async deleteInventory(id: number): Promise<void> {
     return this.fetch(`/inventory/${id}/`, {
       method: 'DELETE',
+    });
+  }
+
+  // Utility Inventory endpoints
+  async getUtilityInventory(params?: { branch?: number; category?: string; is_durable?: boolean }): Promise<Inventory[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.branch) searchParams.set('branch', params.branch.toString());
+    if (params?.category) searchParams.set('category', params.category);
+    if (params?.is_durable !== undefined) searchParams.set('is_durable', params.is_durable.toString());
+
+    const query = searchParams.toString();
+    return this.fetch(`/inventory/utilities/${query ? `?${query}` : ''}`);
+  }
+
+  async getConsumableInventory(params?: { branch?: number }): Promise<Inventory[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.branch) searchParams.set('branch', params.branch.toString());
+
+    const query = searchParams.toString();
+    return this.fetch(`/inventory/consumables/${query ? `?${query}` : ''}`);
+  }
+
+  async getBelowParStock(params?: { branch?: number }): Promise<Inventory[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.branch) searchParams.set('branch', params.branch.toString());
+
+    const query = searchParams.toString();
+    return this.fetch(`/inventory/below_par_stock/${query ? `?${query}` : ''}`);
+  }
+
+  async recordBreakage(id: number, data: { quantity: number; notes?: string }): Promise<Inventory> {
+    return this.fetch(`/inventory/${id}/record_breakage/`, {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 
@@ -1758,6 +1884,62 @@ class ApiClient {
       method: 'PATCH',
       body: JSON.stringify(data)
     });
+  }
+
+  // ============================================================================
+  // STAFF SESSION METHODS
+  // ============================================================================
+
+  async startStaffSession(data?: { shift_type?: string; override_by?: number; override_reason?: string }): Promise<StaffSession> {
+    return this.fetch('/staff-sessions/start/', {
+      method: 'POST',
+      body: JSON.stringify(data || {})
+    });
+  }
+
+  async endStaffSession(sessionId: number): Promise<StaffSession> {
+    return this.fetch(`/staff-sessions/${sessionId}/end/`, {
+      method: 'POST'
+    });
+  }
+
+  async getActiveSession(): Promise<StaffSession> {
+    return this.fetch('/staff-sessions/active/');
+  }
+
+  async getActiveStaff(role?: string): Promise<ActiveStaff[]> {
+    const params = role ? `?role=${role}` : '';
+    return this.fetch(`/staff-sessions/active_staff/${params}`);
+  }
+
+  async getStaffSessions(params?: { staff?: number; status?: string }): Promise<StaffSession[]> {
+    const queryParams = new URLSearchParams();
+    if (params?.staff) queryParams.append('staff', params.staff.toString());
+    if (params?.status) queryParams.append('status', params.status);
+
+    const queryString = queryParams.toString();
+    return this.fetch(`/staff-sessions/${queryString ? `?${queryString}` : ''}`);
+  }
+
+  // ============================================================================
+  // ORDER ASSIGNMENT METHODS
+  // ============================================================================
+
+  async claimOrder(orderId: number): Promise<Order> {
+    return this.fetch(`/orders/${orderId}/claim/`, {
+      method: 'POST'
+    });
+  }
+
+  async assignOrder(orderId: number, staffId: number): Promise<Order> {
+    return this.fetch(`/orders/${orderId}/assign/`, {
+      method: 'POST',
+      body: JSON.stringify({ staff_id: staffId })
+    });
+  }
+
+  async getUnassignedOrders(): Promise<Order[]> {
+    return this.fetch('/orders/unassigned/');
   }
 }
 

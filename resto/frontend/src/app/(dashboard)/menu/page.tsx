@@ -1,14 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon, Remove01Icon, CreditCardIcon, Invoice01Icon, Coffee01Icon, Dish01Icon, KitchenUtensilsIcon, Clock01Icon, IceCream01Icon, SparklesIcon, ChefHatIcon, DrinkIcon, Edit01Icon } from "@hugeicons/core-free-icons"
-import { Card, CardContent } from "@/components/ui/card"
+import { Add01Icon, Remove01Icon, CreditCardIcon, Invoice01Icon, Coffee01Icon, Dish01Icon, KitchenUtensilsIcon, Clock01Icon, IceCream01Icon, SparklesIcon, ChefHatIcon, DrinkIcon, Edit01Icon, Delete01Icon, ShoppingBasket01Icon } from "@hugeicons/core-free-icons"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { api, type Product, type Category, type Table } from "@/lib/api"
+import { useAuth } from "@/contexts/auth-context"
 
 // Filter categories
 const filterCategories = [
@@ -28,19 +32,29 @@ interface MenuItem extends Product {
 }
 
 export default function MenuPage() {
+  const router = useRouter()
+  const { staff, isLoading: authLoading } = useAuth()
   const [activeFilter, setActiveFilter] = useState("")
   const [categories, setCategories] = useState<Category[]>([])
   const [allProducts, setAllProducts] = useState<MenuItem[]>([])
   const [availableTables, setAvailableTables] = useState<Table[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null)
-  const [showNotesFor, setShowNotesFor] = useState<number | null>(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [customerName, setCustomerName] = useState("")
+  const [orderType, setOrderType] = useState<'DINE_IN' | 'TAKEAWAY'>('DINE_IN')
+  const [orderNotes, setOrderNotes] = useState("")
 
   useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!authLoading && !staff) {
+      router.push('/login')
+      return
+    }
+
+    if (!staff) return
+
     fetchData()
-  }, [])
+  }, [staff, authLoading, router])
 
   const fetchData = async () => {
     try {
@@ -94,6 +108,17 @@ export default function MenuPage() {
     return acc
   }, {} as Record<string, MenuItem[]>)
 
+  const removeFromCart = (itemId: number) => {
+    setAllProducts(prevItems =>
+      prevItems.map(item => {
+        if (item.id === itemId) {
+          return { ...item, qty: 0, notes: '' }
+        }
+        return item
+      })
+    )
+  }
+
   const updateQuantity = (itemId: number, increment: boolean) => {
     setAllProducts(prevItems =>
       prevItems.map(item => {
@@ -124,7 +149,7 @@ export default function MenuPage() {
 
   const orderItems = allProducts.filter(item => item.qty > 0)
   const subtotal = orderItems.reduce((total, item) => {
-    const price = parseFloat(item.price)
+    const price = item.effective_price ? parseFloat(item.effective_price) : parseFloat(item.price)
     return total + (price * item.qty)
   }, 0)
   const tax = subtotal * 0.1 // 10% tax
@@ -134,17 +159,19 @@ export default function MenuPage() {
     return `Rp ${Math.round(value).toLocaleString('id-ID')}`
   }
 
-  const handleProcessOrder = () => {
+  const handleProcessOrder = async () => {
     if (orderItems.length === 0) {
       alert("Silakan pilih menu terlebih dahulu")
       return
     }
-    setShowPaymentModal(true)
-  }
 
-  const handlePayment = async () => {
     if (!customerName.trim()) {
       alert("Silakan masukkan nama pelanggan")
+      return
+    }
+
+    if (orderType === 'DINE_IN' && !selectedTableId) {
+      alert("Silakan pilih meja untuk dine-in")
       return
     }
 
@@ -153,14 +180,16 @@ export default function MenuPage() {
       const branchId = parseInt(process.env.NEXT_PUBLIC_API_BRANCH_ID || '5')
       const orderData = {
         branch: branchId,
-        table: selectedTableId,
-        order_type: (selectedTableId ? 'DINE_IN' : 'TAKEAWAY') as 'DINE_IN' | 'TAKEAWAY' | 'DELIVERY',
+        table: orderType === 'DINE_IN' ? selectedTableId : null,
+        order_type: orderType,
         customer_name: customerName,
-        customer_phone: '0812345678900', // You can add a phone input field
+        customer_phone: '0812345678900',
+        notes: orderNotes,
+        status: 'CONFIRMED',
         items: orderItems.map(item => ({
           product: item.id,
           quantity: item.qty,
-          unit_price: item.price,
+          unit_price: item.effective_price || item.price,
           notes: item.notes || ''
         }))
       }
@@ -173,7 +202,7 @@ export default function MenuPage() {
       setAllProducts(prevItems => prevItems.map(item => ({ ...item, qty: 0, notes: '' })))
       setSelectedTableId(null)
       setCustomerName("")
-      setShowPaymentModal(false)
+      setOrderNotes("")
 
       // Refresh available tables
       const tablesResponse = await api.getTables({ is_available: true })
@@ -185,6 +214,22 @@ export default function MenuPage() {
       const errorMessage = error instanceof Error ? error.message : "Gagal membuat pesanan. Silakan coba lagi."
       alert(errorMessage)
     }
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-96">
+          <p className="text-gray-500">Memeriksa autentikasi...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If not authenticated, show nothing (will redirect)
+  if (!staff) {
+    return null
   }
 
   if (loading) {
@@ -281,6 +326,19 @@ export default function MenuPage() {
                             >
                               {categoryName}
                             </Badge>
+                            {/* Seasonal Badge */}
+                            {item.is_seasonal && (
+                              <Badge className="absolute top-2 left-2 bg-yellow-500 text-white text-[10px] px-2 py-0.5">
+                                <HugeiconsIcon icon={SparklesIcon} size={12} strokeWidth={2} className="mr-1 inline" />
+                                Musiman
+                              </Badge>
+                            )}
+                            {/* Promo Badge */}
+                            {item.is_promo_active && (
+                              <Badge className="absolute bottom-2 left-2 bg-red-500 text-white text-[10px] px-2 py-0.5 font-bold">
+                                {item.promo_label || (item.discount_percentage ? `${parseFloat(item.discount_percentage)}% OFF` : 'PROMO')}
+                              </Badge>
+                            )}
                           </div>
                           <CardContent className="p-4">
                             <h4 className="font-semibold text-gray-900 mb-1.5 line-clamp-1 text-sm">
@@ -290,9 +348,22 @@ export default function MenuPage() {
                               {item.description}
                             </p>
                             <div className="flex items-center justify-between">
-                              <span className="text-base font-bold text-black">
-                                {formatCurrency(parseFloat(item.price))}
-                              </span>
+                              <div className="flex flex-col">
+                                {item.is_promo_active && item.effective_price ? (
+                                  <>
+                                    <span className="text-base font-bold text-red-600">
+                                      {formatCurrency(parseFloat(item.effective_price))}
+                                    </span>
+                                    <span className="text-xs text-gray-400 line-through">
+                                      {formatCurrency(parseFloat(item.price))}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="text-base font-bold text-black">
+                                    {formatCurrency(parseFloat(item.price))}
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-1">
                                 <Button
                                   size="sm"
@@ -326,220 +397,188 @@ export default function MenuPage() {
           </div>
 
           {/* POS Order Sidebar - Right Side */}
-          <div className="w-96 bg-white rounded-lg flex flex-col sticky top-8 h-[calc(100vh-8rem)]">
-            {/* Header */}
-            <div className="px-4 py-3 border-b bg-gray-50 flex-shrink-0 rounded-t-lg">
-              <h2 className="text-lg font-bold text-gray-900">Pesanan Baru</h2>
-            </div>
+          <div className="w-96 sticky top-8 h-[calc(100vh-8rem)]">
+            <Card className="h-full flex flex-col">
+              <CardHeader className="flex-shrink-0">
+                <CardTitle className="flex items-center gap-2">
+                  <HugeiconsIcon icon={ShoppingBasket01Icon} className="h-5 w-5" strokeWidth={2} />
+                  Keranjang ({orderItems.length})
+                </CardTitle>
+                <CardDescription>Buat pesanan baru untuk pelanggan</CardDescription>
+              </CardHeader>
 
-            {/* Table Info */}
-            <div className="p-4 border-b flex-shrink-0">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">
-                  Pilih Meja (Opsional)
-                </label>
-                <select
-                  value={selectedTableId || ""}
-                  onChange={(e) => setSelectedTableId(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full h-9 rounded-none border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#58ff34]"
-                >
-                  <option value="">Takeaway (Tanpa Meja)</option>
-                  {availableTables.map((table) => (
-                    <option key={table.id} value={table.id}>
-                      Meja {table.number} - Kapasitas {table.capacity} orang
-                    </option>
-                  ))}
-                </select>
-                {availableTables.length === 0 && (
-                  <p className="text-xs text-gray-500 mt-1">Tidak ada meja tersedia</p>
-                )}
-              </div>
-            </div>
-
-            {/* Order Items - Scrollable middle section */}
-            <div className="flex-1 overflow-y-auto min-h-0 max-h-96">
-              {orderItems.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">
-                  <HugeiconsIcon icon={Invoice01Icon} size={48} strokeWidth={2} className="mx-auto mb-3 text-gray-300 size-12" />
-                  <p>Belum ada menu dipilih</p>
-                  <p className="text-sm">Pilih menu dari daftar di sebelah kiri</p>
+              <CardContent className="flex-1 flex flex-col overflow-hidden space-y-4 p-4">
+                {/* Order Type */}
+                <div>
+                  <Label>Tipe Pesanan</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <Button
+                      variant={orderType === 'DINE_IN' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setOrderType('DINE_IN')
+                        if (availableTables.length > 0 && !selectedTableId) {
+                          setSelectedTableId(availableTables[0].id || null)
+                        }
+                      }}
+                    >
+                      Dine In
+                    </Button>
+                    <Button
+                      variant={orderType === 'TAKEAWAY' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setOrderType('TAKEAWAY')
+                        setSelectedTableId(null)
+                      }}
+                    >
+                      Bungkus
+                    </Button>
+                  </div>
                 </div>
-              ) : (
-                <div className="p-3 space-y-2">
-                  {orderItems.map((item) => (
-                    <div key={item.id} className="p-3 bg-gray-50 rounded">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 truncate">
-                            {item.name}
-                          </h4>
-                          <p className="text-sm text-gray-500">{formatCurrency(parseFloat(item.price))}</p>
-                          {item.notes && (
-                            <p className="text-xs text-orange-600 truncate">
-                              {item.notes}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 ml-3">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateQuantity(item.id, false)}
-                            className="h-7 w-7 p-0 rounded-none"
-                          >
-                            <HugeiconsIcon icon={Remove01Icon} size={16} strokeWidth={2} className="size-4" />
-                          </Button>
-                          <span className="font-medium text-gray-900 min-w-[20px] text-center">
-                            {item.qty}
-                          </span>
-                          <Button
-                            size="sm"
-                            onClick={() => updateQuantity(item.id, true)}
-                            className="h-7 w-7 p-0 rounded-none"
-                          >
-                            <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} className="size-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setShowNotesFor(showNotesFor === item.id ? null : item.id)}
-                            className={`h-7 w-7 p-0 ml-2 rounded-none ${
-                              item.notes ? "text-orange-600 border-orange-600" : "text-gray-600"
-                            }`}
-                            title="Tambah catatan"
-                          >
-                            <HugeiconsIcon icon={Edit01Icon} size={16} strokeWidth={2} className="size-4" />
-                          </Button>
-                        </div>
+
+                {/* Table Selection */}
+                {orderType === 'DINE_IN' && (
+                  <div>
+                    <Label>Pilih Meja</Label>
+                    <select
+                      className="w-full mt-2 p-2 border rounded"
+                      value={selectedTableId || ''}
+                      onChange={(e) => setSelectedTableId(Number(e.target.value))}
+                    >
+                      <option value="">Pilih meja...</option>
+                      {availableTables.map(table => (
+                        <option key={table.id} value={table.id}>
+                          Meja {table.number} (Kapasitas: {table.capacity})
+                        </option>
+                      ))}
+                    </select>
+                    {availableTables.length === 0 && (
+                      <p className="text-xs text-red-500 mt-1">Tidak ada meja tersedia</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Customer Name */}
+                <div>
+                  <Label>Nama Pelanggan</Label>
+                  <Input
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Masukkan nama..."
+                    className="mt-2"
+                  />
+                </div>
+
+                {/* Cart Items */}
+                <div className="border-t pt-4 flex-1 flex flex-col min-h-0">
+                  <Label className="mb-2">Item Pesanan</Label>
+                  {orderItems.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="text-center text-gray-500">
+                        <HugeiconsIcon icon={Invoice01Icon} size={48} strokeWidth={2} className="mx-auto mb-3 text-gray-300" />
+                        <p className="text-sm">Keranjang masih kosong</p>
                       </div>
-                      {showNotesFor === item.id && (
-                        <div className="mt-3 pt-3 border-t">
+                    </div>
+                  ) : (
+                    <div className="flex-1 overflow-y-auto space-y-3">
+                      {orderItems.map(item => (
+                        <div key={item.id} className="p-3 border rounded">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-medium text-sm">{item.name}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeFromCart(item.id)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" strokeWidth={2} />
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuantity(item.id, false)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <HugeiconsIcon icon={Remove01Icon} className="h-3 w-3" strokeWidth={2} />
+                            </Button>
+                            <span className="text-sm w-8 text-center">{item.qty}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuantity(item.id, true)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <HugeiconsIcon icon={Add01Icon} className="h-3 w-3" strokeWidth={2} />
+                            </Button>
+                            <span className="text-sm ml-auto">
+                              Rp {((item.effective_price ? parseFloat(item.effective_price) : parseFloat(item.price)) * item.qty).toLocaleString('id-ID')}
+                            </span>
+                          </div>
                           <Input
-                            type="text"
-                            placeholder="Catatan untuk pesanan (mis: extra pedas, tanpa bawang)"
+                            placeholder="Catatan item..."
                             value={item.notes}
                             onChange={(e) => updateItemNotes(item.id, e.target.value)}
-                            className="w-full h-8 text-sm"
-                            autoFocus
+                            className="text-xs h-7"
                           />
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Order Summary & Buttons - Always visible at bottom */}
-            {orderItems.length > 0 && (
-              <div className="flex-shrink-0 border-t p-3 space-y-3 bg-white">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>{formatCurrency(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Pajak (10%):</span>
-                    <span>{formatCurrency(tax)}</span>
-                  </div>
-                  <div className="border-t pt-2">
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Total:</span>
-                      <span>{formatCurrency(total)}</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                <div className="space-y-2">
-                  <Button
-                    onClick={handleProcessOrder}
-                    className="w-full bg-green-600 hover:bg-green-700 rounded-none h-10"
-                  >
-                    <HugeiconsIcon icon={Invoice01Icon} size={20} strokeWidth={2} className="mr-2 size-5" />
-                    Proses Pesanan
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setAllProducts(prevItems => prevItems.map(item => ({ ...item, qty: 0, notes: '' })))
-                      setSelectedTableId(null)
-                    }}
-                    className="w-full rounded-none h-10"
-                  >
-                    Batal
-                  </Button>
-                </div>
-              </div>
-            )}
+                {/* Order Notes */}
+                {orderItems.length > 0 && (
+                  <div>
+                    <Label>Catatan Pesanan (Optional)</Label>
+                    <Textarea
+                      value={orderNotes}
+                      onChange={(e) => setOrderNotes(e.target.value)}
+                      placeholder="Catatan tambahan..."
+                      rows={2}
+                      className="mt-2"
+                    />
+                  </div>
+                )}
+
+                {/* Total & Submit */}
+                {orderItems.length > 0 && (
+                  <div className="border-t pt-4 space-y-4">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>{formatCurrency(subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Pajak (10%):</span>
+                        <span>{formatCurrency(tax)}</span>
+                      </div>
+                      <div className="border-t pt-2">
+                        <div className="flex justify-between font-bold text-lg">
+                          <span>Total:</span>
+                          <span>{formatCurrency(total)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleProcessOrder}
+                      disabled={!customerName.trim() || (orderType === 'DINE_IN' && !selectedTableId)}
+                      className="w-full bg-green-600 hover:bg-green-700"
+                    >
+                      <HugeiconsIcon icon={Invoice01Icon} size={20} strokeWidth={2} className="mr-2" />
+                      Proses Pesanan
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
 
-      {/* Payment Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Pembayaran</h3>
-
-            {/* Order Summary */}
-            <div className="mb-6 p-4 bg-gray-50 rounded">
-              <h4 className="font-semibold text-gray-900 mb-3">Ringkasan Pesanan</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>{formatCurrency(subtotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Pajak (10%):</span>
-                  <span>{formatCurrency(tax)}</span>
-                </div>
-                <div className="border-t pt-2">
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total:</span>
-                    <span>{formatCurrency(total)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Customer Info */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nama Pelanggan *
-              </label>
-              <Input
-                type="text"
-                placeholder="Masukkan nama pelanggan"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full"
-                autoFocus
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowPaymentModal(false)
-                  setCustomerName("")
-                }}
-                className="flex-1 rounded-none"
-              >
-                Batal
-              </Button>
-              <Button
-                onClick={handlePayment}
-                className="flex-1 bg-green-600 hover:bg-green-700 rounded-none"
-                disabled={!customerName.trim()}
-              >
-                Buat Pesanan
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }

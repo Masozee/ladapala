@@ -70,6 +70,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [settingsId, setSettingsId] = useState<number | null>(null)
   const [restaurantId, setRestaurantId] = useState<number | null>(null)
+  const [testingPrinter, setTestingPrinter] = useState<string | null>(null)
 
   const [restaurantSettings, setRestaurantSettings] = useState<RestaurantSettings>({
     name: "",
@@ -101,6 +102,7 @@ export default function SettingsPage() {
 
   const [printerSettings, setPrinterSettings] = useState({
     kitchenPrinter: "",
+    barPrinter: "",
     receiptPrinter: "",
     enableAutoPrint: true,
     printReceipts: true,
@@ -161,6 +163,7 @@ export default function SettingsPage() {
 
       setPrinterSettings({
         kitchenPrinter: data.kitchen_printer_ip || "",
+        barPrinter: data.bar_printer_ip || "",
         receiptPrinter: data.receipt_printer_ip || "",
         enableAutoPrint: data.enable_auto_print,
         printReceipts: data.print_receipts,
@@ -221,6 +224,7 @@ export default function SettingsPage() {
         enable_audit_log: systemSettings.enableAuditLog,
         session_timeout_minutes: systemSettings.sessionTimeout,
         kitchen_printer_ip: printerSettings.kitchenPrinter,
+        bar_printer_ip: printerSettings.barPrinter,
         receipt_printer_ip: printerSettings.receiptPrinter,
         enable_auto_print: printerSettings.enableAutoPrint,
         print_receipts: printerSettings.printReceipts,
@@ -243,6 +247,46 @@ export default function SettingsPage() {
       alert('Gagal menyimpan pengaturan')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleTestPrinter = async (printerType: 'kitchen' | 'bar' | 'receipt') => {
+    let ipAddress = ''
+
+    if (printerType === 'kitchen') ipAddress = printerSettings.kitchenPrinter
+    else if (printerType === 'bar') ipAddress = printerSettings.barPrinter
+    else if (printerType === 'receipt') ipAddress = printerSettings.receiptPrinter
+
+    if (!ipAddress.trim()) {
+      alert('Masukkan IP address terlebih dahulu')
+      return
+    }
+
+    try {
+      setTestingPrinter(printerType)
+      const response = await fetch('http://localhost:8000/api/settings/test_printer/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ ip_address: ipAddress })
+      })
+
+      const data = await response.json()
+
+      if (data.error) {
+        alert(`Error: ${data.error}`)
+      } else if (data.success) {
+        alert(`Berhasil!\n${data.message || 'Printer dapat dijangkau'}`)
+      } else {
+        alert(`Gagal!\n${data.message || 'Printer tidak dapat dijangkau'}`)
+      }
+    } catch (error: any) {
+      console.error('Error testing printer:', error)
+      alert(`Error: ${error.message || 'Gagal menghubungi server'}`)
+    } finally {
+      setTestingPrinter(null)
     }
   }
 
@@ -642,29 +686,80 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label>IP Printer Kitchen</Label>
-                  <Input
-                    value={printerSettings.kitchenPrinter}
-                    onChange={(e) => setPrinterSettings({
-                      ...printerSettings,
-                      kitchenPrinter: e.target.value
-                    })}
-                    placeholder="192.168.1.100"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={printerSettings.kitchenPrinter}
+                      onChange={(e) => setPrinterSettings({
+                        ...printerSettings,
+                        kitchenPrinter: e.target.value
+                      })}
+                      placeholder="192.168.1.100"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleTestPrinter('kitchen')}
+                      disabled={testingPrinter === 'kitchen'}
+                    >
+                      {testingPrinter === 'kitchen' ? 'Testing...' : 'Test'}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Untuk mencetak order makanan
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>IP Printer Bar</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={printerSettings.barPrinter}
+                      onChange={(e) => setPrinterSettings({
+                        ...printerSettings,
+                        barPrinter: e.target.value
+                      })}
+                      placeholder="192.168.1.101"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleTestPrinter('bar')}
+                      disabled={testingPrinter === 'bar'}
+                    >
+                      {testingPrinter === 'bar' ? 'Testing...' : 'Test'}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Untuk mencetak order minuman
+                  </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label>IP Printer Kasir</Label>
-                  <Input
-                    value={printerSettings.receiptPrinter}
-                    onChange={(e) => setPrinterSettings({
-                      ...printerSettings,
-                      receiptPrinter: e.target.value
-                    })}
-                    placeholder="192.168.1.101"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={printerSettings.receiptPrinter}
+                      onChange={(e) => setPrinterSettings({
+                        ...printerSettings,
+                        receiptPrinter: e.target.value
+                      })}
+                      placeholder="192.168.1.102"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleTestPrinter('receipt')}
+                      disabled={testingPrinter === 'receipt'}
+                    >
+                      {testingPrinter === 'receipt' ? 'Testing...' : 'Test'}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Untuk mencetak struk pembayaran
+                  </p>
                 </div>
               </div>
 
