@@ -217,13 +217,13 @@ export default function BarDisplayPage() {
   }
 
   const isDrink = (categoryName: string) => {
-    const drinkCategories = ['minuman', 'drink', 'beverage', 'juice', 'jus', 'kopi', 'coffee', 'teh', 'tea', 'es ', 'wedang']
-    return drinkCategories.some(cat => categoryName.toLowerCase().includes(cat))
+    if (!categoryName) return false
+    return categoryName.toLowerCase().includes('minuman')
   }
 
-  // Filter orders to only show orders with drink items
+  // Filter orders to only show orders with drink items (based on category)
   const allFilteredOrders = orders.filter(order => {
-    return order.items.some(item => isDrink(item.product_name || ''))
+    return order.items.some(item => isDrink(item.product_category_name || ''))
   })
 
   const unassignedOrders = allFilteredOrders.filter(o => !o.prepared_by && o.status === 'CONFIRMED')
@@ -482,7 +482,8 @@ export default function BarDisplayPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredOrders.map((order) => {
-              const relevantItems = order.items.filter(item => isDrink(item.product_name || ''))
+              // Only show beverage items on bar page
+              const relevantItems = order.items.filter(item => isDrink(item.product_category_name || ''))
               const isMyOrder = order.prepared_by === session?.staff
               const isUnassigned = !order.prepared_by
 
