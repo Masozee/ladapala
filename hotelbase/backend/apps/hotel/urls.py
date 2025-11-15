@@ -24,6 +24,8 @@ try:
     from .views.settings import HotelSettingsViewSet
     from .views.sidebar_counts import sidebar_counts
     from .views.support_reports import support_analytics
+    from .views.lost_found import LostAndFoundViewSet
+    from .views.wake_up_call import WakeUpCallViewSet
     from .views.promotions import (
         VoucherViewSet, DiscountViewSet, LoyaltyProgramViewSet,
         GuestLoyaltyPointsViewSet, LoyaltyTransactionViewSet
@@ -86,6 +88,8 @@ if LEGACY_VIEWS:
     router.register(r'stock-opnames', StockOpnameViewSet, basename='hotel-stock-opnames')
     router.register(r'stock-opname-items', StockOpnameItemViewSet, basename='hotel-stock-opname-items')
     router.register(r'warehouse-audit', WarehouseAuditLogViewSet, basename='hotel-warehouse-audit')
+    router.register(r'lost-and-found', LostAndFoundViewSet, basename='hotel-lost-and-found')
+    router.register(r'wake-up-calls', WakeUpCallViewSet, basename='hotel-wake-up-calls')
 
 urlpatterns = [
     path('', include(router.urls)),

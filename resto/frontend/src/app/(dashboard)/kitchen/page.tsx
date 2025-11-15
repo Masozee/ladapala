@@ -54,10 +54,21 @@ export default function KitchenDisplayPage() {
 
       const ordersList = Array.isArray(response) ? response : (response.results || [])
 
-      // Filter to show only kitchen-relevant orders
-      let kitchenOrders = ordersList.filter((order: Order) =>
-        ['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status || '')
-      )
+      // Filter to show only kitchen-relevant orders (exclude beverage-only orders)
+      let kitchenOrders = ordersList.filter((order: Order) => {
+        // Check if order is in valid status
+        if (!['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status || '')) {
+          return false
+        }
+
+        // Show orders that have at least one NON-beverage item
+        // Exclude orders that ONLY have beverage items
+        const hasNonBeverageItems = order.items?.some((item: any) =>
+          !item.product_category_name?.toLowerCase().includes('minuman')
+        )
+
+        return hasNonBeverageItems
+      })
 
       // Apply MY_ORDERS filter if active
       if (filter === 'MY_ORDERS' && session) {

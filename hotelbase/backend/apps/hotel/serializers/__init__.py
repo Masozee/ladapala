@@ -939,7 +939,7 @@ class ReservationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = [
-            'id', 'reservation_number', 'guest', 'guest_name', 'room_number', 'room_type_name',
+            'id', 'reservation_number', 'guest', 'guest_name', 'room', 'room_number', 'room_type_name',
             'check_in_date', 'check_out_date', 'nights', 'adults', 'children',
             'total_guests', 'status', 'status_display', 'booking_source',
             'booking_source_display', 'is_fully_paid', 'grand_total', 'created_at'

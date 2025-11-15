@@ -1,0 +1,54 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .viewsets import (
+    RestaurantViewSet, BranchViewSet, StaffViewSet,
+    CategoryViewSet, ProductViewSet, InventoryViewSet,
+    InventoryTransactionViewSet, InventoryBatchViewSet, OrderViewSet, OrderItemViewSet, PaymentViewSet,
+    TableViewSet, KitchenOrderViewSet, PromotionViewSet,
+    ScheduleViewSet, DashboardViewSet, CashierSessionViewSet, StaffSessionViewSet,
+    RecipeViewSet, RecipeIngredientViewSet, PurchaseOrderViewSet, PurchaseOrderItemViewSet,
+    StockTransferViewSet, VendorViewSet,
+    CustomerViewSet, LoyaltyTransactionViewSet, RewardViewSet, CustomerFeedbackViewSet, MembershipTierBenefitViewSet,
+    KitchenTicketViewSet, RestaurantSettingsViewSet
+)
+from .reports import ReportViewSet
+
+router = DefaultRouter()
+router.register(r'restaurants', RestaurantViewSet)
+router.register(r'branches', BranchViewSet)
+router.register(r'staff', StaffViewSet)
+router.register(r'categories', CategoryViewSet)
+router.register(r'products', ProductViewSet)
+router.register(r'inventory', InventoryViewSet)
+router.register(r'inventory-transactions', InventoryTransactionViewSet)
+router.register(r'inventory-batches', InventoryBatchViewSet)
+router.register(r'orders', OrderViewSet)
+router.register(r'order-items', OrderItemViewSet)
+router.register(r'payments', PaymentViewSet)
+router.register(r'tables', TableViewSet)
+router.register(r'kitchen-orders', KitchenOrderViewSet)
+router.register(r'promotions', PromotionViewSet)
+router.register(r'schedules', ScheduleViewSet)
+router.register(r'reports', ReportViewSet, basename='reports')
+router.register(r'dashboard', DashboardViewSet, basename='dashboard')
+router.register(r'cashier-sessions', CashierSessionViewSet)
+router.register(r'staff-sessions', StaffSessionViewSet)
+router.register(r'recipes', RecipeViewSet)
+router.register(r'recipe-ingredients', RecipeIngredientViewSet)
+router.register(r'purchase-orders', PurchaseOrderViewSet)
+router.register(r'purchase-order-items', PurchaseOrderItemViewSet)
+router.register(r'stock-transfers', StockTransferViewSet)
+router.register(r'vendors', VendorViewSet, basename='vendor')
+router.register(r'customers', CustomerViewSet)
+router.register(r'loyalty-transactions', LoyaltyTransactionViewSet)
+router.register(r'rewards', RewardViewSet)
+router.register(r'feedback', CustomerFeedbackViewSet)
+router.register(r'tier-benefits', MembershipTierBenefitViewSet)
+router.register(r'kitchen-tickets', KitchenTicketViewSet, basename='kitchen-tickets')
+router.register(r'settings', RestaurantSettingsViewSet, basename='settings')
+
+app_name = 'restaurant'
+
+urlpatterns = [
+    path('', include(router.urls)),
+]

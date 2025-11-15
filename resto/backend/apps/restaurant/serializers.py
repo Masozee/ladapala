@@ -139,6 +139,7 @@ class TableSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
+    product_category_name = serializers.CharField(source='product.category.name', read_only=True)
     subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     order_number = serializers.CharField(source='order.order_number', read_only=True)
     order_status = serializers.CharField(source='order.status', read_only=True)
@@ -302,21 +303,51 @@ class OrderCreateSerializer(serializers.ModelSerializer):
                 'DELIVERY': 1
             }
 
-            kitchen_order = KitchenOrder.objects.create(
-                order=order,
-                priority=priority_map.get(order.order_type, 0),
-                status='PENDING'
-            )
+            kitchen_items = []
+            bar_items = []
 
-            # Create kitchen order items
+            # Categorize items - beverages go to bar, everything else to kitchen
             for order_item in order.items.all():
-                KitchenOrderItem.objects.create(
-                    kitchen_order=kitchen_order,
-                    product=order_item.product,
-                    quantity=order_item.quantity,
-                    notes=order_item.notes,
+                # Check if product category is beverage/drink
+                if order_item.product.category and 'minuman' in order_item.product.category.name.lower():
+                    bar_items.append(order_item)
+                else:
+                    kitchen_items.append(order_item)
+
+            # Create kitchen order if there are kitchen items
+            if kitchen_items:
+                kitchen_order = KitchenOrder.objects.create(
+                    order=order,
+                    priority=priority_map.get(order.order_type, 0),
                     status='PENDING'
                 )
+
+                for order_item in kitchen_items:
+                    KitchenOrderItem.objects.create(
+                        kitchen_order=kitchen_order,
+                        product=order_item.product,
+                        quantity=order_item.quantity,
+                        notes=order_item.notes,
+                        status='PENDING'
+                    )
+
+            # Create bar order if there are bar items
+            # Using KitchenOrder model with [BAR] prefix for now
+            if bar_items:
+                bar_order = KitchenOrder.objects.create(
+                    order=order,
+                    priority=priority_map.get(order.order_type, 0),
+                    status='PENDING',
+                )
+
+                for order_item in bar_items:
+                    KitchenOrderItem.objects.create(
+                        kitchen_order=bar_order,
+                        product=order_item.product,
+                        quantity=order_item.quantity,
+                        notes=f"[BAR] {order_item.notes}" if order_item.notes else "[BAR]",
+                        status='PENDING'
+                    )
 
         return order
 

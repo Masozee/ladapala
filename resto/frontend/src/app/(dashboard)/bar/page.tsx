@@ -53,10 +53,21 @@ export default function BarDisplayPage() {
 
       const ordersList = Array.isArray(response) ? response : (response.results || [])
 
-      // Filter to show only bar-relevant orders
-      let barOrders = ordersList.filter((order: Order) =>
-        ['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status || '')
-      )
+      // Filter to show only bar-relevant orders (orders with beverage items)
+      let barOrders = ordersList.filter((order: Order) => {
+        // Check if order is in valid status
+        if (!['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status || '')) {
+          return false
+        }
+
+        // Check if order has beverage/drink items
+        // Look for items with category name containing "minuman" (Indonesian for beverage)
+        const hasBeverageItems = order.items?.some((item: any) =>
+          item.product_category_name?.toLowerCase().includes('minuman')
+        )
+
+        return hasBeverageItems
+      })
 
       // Apply MY_ORDERS filter if active
       if (filter === 'MY_ORDERS' && session) {

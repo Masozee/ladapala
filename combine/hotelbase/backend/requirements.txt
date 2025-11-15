@@ -1,0 +1,31 @@
+# Hotel Backend Requirements
+# Python >= 3.12
+
+# Django Core
+django==5.2.7
+djangorestframework==3.16.1
+django-cors-headers==4.9.0
+django-filter==25.2
+
+# Database
+sqlparse==0.5.3
+
+# File Processing
+pillow==12.0.0
+openpyxl==3.1.5
+reportlab==4.4.4
+
+# HTTP & Networking
+requests==2.32.5
+urllib3==2.5.0
+certifi==2025.10.5
+idna==3.11
+charset-normalizer==3.4.4
+
+# Utilities
+asgiref==3.10.0
+et-xmlfile==2.0.0
+
+# Production Server (optional - uncomment if needed)
+# gunicorn==23.0.0
+# whitenoise==6.8.2
