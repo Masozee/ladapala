@@ -7,12 +7,8 @@ from django.conf import settings
 # Only these keys are accepted - .env file must contain one of these
 VALID_LICENSE_KEYS = [
     'KL-H558N',
-    'KL-S904L',
     'KL-G117R',
     'KL-P663U',
-    'KL-W742Q',
-    'KL-B509E',
-    'KL-U384T',
     'KL-C276Y',
 ]
 
