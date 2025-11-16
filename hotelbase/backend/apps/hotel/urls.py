@@ -39,6 +39,7 @@ try:
     from .views.analytics import dashboard_analytics, monthly_comparison
     from .views.financial import financial_overview, financial_transactions, financial_invoices
     from .views.occupancy import occupancy_analytics
+    from .views.license import validate_license, get_license_status
     LEGACY_VIEWS = True
 except ImportError:
     LEGACY_VIEWS = False
@@ -98,6 +99,13 @@ urlpatterns = [
     path('system/stats/', system_stats, name='system-stats'),
     path('system/processes/', process_list, name='process-list'),
 ]
+
+# Add license validation endpoints if available
+if LEGACY_VIEWS:
+    urlpatterns += [
+        path('validate-license/', validate_license, name='validate-license'),
+        path('license-status/', get_license_status, name='license-status'),
+    ]
 
 # Add legacy URL patterns if views are available
 if LEGACY_VIEWS:
