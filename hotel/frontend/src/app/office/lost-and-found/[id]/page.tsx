@@ -88,9 +88,13 @@ export default function LostFoundDetailPage() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [statusData, setStatusData] = useState<any>({});
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     fetchItem();
+    fetchEmployees();
+    fetchCurrentUser();
   }, [id]);
 
   const fetchItem = async () => {
@@ -107,6 +111,34 @@ export default function LostFoundDetailPage() {
       console.error('Error fetching item:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch(buildApiUrl('hotel/employees/'), {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEmployees(data.results || data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
+  };
+
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await fetch(buildApiUrl('user/me/'), {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentUser(data);
+      }
+    } catch (error) {
+      console.error('Error fetching current user:', error);
     }
   };
 
@@ -521,6 +553,12 @@ export default function LostFoundDetailPage() {
                   <button
                     onClick={() => {
                       setSelectedStatus('CLAIMED');
+                      // Pre-populate with current user's employee ID if available
+                      if (currentUser?.employee_id) {
+                        setStatusData({ claim_verified_by: currentUser.employee_id });
+                      } else {
+                        setStatusData({});
+                      }
                       setShowStatusModal(true);
                     }}
                     className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
@@ -599,6 +637,21 @@ export default function LostFoundDetailPage() {
                         placeholder="Phone or email"
                         className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Verified By *</label>
+                      <select
+                        value={statusData.claim_verified_by || ''}
+                        onChange={(e) => setStatusData({ ...statusData, claim_verified_by: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select staff member...</option>
+                        {employees.map((emp) => (
+                          <option key={emp.id} value={emp.id}>
+                            {emp.first_name} {emp.last_name} - {emp.position || emp.department}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Verification Notes</label>

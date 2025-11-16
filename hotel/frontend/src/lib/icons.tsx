@@ -17,6 +17,7 @@ import {
   Time01Icon as HugeTime01,
   ArrowUp01Icon as HugeArrowUp01,
   ArrowDown01Icon as HugeArrowDown01,
+  ArrowLeft01Icon as HugeArrowLeft01,
   QuestionIcon as HugeQuestion,
   Wrench01Icon as HugeWrench01,
   Shield01Icon as HugeShield01,
@@ -63,6 +64,7 @@ import {
   ClipboardIcon as HugeClipboard,
   CheckmarkCircle02Icon as HugeCheckmarkCircle02,
   PlayIcon as HugePlay,
+  Download01Icon as HugeDownload,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 
@@ -89,6 +91,7 @@ export const UserSettings01Icon = createIconComponent(HugeUserSettings01);
 export const Time01Icon = createIconComponent(HugeTime01);
 export const ArrowUp01Icon = createIconComponent(HugeArrowUp01);
 export const ArrowDown01Icon = createIconComponent(HugeArrowDown01);
+export const ArrowLeft01Icon = createIconComponent(HugeArrowLeft01);
 export const QuestionIcon = createIconComponent(HugeQuestion);
 export const Wrench01Icon = createIconComponent(HugeWrench01);
 export const Shield01Icon = createIconComponent(HugeShield01);
@@ -173,6 +176,7 @@ UserSettings01Icon.displayName = 'UserSettings01Icon';
 Time01Icon.displayName = 'Time01Icon';
 ArrowUp01Icon.displayName = 'ArrowUp01Icon';
 ArrowDown01Icon.displayName = 'ArrowDown01Icon';
+ArrowLeft01Icon.displayName = 'ArrowLeft01Icon';
 QuestionIcon.displayName = 'QuestionIcon';
 Wrench01Icon.displayName = 'Wrench01Icon';
 Shield01Icon.displayName = 'Shield01Icon';
@@ -236,3 +240,13 @@ CheckmarkCircle02Icon.displayName = 'CheckmarkCircle02Icon';
 
 export const PlayIcon = createIconComponent(HugePlay);
 PlayIcon.displayName = 'PlayIcon';
+
+// Use CheckmarkCircle as SaveIcon since FloppyDisk is not in free package
+export const SaveIcon = CheckmarkCircle02Icon;
+SaveIcon.displayName = 'SaveIcon';
+
+export const RefreshIcon = CircleArrowReload01Icon;
+RefreshIcon.displayName = 'RefreshIcon';
+
+export const DownloadIcon = createIconComponent(HugeDownload);
+DownloadIcon.displayName = 'DownloadIcon';

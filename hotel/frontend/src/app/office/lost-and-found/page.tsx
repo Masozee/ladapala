@@ -5,22 +5,10 @@ import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
 import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
-  Archive03Icon,
   Search02Icon,
   Add01Icon,
-  FilterIcon,
-  EyeIcon,
-  PencilEdit02Icon,
-  CheckmarkCircle02Icon,
-  Cancel01Icon,
-  PackageIcon,
-  Location01Icon,
-  UserIcon,
-  Calendar01Icon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  AlertCircleIcon,
-  SparklesIcon
 } from '@/lib/icons';
 
 // API interfaces
@@ -70,14 +58,6 @@ const STATUS_COLORS: Record<string, string> = {
   DISPOSED: 'bg-gray-100 text-gray-800',
 };
 
-const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  ELECTRONICS: SparklesIcon,
-  JEWELRY: SparklesIcon,
-  DOCUMENTS: FilterIcon,
-  MONEY: FilterIcon,
-  KEYS: FilterIcon,
-  default: PackageIcon,
-};
 
 export default function LostAndFoundPage() {
   const router = useRouter();
@@ -158,10 +138,6 @@ export default function LostAndFoundPage() {
     });
   };
 
-  const getCategoryIcon = (category: string) => {
-    const IconComponent = CATEGORY_ICONS[category] || CATEGORY_ICONS.default;
-    return IconComponent;
-  };
 
   return (
     <OfficeLayout>
@@ -170,8 +146,7 @@ export default function LostAndFoundPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <Archive03Icon className="h-8 w-8 text-blue-600" />
+              <h1 className="text-3xl font-bold text-gray-900">
                 Lost & Found
               </h1>
               <p className="text-gray-600 mt-1">
@@ -189,29 +164,35 @@ export default function LostAndFoundPage() {
 
           {/* Status Counters */}
           {statusCounters && (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
-              <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
-                <div className="text-yellow-600 text-sm font-medium">Pending</div>
-                <div className="text-2xl font-bold text-yellow-900">{statusCounters.pending}</div>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <button
+                onClick={() => setStatusFilter('PENDING')}
+                className="bg-blue-50 border border-blue-200 rounded p-4 text-left hover:bg-blue-100 transition-colors"
+              >
+                <div className="text-blue-600 text-sm font-medium">Pending</div>
+                <div className="text-2xl font-bold text-blue-900">{statusCounters.pending}</div>
+              </button>
+              <button
+                onClick={() => setStatusFilter('IN_STORAGE')}
+                className="bg-blue-50 border border-blue-200 rounded p-4 text-left hover:bg-blue-100 transition-colors"
+              >
                 <div className="text-blue-600 text-sm font-medium">In Storage</div>
                 <div className="text-2xl font-bold text-blue-900">{statusCounters.in_storage}</div>
-              </div>
-              <div className="bg-purple-50 border border-purple-200 rounded p-4">
-                <div className="text-purple-600 text-sm font-medium">Valuable Items</div>
-                <div className="text-2xl font-bold text-purple-900">{statusCounters.valuable_items}</div>
-              </div>
-              <div className="bg-red-50 border border-red-200 rounded p-4">
-                <div className="text-red-600 text-sm font-medium">Unclaimed 30+ days</div>
-                <div className="text-2xl font-bold text-red-900">{statusCounters.unclaimed_long}</div>
-              </div>
-              <div className="bg-green-50 border border-green-200 rounded p-4">
-                <div className="text-green-600 text-sm font-medium">Claimed/Returned</div>
-                <div className="text-2xl font-bold text-green-900">
-                  {statusCounters.claimed + statusCounters.returned_to_guest}
-                </div>
-              </div>
+              </button>
+              <button
+                onClick={() => setShowValuableOnly(true)}
+                className="bg-blue-50 border border-blue-200 rounded p-4 text-left hover:bg-blue-100 transition-colors"
+              >
+                <div className="text-blue-600 text-sm font-medium">Valuable Items</div>
+                <div className="text-2xl font-bold text-blue-900">{statusCounters.valuable_items}</div>
+              </button>
+              <button
+                onClick={() => setShowUnclaimedLongOnly(true)}
+                className="bg-blue-50 border border-blue-200 rounded p-4 text-left hover:bg-blue-100 transition-colors"
+              >
+                <div className="text-blue-600 text-sm font-medium">Unclaimed 30+ days</div>
+                <div className="text-2xl font-bold text-blue-900">{statusCounters.unclaimed_long}</div>
+              </button>
             </div>
           )}
         </div>
@@ -302,8 +283,7 @@ export default function LostAndFoundPage() {
           </div>
         ) : items.length === 0 ? (
           <div className="text-center py-12 bg-white rounded border border-gray-200">
-            <Archive03Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No lost and found items found</p>
+            <p className="text-gray-600 text-lg">No lost and found items found</p>
           </div>
         ) : (
           <>
@@ -336,30 +316,24 @@ export default function LostAndFoundPage() {
                 </thead>
                 <tbody className="bg-white">
                   {items.map((item) => {
-                    const CategoryIcon = getCategoryIcon(item.category);
                     return (
                       <tr key={item.id} className="hover:bg-gray-50">
                         <td className="border border-gray-300 px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded ${item.is_valuable ? 'bg-purple-100' : 'bg-gray-100'}`}>
-                              <CategoryIcon className={`h-5 w-5 ${item.is_valuable ? 'text-purple-600' : 'text-gray-600'}`} />
+                          <div>
+                            <div className="font-medium text-gray-900 flex items-center gap-2">
+                              {item.item_name}
+                              {item.is_valuable && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                  Valuable
+                                </span>
+                              )}
+                              {item.is_unclaimed_long && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                  30+ days
+                                </span>
+                              )}
                             </div>
-                            <div>
-                              <div className="font-medium text-gray-900 flex items-center gap-2">
-                                {item.item_name}
-                                {item.is_valuable && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                    Valuable
-                                  </span>
-                                )}
-                                {item.is_unclaimed_long && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                    30+ days
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-sm text-gray-500">{item.item_number}</div>
-                            </div>
+                            <div className="text-sm text-gray-500">{item.item_number}</div>
                           </div>
                         </td>
                         <td className="border border-gray-300 px-6 py-4">
@@ -373,15 +347,11 @@ export default function LostAndFoundPage() {
                           </div>
                         </td>
                         <td className="border border-gray-300 px-6 py-4">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Location01Icon className="h-4 w-4 text-gray-400" />
-                            <span className="text-gray-900">
-                              {item.room_number ? `Room ${item.room_number}` : item.location_type}
-                            </span>
+                          <div className="text-sm text-gray-900">
+                            {item.room_number ? `Room ${item.room_number}` : item.location_type}
                           </div>
                           {item.guest_name && (
-                            <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                              <UserIcon className="h-4 w-4 text-gray-400" />
+                            <div className="text-sm text-gray-500 mt-1">
                               {item.guest_name}
                             </div>
                           )}
@@ -411,10 +381,9 @@ export default function LostAndFoundPage() {
                         <td className="border border-gray-300 px-6 py-4 text-right">
                           <button
                             onClick={() => router.push(`/office/lost-and-found/${item.id}`)}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            className="text-sm text-blue-600 hover:text-blue-800 underline"
                           >
-                            <EyeIcon className="h-4 w-4" />
-                            View
+                            View Details
                           </button>
                         </td>
                       </tr>

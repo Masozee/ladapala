@@ -124,20 +124,20 @@ const AppLayout = ({ children, breadcrumb }: AppLayoutProps) => {
     <DepartmentGuard requiredAccess="main">
         <div className="flex h-screen bg-gray-50">
           <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {/* Top Navbar */}
-          <header className="sticky top-0 z-10 bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/50 h-16 flex items-center justify-between px-6">
+          <header className="sticky top-0 z-10 bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200/50 h-16 flex items-center justify-between px-3 sm:px-4 md:px-6">
             {/* Breadcrumb */}
-            <nav className="flex items-center space-x-2 text-sm">
+            <nav className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm overflow-x-auto flex-shrink min-w-0">
               {breadcrumbItems.map((item, index) => (
-                <div key={index} className="flex items-center">
-                  {index > 0 && <ChevronRightIcon className="h-4 w-4 text-gray-400 mx-2" />}
+                <div key={index} className="flex items-center flex-shrink-0">
+                  {index > 0 && <ChevronRightIcon className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 mx-1 sm:mx-2" />}
                   {item.href && index < breadcrumbItems.length - 1 ? (
-                    <Link href={item.href} className="text-gray-600 hover:text-[#005357] transition-colors">
+                    <Link href={item.href} className="text-gray-600 hover:text-[#005357] transition-colors whitespace-nowrap">
                       {item.label}
                     </Link>
                   ) : (
-                    <span className={index === breadcrumbItems.length - 1 ? 'text-gray-900 font-medium' : 'text-gray-600'}>
+                    <span className={`${index === breadcrumbItems.length - 1 ? 'text-gray-900 font-medium' : 'text-gray-600'} whitespace-nowrap`}>
                       {item.label}
                     </span>
                   )}
@@ -146,12 +146,12 @@ const AppLayout = ({ children, breadcrumb }: AppLayoutProps) => {
             </nav>
 
             {/* Right Side: Date/Time & Header Actions */}
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-6 flex-shrink-0">
               {/* Today's Date & Time */}
-              <div className="flex items-center space-x-3 text-sm text-gray-600 border-r border-gray-300 pr-6">
-                <Calendar01Icon className="h-4 w-4" />
+              <div className="hidden md:flex items-center space-x-3 text-sm text-gray-600 border-r border-gray-300 pr-4 md:pr-6">
+                <Calendar01Icon className="h-4 w-4 flex-shrink-0" />
                 <div className="flex flex-col">
-                  <span className="font-medium">
+                  <span className="font-medium whitespace-nowrap">
                     {currentTime.toLocaleDateString('en-US', {
                       weekday: 'long',
                       month: 'long',
@@ -173,6 +173,25 @@ const AppLayout = ({ children, breadcrumb }: AppLayoutProps) => {
                 </div>
               </div>
 
+              {/* Compact Date/Time for tablet */}
+              <div className="flex md:hidden items-center space-x-2 text-xs text-gray-600 border-r border-gray-300 pr-3">
+                <div className="flex flex-col items-end">
+                  <span className="font-medium whitespace-nowrap">
+                    {currentTime.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </span>
+                  <span className="text-gray-500" suppressHydrationWarning>
+                    {currentTime.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </span>
+                </div>
+              </div>
+
               {/* Header Actions */}
               <HeaderActions />
             </div>
@@ -180,7 +199,7 @@ const AppLayout = ({ children, breadcrumb }: AppLayoutProps) => {
 
           {/* Main Content */}
           <main className="flex-1 overflow-auto bg-gray-50">
-            <div className="max-w-7xl mx-auto p-6">
+            <div className="max-w-7xl mx-auto px-3 py-4 sm:px-4 sm:py-5 md:p-6">
               {children}
             </div>
           </main>

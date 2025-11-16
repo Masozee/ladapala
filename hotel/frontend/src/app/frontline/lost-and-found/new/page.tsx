@@ -6,7 +6,7 @@ import AppLayout from '@/components/AppLayout';
 import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   Archive03Icon,
-  ArrowLeft01Icon,
+  ChevronLeftIcon,
   CheckmarkCircle02Icon,
   AlertCircleIcon
 } from '@/lib/icons';
@@ -121,7 +121,7 @@ export default function FrontlineReportLostItemPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken,
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
         },
         credentials: 'include',
         body: JSON.stringify(submitData),
@@ -169,7 +169,7 @@ export default function FrontlineReportLostItemPage() {
             onClick={() => router.push('/frontline')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
           >
-            <ArrowLeft01Icon className="h-5 w-5" />
+            <ChevronLeftIcon className="h-5 w-5" />
             Back to Frontline
           </button>
 
@@ -405,7 +405,7 @@ export default function FrontlineReportLostItemPage() {
             <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
               <button
                 type="submit"
-                disabled={saving || !formData.guest}
+                disabled={saving || !formData.item_name || !formData.description}
                 className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <CheckmarkCircle02Icon className="h-5 w-5" />
