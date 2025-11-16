@@ -6,8 +6,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from django.utils import timezone
 
-from ..models import MaintenanceRequest, MaintenanceTechnician, Complaint
-from ..serializers import MaintenanceRequestSerializer, MaintenanceTechnicianSerializer, ComplaintSerializer
+from ..models import MaintenanceRequest, MaintenanceTechnician, Complaint, WarehouseItem, MaintenancePartUsed
+from ..serializers import MaintenanceRequestSerializer, MaintenanceTechnicianSerializer, ComplaintSerializer, WarehouseItemSerializer, MaintenancePartUsedSerializer
 
 
 class MaintenanceRequestViewSet(viewsets.ModelViewSet):
@@ -47,7 +47,7 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
         complaints_as_maintenance = []
         for complaint in complaint_serializer.data:
             complaints_as_maintenance.append({
-                'id': f"COMPLAINT_{complaint['id']}",  # Prefix to distinguish
+                'id': complaint['complaint_number'],  # Use complaint number as ID
                 'request_number': complaint['complaint_number'],
                 'title': complaint['title'],
                 'description': complaint['description'],
@@ -183,11 +183,66 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(maintenance_request)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['patch'], url_path='complaint/(?P<complaint_id>[0-9]+)/(?P<action_name>[a-z_]+)')
-    def update_complaint(self, request, complaint_id=None, action_name=None):
+    @action(detail=False, methods=['get'], url_path='complaint/(?P<complaint_number>[A-Z0-9]+)')
+    def get_complaint(self, request, complaint_number=None):
+        """Get a specific complaint as maintenance request"""
+        try:
+            complaint = Complaint.objects.select_related('room', 'guest').get(complaint_number=complaint_number)
+
+            if complaint.assigned_team != 'ENGINEERING':
+                return Response(
+                    {'error': 'This complaint is not assigned to Engineering team'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Serialize the complaint
+            complaint_serializer = ComplaintSerializer(complaint)
+            complaint_data = complaint_serializer.data
+
+            # Transform complaint to match maintenance request format
+            maintenance_format = {
+                'id': complaint_data['complaint_number'],
+                'request_number': complaint_data['complaint_number'],
+                'title': complaint_data['title'],
+                'description': complaint_data['description'],
+                'category': 'General',
+                'category_display': 'Guest Complaint',
+                'priority': complaint_data['priority'],
+                'priority_display': complaint_data.get('priority_display', complaint_data['priority']),
+                'status': complaint_data['status'].replace('OPEN', 'SUBMITTED').replace('RESOLVED', 'COMPLETED'),
+                'status_display': complaint_data.get('status_display', complaint_data['status']).replace('Open', 'Submitted').replace('Resolved', 'Completed'),
+                'source': 'GUEST_REQUEST',
+                'source_display': 'Guest Request',
+                'room': complaint_data.get('room'),
+                'room_number': complaint_data.get('room_number'),
+                'guest': complaint_data.get('guest'),
+                'guest_name': complaint_data.get('guest_name'),
+                'assigned_technician': complaint_data.get('assigned_to'),
+                'technician_notes': complaint_data.get('resolution'),
+                'requested_date': complaint_data['incident_date'],
+                'created_at': complaint_data['created_at'],
+                'updated_at': complaint_data['updated_at'],
+                'is_complaint': True,
+                'complaint_id': complaint.id,
+                # Optional fields that might not exist
+                'estimated_cost': None,
+                'actual_cost': None,
+                'estimated_completion': None,
+            }
+
+            return Response(maintenance_format)
+
+        except Complaint.DoesNotExist:
+            return Response(
+                {'error': 'Complaint not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=False, methods=['patch'], url_path='complaint/(?P<complaint_number>[A-Z0-9]+)/(?P<action_name>[a-z_]+)')
+    def update_complaint(self, request, complaint_number=None, action_name=None):
         """Update complaint status from maintenance page"""
         try:
-            complaint = Complaint.objects.get(id=complaint_id)
+            complaint = Complaint.objects.get(complaint_number=complaint_number)
 
             if complaint.assigned_team != 'ENGINEERING':
                 return Response(
@@ -267,3 +322,56 @@ class MaintenanceTechnicianViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class WarehouseItemViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing warehouse items"""
+    queryset = WarehouseItem.objects.all()
+    serializer_class = WarehouseItemSerializer
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['category', 'is_active']
+    search_fields = ['name', 'code', 'description']
+    ordering_fields = ['name', 'quantity', 'created_at']
+    ordering = ['name']
+
+    @action(detail=False, methods=['get'])
+    def low_stock(self, request):
+        """Get items that are low on stock"""
+        low_stock_items = [item for item in self.get_queryset() if item.is_low_stock]
+        serializer = self.get_serializer(low_stock_items, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def add_stock(self, request, pk=None):
+        """Add stock to warehouse item"""
+        item = self.get_object()
+        quantity = request.data.get('quantity', 0)
+
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                return Response(
+                    {'error': 'Quantity must be positive'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            item.add_stock(quantity)
+            serializer = self.get_serializer(item)
+            return Response(serializer.data)
+
+        except ValueError:
+            return Response(
+                {'error': 'Invalid quantity value'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class MaintenancePartUsedViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing parts used in maintenance"""
+    queryset = MaintenancePartUsed.objects.select_related('maintenance_request', 'warehouse_item')
+    serializer_class = MaintenancePartUsedSerializer
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['maintenance_request', 'source']
+    ordering = ['-used_at']

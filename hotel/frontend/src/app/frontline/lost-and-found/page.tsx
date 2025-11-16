@@ -127,13 +127,13 @@ export default function FrontlineLostAndFoundPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Archive03Icon className="h-8 w-8 text-gray-700" />
+          <div>
             <h1 className="text-3xl font-bold text-gray-900">Lost & Found</h1>
+            <p className="text-sm text-gray-600 mt-1">Manage lost and found items reported by guests and staff</p>
           </div>
           <Link
             href="/frontline/lost-and-found/new"
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white rounded hover:bg-[#004044] transition-colors"
           >
             <Add01Icon className="h-4 w-4" />
             <span>Report Lost Item</span>
@@ -141,7 +141,7 @@ export default function FrontlineLostAndFoundPage() {
         </div>
 
         {/* Status Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-4 border border-gray-200">
             <div className="text-2xl font-bold text-gray-900">{counts.total}</div>
             <div className="text-sm text-gray-600">Total Items</div>
@@ -158,32 +158,14 @@ export default function FrontlineLostAndFoundPage() {
             <div className="text-2xl font-bold text-green-600">{counts.claimed}</div>
             <div className="text-sm text-gray-600">Claimed</div>
           </div>
-          <div className="bg-white p-4 border border-gray-200">
-            <div className="text-2xl font-bold text-purple-600">{counts.returned_to_guest}</div>
-            <div className="text-sm text-gray-600">Returned</div>
-          </div>
-          <div className="bg-white p-4 border border-gray-200">
-            <div className="text-2xl font-bold text-gray-600">{counts.disposed}</div>
-            <div className="text-sm text-gray-600">Disposed</div>
-          </div>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by item name, number, or description..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <div className="flex flex-col md:flex-row gap-4 items-center">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
@@ -195,12 +177,22 @@ export default function FrontlineLostAndFoundPage() {
           <select
             value={reportTypeFilter}
             onChange={(e) => setReportTypeFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
           >
             <option value="">All Types</option>
             <option value="FOUND">Found Items</option>
             <option value="LOST">Lost Reports</option>
           </select>
+          <div className="ml-auto relative w-64">
+            <Search02Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F87B1B]"
+            />
+          </div>
         </div>
 
         {/* Table */}

@@ -17,6 +17,8 @@ VALID_LICENSE_KEYS = [
     'KL-V230J',
     'KL-H558N',
     'KL-S904L',
+    'KL-G117R',
+    'KL-P663U',
     'KL-W742Q',
     'KL-B509E',
     'KL-U384T',

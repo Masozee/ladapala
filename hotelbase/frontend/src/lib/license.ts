@@ -3,12 +3,12 @@
  * Validates the application license key against the backend
  *
  * IMPORTANT: The valid license keys are HARDCODED in the backend.
- * The .env file must contain one of the 16 valid license keys.
+ * The .env file must contain one of the 18 valid license keys.
  * Changing the .env to a different value will NOT work unless it's one of the valid keys.
  *
  * Valid Keys: KL-D326F, KL-A829B, KL-L492K, KL-Q183Z, KL-R740M, KL-K915C,
- *             KL-T083X, KL-M672P, KL-V230J, KL-H558N, KL-S904L, KL-W742Q,
- *             KL-B509E, KL-U384T, KL-C276Y, KL-J831D
+ *             KL-T083X, KL-M672P, KL-V230J, KL-H558N, KL-S904L, KL-G117R,
+ *             KL-P663U, KL-W742Q, KL-B509E, KL-U384T, KL-C276Y, KL-J831D
  */
 
 const LICENSE_KEY = process.env.NEXT_PUBLIC_LICENSE_KEY || '';
@@ -26,6 +26,8 @@ const VALID_LICENSE_KEYS = [
   'KL-V230J',
   'KL-H558N',
   'KL-S904L',
+  'KL-G117R',
+  'KL-P663U',
   'KL-W742Q',
   'KL-B509E',
   'KL-U384T',

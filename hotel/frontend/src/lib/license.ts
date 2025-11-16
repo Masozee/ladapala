@@ -1,13 +1,16 @@
 /**
- * License validation utility
+ * License validation utility for hotel
  * Validates the application license key against the backend
  *
- * IMPORTANT: The valid license key is HARDCODED in both frontend and backend.
- * The .env file must contain the exact hardcoded value to work.
+ * IMPORTANT: The valid license key is HARDCODED in the backend.
+ * The .env file must contain the exact key: KL-U384T
  * Changing the .env to a different value will NOT work.
+ *
+ * Valid Key: KL-U384T
  */
 
 const LICENSE_KEY = process.env.NEXT_PUBLIC_LICENSE_KEY || '';
+
 // HARDCODED EXPECTED LICENSE KEY - must match backend
 const EXPECTED_LICENSE_KEY = 'KL-U384T';
 
@@ -26,8 +29,15 @@ export function getLicenseKey(): string {
 }
 
 /**
+ * Get the expected license key
+ */
+export function getExpectedLicenseKey(): string {
+  return EXPECTED_LICENSE_KEY;
+}
+
+/**
  * Validate license with backend
- * This checks if the frontend license matches the backend license
+ * This checks if the frontend license matches the backend's expected key
  */
 export async function validateLicenseWithBackend(apiBaseUrl: string): Promise<boolean> {
   try {
@@ -59,5 +69,6 @@ export function getLicenseInfo() {
     key: LICENSE_KEY,
     isValid: isLicenseValid(),
     hasLicense: LICENSE_KEY.length > 0,
+    expectedKey: EXPECTED_LICENSE_KEY,
   };
 }

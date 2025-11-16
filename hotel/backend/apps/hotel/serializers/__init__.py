@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from ..models import (
     RoomType, Room, RoomTypeImage, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
     CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, DepartmentInventory, Supplier,
-    MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
+    MaintenanceRequest, MaintenanceTechnician, WarehouseItem, MaintenancePartUsed, HousekeepingTask, AmenityUsage,
     FinancialTransaction, Invoice, InvoiceItem, AmenityRequest, AmenityCategory, HotelSettings,
     EventPackage, FoodPackage, EventBooking, EventPayment, EventAddOn
 )
@@ -1053,6 +1053,36 @@ class AmenityRequestSerializer(serializers.ModelSerializer):
             return obj.completed_by.get_full_name() or obj.completed_by.username
         return None
 
+class WarehouseItemSerializer(serializers.ModelSerializer):
+    """Serializer for warehouse items"""
+    is_low_stock = serializers.ReadOnlyField()
+    unit_display = serializers.CharField(source='get_unit_display', read_only=True)
+
+    class Meta:
+        model = WarehouseItem
+        fields = [
+            'id', 'name', 'code', 'description', 'category', 'unit', 'unit_display',
+            'quantity', 'minimum_stock', 'unit_cost', 'location',
+            'is_active', 'is_low_stock', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'is_low_stock']
+
+
+class MaintenancePartUsedSerializer(serializers.ModelSerializer):
+    """Serializer for parts used in maintenance"""
+    warehouse_item_name = serializers.CharField(source='warehouse_item.name', read_only=True)
+    source_display = serializers.CharField(source='get_source_display', read_only=True)
+
+    class Meta:
+        model = MaintenancePartUsed
+        fields = [
+            'id', 'maintenance_request', 'warehouse_item', 'warehouse_item_name',
+            'part_name', 'quantity', 'source', 'source_display', 'vendor_name',
+            'unit_cost', 'total_cost', 'used_at', 'notes'
+        ]
+        read_only_fields = ['total_cost', 'used_at']
+
+
 class MaintenanceRequestSerializer(serializers.ModelSerializer):
     """Serializer for maintenance requests"""
     room_number = serializers.CharField(source='room.number', read_only=True)
@@ -1063,6 +1093,7 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
     source_display = serializers.CharField(source='get_source_display', read_only=True)
     resolution_time_hours = serializers.ReadOnlyField()
     efficiency_score = serializers.ReadOnlyField()
+    parts_used_list = MaintenancePartUsedSerializer(source='parts_used', many=True, read_only=True)
 
     class Meta:
         model = MaintenanceRequest
@@ -1072,13 +1103,13 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
             'status', 'status_display', 'source', 'source_display',
             'title', 'description', 'assigned_technician', 'technician_notes',
             'requested_date', 'acknowledged_date', 'started_date', 'completed_date',
-            'estimated_cost', 'actual_cost', 'customer_satisfaction',
-            'resolution_time_hours', 'efficiency_score',
+            'estimated_cost', 'actual_cost', 'parts_needed', 'parts_used_list',
+            'customer_satisfaction', 'resolution_time_hours', 'efficiency_score',
             'created_at', 'updated_at'
         ]
         read_only_fields = [
             'created_at', 'updated_at', 'request_number',
-            'resolution_time_hours', 'efficiency_score'
+            'resolution_time_hours', 'efficiency_score', 'parts_used_list'
         ]
 
 

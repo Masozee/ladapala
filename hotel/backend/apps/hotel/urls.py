@@ -39,8 +39,13 @@ try:
     from .views.lost_found import LostAndFoundViewSet
     from .views.wake_up_call import WakeUpCallViewSet
     from .views.department_inventory import DepartmentInventoryViewSet
-    from .views.license import validate_license, get_license_status
     LEGACY_VIEWS = True
+    # Import license views separately to handle potential import errors
+    try:
+        from .views.license import validate_license, get_license_status
+        HAS_LICENSE = True
+    except ImportError:
+        HAS_LICENSE = False
 except ImportError:
     LEGACY_VIEWS = False
 
@@ -103,7 +108,7 @@ urlpatterns = [
 ]
 
 # Add license validation endpoints if available
-if LEGACY_VIEWS:
+if LEGACY_VIEWS and HAS_LICENSE:
     urlpatterns += [
         path('validate-license/', validate_license, name='validate-license'),
         path('license-status/', get_license_status, name='license-status'),

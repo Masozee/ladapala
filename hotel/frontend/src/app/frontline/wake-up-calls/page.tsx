@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import { Clock01Icon, Add01Icon, CheckmarkCircle02Icon, Cancel01Icon, Alert01Icon, BedIcon, UserIcon } from '@/lib/icons';
 
 interface WakeUpCall {
@@ -33,7 +35,7 @@ interface Room {
 interface Reservation {
   id: number;
   reservation_number: string;
-  room: number;
+  room?: number;
   room_number: string;
   guest: number;
   guest_name: string;
@@ -42,12 +44,14 @@ interface Reservation {
 }
 
 export default function WakeUpCallsPage() {
+  const searchParams = useSearchParams();
   const [wakeUpCalls, setWakeUpCalls] = useState<WakeUpCall[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState('PENDING');
+  const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
   const [formData, setFormData] = useState({
     reservation: '',
     room: '',
@@ -57,26 +61,61 @@ export default function WakeUpCallsPage() {
     notes: ''
   });
 
-  const buildApiUrl = (endpoint: string) => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
-    return `${baseUrl}/hotel/${endpoint}`;
-  };
-
   useEffect(() => {
     fetchWakeUpCalls();
     fetchReservations();
   }, [filterStatus]);
 
+  // Handle reservation parameter from URL - only once
+  useEffect(() => {
+    const reservationId = searchParams.get('reservation');
+    if (reservationId && reservations.length > 0 && !hasLoadedFromUrl) {
+      const reservation = reservations.find(r => r.id.toString() === reservationId);
+      if (reservation) {
+        // Fetch room ID from room number
+        fetchRoomIdByNumber(reservation.room_number).then(roomId => {
+          setFormData({
+            reservation: reservationId,
+            room: roomId || '',
+            guest_name: reservation.guest_name || '',
+            call_date: reservation.check_out_date || '',
+            call_time: '',
+            notes: ''
+          });
+          setShowAddModal(true);
+          setHasLoadedFromUrl(true);
+        });
+      }
+    }
+  }, [searchParams, reservations, hasLoadedFromUrl]);
+
+  const fetchRoomIdByNumber = async (roomNumber: string): Promise<string> => {
+    try {
+      const response = await fetch(buildApiUrl(`hotel/rooms/?number=${roomNumber}`), {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          return data.results[0].id.toString();
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching room ID:', error);
+    }
+    return '';
+  };
+
   const fetchWakeUpCalls = async () => {
     setLoading(true);
     try {
-      let endpoint = 'wake-up-calls/';
+      let endpoint = 'hotel/wake-up-calls/';
       if (filterStatus === 'TODAY') {
-        endpoint = 'wake-up-calls/today/';
+        endpoint = 'hotel/wake-up-calls/today/';
       } else if (filterStatus === 'PENDING') {
-        endpoint = 'wake-up-calls/pending/';
+        endpoint = 'hotel/wake-up-calls/pending/';
       } else if (filterStatus) {
-        endpoint = `wake-up-calls/?status=${filterStatus}`;
+        endpoint = `hotel/wake-up-calls/?status=${filterStatus}`;
       }
 
       const response = await fetch(buildApiUrl(endpoint), {
@@ -96,7 +135,7 @@ export default function WakeUpCallsPage() {
   const fetchReservations = async () => {
     try {
       // Fetch current checked-in reservations
-      const response = await fetch(buildApiUrl('reservations/?status=CHECKED_IN'), {
+      const response = await fetch(buildApiUrl('hotel/reservations/?status=CHECKED_IN'), {
         credentials: 'include'
       });
       if (response.ok) {
@@ -108,15 +147,16 @@ export default function WakeUpCallsPage() {
     }
   };
 
-  const handleReservationChange = (reservationId: string) => {
+  const handleReservationChange = async (reservationId: string) => {
     const reservation = reservations.find(r => r.id.toString() === reservationId);
     if (reservation) {
+      const roomId = await fetchRoomIdByNumber(reservation.room_number);
       setFormData({
         ...formData,
         reservation: reservationId,
-        room: reservation.room.toString(),
-        guest_name: reservation.guest_name,
-        call_date: reservation.check_out_date, // Default to checkout date
+        room: roomId || '',
+        guest_name: reservation.guest_name || '',
+        call_date: reservation.check_out_date || '', // Default to checkout date
       });
     }
   };
@@ -124,12 +164,38 @@ export default function WakeUpCallsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('Submitting formData:', formData);
+
+    // Validate required fields
+    const missing = [];
+    if (!formData.room) missing.push('Room');
+    if (!formData.guest_name) missing.push('Guest Name');
+    if (!formData.call_date) missing.push('Call Date');
+    if (!formData.call_time) missing.push('Call Time');
+
+    if (missing.length > 0) {
+      alert(`Please fill in the following required fields: ${missing.join(', ')}`);
+      return;
+    }
+
     try {
-      const response = await fetch(buildApiUrl('wake-up-calls/'), {
+      const csrfToken = await getCsrfToken();
+
+      // Prepare data - convert empty strings to null for optional fields
+      const submitData = {
+        ...formData,
+        reservation: formData.reservation || null,
+        room: parseInt(formData.room),
+      };
+
+      const response = await fetch(buildApiUrl('hotel/wake-up-calls/'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+        },
         credentials: 'include',
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submitData)
       });
 
       if (response.ok) {
@@ -138,8 +204,15 @@ export default function WakeUpCallsPage() {
         setFormData({ reservation: '', room: '', guest_name: '', call_date: '', call_time: '', notes: '' });
         fetchWakeUpCalls();
       } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to schedule wake up call');
+        const errorData = await response.json();
+        console.error('Server error:', errorData);
+
+        // Show detailed validation errors
+        if (errorData.room) {
+          alert(`Room error: ${errorData.room.join(', ')}`);
+        } else {
+          alert(errorData.error || errorData.detail || 'Failed to schedule wake up call');
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -149,31 +222,49 @@ export default function WakeUpCallsPage() {
 
   const markCompleted = async (id: number) => {
     try {
-      const response = await fetch(buildApiUrl(`wake-up-calls/${id}/mark_completed/`), {
+      const csrfToken = await getCsrfToken();
+      const response = await fetch(buildApiUrl(`hotel/wake-up-calls/${id}/mark_completed/`), {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+        },
         credentials: 'include'
       });
 
       if (response.ok) {
         fetchWakeUpCalls();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to mark as completed');
       }
     } catch (error) {
       console.error('Error:', error);
+      alert('Failed to mark as completed');
     }
   };
 
   const markMissed = async (id: number) => {
     try {
-      const response = await fetch(buildApiUrl(`wake-up-calls/${id}/mark_missed/`), {
+      const csrfToken = await getCsrfToken();
+      const response = await fetch(buildApiUrl(`hotel/wake-up-calls/${id}/mark_missed/`), {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+        },
         credentials: 'include'
       });
 
       if (response.ok) {
         fetchWakeUpCalls();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to mark as missed');
       }
     } catch (error) {
       console.error('Error:', error);
+      alert('Failed to mark as missed');
     }
   };
 
@@ -192,13 +283,13 @@ export default function WakeUpCallsPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Clock01Icon className="h-8 w-8 text-gray-700" />
+          <div>
             <h1 className="text-3xl font-bold text-gray-900">Wake Up Calls</h1>
+            <p className="text-sm text-gray-600 mt-1">Schedule and manage wake up calls for guests</p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white hover:bg-[#004147] transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#005357] text-white rounded hover:bg-[#004044] transition-colors"
           >
             <Add01Icon className="h-4 w-4" />
             <span>Schedule Call</span>
@@ -212,7 +303,7 @@ export default function WakeUpCallsPage() {
             onClick={() => setFilterStatus('TODAY')}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               filterStatus === 'TODAY'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-[#005357] text-white'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -222,7 +313,7 @@ export default function WakeUpCallsPage() {
             onClick={() => setFilterStatus('PENDING')}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               filterStatus === 'PENDING'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-[#005357] text-white'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -232,7 +323,7 @@ export default function WakeUpCallsPage() {
             onClick={() => setFilterStatus('COMPLETED')}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               filterStatus === 'COMPLETED'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-[#005357] text-white'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -242,7 +333,7 @@ export default function WakeUpCallsPage() {
             onClick={() => setFilterStatus('')}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               filterStatus === ''
-                ? 'bg-blue-600 text-white'
+                ? 'bg-[#005357] text-white'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -377,7 +468,18 @@ export default function WakeUpCallsPage() {
                 />
               </div>
 
-              <input type="hidden" value={formData.room} />
+              {formData.room && formData.reservation && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Room</label>
+                  <input
+                    type="text"
+                    value={reservations.find(r => r.id.toString() === formData.reservation)?.room_number || ''}
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 bg-gray-50 text-gray-600"
+                  />
+                  <input type="hidden" name="room" value={formData.room} />
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>

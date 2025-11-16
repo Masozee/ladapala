@@ -229,11 +229,11 @@ const MaintenancePage = () => {
       const csrfToken = getCsrfToken();
       let endpoint: string;
 
-      // Check if this is a complaint (ID starts with "COMPLAINT_")
-      if (typeof requestId === 'string' && requestId.startsWith('COMPLAINT_')) {
-        // Extract complaint ID from "COMPLAINT_6" format
-        const complaintId = requestId.replace('COMPLAINT_', '');
-        endpoint = `hotel/maintenance-requests/complaint/${complaintId}/${action}/`;
+      // Check if this is a complaint (ID starts with "CMP" or "CPL")
+      const isComplaint = typeof requestId === 'string' && (requestId.startsWith('CMP') || requestId.startsWith('CPL'));
+      if (isComplaint) {
+        // Use complaint number directly
+        endpoint = `hotel/maintenance-requests/complaint/${requestId}/${action}/`;
       } else {
         // Regular maintenance request
         endpoint = `hotel/maintenance-requests/${requestId}/${action}/`;
@@ -254,7 +254,7 @@ const MaintenancePage = () => {
       if (response.ok) {
         await refreshRequests();
         setOpenMenuId(null);
-        const itemType = typeof requestId === 'string' && requestId.startsWith('COMPLAINT_') ? 'Complaint' : 'Request';
+        const itemType = isComplaint ? 'Complaint' : 'Request';
         alert(`${itemType} ${action.replace('_', ' ')} successfully!`);
       } else {
         const errorData = await response.json();
@@ -619,15 +619,12 @@ const MaintenancePage = () => {
                                   Mark Complete
                                 </button>
                               )}
-                              <button
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  // Could add view details functionality here
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              <Link
+                                href={`/support/maintenance/${request.id}`}
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                               >
                                 View Details
-                              </button>
+                              </Link>
                               {request.is_complaint && (
                                 <button
                                   onClick={() => {

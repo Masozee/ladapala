@@ -2075,6 +2075,14 @@ const BookingsPage = () => {
                                         <Clock01Icon className="h-4 w-4" />
                                         <span>Request Late Checkout</span>
                                       </button>
+                                      <Link
+                                        href={`/frontline/wake-up-calls?reservation=${reservation.id}`}
+                                        className="flex items-center space-x-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors w-full text-left"
+                                        onClick={() => setOpenMenuId(null)}
+                                      >
+                                        <Clock01Icon className="h-4 w-4" />
+                                        <span>Request Wake Up Call</span>
+                                      </Link>
                                       <button
                                         onClick={async () => {
                                           await handleNavigateToPayment(reservation);

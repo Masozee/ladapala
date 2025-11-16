@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import AppLayout, { HeaderActions } from '@/components/AppLayout';
+import SupportLayout from '@/components/SupportLayout';
+import { buildApiUrl } from '@/lib/config';
 import {
   ChevronLeftIcon,
   Wrench01Icon,
@@ -30,231 +31,183 @@ import {
   Loading03Icon,
   UserMultipleIcon,
   CreditCardIcon,
-  ArrowUp01Icon
+  ArrowUp01Icon,
+  PencilEdit02Icon
 } from '@/lib/icons';
 
 interface MaintenanceRequest {
-  id: number;
-  ticket_number: string;
+  id: number | string;
+  request_number?: string;
+  ticket_number?: string;
   title: string;
   description: string;
-  category: 'hvac' | 'plumbing' | 'electrical' | 'general' | 'elevator' | 'security' | 'it_network' | 'furniture' | 'appliances';
-  priority: 'low' | 'medium' | 'high' | 'urgent' | 'emergency';
-  status: 'open' | 'assigned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
-  location: string;
+  category: string;
+  category_display?: string;
+  priority: string;
+  priority_display?: string;
+  status: string;
+  status_display?: string;
+  source?: string;
+  source_display?: string;
+  location?: string;
+  room?: number;
   room_number?: string;
   floor?: number;
   building_section?: string;
-  reported_by: string;
-  reporter_role: string;
-  reporter_contact: string;
+  guest?: number;
+  guest_name?: string;
+  reported_by?: string;
+  reporter_role?: string;
+  reporter_contact?: string;
+  assigned_technician?: string;
+  technician_notes?: string;
+  technician_id?: number;
+  requested_date?: string;
+  acknowledged_date?: string;
+  started_date?: string;
+  completed_date?: string;
   created_at: string;
   updated_at: string;
-  assigned_to?: string;
-  technician_id?: number;
   estimated_completion?: string;
   actual_completion?: string;
   estimated_cost?: number;
   actual_cost?: number;
-  parts_needed: string[];
+  parts_needed?: string[];
   parts_cost?: number;
   labor_hours?: number;
   labor_cost?: number;
-  guest_impact: boolean;
+  guest_impact?: boolean;
   downtime_start?: string;
   downtime_end?: string;
-  safety_issue: boolean;
-  warranty_covered: boolean;
-  vendor_required: boolean;
+  safety_issue?: boolean;
+  warranty_covered?: boolean;
+  vendor_required?: boolean;
   vendor_name?: string;
-  notes: string;
-  photos: string[];
+  notes?: string;
+  photos?: string[];
   completion_notes?: string;
   guest_satisfaction?: number;
-  preventive_maintenance: boolean;
+  customer_satisfaction?: number;
+  preventive_maintenance?: boolean;
   next_service_date?: string;
-  work_log: WorkLogEntry[];
-  parts_used: PartUsage[];
-  cost_breakdown: CostBreakdown;
+  resolution_time_hours?: number;
+  efficiency_score?: number;
+  is_complaint?: boolean;
+  complaint_id?: number;
 }
-
-interface WorkLogEntry {
-  id: number;
-  timestamp: string;
-  technician: string;
-  action: string;
-  description: string;
-  time_spent?: number;
-  status_change?: string;
-  photos?: string[];
-}
-
-interface PartUsage {
-  id: number;
-  part_name: string;
-  quantity_used: number;
-  unit_cost: number;
-  supplier: string;
-  installation_date: string;
-  warranty_period?: string;
-  notes?: string;
-}
-
-interface CostBreakdown {
-  labor_cost: number;
-  parts_cost: number;
-  equipment_rental: number;
-  vendor_fees: number;
-  additional_charges: number;
-  total_cost: number;
-}
-
-interface Technician {
-  id: number;
-  name: string;
-  specialization: string[];
-  skill_level: 'junior' | 'senior' | 'expert';
-  phone: string;
-  email: string;
-  efficiency_rating: number;
-}
-
-// Mock data for demonstration
-const MOCK_MAINTENANCE_REQUEST: MaintenanceRequest = {
-  id: 1,
-  ticket_number: 'MNT-2024-001',
-  title: 'Air conditioning unit making loud noise',
-  description: 'AC unit in room 1205 making unusual grinding noise and not cooling effectively. Guest complaints received. Unit appears to be operational but inefficient. The noise is particularly loud during night hours affecting guest comfort.',
-  category: 'hvac',
-  priority: 'high',
-  status: 'in_progress',
-  location: 'Room 1205',
-  room_number: '1205',
-  floor: 12,
-  building_section: 'Main Tower',
-  reported_by: 'Sari Wulandari',
-  reporter_role: 'Housekeeper',
-  reporter_contact: '+62-812-3456-1234',
-  created_at: '2024-08-25T08:30:00Z',
-  updated_at: '2024-08-25T09:15:00Z',
-  assigned_to: 'Ahmad Technical',
-  technician_id: 1,
-  estimated_completion: '2024-08-25T14:00:00Z',
-  estimated_cost: 750000,
-  actual_cost: 650000,
-  parts_needed: ['AC Filter', 'Lubricant', 'Belt replacement', 'Refrigerant'],
-  parts_cost: 350000,
-  labor_hours: 4,
-  labor_cost: 300000,
-  guest_impact: true,
-  safety_issue: false,
-  warranty_covered: true,
-  vendor_required: false,
-  notes: 'Guest has been relocated temporarily. Priority due to VIP guest arrival tonight. Room must be ready by 6 PM.',
-  photos: ['/maintenance/ac-unit-1205-1.jpg', '/maintenance/ac-unit-1205-2.jpg', '/maintenance/ac-unit-1205-3.jpg'],
-  completion_notes: '',
-  preventive_maintenance: false,
-  work_log: [
-    {
-      id: 1,
-      timestamp: '2024-08-25T08:30:00Z',
-      technician: 'System',
-      action: 'Created',
-      description: 'Maintenance request created by housekeeper',
-      status_change: 'open'
-    },
-    {
-      id: 2,
-      timestamp: '2024-08-25T09:15:00Z',
-      technician: 'Maintenance Supervisor',
-      action: 'Assigned',
-      description: 'Assigned to Ahmad Technical - HVAC specialist',
-      status_change: 'assigned'
-    },
-    {
-      id: 3,
-      timestamp: '2024-08-25T10:30:00Z',
-      technician: 'Ahmad Technical',
-      action: 'Started Work',
-      description: 'Arrived on site, initial inspection completed. Identified worn belt and clogged filter.',
-      time_spent: 30,
-      status_change: 'in_progress',
-      photos: ['/maintenance/inspection-1205-1.jpg']
-    },
-    {
-      id: 4,
-      timestamp: '2024-08-25T11:45:00Z',
-      technician: 'Ahmad Technical',
-      action: 'Progress Update',
-      description: 'Replaced AC filter and cleaned evaporator coils. Ordering new belt.',
-      time_spent: 75
-    }
-  ],
-  parts_used: [
-    {
-      id: 1,
-      part_name: 'HVAC Air Filter (24x24x1)',
-      quantity_used: 1,
-      unit_cost: 85000,
-      supplier: 'Jakarta HVAC Supply',
-      installation_date: '2024-08-25T11:00:00Z',
-      warranty_period: '3 months',
-      notes: 'Heavy dust accumulation, recommend monthly replacement'
-    },
-    {
-      id: 2,
-      part_name: 'Evaporator Coil Cleaner',
-      quantity_used: 2,
-      unit_cost: 45000,
-      supplier: 'Jakarta HVAC Supply',
-      installation_date: '2024-08-25T11:30:00Z',
-      notes: 'Used for deep cleaning'
-    }
-  ],
-  cost_breakdown: {
-    labor_cost: 300000,
-    parts_cost: 175000,
-    equipment_rental: 0,
-    vendor_fees: 0,
-    additional_charges: 0,
-    total_cost: 475000
-  }
-};
-
-const MOCK_TECHNICIAN: Technician = {
-  id: 1,
-  name: 'Ahmad Technical',
-  specialization: ['HVAC', 'General Maintenance'],
-  skill_level: 'senior',
-  phone: '+62-812-1111-2222',
-  email: 'ahmad.tech@hotel.com',
-  efficiency_rating: 4.7
-};
 
 const MaintenanceDetailPage = () => {
   const params = useParams();
   const requestId = params.id as string;
   const [request, setRequest] = useState<MaintenanceRequest | null>(null);
-  const [technician, setTechnician] = useState<Technician | null>(null);
-  const [activeTab, setActiveTab] = useState<'details' | 'work-log' | 'parts' | 'costs'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'work-log'>('details');
   const [newLogEntry, setNewLogEntry] = useState('');
-  const [workTimer, setWorkTimer] = useState<{ started: boolean; elapsed: number }>({ started: false, elapsed: 0 });
+  const [showAssignTechnicianDialog, setShowAssignTechnicianDialog] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [warehouseItems, setWarehouseItems] = useState<any[]>([]);
+
+  // Form data for editing
+  const [formData, setFormData] = useState({
+    assigned_technician: '',
+    estimated_completion: '',
+    technician_notes: '',
+    category: '',
+    priority: '',
+  });
+
+  // Parts management
+  const [parts, setParts] = useState<Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    source: 'warehouse' | 'vendor';
+    vendor_name?: string;
+    warehouse_item_id?: number;
+    available_stock?: number;
+  }>>([]);
+  const [showAddPartDialog, setShowAddPartDialog] = useState(false);
+  const [newPart, setNewPart] = useState({
+    name: '',
+    quantity: 1,
+    source: 'warehouse' as 'warehouse' | 'vendor',
+    vendor_name: '',
+    warehouse_item_id: null as number | null
+  });
 
   useEffect(() => {
-    // In real application, fetch data based on requestId
-    setRequest(MOCK_MAINTENANCE_REQUEST);
-    setTechnician(MOCK_TECHNICIAN);
+    const fetchMaintenanceRequest = async () => {
+      try {
+        let endpoint: string;
+
+        // Check if this is a complaint (ID starts with "CMP" or "CPL")
+        if (requestId.startsWith('CMP') || requestId.startsWith('CPL')) {
+          endpoint = `hotel/maintenance-requests/complaint/${requestId}/`;
+        } else {
+          endpoint = `hotel/maintenance-requests/${requestId}/`;
+        }
+
+        console.log('Fetching from endpoint:', buildApiUrl(endpoint));
+        const response = await fetch(buildApiUrl(endpoint));
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Received data:', data);
+          setRequest(data);
+          // If technician data is available in the response, set it
+          // Otherwise, you might need a separate API call to fetch technician details
+        } else {
+          const errorText = await response.text();
+          console.error('Failed to fetch maintenance request. Status:', response.status, 'Response:', errorText);
+        }
+      } catch (error) {
+        console.error('Error fetching maintenance request:', error);
+      }
+    };
+
+    fetchMaintenanceRequest();
   }, [requestId]);
 
+  // Fetch warehouse items
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (workTimer.started) {
-      interval = setInterval(() => {
-        setWorkTimer(prev => ({ ...prev, elapsed: prev.elapsed + 1 }));
-      }, 1000);
+    const fetchWarehouseItems = async () => {
+      try {
+        const response = await fetch(buildApiUrl('hotel/warehouse-items/?is_active=true'));
+        if (response.ok) {
+          const data = await response.json();
+          setWarehouseItems(data);
+        }
+      } catch (error) {
+        console.error('Error fetching warehouse items:', error);
+      }
+    };
+
+    fetchWarehouseItems();
+  }, []);
+
+  // Populate form data when request is loaded
+  useEffect(() => {
+    if (request) {
+      setFormData({
+        assigned_technician: request.assigned_technician || '',
+        estimated_completion: request.estimated_completion || '',
+        technician_notes: request.technician_notes || '',
+        category: request.category || '',
+        priority: request.priority || '',
+      });
+
+      // Load existing parts if any
+      if (request.parts_needed && request.parts_needed.length > 0) {
+        setParts(request.parts_needed.map((part, index) => ({
+          id: `part-${index}`,
+          name: part,
+          quantity: 1,
+          source: 'warehouse' as 'warehouse' | 'vendor',
+        })));
+      }
     }
-    return () => clearInterval(interval);
-  }, [workTimer.started]);
+  }, [request]);
+
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -273,32 +226,29 @@ const MaintenanceDetailPage = () => {
     }).format(amount);
   };
 
-  const formatTimer = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open': return 'bg-blue-100 text-blue-800';
-      case 'assigned': return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress': return 'bg-orange-100 text-orange-800';
-      case 'on_hold': return 'bg-purple-100 text-purple-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
+    const normalizedStatus = status?.toUpperCase();
+    switch (normalizedStatus) {
+      case 'SUBMITTED': return 'bg-blue-100 text-blue-800';
+      case 'OPEN': return 'bg-blue-100 text-blue-800';
+      case 'ACKNOWLEDGED': return 'bg-yellow-100 text-yellow-800';
+      case 'ASSIGNED': return 'bg-yellow-100 text-yellow-800';
+      case 'IN_PROGRESS': return 'bg-orange-100 text-orange-800';
+      case 'ON_HOLD': return 'bg-purple-100 text-purple-800';
+      case 'COMPLETED': return 'bg-green-100 text-green-800';
+      case 'CANCELLED': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'low': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'emergency': return 'bg-red-200 text-red-900';
+    const normalizedPriority = priority?.toUpperCase();
+    switch (normalizedPriority) {
+      case 'LOW': return 'bg-green-100 text-green-800';
+      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
+      case 'HIGH': return 'bg-orange-100 text-orange-800';
+      case 'URGENT': return 'bg-red-100 text-red-800';
+      case 'EMERGENCY': return 'bg-red-200 text-red-900';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -334,62 +284,199 @@ const MaintenanceDetailPage = () => {
   };
 
 
-  const handleAddLogEntry = () => {
-    if (newLogEntry.trim() && request && technician) {
-      const newEntry: WorkLogEntry = {
-        id: request.work_log.length + 1,
-        timestamp: new Date().toISOString(),
-        technician: technician.name,
-        action: 'Progress Update',
-        description: newLogEntry,
-        time_spent: workTimer.elapsed / 60
-      };
-      
-      setRequest({
-        ...request,
-        work_log: [...request.work_log, newEntry]
+  const handleAddLogEntry = async () => {
+    if (!newLogEntry.trim() || !request) {
+      alert('Please enter a log entry');
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      const { getCsrfToken } = await import('@/lib/config');
+      const csrfToken = getCsrfToken();
+
+      const isComplaint = requestId.startsWith('CMP') || requestId.startsWith('CPL');
+      let endpoint: string;
+
+      if (isComplaint) {
+        endpoint = `hotel/complaints/${request.complaint_id}/`;
+      } else {
+        endpoint = `hotel/maintenance-requests/${requestId}/`;
+      }
+
+      // Append new log entry to existing notes
+      const timestamp = new Date().toLocaleString();
+      const engineer = request.assigned_technician || 'Engineer';
+      const logEntry = `[${timestamp}] ${engineer}: ${newLogEntry}`;
+      const updatedNotes = request.technician_notes
+        ? `${request.technician_notes}\n\n${logEntry}`
+        : logEntry;
+
+      const response = await fetch(buildApiUrl(endpoint), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ technician_notes: updatedNotes }),
       });
-      setNewLogEntry('');
-      setWorkTimer({ started: false, elapsed: 0 });
+
+      if (response.ok) {
+        const updatedData = await response.json();
+        setRequest(updatedData);
+        setNewLogEntry('');
+        alert('Work log entry added successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to add log entry');
+      }
+    } catch (error) {
+      console.error('Error adding log entry:', error);
+      alert('Failed to add log entry. Please try again.');
+    } finally {
+      setFormLoading(false);
     }
   };
 
-  const toggleWorkTimer = () => {
-    setWorkTimer(prev => ({ ...prev, started: !prev.started }));
+
+  const handleAddPart = () => {
+    if (newPart.source === 'warehouse') {
+      if (!newPart.warehouse_item_id) {
+        alert('Please select an item from warehouse');
+        return;
+      }
+
+      // Find the warehouse item to get stock info
+      const warehouseItem = warehouseItems.find(item => item.id === newPart.warehouse_item_id);
+      if (warehouseItem && newPart.quantity > warehouseItem.quantity) {
+        alert(`Insufficient stock! Available: ${warehouseItem.quantity}`);
+        return;
+      }
+
+      setParts([...parts, {
+        id: `part-${Date.now()}`,
+        name: warehouseItem?.name || newPart.name,
+        quantity: newPart.quantity,
+        source: 'warehouse',
+        warehouse_item_id: newPart.warehouse_item_id,
+        available_stock: warehouseItem?.quantity
+      }]);
+    } else {
+      // Vendor part
+      if (!newPart.name) {
+        alert('Please enter part name');
+        return;
+      }
+      if (!newPart.vendor_name) {
+        alert('Please enter vendor name');
+        return;
+      }
+
+      setParts([...parts, {
+        id: `part-${Date.now()}`,
+        name: newPart.name,
+        quantity: newPart.quantity,
+        source: 'vendor',
+        vendor_name: newPart.vendor_name
+      }]);
+    }
+
+    setNewPart({
+      name: '',
+      quantity: 1,
+      source: 'warehouse',
+      vendor_name: '',
+      warehouse_item_id: null
+    });
+    setShowAddPartDialog(false);
   };
 
-  const resetWorkTimer = () => {
-    setWorkTimer({ started: false, elapsed: 0 });
+  const handleRemovePart = (partId: string) => {
+    setParts(parts.filter(p => p.id !== partId));
+  };
+
+  const handleUpdateRequest = async () => {
+    if (!request) return;
+
+    try {
+      setFormLoading(true);
+      const { getCsrfToken } = await import('@/lib/config');
+      const csrfToken = getCsrfToken();
+
+      const isComplaint = requestId.startsWith('CMP') || requestId.startsWith('CPL');
+      let endpoint: string;
+
+      if (isComplaint) {
+        endpoint = `hotel/complaints/${request.complaint_id}/`;
+      } else {
+        endpoint = `hotel/maintenance-requests/${requestId}/`;
+      }
+
+      const updateData: any = {};
+
+      if (formData.assigned_technician) updateData.assigned_technician = formData.assigned_technician;
+      if (formData.estimated_completion) updateData.estimated_completion = formData.estimated_completion;
+      if (formData.technician_notes) updateData.technician_notes = formData.technician_notes;
+      if (formData.category) updateData.category = formData.category;
+      if (formData.priority) updateData.priority = formData.priority;
+
+      // Include parts data
+      if (parts.length > 0) {
+        updateData.parts_needed = parts.map(p => `${p.name} (${p.quantity}x) - ${p.source === 'warehouse' ? 'Warehouse' : `Vendor: ${p.vendor_name}`}`);
+      }
+
+      const response = await fetch(buildApiUrl(endpoint), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify(updateData),
+      });
+
+      if (response.ok) {
+        const updatedData = await response.json();
+        setRequest(updatedData);
+        alert('Request updated successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to update request');
+      }
+    } catch (error) {
+      console.error('Error updating request:', error);
+      alert('Failed to update request. Please try again.');
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   if (!request) {
     return (
-      <AppLayout>
+      <SupportLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <Wrench01Icon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900">Loading request details...</h3>
           </div>
         </div>
-      </AppLayout>
+      </SupportLayout>
     );
   }
 
   return (
-    <AppLayout>
+    <SupportLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link 
-              href="/maintenance"
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ChevronLeftIcon className="h-4 w-4" />
-              <span className="text-sm font-medium">Back to Maintenance</span>
-            </Link>
-          </div>
-          <HeaderActions />
+          <Link
+            href="/support/maintenance"
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ChevronLeftIcon className="h-4 w-4" />
+            <span className="text-sm font-medium">Back to Maintenance</span>
+          </Link>
         </div>
 
         {/* Request Overview */}
@@ -397,37 +484,37 @@ const MaintenanceDetailPage = () => {
           <div className="p-6 bg-[#F87B1B] text-white">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-white">MNT-2024-001</h3>
+                <h3 className="text-xl font-bold text-white">{request.request_number || request.ticket_number || `REQ-${request.id}`}</h3>
                 <div className="text-sm text-gray-100 mt-1">
-                  assigned • high • Air conditioning unit making loud noise • HVAC • Room 1205 • Sari Wulandari • 8772h overdue
+                  {request.title}
                 </div>
               </div>
             </div>
           </div>
           
           <div className="p-4 bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Status & Priority */}
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3">Status & Priority</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Status:</span>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm text-gray-600 block mb-1">Status:</span>
                     <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
-                      {request.status.replace('_', ' ')}
+                      {request.status_display || request.status?.replace('_', ' ')}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Priority:</span>
+                  <div>
+                    <label className="text-sm text-gray-600 block mb-1">Priority:</label>
                     <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(request.priority)}`}>
-                      {request.priority}
+                      {request.priority_display || request.priority}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Category:</span>
+                  <div>
+                    <label className="text-sm text-gray-600 block mb-1">Category:</label>
                     <div className="flex items-center space-x-1">
-                      <div className="text-[#F87B1B]">{getCategoryIcon(request.category)}</div>
-                      <span className="text-sm text-gray-900">{getCategoryName(request.category)}</span>
+                      <div className="text-[#F87B1B]">{getCategoryIcon(request.category?.toLowerCase())}</div>
+                      <span className="text-sm text-gray-900">{request.category_display || getCategoryName(request.category?.toLowerCase())}</span>
                     </div>
                   </div>
                 </div>
@@ -437,16 +524,29 @@ const MaintenanceDetailPage = () => {
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3">Location & Impact</h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Location01Icon className="h-3 w-3 text-gray-400" />
-                    <span className="text-gray-600">Location:</span>
-                    <span className="text-gray-900">{request.location}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Building03Icon className="h-3 w-3 text-gray-400" />
-                    <span className="text-gray-600">Section:</span>
-                    <span className="text-gray-900">{request.building_section}</span>
-                  </div>
+                  {(request.location || request.room_number) && (
+                    <div className="flex items-center space-x-2">
+                      <Location01Icon className="h-3 w-3 text-gray-400" />
+                      <span className="text-gray-600">Location:</span>
+                      <span className="text-gray-900">
+                        {request.location || (request.room_number ? `Room ${request.room_number}` : 'N/A')}
+                      </span>
+                    </div>
+                  )}
+                  {request.building_section && (
+                    <div className="flex items-center space-x-2">
+                      <Building03Icon className="h-3 w-3 text-gray-400" />
+                      <span className="text-gray-600">Section:</span>
+                      <span className="text-gray-900">{request.building_section}</span>
+                    </div>
+                  )}
+                  {request.guest_name && (
+                    <div className="flex items-center space-x-2">
+                      <UserIcon className="h-3 w-3 text-gray-400" />
+                      <span className="text-gray-600">Guest:</span>
+                      <span className="text-gray-900">{request.guest_name}</span>
+                    </div>
+                  )}
                   {request.guest_impact && (
                     <div className="flex items-center space-x-2 p-2 bg-orange-50 border border-orange-200 rounded">
                       <Alert01Icon className="h-3 w-3 text-orange-600" />
@@ -467,160 +567,378 @@ const MaintenanceDetailPage = () => {
                 <h3 className="font-semibold text-gray-900 mb-3">Timeline</h3>
                 <div className="space-y-2 text-sm">
                   <div>
-                    <span className="text-gray-600">Created:</span>
-                    <div className="text-gray-900">{formatDateTime(request.created_at)}</div>
+                    <span className="text-gray-600">Requested:</span>
+                    <div className="text-gray-900">{formatDateTime(request.requested_date || request.created_at)}</div>
                   </div>
-                  {request.estimated_completion && (
+                  {request.acknowledged_date && (
                     <div>
-                      <span className="text-gray-600">Est. Completion:</span>
-                      <div className="text-gray-900">{formatDateTime(request.estimated_completion)}</div>
+                      <span className="text-gray-600">Acknowledged:</span>
+                      <div className="text-yellow-600">{formatDateTime(request.acknowledged_date)}</div>
                     </div>
                   )}
-                  {request.actual_completion && (
+                  {request.started_date && (
+                    <div>
+                      <span className="text-gray-600">Started:</span>
+                      <div className="text-orange-600">{formatDateTime(request.started_date)}</div>
+                    </div>
+                  )}
+                  {(request.completed_date || request.actual_completion) && (
                     <div>
                       <span className="text-gray-600">Completed:</span>
-                      <div className="text-green-600">{formatDateTime(request.actual_completion)}</div>
+                      <div className="text-green-600">{formatDateTime(request.completed_date || request.actual_completion!)}</div>
                     </div>
                   )}
-                  <div className="flex items-center space-x-2">
-                    <Clock01Icon className="h-3 w-3 text-gray-400" />
-                    <span className="text-gray-600">Est. Time:</span>
-                    <span className="text-gray-900">{request.labor_hours || 'TBD'}h</span>
+                  <div>
+                    <label className="text-gray-600 block">Est. Completion:</label>
+                    {request.estimated_completion ? (
+                      <div className="text-gray-900">{formatDateTime(request.estimated_completion)}</div>
+                    ) : (
+                      <div className="text-gray-500 text-xs">Not set</div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Cost Summary */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Cost Summary</h3>
-                <div className="space-y-2">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-[#F87B1B]">
-                      {request.cost_breakdown ? formatCurrency(request.cost_breakdown.total_cost) : formatCurrency(request.estimated_cost || 0)}
-                    </div>
-                    <div className="text-xs text-gray-600">{request.actual_cost ? 'Actual Cost' : 'Estimated Cost'}</div>
-                  </div>
-                  {request.warranty_covered && (
-                    <div className="text-center p-2 bg-green-50 border border-green-200 rounded">
-                      <UserCheckIcon className="h-4 w-4 text-green-600 mx-auto mb-1" />
-                      <span className="text-green-800 text-xs font-medium">Warranty Covered</span>
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
             
-            {/* Action Buttons */}
-            <div className="flex items-center justify-end space-x-2 mt-4 pt-4 border-t border-white/20">
-              <button className="bg-white/10 text-white px-4 py-2 text-sm font-medium rounded hover:bg-white/20 transition-colors">
-                View Details
+          </div>
+        </div>
+
+        {/* Assignment Summary - Shows what's assigned */}
+        <div className="bg-white border border-gray-200">
+          <div className="p-6 bg-[#F87B1B] text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white">Work Assignment</h3>
+                <p className="text-sm text-gray-100 mt-1">Engineer, parts, and work details</p>
+              </div>
+              <button
+                onClick={() => setShowAssignTechnicianDialog(true)}
+                className="px-4 py-2 bg-white text-[#F87B1B] text-sm font-medium rounded hover:bg-gray-100 transition-colors flex items-center space-x-2"
+              >
+                <PencilEdit02Icon className="h-4 w-4" />
+                <span>Update Assignment</span>
               </button>
-              <button className="bg-white text-[#F87B1B] px-4 py-2 text-sm font-medium rounded hover:bg-gray-100 transition-colors">
-                Update
-              </button>
+            </div>
+          </div>
+          <div className="p-6 bg-gray-50">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Assigned Engineer */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Assigned Engineer</h4>
+                {request.assigned_technician ? (
+                  <div className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <UserIcon className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{request.assigned_technician}</p>
+                      <p className="text-xs text-gray-600">Engineering Team</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded text-center">
+                    <p className="text-sm text-yellow-800">Not assigned yet</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Parts Summary */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Required Parts</h4>
+                {parts.length > 0 ? (
+                  <div className="p-3 bg-white border border-gray-200 rounded">
+                    <p className="text-sm text-gray-900 font-medium">{parts.length} part(s) needed</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {parts.filter(p => p.source === 'warehouse').length} from warehouse, {parts.filter(p => p.source === 'vendor').length} from vendor
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-100 border border-dashed border-gray-300 rounded text-center">
+                    <p className="text-sm text-gray-600">No parts specified</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Notes Summary */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Work Notes</h4>
+                {request.technician_notes ? (
+                  <div className="p-3 bg-white border border-gray-200 rounded">
+                    <p className="text-sm text-gray-700 line-clamp-3">{request.technician_notes}</p>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-100 border border-dashed border-gray-300 rounded text-center">
+                    <p className="text-sm text-gray-600">No notes added</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Assigned Technician & Work Timer */}
-        {technician && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Technician Info */}
-            <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#F87B1B] text-white">
-                <div className="flex items-center justify-between">
+        {/* Assignment Form Dialog */}
+        {showAssignTechnicianDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white max-w-2xl w-full rounded-lg max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200 bg-[#F87B1B] text-white">
+                <h3 className="text-xl font-bold">Update Work Assignment</h3>
+                <p className="text-sm text-gray-100 mt-1">Assign engineer and specify requirements</p>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Engineer Assignment */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Assign Engineer</label>
+                  <input
+                    type="text"
+                    value={formData.assigned_technician}
+                    onChange={(e) => setFormData({ ...formData, assigned_technician: e.target.value })}
+                    placeholder="Enter engineer name"
+                    className="w-full px-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#F87B1B] focus:border-[#F87B1B]"
+                  />
+                </div>
+
+                {/* Priority & Category */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-xl font-bold text-white">Assigned Technician</h3>
-                    <p className="text-sm text-gray-100 mt-1">Current technician working on this request</p>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Priority</label>
+                    <select
+                      value={formData.priority}
+                      onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-[#F87B1B] focus:border-[#F87B1B]"
+                    >
+                      <option value="LOW">Low</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HIGH">High</option>
+                      <option value="URGENT">Urgent</option>
+                    </select>
                   </div>
-                  <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Shield01Icon className="h-4 w-4 text-[#F87B1B]" />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Category</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-[#F87B1B] focus:border-[#F87B1B]"
+                    >
+                      <option value="HVAC">HVAC</option>
+                      <option value="Electrical">Electrical</option>
+                      <option value="Plumbing">Plumbing</option>
+                      <option value="Elevator">Elevator</option>
+                      <option value="IT/Network">IT/Network</option>
+                      <option value="General">General</option>
+                      <option value="Security">Security</option>
+                      <option value="Furniture">Furniture</option>
+                      <option value="Appliances">Appliances</option>
+                    </select>
                   </div>
+                </div>
+
+                {/* Parts & Materials */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-gray-900">Parts & Materials</label>
+                    <button
+                      onClick={() => setShowAddPartDialog(true)}
+                      className="flex items-center space-x-1 px-3 py-1.5 bg-[#F87B1B] text-white rounded text-sm hover:bg-[#E06A0A]"
+                    >
+                      <Add01Icon className="h-4 w-4" />
+                      <span>Add Part</span>
+                    </button>
+                  </div>
+
+                  {parts.length > 0 ? (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {parts.map((part) => (
+                        <div key={part.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded">
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">{part.name}</div>
+                            <div className="text-xs text-gray-600">
+                              Qty: {part.quantity} • {part.source === 'warehouse' ? 'Warehouse Stock' : `Vendor: ${part.vendor_name}`}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemovePart(part.id)}
+                            className="text-red-600 hover:text-red-800 p-1"
+                          >
+                            <CancelCircleIcon className="h-5 w-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-gray-50 border border-dashed border-gray-300 rounded text-center">
+                      <PackageIcon className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                      <p className="text-sm text-gray-600">No parts added</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Work Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Work Notes</label>
+                  <textarea
+                    value={formData.technician_notes}
+                    onChange={(e) => setFormData({ ...formData, technician_notes: e.target.value })}
+                    rows={4}
+                    placeholder="Add notes about the work to be performed, observations, etc."
+                    className="w-full px-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#F87B1B] focus:border-[#F87B1B]"
+                  />
+                </div>
+
+                {/* Estimated Completion */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Estimated Completion Date</label>
+                  <input
+                    type="datetime-local"
+                    value={formData.estimated_completion ? new Date(formData.estimated_completion).toISOString().slice(0, 16) : ''}
+                    onChange={(e) => setFormData({ ...formData, estimated_completion: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded text-sm focus:ring-[#F87B1B] focus:border-[#F87B1B]"
+                  />
                 </div>
               </div>
-              <div className="p-4 bg-gray-50">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <UserIcon className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900">{technician.name}</h4>
-                    <p className="text-sm text-gray-600">{technician.skill_level} level</p>
-                    <div className="flex items-center space-x-1 mt-1">
-                      <SparklesIcon className="h-3 w-3 text-yellow-400" />
-                      <span className="text-xs text-gray-600">{technician.efficiency_rating} rating</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center space-x-2">
-                    <Call02Icon className="h-3 w-3 text-gray-400" />
-                    <span className="text-sm text-gray-900">{technician.phone}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Mail01Icon className="h-3 w-3 text-gray-400" />
-                    <span className="text-sm text-gray-900">{technician.email}</span>
-                  </div>
-                </div>
-                
-                <div className="flex flex-wrap gap-1">
-                  {technician.specialization.map((spec, index) => (
-                    <span key={index} className="inline-block bg-blue-100 text-blue-800 px-2 py-1 text-xs rounded">
-                      {spec}
-                    </span>
-                  ))}
-                </div>
+
+              <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3 bg-gray-50">
+                <button
+                  onClick={() => setShowAssignTechnicianDialog(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-100"
+                  disabled={formLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handleUpdateRequest();
+                    setShowAssignTechnicianDialog(false);
+                  }}
+                  className="px-6 py-2 bg-[#F87B1B] text-white text-sm font-medium rounded hover:bg-[#E06A0A] disabled:opacity-50 flex items-center space-x-2"
+                  disabled={formLoading}
+                >
+                  {formLoading ? (
+                    <>
+                      <Loading03Icon className="h-4 w-4 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserCheckIcon className="h-4 w-4" />
+                      <span>Save Assignment</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Work Timer */}
-            <div className="bg-white border border-gray-200">
-              <div className="p-6 bg-[#F87B1B] text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Work Timer</h3>
-                    <p className="text-sm text-gray-100 mt-1">Track active work time on this request</p>
-                  </div>
-                  <div className="w-8 h-8 bg-white flex items-center justify-center">
-                    <Clock01Icon className="h-4 w-4 text-[#F87B1B]" />
-                  </div>
+        {/* Add Part Dialog */}
+        {showAddPartDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white max-w-md w-full rounded">
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900">Add Part/Material</h3>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                  <select
+                    value={newPart.source}
+                    onChange={(e) => setNewPart({ ...newPart, source: e.target.value as 'warehouse' | 'vendor', warehouse_item_id: null, name: '' })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-[#F87B1B] focus:border-[#F87B1B]"
+                  >
+                    <option value="warehouse">Warehouse Stock</option>
+                    <option value="vendor">External Vendor</option>
+                  </select>
+                </div>
+
+                {newPart.source === 'warehouse' ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Select Part from Warehouse</label>
+                      <select
+                        value={newPart.warehouse_item_id || ''}
+                        onChange={(e) => {
+                          const itemId = parseInt(e.target.value);
+                          const item = warehouseItems.find(i => i.id === itemId);
+                          setNewPart({ ...newPart, warehouse_item_id: itemId, name: item?.name || '' });
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-[#F87B1B] focus:border-[#F87B1B]"
+                      >
+                        <option value="">-- Select Item --</option>
+                        {warehouseItems.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name} ({item.code}) - Stock: {item.quantity} {item.unit_display}
+                            {item.is_low_stock && ' ⚠️ Low Stock'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {newPart.warehouse_item_id && (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+                        {(() => {
+                          const selectedItem = warehouseItems.find(i => i.id === newPart.warehouse_item_id);
+                          return selectedItem ? (
+                            <div className="text-sm">
+                              <p className="font-medium text-blue-900">Available Stock: {selectedItem.quantity} {selectedItem.unit_display}</p>
+                              <p className="text-blue-700 text-xs mt-1">Location: {selectedItem.location || 'N/A'}</p>
+                              {selectedItem.is_low_stock && (
+                                <p className="text-orange-600 text-xs mt-1">⚠️ Low stock - below minimum level</p>
+                              )}
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Part Name</label>
+                      <input
+                        type="text"
+                        value={newPart.name}
+                        onChange={(e) => setNewPart({ ...newPart, name: e.target.value })}
+                        placeholder="e.g., Special AC Compressor"
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-[#F87B1B] focus:border-[#F87B1B]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Vendor Name</label>
+                      <input
+                        type="text"
+                        value={newPart.vendor_name}
+                        onChange={(e) => setNewPart({ ...newPart, vendor_name: e.target.value })}
+                        placeholder="Enter vendor name"
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-[#F87B1B] focus:border-[#F87B1B]"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    value={newPart.quantity}
+                    onChange={(e) => setNewPart({ ...newPart, quantity: parseInt(e.target.value) || 1 })}
+                    min="1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-[#F87B1B] focus:border-[#F87B1B]"
+                  />
                 </div>
               </div>
-              <div className="p-4 bg-gray-50">
-                <div className="text-center mb-4">
-                  <div className="text-3xl font-mono font-bold text-[#F87B1B] mb-2">
-                    {formatTimer(workTimer.elapsed)}
-                  </div>
-                  <p className="text-sm text-gray-600">Active work time</p>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={toggleWorkTimer}
-                    className={`flex items-center justify-center space-x-1 px-3 py-2 text-sm font-medium rounded transition-colors ${
-                      workTimer.started 
-                        ? 'bg-red-600 text-white hover:bg-red-700' 
-                        : 'bg-green-600 text-white hover:bg-green-700'
-                    }`}
-                  >
-                    {workTimer.started ? <PackageIcon className="h-3 w-3" /> : <PackageIcon className="h-3 w-3" />}
-                    <span>{workTimer.started ? 'Pause' : 'Start'}</span>
-                  </button>
-                  <button
-                    onClick={resetWorkTimer}
-                    className="flex items-center justify-center space-x-1 bg-gray-600 text-white px-3 py-2 text-sm font-medium rounded hover:bg-gray-700 transition-colors"
-                  >
-                    <Loading03Icon className="h-3 w-3" />
-                    <span>Reset</span>
-                  </button>
-                  <button
-                    className="flex items-center justify-center space-x-1 bg-blue-600 text-white px-3 py-2 text-sm font-medium rounded hover:bg-blue-700 transition-colors"
-                  >
-                    <PackageIcon className="h-3 w-3" />
-                    <span>Log</span>
-                  </button>
-                </div>
+              <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3">
+                <button
+                  onClick={() => setShowAddPartDialog(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddPart}
+                  className="px-4 py-2 bg-[#F87B1B] text-white text-sm rounded hover:bg-[#E06A0A]"
+                >
+                  Add Part
+                </button>
               </div>
             </div>
           </div>
@@ -630,14 +948,12 @@ const MaintenanceDetailPage = () => {
         <div className="">
           <nav className="-mb-px flex space-x-8">
             {[
-              { id: 'details', name: 'Details', icon: File01Icon },
-              { id: 'work-log', name: 'Work Log', icon: UserCheckIcon },
-              { id: 'parts', name: 'Parts & Materials', icon: PackageIcon },
-              { id: 'costs', name: 'Cost Breakdown', icon: PieChartIcon }
+              { id: 'details', name: 'Details & Problem Description', icon: File01Icon },
+              { id: 'work-log', name: 'Work Log & History', icon: UserCheckIcon },
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as 'details' | 'work-log' | 'parts' | 'costs')}
+                onClick={() => setActiveTab(tab.id as 'details' | 'work-log')}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
                     ? 'border-[#F87B1B] text-[#F87B1B]'
@@ -700,31 +1016,37 @@ const MaintenanceDetailPage = () => {
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50">
-                  <div className="space-y-2">
-                    {request.parts_needed.map((part, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded">
-                        <div className="flex items-center space-x-2">
-                          <PackageIcon className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm text-gray-900">{part}</span>
+                  {request.parts_needed && request.parts_needed.length > 0 ? (
+                    <>
+                      <div className="space-y-2">
+                        {request.parts_needed.map((part, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded">
+                            <div className="flex items-center space-x-2">
+                              <PackageIcon className="h-4 w-4 text-gray-400" />
+                              <span className="text-sm text-gray-900">{part}</span>
+                            </div>
+                            <span className="text-xs text-gray-600">Required</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {request.parts_cost && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-gray-900">Estimated Parts Cost:</span>
+                            <span className="font-bold text-[#F87B1B]">{formatCurrency(request.parts_cost)}</span>
+                          </div>
                         </div>
-                        <span className="text-xs text-gray-600">Required</span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {request.parts_cost && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-gray-900">Estimated Parts Cost:</span>
-                        <span className="font-bold text-[#F87B1B]">{formatCurrency(request.parts_cost)}</span>
-                      </div>
-                    </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-600">No parts specified yet</p>
                   )}
                 </div>
               </div>
 
               {/* Request Photos */}
-              {request.photos.length > 0 && (
+              {request.photos && request.photos.length > 0 && (
                 <div className="lg:col-span-2 bg-white border border-gray-200">
                   <div className="p-6 bg-[#F87B1B] text-white">
                     <div className="flex items-center justify-between">
@@ -779,16 +1101,23 @@ const MaintenanceDetailPage = () => {
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
                     />
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-600">
-                        Timer: {formatTimer(workTimer.elapsed)}
-                      </div>
+                    <div className="flex items-center justify-end">
                       <button
                         onClick={handleAddLogEntry}
-                        disabled={!newLogEntry.trim()}
-                        className="bg-[#F87B1B] text-white px-4 py-2 text-sm font-medium rounded hover:bg-[#E66A0A] transition-colors disabled:bg-gray-300"
+                        disabled={!newLogEntry.trim() || formLoading}
+                        className="bg-[#F87B1B] text-white px-6 py-2 text-sm font-medium rounded hover:bg-[#E66A0A] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center space-x-2"
                       >
-                        Add Entry
+                        {formLoading ? (
+                          <>
+                            <Loading03Icon className="h-4 w-4 animate-spin" />
+                            <span>Adding...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Add01Icon className="h-4 w-4" />
+                            <span>Add Entry</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -800,7 +1129,7 @@ const MaintenanceDetailPage = () => {
                 <div className="p-6 bg-[#F87B1B] text-white">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-white">Work Log Timeline</h3>
+                      <h3 className="text-xl font-bold text-white">Work Log History</h3>
                       <p className="text-sm text-gray-100 mt-1">Complete history of work performed</p>
                     </div>
                     <div className="w-8 h-8 bg-white flex items-center justify-center">
@@ -810,44 +1139,61 @@ const MaintenanceDetailPage = () => {
                 </div>
                 <div className="p-4 bg-gray-50">
                   <div className="space-y-4">
-                    {request.work_log.map((entry) => (
-                      <div key={entry.id} className="flex space-x-4">
-                        <div className="flex-shrink-0">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <UserCheckIcon className="h-4 w-4 text-blue-600" />
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="bg-white p-4 border border-gray-200 rounded">
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <h4 className="font-medium text-gray-900">{entry.action}</h4>
-                                <p className="text-sm text-gray-600">by {entry.technician}</p>
+                    {request.technician_notes ? (
+                      <div className="space-y-3">
+                        {request.technician_notes.split('\n\n').map((entry, index) => {
+                          // Parse entry format: [timestamp] engineer: message
+                          const match = entry.match(/\[(.*?)\]\s*(.*?):\s*(.*)/s);
+                          if (match) {
+                            const [, timestamp, engineer, message] = match;
+                            return (
+                              <div key={index} className="flex space-x-4">
+                                <div className="flex-shrink-0">
+                                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <UserCheckIcon className="h-4 w-4 text-blue-600" />
+                                  </div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="bg-white p-4 border border-gray-200 rounded">
+                                    <div className="flex items-start justify-between mb-2">
+                                      <div>
+                                        <h4 className="font-medium text-gray-900">Work Update</h4>
+                                        <p className="text-sm text-gray-600">by {engineer}</p>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="text-sm text-gray-600">{timestamp}</div>
+                                      </div>
+                                    </div>
+                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{message.trim()}</p>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-right">
-                                <div className="text-sm text-gray-600">{formatDateTime(entry.timestamp)}</div>
-                                {entry.time_spent && (
-                                  <div className="text-xs text-gray-500">{Math.round(entry.time_spent)} min</div>
-                                )}
-                                {entry.status_change && (
-                                  <span className={`inline-block px-2 py-1 text-xs font-medium rounded mt-1 ${getStatusColor(entry.status_change)}`}>
-                                    {entry.status_change.replace('_', ' ')}
-                                  </span>
-                                )}
+                            );
+                          } else {
+                            // Fallback for non-formatted entries
+                            return (
+                              <div key={index} className="bg-white p-4 border border-gray-200 rounded">
+                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{entry}</p>
                               </div>
-                            </div>
-                            <p className="text-sm text-gray-700">{entry.description}</p>
-                          </div>
-                        </div>
+                            );
+                          }
+                        })}
                       </div>
-                    ))}
+                    ) : (
+                      <div className="text-center p-8 bg-gray-100 border border-dashed border-gray-300 rounded">
+                        <UserCheckIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                        <p className="text-sm text-gray-600">No work log entries yet</p>
+                        <p className="text-xs text-gray-500 mt-1">Add your first entry above to start tracking work</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {activeTab === 'parts' && (
+          {/* Removed parts and costs tabs - now handled in main form */}
+          {activeTab === 'parts-removed' && (
             <div className="space-y-6">
               {/* Parts Used */}
               <div className="bg-white border border-gray-200">
@@ -876,7 +1222,7 @@ const MaintenanceDetailPage = () => {
                         </tr>
                       </thead>
                       <tbody className="">
-                        {request.parts_used.map((part) => (
+                        {request.parts_used && request.parts_used.length > 0 ? request.parts_used.map((part) => (
                           <tr key={part.id} className="bg-white">
                             <td className="border border-gray-200 px-4 py-4">
                               <div>
@@ -897,7 +1243,13 @@ const MaintenanceDetailPage = () => {
                               {formatCurrency(part.unit_cost * part.quantity_used)}
                             </td>
                           </tr>
-                        ))}
+                        )) : (
+                          <tr>
+                            <td colSpan={6} className="border border-gray-200 px-4 py-8 text-center text-sm text-gray-600">
+                              No parts used yet
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -918,31 +1270,35 @@ const MaintenanceDetailPage = () => {
                   </div>
                 </div>
                 <div className="p-4 bg-gray-50">
-                  <div className="space-y-3">
-                    {request.parts_needed.map((part, index) => {
-                      const isUsed = request.parts_used.find(used => used.part_name.includes(part.split(' ')[0]));
-                      return (
-                        <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded">
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-3 h-3 rounded-full ${isUsed ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                            <span className="text-sm text-gray-900">{part}</span>
+                  {request.parts_needed && request.parts_needed.length > 0 ? (
+                    <div className="space-y-3">
+                      {request.parts_needed.map((part, index) => {
+                        const isUsed = request.parts_used?.find(used => used.part_name.includes(part.split(' ')[0]));
+                        return (
+                          <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded">
+                            <div className="flex items-center space-x-3">
+                              <div className={`w-3 h-3 rounded-full ${isUsed ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                              <span className="text-sm text-gray-900">{part}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className={`text-xs px-2 py-1 rounded ${isUsed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                {isUsed ? 'Used' : 'Pending'}
+                              </span>
+                              <span className="text-xs text-gray-600">Stock: 15</span>
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`text-xs px-2 py-1 rounded ${isUsed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                              {isUsed ? 'Used' : 'Pending'}
-                            </span>
-                            <span className="text-xs text-gray-600">Stock: 15</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600">No parts inventory to track</p>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {activeTab === 'costs' && request.cost_breakdown && (
+          {activeTab === 'costs-removed' && request.cost_breakdown && (
             <div className="space-y-6">
               {/* Cost Breakdown */}
               <div className="bg-white border border-gray-200">
@@ -1075,7 +1431,7 @@ const MaintenanceDetailPage = () => {
         </div>
 
       </div>
-    </AppLayout>
+    </SupportLayout>
   );
 };
 
