@@ -19,7 +19,7 @@ try:
     from .views.warehouse import PurchaseOrderViewSet, PurchaseOrderItemViewSet, StockMovementViewSet
     from .views.stock_opname import StockOpnameViewSet, StockOpnameItemViewSet
     from .views.audit import WarehouseAuditLogViewSet
-    from .views.maintenance import MaintenanceRequestViewSet, MaintenanceTechnicianViewSet
+    from .views.maintenance import MaintenanceRequestViewSet, MaintenanceTechnicianViewSet, WarehouseItemViewSet, MaintenancePartUsedViewSet
     from .views.settings import HotelSettingsViewSet
     from .views.sidebar_counts import sidebar_counts
     from .views.support_reports import support_analytics
@@ -39,6 +39,7 @@ try:
     from .views.lost_found import LostAndFoundViewSet
     from .views.wake_up_call import WakeUpCallViewSet
     from .views.department_inventory import DepartmentInventoryViewSet
+    from .views.license import validate_license, get_license_status
     LEGACY_VIEWS = True
 except ImportError:
     LEGACY_VIEWS = False
@@ -73,6 +74,8 @@ if LEGACY_VIEWS:
     router.register(r'amenity-categories', AmenityCategoryViewSet, basename='hotel-amenity-categories')
     router.register(r'maintenance-requests', MaintenanceRequestViewSet, basename='hotel-maintenance-requests')
     router.register(r'maintenance-technicians', MaintenanceTechnicianViewSet, basename='hotel-maintenance-technicians')
+    router.register(r'warehouse-items', WarehouseItemViewSet, basename='hotel-warehouse-items')
+    router.register(r'maintenance-parts-used', MaintenancePartUsedViewSet, basename='hotel-maintenance-parts-used')
     router.register(r'settings', HotelSettingsViewSet, basename='hotel-settings')
     router.register(r'vouchers', VoucherViewSet, basename='hotel-vouchers')
     router.register(r'discounts', DiscountViewSet, basename='hotel-discounts')
@@ -98,6 +101,13 @@ urlpatterns = [
     path('system/stats/', system_stats, name='system-stats'),
     path('system/processes/', process_list, name='process-list'),
 ]
+
+# Add license validation endpoints if available
+if LEGACY_VIEWS:
+    urlpatterns += [
+        path('validate-license/', validate_license, name='validate-license'),
+        path('license-status/', get_license_status, name='license-status'),
+    ]
 
 # Add legacy URL patterns if views are available
 if LEGACY_VIEWS:
