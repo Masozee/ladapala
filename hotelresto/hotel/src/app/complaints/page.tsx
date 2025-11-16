@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import Link from 'next/link';
 import {
   Search02Icon,
@@ -129,7 +129,7 @@ interface ComplaintsResponse {
 // API functions
 const fetchComplaints = async (): Promise<ComplaintsResponse> => {
   try {
-    const response = await fetch(buildApiUrl('hotel/complaints/'));
+    const response = await apiFetch('hotel/complaints/');
     if (!response.ok) {
       if (response.status === 401) {
         throw new Error('Authentication required');
@@ -222,14 +222,14 @@ const ComplaintsPage = () => {
       const loadFormData = async () => {
         try {
           // Load guests
-          const guestsResponse = await fetch(buildApiUrl('guests/'));
+          const guestsResponse = await apiFetch('guests/');
           if (guestsResponse.ok) {
             const guestsData = await guestsResponse.json();
             setGuests(guestsData.results || []);
           }
 
           // Load rooms
-          const roomsResponse = await fetch(buildApiUrl('rooms/'));
+          const roomsResponse = await apiFetch('rooms/');
           if (roomsResponse.ok) {
             const roomsData = await roomsResponse.json();
             setRooms(roomsData.results || []);
@@ -273,7 +273,7 @@ const ComplaintsPage = () => {
 
     try {
       // First, create the complaint
-      const response = await fetch(buildApiUrl('hotel/complaints/'), {
+      const response = await apiFetch('hotel/complaints/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -296,7 +296,7 @@ const ComplaintsPage = () => {
           imageFormData.append('image', image);
           imageFormData.append('complaint', newComplaint.id.toString());
 
-          await fetch(buildApiUrl('hotel/complaint-images/'), {
+          await apiFetch('hotel/complaint-images/', {
             method: 'POST',
             body: imageFormData
           });
@@ -333,7 +333,7 @@ const ComplaintsPage = () => {
     if (showAssignStaffDialog) {
       const loadStaff = async () => {
         try {
-          const response = await fetch(buildApiUrl('user/users/'), {
+          const response = await apiFetch('user/users/', {
             credentials: 'include',
           });
           if (response.ok) {

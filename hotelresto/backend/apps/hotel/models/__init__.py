@@ -10,7 +10,7 @@ from .checkins import CheckIn
 from .calendars import Holiday, CalendarEvent
 from .inventory import InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, StockOpname, StockOpnameItem, DepartmentInventory
 from .supplier import Supplier
-from .maintenance import MaintenanceRequest, MaintenanceTechnician
+from .maintenance import MaintenanceRequest, MaintenanceTechnician, WarehouseItem, MaintenancePartUsed
 from .housekeeping import HousekeepingTask, AmenityUsage, CleaningTemplate, CleaningTemplateItem
 from .financial import FinancialTransaction, Invoice, InvoiceItem
 from .amenities import AmenityRequest, AmenityCategory
@@ -26,7 +26,7 @@ __all__ = [
     'RoomType', 'Room', 'RoomTypeImage', 'Guest', 'Reservation', 'Payment', 'VoucherUsage', 'AdditionalCharge', 'Expense',
     'Complaint', 'ComplaintImage', 'CheckIn', 'Holiday', 'CalendarEvent', 'InventoryItem',
     'PurchaseOrder', 'PurchaseOrderItem', 'StockMovement', 'StockOpname', 'StockOpnameItem', 'DepartmentInventory', 'Supplier',
-    'MaintenanceRequest', 'MaintenanceTechnician', 'HousekeepingTask', 'AmenityUsage',
+    'MaintenanceRequest', 'MaintenanceTechnician', 'WarehouseItem', 'MaintenancePartUsed', 'HousekeepingTask', 'AmenityUsage',
     'CleaningTemplate', 'CleaningTemplateItem',
     'FinancialTransaction', 'Invoice', 'InvoiceItem', 'AmenityRequest', 'AmenityCategory', 'HotelSettings',
     'EventBooking', 'EventPackage', 'FoodPackage', 'EventPayment', 'EventAddOn',

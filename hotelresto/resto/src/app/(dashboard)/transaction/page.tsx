@@ -24,12 +24,9 @@ export default function TransactionPage() {
   const [activeTab, setActiveTab] = useState("payment")
   const [pendingOrders, setPendingOrders] = useState<Order[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "qris" | "room_charge">("cash")
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "qris">("cash")
   const [cashAmount, setCashAmount] = useState("")
   const [customerName, setCustomerName] = useState("")
-  const [roomNumber, setRoomNumber] = useState("")
-  const [roomGuest, setRoomGuest] = useState<{guest_name: string, reservation_id: number} | null>(null)
-  const [validatingRoom, setValidatingRoom] = useState(false)
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false)
   const [loading, setLoading] = useState(true)
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
@@ -398,46 +395,6 @@ export default function TransactionPage() {
     }
   }
 
-  // Validate room number for room charge
-  const handleValidateRoom = async () => {
-    if (!roomNumber.trim()) {
-      alert("Nomor kamar harus diisi!")
-      return
-    }
-
-    setValidatingRoom(true)
-    try {
-      const response = await fetch('http://localhost:8000/api/restaurant/payments/validate-room/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ room_number: roomNumber })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        alert(data.error || 'Gagal memvalidasi nomor kamar')
-        setRoomGuest(null)
-        return
-      }
-
-      setRoomGuest({
-        guest_name: data.guest_name,
-        reservation_id: data.reservation_id
-      })
-      alert(`✓ Kamar valid! Tamu: ${data.guest_name}`)
-    } catch (error) {
-      console.error('Error validating room:', error)
-      alert('Gagal memvalidasi nomor kamar')
-      setRoomGuest(null)
-    } finally {
-      setValidatingRoom(false)
-    }
-  }
-
   // Process payment
   const handlePayment = async () => {
     if (!selectedOrder) {
@@ -447,11 +404,6 @@ export default function TransactionPage() {
 
     if (paymentMethod === "cash" && cashReceived < total) {
       alert("Uang tidak cukup!")
-      return
-    }
-
-    if (paymentMethod === "room_charge" && !roomGuest) {
-      alert("Validasi nomor kamar terlebih dahulu!")
       return
     }
 
@@ -471,23 +423,12 @@ export default function TransactionPage() {
       // Backend automatically updates order status when payment is COMPLETED
       // Map QRIS to MOBILE for backend
       const backendPaymentMethod = paymentMethod === 'qris' ? 'MOBILE' : paymentMethod.toUpperCase()
-
-      const paymentData: any = {
+      await api.createPayment({
         order: selectedOrder.id!,
         amount: total.toString(),
-        payment_method: backendPaymentMethod as 'CASH' | 'CARD' | 'MOBILE' | 'ROOM_CHARGE',
+        payment_method: backendPaymentMethod as 'CASH' | 'CARD' | 'MOBILE',
         status: 'COMPLETED'
-      }
-
-      // Add room charge fields if payment is room charge
-      if (paymentMethod === 'room_charge' && roomGuest) {
-        paymentData.is_room_charge = true
-        paymentData.room_number = roomNumber
-        paymentData.guest_name = roomGuest.guest_name
-        paymentData.hotel_reservation_id = roomGuest.reservation_id
-      }
-
-      await api.createPayment(paymentData)
+      })
 
       // Prepare and trigger receipt printing (if enabled in settings)
       if (printReceipts) {
@@ -891,7 +832,7 @@ export default function TransactionPage() {
         {/* Payment Methods */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold mb-3">Metode Pembayaran</h3>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <Button
               variant={paymentMethod === "cash" ? "default" : "outline"}
               onClick={() => setPaymentMethod("cash")}
@@ -915,17 +856,6 @@ export default function TransactionPage() {
             >
               <HugeiconsIcon icon={SmartPhone01Icon} size={32} strokeWidth={2} className="mb-1" />
               <span className="text-xs">QRIS</span>
-            </Button>
-            <Button
-              variant={paymentMethod === "room_charge" ? "default" : "outline"}
-              onClick={() => setPaymentMethod("room_charge")}
-              className="flex flex-col items-center p-3 h-auto rounded-lg"
-            >
-              <svg className="mb-1" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="16" rx="2"/>
-                <path d="M7 8h10M7 12h10M7 16h4"/>
-              </svg>
-              <span className="text-xs">Kamar</span>
             </Button>
           </div>
         </div>
@@ -1074,56 +1004,6 @@ export default function TransactionPage() {
                 <p className="text-sm text-gray-600 mt-2">
                   Total: <strong>Rp {total.toLocaleString('id-ID')}</strong>
                 </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {paymentMethod === "room_charge" && (
-          <Card className="mb-4 rounded-lg border flex-1 shadow-none">
-            <CardContent className="p-4">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="roomNumber">Nomor Kamar</Label>
-                  <div className="flex gap-2 mt-1">
-                    <Input
-                      id="roomNumber"
-                      value={roomNumber}
-                      onChange={(e) => {
-                        setRoomNumber(e.target.value)
-                        setRoomGuest(null)
-                      }}
-                      placeholder="Contoh: 101"
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={handleValidateRoom}
-                      disabled={validatingRoom || !roomNumber.trim()}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      {validatingRoom ? 'Validasi...' : 'Cek'}
-                    </Button>
-                  </div>
-                </div>
-
-                {roomGuest && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm text-green-800">
-                      ✓ Kamar valid
-                    </p>
-                    <p className="text-sm font-semibold text-green-900 mt-1">
-                      Tamu: {roomGuest.guest_name}
-                    </p>
-                  </div>
-                )}
-
-                <div className="text-sm text-gray-600 mt-3">
-                  <p className="font-semibold mb-1">Tagihan:</p>
-                  <p>Total: <strong>Rp {total.toLocaleString('id-ID')}</strong></p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Tagihan akan dibebankan ke kamar hotel
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>

@@ -184,7 +184,8 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # Allow all origins for API access (development/testing)
-CORS_ALLOW_ALL_ORIGINS = True
+# NOTE: MUST be False when CORS_ALLOW_CREDENTIALS is True
+CORS_ALLOW_ALL_ORIGINS = False
 
 # Allow custom headers
 CORS_ALLOW_HEADERS = [
@@ -208,15 +209,20 @@ SESSION_COOKIE_SAMESITE = 'Lax'  # Lax works for same-site subdomains
 SESSION_COOKIE_SECURE = IS_PRODUCTION  # True in production (HTTPS), False in development
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_COOKIE_DOMAIN = '.kapulaga.net' if IS_PRODUCTION else None  # Share across subdomains in production
+# In development, None means cookies are same-origin only (not shared across ports)
+# In production, use '.kapulaga.net' for subdomain sharing
+SESSION_COOKIE_DOMAIN = '.kapulaga.net' if IS_PRODUCTION else None  # Same origin in development
 
 CSRF_COOKIE_SAMESITE = 'Lax'  # Lax works for same-site subdomains
 CSRF_COOKIE_SECURE = IS_PRODUCTION  # True in production (HTTPS), False in development
 CSRF_COOKIE_HTTPONLY = False  # Must be False for JS to read it
-CSRF_COOKIE_DOMAIN = '.kapulaga.net' if IS_PRODUCTION else None  # Share across subdomains in production
+# In development, None means cookies are same-origin only
+CSRF_COOKIE_DOMAIN = '.kapulaga.net' if IS_PRODUCTION else None  # Same origin in development
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
     "https://hotel.kapulaga.net",
     "http://hotel.kapulaga.net",
     "https://palermo.id.rapidplex.com",

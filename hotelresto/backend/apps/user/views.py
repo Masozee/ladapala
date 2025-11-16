@@ -137,6 +137,21 @@ def check_session(request):
                 } if employee.department else None
             }
 
+        # Get staff info if available (for restaurant)
+        staff_info = None
+        if hasattr(request.user, 'staff'):
+            staff = request.user.staff
+            staff_info = {
+                'id': staff.id,
+                'employee_id': staff.employee_id,
+                'role': staff.role,
+                'branch': {
+                    'id': staff.branch.id,
+                    'name': staff.branch.name
+                },
+                'is_active': staff.is_active,
+            }
+
         # Get access level based on department
         access_level = get_user_access_level(request.user)
 
@@ -151,9 +166,10 @@ def check_session(request):
                 'role': request.user.role,
                 'phone': request.user.phone,
                 'is_staff': request.user.is_staff,
-                'is_superuser': request.is_superuser,
+                'is_superuser': request.user.is_superuser,
             },
             'employee': employee_info,
+            'staff': staff_info,
             'access': access_level,
         })
     else:

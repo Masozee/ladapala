@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/restaurant/', include('apps.restaurant.urls')),  # Restaurant API endpoints
     path('api/warehouse/', include('apps.warehouse.urls')),  # Unified warehouse API endpoints
     path('api/', include('apps.hotel.urls_public')),  # Public hotel API endpoints
+    path('api/', include('apps.restaurant.urls')),  # Restaurant API endpoints (alias for /api/dashboard, etc.)
     path('api-auth/', include('rest_framework.urls')),
     # License validation endpoints (shared)
     path('api/validate-license/', validate_license, name='validate-license'),

@@ -52,6 +52,11 @@ class AuthenticationMiddleware:
         # For all other /api/ endpoints, require authentication
         if path.startswith('/api/'):
             if not request.user.is_authenticated:
+                # Debug logging
+                print(f"[AUTH MIDDLEWARE] Blocked: {path}")
+                print(f"[AUTH MIDDLEWARE] User authenticated: {request.user.is_authenticated}")
+                print(f"[AUTH MIDDLEWARE] User: {request.user}")
+                print(f"[AUTH MIDDLEWARE] Session key: {request.session.session_key}")
                 return JsonResponse({
                     'error': 'Authentication required',
                     'detail': 'You must be logged in to access this endpoint'

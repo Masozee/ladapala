@@ -6,8 +6,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from django.utils import timezone
 
-from ..models import MaintenanceRequest, MaintenanceTechnician, Complaint
-from ..serializers import MaintenanceRequestSerializer, MaintenanceTechnicianSerializer, ComplaintSerializer
+from ..models import MaintenanceRequest, MaintenanceTechnician, Complaint, WarehouseItem, MaintenancePartUsed
+from ..serializers import MaintenanceRequestSerializer, MaintenanceTechnicianSerializer, ComplaintSerializer, WarehouseItemSerializer, MaintenancePartUsedSerializer
 
 
 class MaintenanceRequestViewSet(viewsets.ModelViewSet):
@@ -273,3 +273,56 @@ class MaintenanceTechnicianViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class WarehouseItemViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing warehouse items"""
+    queryset = WarehouseItem.objects.all()
+    serializer_class = WarehouseItemSerializer
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['category', 'is_active']
+    search_fields = ['name', 'code', 'description']
+    ordering_fields = ['name', 'quantity', 'created_at']
+    ordering = ['name']
+
+    @action(detail=False, methods=['get'])
+    def low_stock(self, request):
+        """Get items that are low on stock"""
+        low_stock_items = [item for item in self.get_queryset() if item.is_low_stock]
+        serializer = self.get_serializer(low_stock_items, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def add_stock(self, request, pk=None):
+        """Add stock to warehouse item"""
+        item = self.get_object()
+        quantity = request.data.get('quantity', 0)
+
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                return Response(
+                    {'error': 'Quantity must be positive'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            item.add_stock(quantity)
+            serializer = self.get_serializer(item)
+            return Response(serializer.data)
+
+        except ValueError:
+            return Response(
+                {'error': 'Invalid quantity value'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class MaintenancePartUsedViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing parts used in maintenance"""
+    queryset = MaintenancePartUsed.objects.select_related('maintenance_request', 'warehouse_item')
+    serializer_class = MaintenancePartUsedSerializer
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['maintenance_request', 'source']
+    ordering = ['-used_at']

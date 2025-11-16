@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from ..models import (
     RoomType, Room, RoomTypeImage, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
     CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, Supplier,
-    MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
+    MaintenanceRequest, MaintenanceTechnician, WarehouseItem, MaintenancePartUsed, HousekeepingTask, AmenityUsage,
     FinancialTransaction, Invoice, InvoiceItem, AmenityRequest, AmenityCategory, HotelSettings,
     EventPackage, FoodPackage, EventBooking, EventPayment, EventAddOn, DepartmentInventory
 )
@@ -1237,6 +1237,36 @@ class MaintenanceTechnicianSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
+
+
+class WarehouseItemSerializer(serializers.ModelSerializer):
+    """Serializer for warehouse items"""
+    is_low_stock = serializers.ReadOnlyField()
+    unit_display = serializers.CharField(source='get_unit_display', read_only=True)
+
+    class Meta:
+        model = WarehouseItem
+        fields = [
+            'id', 'name', 'code', 'description', 'category', 'unit', 'unit_display',
+            'quantity', 'minimum_stock', 'unit_cost', 'location',
+            'is_active', 'is_low_stock', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'is_low_stock']
+
+
+class MaintenancePartUsedSerializer(serializers.ModelSerializer):
+    """Serializer for parts used in maintenance"""
+    warehouse_item_name = serializers.CharField(source='warehouse_item.name', read_only=True)
+    source_display = serializers.CharField(source='get_source_display', read_only=True)
+
+    class Meta:
+        model = MaintenancePartUsed
+        fields = [
+            'id', 'maintenance_request', 'warehouse_item', 'warehouse_item_name',
+            'part_name', 'quantity', 'source', 'source_display', 'vendor_name',
+            'unit_cost', 'total_cost', 'used_at', 'notes'
+        ]
+        read_only_fields = ['total_cost']
 
 
 class HotelSettingsSerializer(serializers.ModelSerializer):
