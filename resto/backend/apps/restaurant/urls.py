@@ -12,6 +12,7 @@ from .viewsets import (
     KitchenTicketViewSet, RestaurantSettingsViewSet
 )
 from .reports import ReportViewSet
+from .views.license import validate_license, get_license_status
 
 router = DefaultRouter()
 router.register(r'restaurants', RestaurantViewSet)
@@ -51,4 +52,7 @@ app_name = 'restaurant'
 
 urlpatterns = [
     path('', include(router.urls)),
+    # License validation endpoints
+    path('validate-license/', validate_license, name='validate-license'),
+    path('license-status/', get_license_status, name='license-status'),
 ]
