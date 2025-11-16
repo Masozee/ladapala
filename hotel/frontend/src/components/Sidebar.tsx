@@ -28,7 +28,8 @@ import {
   Shield01Icon,
   Home01Icon,
   UserIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  Archive03Icon
 } from '@/lib/icons';
 
 interface MenuItem {
@@ -78,6 +79,8 @@ const Sidebar = () => {
     { name: 'Room Status', icon: BedIcon, href: '/rooms' },
     { name: 'Complaints', icon: QuestionIcon, href: '/complaints', badge: uncompletedComplaintsCount > 0 ? uncompletedComplaintsCount.toString() : undefined },
     { name: 'Payments', icon: CreditCardIcon, href: '/payments' },
+    { name: 'Wake Up Calls', icon: Clock01Icon, href: '/frontline/wake-up-calls' },
+    { name: 'Lost & Found', icon: Archive03Icon, href: '/frontline/lost-and-found' },
   ];
 
   const bottomActions: MenuItem[] = [

@@ -64,6 +64,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Custom authentication middleware (must come after AuthenticationMiddleware)
+    'core.middleware.AuthenticationMiddleware',
+    'core.middleware.StaffRequiredMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -161,6 +164,8 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3001",  # Restaurant frontend
+    "http://127.0.0.1:3001",  # Restaurant frontend
     "https://hotel.kapulaga.net",
     "http://hotel.kapulaga.net",
     "https://palermo.id.rapidplex.com",
@@ -204,6 +209,8 @@ CSRF_COOKIE_DOMAIN = '.kapulaga.net' if IS_PRODUCTION else None  # Share across 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3001",  # Restaurant frontend
+    "http://127.0.0.1:3001",  # Restaurant frontend
     "https://hotel.kapulaga.net",
     "http://hotel.kapulaga.net",
     "https://palermo.id.rapidplex.com",

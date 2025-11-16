@@ -24,7 +24,8 @@ import {
   CircleArrowReload01Icon,
   SparklesIcon,
   PieChartIcon,
-  Alert01Icon
+  Alert01Icon,
+  Archive03Icon
 } from '@/lib/icons';
 
 interface MenuItem {
@@ -38,6 +39,7 @@ const OfficeSidebar = () => {
   const pathname = usePathname();
   const [housekeepingCount, setHousekeepingCount] = useState<number>(0);
   const [lowStockCount, setLowStockCount] = useState<number>(0);
+  const [lostFoundCount, setLostFoundCount] = useState<number>(0);
 
   // Fetch sidebar counts
   useEffect(() => {
@@ -51,11 +53,13 @@ const OfficeSidebar = () => {
           const data = await response.json();
           setHousekeepingCount(data.office_sidebar?.unfinished_housekeeping || 0);
           setLowStockCount(data.office_sidebar?.low_stock_items || 0);
+          setLostFoundCount(data.office_sidebar?.pending_lost_found || 0);
         }
       } catch (error) {
         console.error('Error fetching sidebar counts:', error);
         setHousekeepingCount(0);
         setLowStockCount(0);
+        setLostFoundCount(0);
       }
     };
 
@@ -79,6 +83,7 @@ const OfficeSidebar = () => {
     { name: 'Financial', icon: CreditCardIcon, href: '/office/financial' },
     { name: 'Promotions', icon: Alert01Icon, href: '/office/promotions' },
     { name: 'Warehouse', icon: PackageIcon, href: '/office/warehouse', badge: lowStockCount > 0 ? lowStockCount.toString() : undefined },
+    { name: 'Lost & Found', icon: Archive03Icon, href: '/office/lost-and-found', badge: lostFoundCount > 0 ? lostFoundCount.toString() : undefined },
     { name: 'Reports', icon: File01Icon, href: '/office/reports' },
   ];
 

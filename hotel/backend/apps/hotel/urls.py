@@ -36,6 +36,9 @@ try:
     from .views.analytics import dashboard_analytics, monthly_comparison
     from .views.financial import financial_overview, financial_transactions, financial_invoices
     from .views.occupancy import occupancy_analytics
+    from .views.lost_found import LostAndFoundViewSet
+    from .views.wake_up_call import WakeUpCallViewSet
+    from .views.department_inventory import DepartmentInventoryViewSet
     LEGACY_VIEWS = True
 except ImportError:
     LEGACY_VIEWS = False
@@ -84,6 +87,9 @@ if LEGACY_VIEWS:
     router.register(r'stock-opnames', StockOpnameViewSet, basename='hotel-stock-opnames')
     router.register(r'stock-opname-items', StockOpnameItemViewSet, basename='hotel-stock-opname-items')
     router.register(r'warehouse-audit', WarehouseAuditLogViewSet, basename='hotel-warehouse-audit')
+    router.register(r'lost-and-found', LostAndFoundViewSet, basename='hotel-lost-and-found')
+    router.register(r'wake-up-calls', WakeUpCallViewSet, basename='hotel-wake-up-calls')
+    router.register(r'department-inventory', DepartmentInventoryViewSet, basename='hotel-department-inventory')
 
 urlpatterns = [
     path('', include(router.urls)),

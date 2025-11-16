@@ -8,7 +8,7 @@ from .expenses import Expense
 from .complaints import Complaint, ComplaintImage
 from .checkins import CheckIn
 from .calendars import Holiday, CalendarEvent
-from .inventory import InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, StockOpname, StockOpnameItem
+from .inventory import InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, StockOpname, StockOpnameItem, DepartmentInventory
 from .supplier import Supplier
 from .maintenance import MaintenanceRequest, MaintenanceTechnician
 from .housekeeping import HousekeepingTask, AmenityUsage, CleaningTemplate, CleaningTemplateItem
@@ -18,16 +18,19 @@ from .settings import HotelSettings
 from .events import EventBooking, EventPackage, FoodPackage, EventPayment, EventAddOn
 from .audit import WarehouseAuditLog
 from .promotions import Voucher, Discount, LoyaltyProgram, GuestLoyaltyPoints, LoyaltyTransaction
+from .lost_found import LostAndFound
+from .wake_up_call import WakeUpCall
 
 # Make all models available for import
 __all__ = [
     'RoomType', 'Room', 'RoomTypeImage', 'Guest', 'Reservation', 'Payment', 'VoucherUsage', 'AdditionalCharge', 'Expense',
     'Complaint', 'ComplaintImage', 'CheckIn', 'Holiday', 'CalendarEvent', 'InventoryItem',
-    'PurchaseOrder', 'PurchaseOrderItem', 'StockMovement', 'StockOpname', 'StockOpnameItem', 'Supplier',
+    'PurchaseOrder', 'PurchaseOrderItem', 'StockMovement', 'StockOpname', 'StockOpnameItem', 'DepartmentInventory', 'Supplier',
     'MaintenanceRequest', 'MaintenanceTechnician', 'HousekeepingTask', 'AmenityUsage',
     'CleaningTemplate', 'CleaningTemplateItem',
     'FinancialTransaction', 'Invoice', 'InvoiceItem', 'AmenityRequest', 'AmenityCategory', 'HotelSettings',
     'EventBooking', 'EventPackage', 'FoodPackage', 'EventPayment', 'EventAddOn',
     'WarehouseAuditLog',
-    'Voucher', 'Discount', 'LoyaltyProgram', 'GuestLoyaltyPoints', 'LoyaltyTransaction'
+    'Voucher', 'Discount', 'LoyaltyProgram', 'GuestLoyaltyPoints', 'LoyaltyTransaction',
+    'LostAndFound', 'WakeUpCall'
 ]

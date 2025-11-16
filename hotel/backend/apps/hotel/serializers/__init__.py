@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from ..models import (
     RoomType, Room, RoomTypeImage, Guest, Reservation, Payment, AdditionalCharge, Complaint, ComplaintImage,
-    CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, Supplier,
+    CheckIn, Holiday, InventoryItem, PurchaseOrder, PurchaseOrderItem, StockMovement, DepartmentInventory, Supplier,
     MaintenanceRequest, MaintenanceTechnician, HousekeepingTask, AmenityUsage,
     FinancialTransaction, Invoice, InvoiceItem, AmenityRequest, AmenityCategory, HotelSettings,
     EventPackage, FoodPackage, EventBooking, EventPayment, EventAddOn
@@ -1190,8 +1190,36 @@ class EventBookingSerializer(serializers.ModelSerializer):
         else:
             return 'Belum Bayar'
 
+class DepartmentInventorySerializer(serializers.ModelSerializer):
+    """Serializer for department inventory buffers"""
+    inventory_item_name = serializers.CharField(source='inventory_item.name', read_only=True)
+    inventory_item_category = serializers.CharField(source='inventory_item.category.name', read_only=True)
+    unit_of_measurement = serializers.CharField(source='inventory_item.unit_of_measurement', read_only=True)
+    department_display = serializers.CharField(source='get_department_display', read_only=True)
+    stock_status = serializers.CharField(read_only=True)
+    is_low_stock = serializers.BooleanField(read_only=True)
+    suggested_restock_quantity = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = DepartmentInventory
+        fields = [
+            'id', 'department', 'department_display', 'inventory_item', 'inventory_item_name',
+            'inventory_item_category', 'unit_of_measurement', 'current_stock', 'min_stock',
+            'max_stock', 'location', 'last_restocked', 'is_active', 'stock_status',
+            'is_low_stock', 'suggested_restock_quantity', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'stock_status', 'is_low_stock',
+                           'suggested_restock_quantity', 'inventory_item_name',
+                           'inventory_item_category', 'unit_of_measurement', 'department_display']
+
+
 from .promotions import (
     VoucherSerializer, VoucherListSerializer, VoucherValidationSerializer,
     DiscountSerializer, LoyaltyProgramSerializer, GuestLoyaltyPointsSerializer,
     LoyaltyTransactionSerializer, PointsRedemptionSerializer, VoucherUsageSerializer
 )
+from .lost_found import (
+    LostAndFoundSerializer, LostAndFoundCreateSerializer, LostAndFoundUpdateStatusSerializer,
+    LostAndFoundListSerializer
+)
+from .wake_up_call import WakeUpCallSerializer, WakeUpCallCreateSerializer
