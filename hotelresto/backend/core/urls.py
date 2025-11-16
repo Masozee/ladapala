@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework import routers
+from views.license import validate_license, get_license_status
 
 router = routers.DefaultRouter()
 
@@ -30,6 +31,9 @@ urlpatterns = [
     path('api/warehouse/', include('apps.warehouse.urls')),  # Unified warehouse API endpoints
     path('api/', include('apps.hotel.urls_public')),  # Public hotel API endpoints
     path('api-auth/', include('rest_framework.urls')),
+    # License validation endpoints (shared)
+    path('api/validate-license/', validate_license, name='validate-license'),
+    path('api/license-status/', get_license_status, name='license-status'),
 ]
 
 # Serve media files during development
