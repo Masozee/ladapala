@@ -111,12 +111,27 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
             # Create amenity usage records
             for item in amenity_items:
                 try:
+                    from apps.hotel.models import DepartmentInventory
+
                     inventory_item = InventoryItem.objects.get(id=item['inventory_item'])
 
-                    # Check stock availability
-                    if inventory_item.current_stock < item['quantity_used']:
+                    # Check stock availability (department buffer first, then warehouse)
+                    try:
+                        dept_stock = DepartmentInventory.objects.get(
+                            department='HOUSEKEEPING',
+                            inventory_item=inventory_item,
+                            is_active=True
+                        )
+                        available_stock = dept_stock.current_stock
+                        stock_source = f'department buffer ({available_stock})'
+                    except DepartmentInventory.DoesNotExist:
+                        available_stock = inventory_item.current_stock
+                        stock_source = f'warehouse ({available_stock})'
+
+                    # Check if sufficient stock available
+                    if available_stock < item['quantity_used']:
                         return Response(
-                            {'error': f'Insufficient stock for {inventory_item.name}. Available: {inventory_item.current_stock}'},
+                            {'error': f'Insufficient stock for {inventory_item.name}. Available in {stock_source}: {available_stock}, Required: {item["quantity_used"]}'},
                             status=status.HTTP_400_BAD_REQUEST
                         )
 
@@ -224,13 +239,30 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
                  .annotate(avg_quantity=Avg('quantity_used'))\
                  .order_by('-avg_quantity')
 
+                from apps.hotel.models import DepartmentInventory
+
                 for usage in usage_aggregate:
+                    # Get department buffer stock if available
+                    try:
+                        dept_stock = DepartmentInventory.objects.get(
+                            department='HOUSEKEEPING',
+                            inventory_item_id=usage['inventory_item__id'],
+                            is_active=True
+                        )
+                        buffer_stock = float(dept_stock.current_stock)
+                        warehouse_stock = usage['inventory_item__current_stock']
+                    except DepartmentInventory.DoesNotExist:
+                        buffer_stock = 0
+                        warehouse_stock = usage['inventory_item__current_stock']
+
                     suggestions.append({
                         'inventory_item': usage['inventory_item__id'],
                         'name': usage['inventory_item__name'],
                         'category': usage['inventory_item__category__name'],
                         'suggested_quantity': round(usage['avg_quantity']),
-                        'current_stock': usage['inventory_item__current_stock'],
+                        'buffer_stock': buffer_stock,
+                        'warehouse_stock': warehouse_stock,
+                        'current_stock': usage['inventory_item__current_stock'],  # For backward compatibility
                         'unit': usage['inventory_item__unit_of_measurement'],
                         'reason': 'Based on previous usage for this room',
                         'is_optional': False
@@ -254,13 +286,30 @@ class HousekeepingTaskViewSet(viewsets.ModelViewSet):
                 ).prefetch_related('items__inventory_item__category').first()
 
             if template:
+                from apps.hotel.models import DepartmentInventory
+
                 for template_item in template.items.all():
+                    # Get department buffer stock if available
+                    try:
+                        dept_stock = DepartmentInventory.objects.get(
+                            department='HOUSEKEEPING',
+                            inventory_item=template_item.inventory_item,
+                            is_active=True
+                        )
+                        buffer_stock = float(dept_stock.current_stock)
+                        warehouse_stock = template_item.inventory_item.current_stock
+                    except DepartmentInventory.DoesNotExist:
+                        buffer_stock = 0
+                        warehouse_stock = template_item.inventory_item.current_stock
+
                     suggestions.append({
                         'inventory_item': template_item.inventory_item.id,
                         'name': template_item.inventory_item.name,
                         'category': template_item.inventory_item.category.name,
                         'suggested_quantity': template_item.quantity,
-                        'current_stock': template_item.inventory_item.current_stock,
+                        'buffer_stock': buffer_stock,
+                        'warehouse_stock': warehouse_stock,
+                        'current_stock': template_item.inventory_item.current_stock,  # For backward compatibility
                         'unit': template_item.inventory_item.unit_of_measurement,
                         'reason': f'From template: {template.name}',
                         'is_optional': template_item.is_optional,

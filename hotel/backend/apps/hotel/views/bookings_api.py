@@ -170,7 +170,8 @@ def reservations_api(request):
                 ] if reservation.room else [],
                 'special_requests': reservation.special_requests or '',
                 'notes': reservation.notes or '',
-                'can_cancel': reservation.status in ['PENDING', 'CONFIRMED']
+                'can_cancel': reservation.status in ['PENDING', 'CONFIRMED'],
+                'can_edit': reservation.status in ['PENDING', 'CONFIRMED']
             }
             
             reservations_data.append(reservation_data)
@@ -641,6 +642,7 @@ def reservation_detail_api(request, reservation_id):
             'transportation': [],  # Mock transportation
             'extras': [],  # Mock extras
             'can_cancel': reservation.status in ['PENDING', 'CONFIRMED'],
+            'can_edit': reservation.status in ['PENDING', 'CONFIRMED'],
             'booking_notes': reservation.notes or ''
         }
         

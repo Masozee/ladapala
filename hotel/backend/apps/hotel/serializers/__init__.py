@@ -303,6 +303,7 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     # Additional info
     can_cancel = serializers.SerializerMethodField()
+    can_edit = serializers.SerializerMethodField()
     total_rooms = serializers.SerializerMethodField()
 
     class Meta:
@@ -316,7 +317,7 @@ class ReservationSerializer(serializers.ModelSerializer):
             'total_amount', 'subtotal', 'taxes', 'service_charge',
             'additional_charges_total', 'additional_charges', 'grand_total',
             'deposit_amount', 'balance_due', 'total_paid', 'is_fully_paid',
-            'can_cancel', 'total_rooms', 'created_at', 'updated_at'
+            'can_cancel', 'can_edit', 'total_rooms', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'reservation_number', 'nights']
 
@@ -379,6 +380,10 @@ class ReservationSerializer(serializers.ModelSerializer):
         """Check if reservation can be cancelled"""
         return obj.status in ['PENDING', 'CONFIRMED']
 
+    def get_can_edit(self, obj):
+        """Check if reservation can be edited"""
+        return obj.status in ['PENDING', 'CONFIRMED']
+
     def get_total_rooms(self, obj):
         """Total number of rooms (currently always 1)"""
         return 1 if obj.room else 0
@@ -392,6 +397,19 @@ class ReservationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Check-out date must be after check-in date")
 
         return data
+
+    def update(self, instance, validated_data):
+        """Override update to allow editing only for certain statuses"""
+        # Allow editing for PENDING and CONFIRMED status only
+        editable_statuses = ['PENDING', 'CONFIRMED']
+
+        if instance.status not in editable_statuses:
+            raise serializers.ValidationError({
+                'status': f'Cannot edit reservation with status {instance.get_status_display()}. '
+                         f'Only reservations with status PENDING or CONFIRMED can be edited.'
+            })
+
+        return super().update(instance, validated_data)
 
 
 class AdditionalChargeSerializer(serializers.ModelSerializer):

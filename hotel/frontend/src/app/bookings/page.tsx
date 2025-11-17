@@ -72,7 +72,9 @@ interface Reservation {
   guest_name: string;
   room?: number;
   room_number?: string;
+  room_type?: number;
   room_type_name?: string;
+  room_type_details?: any;
   room_details?: RoomDetails;
   check_in_date: string;
   check_out_date: string;
@@ -97,6 +99,7 @@ interface Reservation {
   special_requests?: string;
   notes?: string;
   can_cancel: boolean;
+  can_edit?: boolean;
 }
 
 interface ReservationFilters {
@@ -164,6 +167,7 @@ const BookingsPage = () => {
   const [sortField, setSortField] = useState<string>('check_in_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showAddReservation, setShowAddReservation] = useState(false);
+  const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [wizardStep, setWizardStep] = useState(1);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
@@ -246,6 +250,7 @@ const BookingsPage = () => {
   const resetWizard = () => {
     setWizardStep(1);
     setShowAddReservation(false);
+    setEditingReservation(null);
     setAvailableRooms([]);
     setSelectedRoom(null);
     setFormData({
@@ -276,46 +281,73 @@ const BookingsPage = () => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Final validation
     if (!selectedRoom) {
       alert('Please select a room before submitting');
       return;
     }
-    
+
     if (!formData.guest.first_name || !formData.guest.last_name || !formData.guest.email || !formData.guest.phone || !formData.guest.date_of_birth || !formData.guest.id_number) {
       alert('Please fill in all required guest information (Name, Email, Call02Icon, Date of Birth, and ID Number)');
       return;
     }
-    
+
     if (!formData.check_in_date || !formData.check_out_date) {
       alert('Please select check-in and check-out dates');
       return;
     }
-    
+
     try {
       setLoading(true);
-      
-      // Prepare reservation with room TYPE (specific room will be assigned at check-in)
-      const reservationData = {
-        ...formData,
-        room_type: selectedRoom.id, // Send room type ID, not specific room
-      };
 
-      console.log('Creating reservation with data:', reservationData);
-      const newReservation = await createReservation(reservationData);
-      
-      // Refresh reservations list
-      await loadReservations(currentPage);
-      
-      // Reset form and close modal
-      resetWizard();
-      
-      alert('Reservation created successfully!');
-      
-    } catch (error) {
-      alert('Failed to create reservation. Please try again.');
-      console.error('Reservation creation error:', error);
+      if (editingReservation) {
+        // Update existing reservation
+        const updateData = {
+          check_in_date: formData.check_in_date,
+          check_out_date: formData.check_out_date,
+          adults: formData.adults,
+          children: formData.children,
+          booking_source: formData.booking_source,
+          special_requests: formData.special_requests,
+          notes: formData.notes,
+          room_type: selectedRoom.id,
+        };
+
+        console.log('Updating reservation with data:', updateData);
+        await updateReservation(editingReservation.reservation_number, updateData);
+
+        // Refresh reservations list
+        await loadReservations(currentPage);
+
+        // Reset form and close modal
+        resetWizard();
+        setEditingReservation(null);
+
+        alert('Reservation updated successfully!');
+      } else {
+        // Create new reservation
+        const reservationData = {
+          ...formData,
+          room_type: selectedRoom.id, // Send room type ID, not specific room
+        };
+
+        console.log('Creating reservation with data:', reservationData);
+        const newReservation = await createReservation(reservationData);
+
+        // Refresh reservations list
+        await loadReservations(currentPage);
+
+        // Reset form and close modal
+        resetWizard();
+
+        alert('Reservation created successfully!');
+      }
+
+    } catch (error: any) {
+      const action = editingReservation ? 'update' : 'create';
+      alert(error.message || `Failed to ${action} reservation. Please try again.`);
+      console.error(`Reservation ${action} error:`, error);
     } finally {
       setLoading(false);
     }
@@ -772,6 +804,117 @@ const BookingsPage = () => {
     } catch (error) {
       console.error('Error creating reservation:', error);
       throw error;
+    }
+  };
+
+  const updateReservation = async (reservationNumber: string, updateData: {
+    check_in_date?: string;
+    check_out_date?: string;
+    adults?: number;
+    children?: number;
+    booking_source?: string;
+    special_requests?: string;
+    notes?: string;
+    room_type?: number;
+  }) => {
+    try {
+      const csrfToken = getCsrfToken();
+
+      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/`), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+        },
+        credentials: 'include',
+        body: JSON.stringify(updateData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || errorData.status || 'Failed to update reservation');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error updating reservation:', error);
+      throw error;
+    }
+  };
+
+  const handleEditReservation = async (reservation: Reservation) => {
+    try {
+      setLoading(true);
+
+      // Populate form with reservation data
+      setFormData({
+        guest: {
+          first_name: reservation.guest_details?.first_name || '',
+          last_name: reservation.guest_details?.last_name || '',
+          email: reservation.guest_details?.email || '',
+          phone: reservation.guest_details?.phone || '',
+          nationality: reservation.guest_details?.nationality || '',
+          date_of_birth: reservation.guest_details?.date_of_birth || '',
+          gender: reservation.guest_details?.gender || '',
+          id_type: reservation.guest_details?.id_type || 'passport',
+          id_number: reservation.guest_details?.id_number || '',
+          address: reservation.guest_details?.address || '',
+          is_return_customer: false,
+          previous_stay_date: '',
+          loyalty_number: ''
+        },
+        check_in_date: reservation.check_in_date,
+        check_out_date: reservation.check_out_date,
+        adults: reservation.adults,
+        children: reservation.children,
+        booking_source: reservation.booking_source,
+        special_requests: reservation.special_requests || '',
+        notes: reservation.notes || ''
+      });
+
+      setEditingReservation(reservation);
+
+      // Load available rooms for the current dates
+      if (reservation.check_in_date && reservation.check_out_date) {
+        const rooms = await fetchAvailableRooms(
+          reservation.check_in_date,
+          reservation.check_out_date,
+          reservation.adults,
+          reservation.children
+        );
+
+        setAvailableRooms(rooms);
+
+        // Pre-select the current room type if available
+        if (reservation.room_type) {
+          // First try to find by room_type ID
+          const currentRoomType = rooms.find((room: any) => room.id === reservation.room_type);
+          if (currentRoomType) {
+            setSelectedRoom(currentRoomType);
+          }
+        } else if (reservation.room_type_name) {
+          // Fallback: Try to find by room type name
+          const currentRoomType = rooms.find((room: any) =>
+            room.name === reservation.room_type_name
+          );
+          if (currentRoomType) {
+            setSelectedRoom(currentRoomType);
+          }
+        }
+
+        // Start at step 3 (room selection) since we already have guest and date info
+        setWizardStep(3);
+      } else {
+        setWizardStep(1);
+      }
+
+      setShowAddReservation(true);
+    } catch (error) {
+      console.error('Error loading edit reservation:', error);
+      alert('Failed to load reservation details. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1967,13 +2110,24 @@ const BookingsPage = () => {
                                     <EyeIcon className="h-4 w-4" />
                                     <span>View Details</span>
                                   </Link>
-                                  <button
-                                    onClick={() => setOpenMenuId(null)}
-                                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
-                                  >
-                                    <PencilEdit02Icon className="h-4 w-4" />
-                                    <span>Edit Reservation</span>
-                                  </button>
+                                  {reservation.can_edit === true && (
+                                    <button
+                                      onClick={() => {
+                                        setOpenMenuId(null);
+                                        handleEditReservation(reservation);
+                                      }}
+                                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"
+                                    >
+                                      <PencilEdit02Icon className="h-4 w-4" />
+                                      <span>Edit Reservation</span>
+                                    </button>
+                                  )}
+                                  {reservation.can_edit === false && (
+                                    <div className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-400 w-full">
+                                      <PencilEdit02Icon className="h-4 w-4" />
+                                      <span>Edit (Not Available)</span>
+                                    </div>
+                                  )}
                                   <div className="border-t border-gray-100 my-1"></div>
                                   
                                   {/* Status-based Actions */}
@@ -2322,9 +2476,11 @@ const BookingsPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <Dialog.Title className="text-xl font-bold text-white">
-                    New Reservation
+                    {editingReservation ? 'Edit Reservation' : 'New Reservation'}
                   </Dialog.Title>
-                  <p className="text-sm text-gray-200 mt-1">Create a new booking for a guest</p>
+                  <p className="text-sm text-gray-200 mt-1">
+                    {editingReservation ? `Update booking for ${editingReservation.guest_name}` : 'Create a new booking for a guest'}
+                  </p>
                 </div>
                 <Dialog.Close asChild>
                   <button className="p-2 text-white hover:text-gray-200">
@@ -2982,7 +3138,10 @@ const BookingsPage = () => {
                       disabled={loading}
                       className="px-4 py-2 bg-[#005357] text-white text-sm font-medium rounded hover:bg-[#004449] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? 'Creating Reservation...' : 'Complete Reservation'}
+                      {loading
+                        ? (editingReservation ? 'Updating Reservation...' : 'Creating Reservation...')
+                        : (editingReservation ? 'Update Reservation' : 'Complete Reservation')
+                      }
                     </button>
                   )}
                 </div>

@@ -224,19 +224,87 @@ class AmenityUsage(models.Model):
         return f'{self.inventory_item.name} x{self.quantity_used} - {self.housekeeping_task.task_number}'
 
     def save(self, *args, **kwargs):
-        """Automatically deduct stock when amenity usage is recorded"""
+        """Automatically deduct stock when amenity usage is recorded
+
+        Priority:
+        1. Try to deduct from HOUSEKEEPING department buffer stock
+        2. If insufficient buffer stock, deduct from warehouse (main inventory)
+        """
+        from .inventory import DepartmentInventory, StockMovement
+
         is_new = self.pk is None
 
         if is_new and not self.stock_deducted:
-            # Deduct from inventory
-            if self.inventory_item.current_stock >= self.quantity_used:
-                self.inventory_item.current_stock -= self.quantity_used
-                self.inventory_item.save()
-                self.stock_deducted = True
-            else:
-                # Log warning but still save the record
-                print(f'WARNING: Insufficient stock for {self.inventory_item.name}. '
-                      f'Available: {self.inventory_item.current_stock}, Required: {self.quantity_used}')
+            # Try to get HOUSEKEEPING department buffer stock first
+            try:
+                dept_stock = DepartmentInventory.objects.get(
+                    department='HOUSEKEEPING',
+                    inventory_item=self.inventory_item,
+                    is_active=True
+                )
+
+                # Check if department buffer has enough stock
+                if dept_stock.current_stock >= self.quantity_used:
+                    # Deduct from department buffer stock
+                    dept_stock.current_stock -= self.quantity_used
+                    dept_stock.save()
+                    self.stock_deducted = True
+
+                    # Create stock movement record for tracking
+                    StockMovement.objects.create(
+                        inventory_item=self.inventory_item,
+                        movement_type='USAGE',
+                        quantity=-self.quantity_used,
+                        balance_after=self.inventory_item.current_stock,  # Warehouse balance unchanged
+                        reference=f'DEPT-HOUSEKEEPING-{self.housekeeping_task.task_number}',
+                        notes=f'Used by housekeeping from department buffer. Task: {self.housekeeping_task.task_number}',
+                        created_by=self.recorded_by
+                    )
+                else:
+                    # Insufficient department buffer, fall back to warehouse
+                    print(f'WARNING: Insufficient HOUSEKEEPING buffer stock for {self.inventory_item.name}. '
+                          f'Buffer: {dept_stock.current_stock}, Required: {self.quantity_used}. '
+                          f'Deducting from warehouse instead.')
+
+                    if self.inventory_item.current_stock >= self.quantity_used:
+                        self.inventory_item.current_stock -= self.quantity_used
+                        self.inventory_item.save()
+                        self.stock_deducted = True
+
+                        # Create stock movement record
+                        StockMovement.objects.create(
+                            inventory_item=self.inventory_item,
+                            movement_type='USAGE',
+                            quantity=-self.quantity_used,
+                            balance_after=self.inventory_item.current_stock,
+                            reference=f'WAREHOUSE-{self.housekeeping_task.task_number}',
+                            notes=f'Used by housekeeping from warehouse (buffer empty). Task: {self.housekeeping_task.task_number}',
+                            created_by=self.recorded_by
+                        )
+                    else:
+                        print(f'ERROR: Insufficient stock everywhere for {self.inventory_item.name}. '
+                              f'Warehouse: {self.inventory_item.current_stock}, Required: {self.quantity_used}')
+
+            except DepartmentInventory.DoesNotExist:
+                # No department buffer configured, deduct from warehouse directly
+                if self.inventory_item.current_stock >= self.quantity_used:
+                    self.inventory_item.current_stock -= self.quantity_used
+                    self.inventory_item.save()
+                    self.stock_deducted = True
+
+                    # Create stock movement record
+                    StockMovement.objects.create(
+                        inventory_item=self.inventory_item,
+                        movement_type='USAGE',
+                        quantity=-self.quantity_used,
+                        balance_after=self.inventory_item.current_stock,
+                        reference=f'WAREHOUSE-{self.housekeeping_task.task_number}',
+                        notes=f'Used by housekeeping from warehouse (no buffer configured). Task: {self.housekeeping_task.task_number}',
+                        created_by=self.recorded_by
+                    )
+                else:
+                    print(f'ERROR: Insufficient warehouse stock for {self.inventory_item.name}. '
+                          f'Available: {self.inventory_item.current_stock}, Required: {self.quantity_used}')
 
         super().save(*args, **kwargs)
 

@@ -1017,8 +1017,21 @@ const HousekeepingPage = () => {
                                 <p className="text-xs text-gray-600">{item.category}</p>
                                 <p className="text-xs text-gray-500 mt-1">{item.reason}</p>
                               </div>
-                              <div className="text-sm text-gray-600">
-                                Stock: {item.current_stock} {item.unit}
+                              <div className="text-right">
+                                {item.buffer_stock !== undefined ? (
+                                  <div className="text-sm">
+                                    <div className={`font-semibold ${item.buffer_stock > 0 ? 'text-green-600' : 'text-orange-600'}`}>
+                                      Buffer: {item.buffer_stock} {item.unit}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      Warehouse: {item.warehouse_stock} {item.unit}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-sm text-gray-600">
+                                    Stock: {item.current_stock} {item.unit}
+                                  </div>
+                                )}
                               </div>
                             </div>
 
@@ -1044,19 +1057,20 @@ const HousekeepingPage = () => {
                                   }}
                                   className="w-20 px-3 py-2 border border-gray-300 text-center focus:ring-[#F87B1B] focus:border-[#F87B1B] text-sm"
                                   min="0"
-                                  max={item.current_stock}
+                                  max={item.buffer_stock !== undefined ? item.buffer_stock : item.current_stock}
                                 />
                                 <button
                                   onClick={() => {
                                     const newItems = [...amenityItems];
                                     const currentQty = newItems[index].quantity_used ?? item.suggested_quantity;
-                                    if (currentQty < item.current_stock) {
+                                    const maxStock = item.buffer_stock !== undefined ? item.buffer_stock : item.current_stock;
+                                    if (currentQty < maxStock) {
                                       newItems[index].quantity_used = currentQty + 1;
                                       setAmenityItems(newItems);
                                     }
                                   }}
                                   className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center rounded"
-                                  disabled={(item.quantity_used ?? item.suggested_quantity) >= item.current_stock}
+                                  disabled={(item.quantity_used ?? item.suggested_quantity) >= (item.buffer_stock !== undefined ? item.buffer_stock : item.current_stock)}
                                 >
                                   +
                                 </button>

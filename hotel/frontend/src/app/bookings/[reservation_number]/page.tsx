@@ -144,6 +144,7 @@ interface Reservation {
   transportation?: Transportation[];
   extras: Extra[];
   can_cancel: boolean;
+  can_edit?: boolean;
   deposit_amount: number;
   balance_due: number;
   taxes: number;
@@ -403,6 +404,7 @@ const BookingDetailPage = () => {
       extras: [],
       transportation: [],
       can_cancel: apiData.can_cancel !== undefined ? apiData.can_cancel : (apiData.status === 'PENDING' || apiData.status === 'CONFIRMED'),
+      can_edit: apiData.can_edit !== undefined ? apiData.can_edit : (apiData.status === 'PENDING' || apiData.status === 'CONFIRMED'),
       deposit_amount: depositAmount,
       balance_due: balanceDue,
       taxes: taxes,
@@ -635,10 +637,17 @@ const BookingDetailPage = () => {
               <Mail01Icon className="h-4 w-4" />
               <span>{resendingInvoice ? 'Mengirim...' : 'Kirim Invoice'}</span>
             </button>
-            <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
-              <PencilEdit02Icon className="h-4 w-4" />
-              <span>Edit Booking</span>
-            </button>
+            {booking?.can_edit === true ? (
+              <button className="flex items-center space-x-2 bg-[#005357] text-white px-4 py-2 text-sm font-medium hover:bg-[#004147] transition-colors">
+                <PencilEdit02Icon className="h-4 w-4" />
+                <span>Edit Booking</span>
+              </button>
+            ) : (
+              <button disabled className="flex items-center space-x-2 bg-gray-400 text-white px-4 py-2 text-sm font-medium cursor-not-allowed opacity-60">
+                <PencilEdit02Icon className="h-4 w-4" />
+                <span>Edit (Not Available)</span>
+              </button>
+            )}
           </div>
         </div>
 

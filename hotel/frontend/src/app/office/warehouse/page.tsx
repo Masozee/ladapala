@@ -11,7 +11,8 @@ import {
   ArrowRightIcon,
   ClipboardCheckIcon,
   Shield01Icon,
-  UserMultipleIcon
+  UserMultipleIcon,
+  Building03Icon
 } from '@/lib/icons';
 
 export default function WarehouseDashboardPage() {
@@ -23,6 +24,14 @@ export default function WarehouseDashboardPage() {
       href: '/office/warehouse/master-data',
       color: 'bg-blue-500',
       stats: 'Lihat & kelola semua item'
+    },
+    {
+      title: 'Department Buffers',
+      description: 'Kelola buffer stock departemen',
+      icon: Building03Icon,
+      href: '/office/warehouse/department-buffers',
+      color: 'bg-cyan-500',
+      stats: 'Transfer & monitor stok departemen'
     },
     {
       title: 'Suppliers',
