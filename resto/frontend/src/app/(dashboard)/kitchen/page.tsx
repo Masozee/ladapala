@@ -115,7 +115,22 @@ export default function KitchenDisplayPage() {
 
   const handleStartSession = async () => {
     try {
-      await startSession()
+      // Determine shift type based on current time
+      const now = new Date()
+      const hour = now.getHours()
+      let shift_type = 'MORNING'
+
+      if (hour >= 6 && hour < 12) {
+        shift_type = 'MORNING'
+      } else if (hour >= 12 && hour < 17) {
+        shift_type = 'AFTERNOON'
+      } else if (hour >= 17 && hour < 21) {
+        shift_type = 'EVENING'
+      } else {
+        shift_type = 'NIGHT'
+      }
+
+      await startSession({ shift_type })
       await fetchOrders()
       await fetchActiveStaff()
     } catch (error: any) {

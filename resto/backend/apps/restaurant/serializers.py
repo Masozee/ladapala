@@ -1135,6 +1135,7 @@ class StaffSessionCreateSerializer(serializers.ModelSerializer):
 
         staff = data.get('staff')
         override_by = data.get('override_by')
+        shift_type = data.get('shift_type')
 
         # Check if staff already has an open session
         existing_open = StaffSession.objects.filter(
@@ -1147,23 +1148,24 @@ class StaffSessionCreateSerializer(serializers.ModelSerializer):
                 f"{staff.user.get_full_name()} already has an open session. Please close it first."
             )
 
-        # Check if staff has a schedule for today (unless override is provided)
-        if not override_by:
-            today = date.today()
-            schedule = Schedule.objects.filter(
-                staff=staff,
-                date=today,
-                is_confirmed=True
-            ).first()
+        # Check if staff has a schedule for today
+        today = date.today()
+        schedule = Schedule.objects.filter(
+            staff=staff,
+            date=today,
+            is_confirmed=True
+        ).first()
 
-            if not schedule:
-                raise serializers.ValidationError(
-                    f"{staff.user.get_full_name()} does not have a confirmed schedule for today. "
-                    "Manager override is required."
-                )
-
-            # Auto-assign the schedule
+        if schedule:
+            # Auto-assign the schedule if it exists
             data['schedule'] = schedule
+        elif not shift_type:
+            # If no schedule and no shift_type provided, error
+            raise serializers.ValidationError(
+                f"{staff.user.get_full_name()} does not have a confirmed schedule for today. "
+                "Please provide a shift_type or manager override is required."
+            )
+        # If shift_type is provided but no schedule, allow it (no override needed)
 
         return data
 

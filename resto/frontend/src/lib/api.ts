@@ -865,7 +865,7 @@ class ApiClient {
 
         // Handle multiple field errors
         const fieldErrors = Object.entries(errorData)
-          .filter(([key]) => key !== 'error')
+          .filter(([key]) => key !== 'error' && key !== 'message')
           .map(([field, errors]) => {
             if (Array.isArray(errors)) {
               return `${field}: ${errors.join(', ')}`;
@@ -877,7 +877,7 @@ class ApiClient {
           throw new Error(fieldErrors.join('; '));
         }
 
-        throw new Error(errorData.error || `API Error: ${response.status} ${response.statusText}`);
+        throw new Error(errorData.error || errorData.message || `API Error: ${response.status} ${response.statusText}`);
       }
 
       // Handle empty responses (like DELETE requests)

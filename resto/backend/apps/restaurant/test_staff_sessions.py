@@ -162,6 +162,21 @@ class StaffSessionTestCase(TestCase):
         self.assertEqual(session.override_reason, 'Emergency coverage needed')
         self.assertIsNone(session.schedule)
 
+    def test_session_with_shift_type_only(self):
+        """Test creating session without schedule but with explicit shift_type"""
+        # Staff without schedule should be able to start session with shift_type
+        session = StaffSession.objects.create(
+            staff=self.bar_staff,  # bar_staff has no schedule
+            branch=self.branch,
+            shift_type='AFTERNOON'
+        )
+
+        self.assertEqual(session.staff, self.bar_staff)
+        self.assertEqual(session.shift_type, 'AFTERNOON')
+        self.assertIsNone(session.schedule)
+        self.assertIsNone(session.override_by)
+        self.assertEqual(session.status, 'OPEN')
+
     def test_close_session(self):
         """Test closing a staff session"""
         session = StaffSession.objects.create(
