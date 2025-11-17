@@ -630,88 +630,89 @@ const CalendarPage = () => {
 
         {/* Upcoming Events */}
         <div className="bg-white border border-gray-200 w-full xl:w-80 flex-shrink-0">
-          <div className="p-6 bg-gray-50">
+          <div className="p-4 bg-gray-50 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Upcoming Events</h3>
-            <p className="text-sm text-gray-500 mt-1">Next 7 days across all months</p>
+            <p className="text-xs text-gray-500 mt-1">Next 7 days</p>
           </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {(() => {
-                // Get truly upcoming events from the next 7 days
-                const today = new Date();
-                const nextWeek = new Date(today);
-                nextWeek.setDate(today.getDate() + 7);
-                
-                const upcomingEvents = events
-                  .filter(event => {
-                    const eventDate = new Date(event.start_datetime);
-                    return eventDate >= today && eventDate <= nextWeek;
-                  })
-                  .filter(event => filterType === 'all' || event.event_type === filterType)
-                  .sort((a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime())
-                  .slice(0, 5);
-                
-                return upcomingEvents.length > 0 ? upcomingEvents.map((event) => (
-                <div key={event.id} className="flex items-center space-x-4 p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className={`w-3 h-3 rounded-full ${getEventTypeColor(event.event_type)}`}></div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900">{event.title}</h4>
-                      <span className={`px-2 py-1 text-xs rounded ${getPriorityColor(event.priority)}`}>
-                        {event.priority.toLowerCase()}
+          <div className="divide-y divide-gray-200">
+            {(() => {
+              // Get truly upcoming events from the next 7 days
+              const today = new Date();
+              const nextWeek = new Date(today);
+              nextWeek.setDate(today.getDate() + 7);
+
+              const upcomingEvents = events
+                .filter(event => {
+                  const eventDate = new Date(event.start_datetime);
+                  return eventDate >= today && eventDate <= nextWeek;
+                })
+                .filter(event => filterType === 'all' || event.event_type === filterType)
+                .sort((a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime())
+                .slice(0, 5);
+
+              return upcomingEvents.length > 0 ? upcomingEvents.map((event) => (
+              <div
+                key={event.id}
+                className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => {
+                  setSelectedEvent(event);
+                  setShowEventDialog(true);
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`w-1 h-full absolute left-0 ${getEventTypeColor(event.event_type)}`}></div>
+                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${getEventTypeColor(event.event_type)}`}></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <h4 className="font-medium text-sm text-gray-900 truncate">{event.title}</h4>
+                      <span className={`px-1.5 py-0.5 text-[10px] rounded flex-shrink-0 ${getPriorityColor(event.priority)}`}>
+                        {event.priority}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{event.description || 'No description'}</p>
-                    <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                      <div className="flex items-center space-x-1">
-                        <Calendar01Icon className="h-3 w-3" />
-                        <span>{new Date(event.start_datetime).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock01Icon className="h-3 w-3" />
+
+                    <div className="flex flex-col gap-1 text-xs text-gray-600">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar01Icon className="h-3 w-3 flex-shrink-0" />
+                        <span>{new Date(event.start_datetime).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        })}</span>
+                        <span className="text-gray-400">•</span>
+                        <Clock01Icon className="h-3 w-3 flex-shrink-0" />
                         <span>{formatTime(event.start_datetime)}</span>
                       </div>
-                      {event.location && (
-                        <div className="flex items-center space-x-1">
-                          <Location01Icon className="h-3 w-3" />
-                          <span>{event.location}</span>
+
+                      {(event.location || event.room_number) && (
+                        <div className="flex items-center gap-1.5">
+                          <Location01Icon className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{event.location || `Room ${event.room_number}`}</span>
                         </div>
                       )}
-                      {event.room_number && (
-                        <div className="flex items-center space-x-1">
-                          <Location01Icon className="h-3 w-3" />
-                          <span>Room {event.room_number}</span>
+
+                      {event.guest_name && (
+                        <div className="flex items-center gap-1.5">
+                          <UserIcon className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{event.guest_name}</span>
                         </div>
                       )}
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => {
-                        setSelectedEvent(event);
-                        setShowEventDialog(true);
-                      }}
-                      className="p-1 text-gray-400 hover:text-gray-600"
-                    >
-                      <EyeIcon className="h-4 w-4" />
-                    </button>
-                    <button className="p-1 text-gray-400 hover:text-blue-600">
-                      <PencilEdit02Icon className="h-4 w-4" />
-                    </button>
-                    <button className="p-1 text-gray-400 hover:text-red-600">
-                      <Delete02Icon className="h-4 w-4" />
-                    </button>
+
+                    <div className="mt-2 flex items-center gap-1">
+                      <span className={`inline-block px-2 py-0.5 text-[10px] rounded-full text-white ${getEventTypeColor(event.event_type)}`}>
+                        {getEventTypeText(event.event_type)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              )) : (
-                <div className="text-center py-8">
-                  <Calendar01Icon className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500">No upcoming events in the next 7 days</p>
-                  <p className="text-sm text-gray-400 mt-1">Try adjusting your filter or check other months</p>
-                </div>
-              );
-              })()}
-            </div>
+              </div>
+            )) : (
+              <div className="text-center py-12 px-4">
+                <Calendar01Icon className="h-10 w-10 mx-auto text-gray-300 mb-3" />
+                <p className="text-sm text-gray-500 font-medium">No upcoming events</p>
+                <p className="text-xs text-gray-400 mt-1">Next 7 days</p>
+              </div>
+            );
+            })()}
           </div>
         </div>
 
