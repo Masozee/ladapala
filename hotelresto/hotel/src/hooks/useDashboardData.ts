@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 
 interface BasicMetrics {
   total_rooms: number;
@@ -99,11 +99,8 @@ export function useDashboardData(): UseDashboardDataReturn {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(buildApiUrl('hotel/main/'), {
+      const response = await apiFetch('hotel/main/', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
 
       if (!response.ok) {

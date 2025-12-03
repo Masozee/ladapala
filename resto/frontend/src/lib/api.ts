@@ -146,6 +146,62 @@ export interface Order {
   served_at?: string | null;
 }
 
+export interface KitchenOrderItem {
+  id: number;
+  product: number;
+  product_name: string;
+  quantity: number;
+  status: 'PENDING' | 'PREPARING' | 'READY';
+  notes: string;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface KitchenOrder {
+  id: number;
+  order: number;
+  order_number: string;
+  order_type: string;
+  table_number: string | null;
+  status: 'PENDING' | 'PREPARING' | 'READY' | 'SERVED';
+  priority: number;
+  assigned_to: number | null;
+  assigned_to_name: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  items: KitchenOrderItem[];
+}
+
+export interface BarOrderItem {
+  id: number;
+  product: number;
+  product_name: string;
+  quantity: number;
+  status: 'PENDING' | 'PREPARING' | 'READY';
+  notes: string;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface BarOrder {
+  id: number;
+  order: number;
+  order_number: string;
+  order_type: string;
+  table_number: string | null;
+  status: 'PENDING' | 'PREPARING' | 'READY' | 'SERVED';
+  priority: number;
+  assigned_to: number | null;
+  assigned_to_name: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  items: BarOrderItem[];
+}
+
 export interface DashboardData {
   total_orders_today: number;
   total_revenue_today: string;
@@ -1940,6 +1996,96 @@ class ApiClient {
 
   async getUnassignedOrders(): Promise<Order[]> {
     return this.fetch('/orders/unassigned/');
+  }
+
+  // ============================================================================
+  // KITCHEN ORDER METHODS
+  // ============================================================================
+
+  async getKitchenOrders(params?: { status?: string }): Promise<KitchenOrder[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.set('status', params.status);
+    const queryString = searchParams.toString();
+    return this.fetch(`/kitchen-orders/${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getKitchenOrder(id: number): Promise<KitchenOrder> {
+    return this.fetch(`/kitchen-orders/${id}/`);
+  }
+
+  async assignKitchenOrder(id: number, staffId: number): Promise<KitchenOrder> {
+    return this.fetch(`/kitchen-orders/${id}/assign/`, {
+      method: 'POST',
+      body: JSON.stringify({ staff_id: staffId })
+    });
+  }
+
+  async startKitchenPreparation(id: number): Promise<KitchenOrder> {
+    return this.fetch(`/kitchen-orders/${id}/start_preparation/`, {
+      method: 'POST'
+    });
+  }
+
+  async markKitchenReady(id: number): Promise<KitchenOrder> {
+    return this.fetch(`/kitchen-orders/${id}/mark_ready/`, {
+      method: 'POST'
+    });
+  }
+
+  // ============================================================================
+  // BAR ORDER METHODS
+  // ============================================================================
+
+  async getBarOrders(params?: { status?: string }): Promise<BarOrder[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.set('status', params.status);
+    const queryString = searchParams.toString();
+    return this.fetch(`/bar-orders/${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getBarOrder(id: number): Promise<BarOrder> {
+    return this.fetch(`/bar-orders/${id}/`);
+  }
+
+  async assignBarOrder(id: number, staffId: number): Promise<BarOrder> {
+    return this.fetch(`/bar-orders/${id}/assign/`, {
+      method: 'POST',
+      body: JSON.stringify({ staff_id: staffId })
+    });
+  }
+
+  async startBarPreparation(id: number): Promise<BarOrder> {
+    return this.fetch(`/bar-orders/${id}/start_preparation/`, {
+      method: 'POST'
+    });
+  }
+
+  async markBarReady(id: number): Promise<BarOrder> {
+    return this.fetch(`/bar-orders/${id}/mark_ready/`, {
+      method: 'POST'
+    });
+  }
+
+  // ============================================================================
+  // SPLIT BILL & MERGE TABLES METHODS
+  // ============================================================================
+
+  async splitBill(orderId: number, splits: Array<{ customer_name: string; item_ids: number[] }>): Promise<any> {
+    return this.fetch(`/orders/${orderId}/split_bill/`, {
+      method: 'POST',
+      body: JSON.stringify({ splits })
+    });
+  }
+
+  async mergeTables(targetTableId: number, sourceTableIds: number[], mergedCustomerName?: string): Promise<any> {
+    return this.fetch(`/orders/merge_tables/`, {
+      method: 'POST',
+      body: JSON.stringify({
+        target_table_id: targetTableId,
+        source_table_ids: sourceTableIds,
+        merged_customer_name: mergedCustomerName || 'Merged Table'
+      })
+    });
   }
 }
 

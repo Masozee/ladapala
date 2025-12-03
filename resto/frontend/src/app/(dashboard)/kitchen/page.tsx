@@ -16,7 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { api, Order, ActiveStaff } from '@/lib/api'
+import { api, KitchenOrder, ActiveStaff } from '@/lib/api'
 import { useStaffSession } from '@/hooks/useStaffSession'
 import {
   Select,
@@ -27,10 +27,10 @@ import {
 } from "@/components/ui/select"
 
 export default function KitchenDisplayPage() {
-  const [orders, setOrders] = useState<Order[]>([])
+  const [orders, setOrders] = useState<KitchenOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [filter, setFilter] = useState<'ALL' | 'UNASSIGNED' | 'MY_ORDERS' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED'>('ALL')
+  const [filter, setFilter] = useState<'ALL' | 'UNASSIGNED' | 'MY_ORDERS' | 'PENDING' | 'PREPARING' | 'READY'>('ALL')
   const [activeStaff, setActiveStaff] = useState<ActiveStaff[]>([])
   const [assigningOrder, setAssigningOrder] = useState<number | null>(null)
 
@@ -44,42 +44,12 @@ export default function KitchenDisplayPage() {
         setRefreshing(true)
       }
 
-      // Fetch based on filter
-      let response
-      if (filter === 'UNASSIGNED') {
-        response = await api.getUnassignedOrders()
-      } else {
-        response = await api.getOrders({})
-      }
-
-      const ordersList = Array.isArray(response) ? response : (response.results || [])
-
-      // Filter to show only kitchen-relevant orders (exclude beverage-only orders)
-      let kitchenOrders = ordersList.filter((order: Order) => {
-        // Check if order is in valid status
-        if (!['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status || '')) {
-          return false
-        }
-
-        // Show orders that have at least one NON-beverage item
-        // Exclude orders that ONLY have beverage items
-        const hasNonBeverageItems = order.items?.some((item: any) =>
-          !item.product_category_name?.toLowerCase().includes('minuman')
-        )
-
-        return hasNonBeverageItems
-      })
-
-      // Apply MY_ORDERS filter if active
-      if (filter === 'MY_ORDERS' && session) {
-        kitchenOrders = kitchenOrders.filter((order: Order) =>
-          order.prepared_by === session.staff
-        )
-      }
+      // Fetch kitchen orders (only food items)
+      const kitchenOrders = await api.getKitchenOrders({})
 
       setOrders(kitchenOrders)
     } catch (error) {
-      console.error('Error fetching orders:', error)
+      console.error('Error fetching kitchen orders:', error)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -150,19 +120,9 @@ export default function KitchenDisplayPage() {
     }
   }
 
-  const handleClaimOrder = async (orderId: number) => {
+  const handleAssignOrder = async (kitchenOrderId: number, staffId: number) => {
     try {
-      await api.claimOrder(orderId)
-      await fetchOrders(true)
-      await refreshSession()
-    } catch (error: any) {
-      alert(error.message || 'Gagal mengambil pesanan')
-    }
-  }
-
-  const handleAssignOrder = async (orderId: number, staffId: number) => {
-    try {
-      await api.assignOrder(orderId, staffId)
+      await api.assignKitchenOrder(kitchenOrderId, staffId)
       await fetchOrders(true)
       setAssigningOrder(null)
     } catch (error: any) {
@@ -170,43 +130,58 @@ export default function KitchenDisplayPage() {
     }
   }
 
-  const handleStatusUpdate = async (orderId: number, newStatus: string) => {
+  const handleStartPreparation = async (kitchenOrderId: number) => {
     try {
       // Optimistic update
       setOrders(prevOrders =>
         prevOrders.map(order =>
-          order.id === orderId ? { ...order, status: newStatus as any } : order
-        ).filter(order =>
-          ['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'].includes(order.status || '')
+          order.id === kitchenOrderId ? { ...order, status: 'PREPARING' as const } : order
         )
       )
 
-      await api.updateOrderStatus(orderId, newStatus)
+      await api.startKitchenPreparation(kitchenOrderId)
       await fetchOrders(true)
       await refreshSession()
     } catch (error) {
-      console.error('Error updating order status:', error)
-      alert('Gagal mengubah status pesanan')
+      console.error('Error starting preparation:', error)
+      alert('Gagal memulai persiapan')
+      await fetchOrders()
+    }
+  }
+
+  const handleMarkReady = async (kitchenOrderId: number) => {
+    try {
+      // Optimistic update
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === kitchenOrderId ? { ...order, status: 'READY' as const } : order
+        )
+      )
+
+      await api.markKitchenReady(kitchenOrderId)
+      await fetchOrders(true)
+      await refreshSession()
+    } catch (error) {
+      console.error('Error marking as ready:', error)
+      alert('Gagal menandai siap')
       await fetchOrders()
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'CONFIRMED': return 'bg-blue-100 text-blue-800 border-blue-300'
+      case 'PENDING': return 'bg-blue-100 text-blue-800 border-blue-300'
       case 'PREPARING': return 'bg-yellow-100 text-yellow-800 border-yellow-300'
       case 'READY': return 'bg-green-100 text-green-800 border-green-300'
-      case 'COMPLETED': return 'bg-gray-100 text-gray-800 border-gray-300'
       default: return 'bg-gray-100 text-gray-800 border-gray-300'
     }
   }
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'CONFIRMED': return 'Dikonfirmasi'
+      case 'PENDING': return 'Menunggu'
       case 'PREPARING': return 'Sedang Dimasak'
       case 'READY': return 'Siap Disajikan'
-      case 'COMPLETED': return 'Selesai'
       default: return status
     }
   }
@@ -233,28 +208,17 @@ export default function KitchenDisplayPage() {
     return `${diffHours} jam ${diffMins % 60} menit yang lalu`
   }
 
-  const isDrink = (categoryName: string) => {
-    if (!categoryName) return false
-    return categoryName.toLowerCase().includes('minuman')
-  }
-
-  // Filter orders to only show orders with kitchen items (food, not beverages)
-  const allFilteredOrders = orders.filter(order => {
-    return order.items.some(item => !isDrink(item.product_category_name || ''))
-  })
-
-  const unassignedOrders = allFilteredOrders.filter(o => !o.prepared_by && o.status === 'CONFIRMED')
-  const myOrders = session ? allFilteredOrders.filter(o => o.prepared_by === session.staff) : []
-  const confirmedOrders = allFilteredOrders.filter(o => o.status === 'CONFIRMED')
-  const preparingOrders = allFilteredOrders.filter(o => o.status === 'PREPARING')
-  const readyOrders = allFilteredOrders.filter(o => o.status === 'READY')
-  const completedOrders = allFilteredOrders.filter(o => o.status === 'COMPLETED')
+  const unassignedOrders = orders.filter(o => !o.assigned_to && o.status === 'PENDING')
+  const myOrders = session ? orders.filter(o => o.assigned_to === session.staff) : []
+  const pendingOrders = orders.filter(o => o.status === 'PENDING')
+  const preparingOrders = orders.filter(o => o.status === 'PREPARING')
+  const readyOrders = orders.filter(o => o.status === 'READY')
 
   // Filter by active tab
-  const filteredOrders = filter === 'ALL' ? allFilteredOrders
+  const filteredOrders = filter === 'ALL' ? orders
     : filter === 'UNASSIGNED' ? unassignedOrders
     : filter === 'MY_ORDERS' ? myOrders
-    : allFilteredOrders.filter(o => o.status === filter)
+    : orders.filter(o => o.status === filter)
 
   // No session - show session start screen
   if (!hasActiveSession) {
@@ -396,6 +360,17 @@ export default function KitchenDisplayPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
+                  <p className="text-sm font-medium text-muted-foreground">Menunggu</p>
+                  <p className="text-3xl font-bold">{pendingOrders.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm font-medium text-muted-foreground">Sedang Dimasak</p>
                   <p className="text-3xl font-bold">{preparingOrders.length}</p>
                 </div>
@@ -409,17 +384,6 @@ export default function KitchenDisplayPage() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Siap Disajikan</p>
                   <p className="text-3xl font-bold">{readyOrders.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Selesai</p>
-                  <p className="text-3xl font-bold">{completedOrders.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -456,7 +420,17 @@ export default function KitchenDisplayPage() {
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
-            Semua ({allFilteredOrders.length})
+            Semua ({orders.length})
+          </button>
+          <button
+            onClick={() => setFilter('PENDING')}
+            className={`px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap ${
+              filter === 'PENDING'
+                ? 'border-black text-black'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Menunggu ({pendingOrders.length})
           </button>
           <button
             onClick={() => setFilter('PREPARING')}
@@ -498,48 +472,41 @@ export default function KitchenDisplayPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredOrders.map((order) => {
-              // Only show food items on kitchen page (exclude beverages)
-              const relevantItems = order.items.filter(item => !isDrink(item.product_category_name || ''))
-              const isMyOrder = order.prepared_by === session?.staff
-              const isUnassigned = !order.prepared_by
+            {filteredOrders.map((kitchenOrder) => {
+              const isMyOrder = kitchenOrder.assigned_to === session?.staff
+              const isUnassigned = !kitchenOrder.assigned_to
 
               return (
                 <Card
-                  key={order.id}
-                  className={`border shadow-none ${isMyOrder ? 'border-[#58ff34] border-2' : ''} ${isUnassigned ? 'border-red-300' : ''}`}
+                  key={kitchenOrder.id}
+                  className={`border shadow-none ${isMyOrder ? 'border-[#58ff34] border-2' : ''} ${isUnassigned ? 'border-red-300 border-2' : ''}`}
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
-                        <CardTitle className="text-lg">{order.order_number}</CardTitle>
+                        <CardTitle className="text-lg">{kitchenOrder.order_number}</CardTitle>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{order.table_number ? `Meja ${order.table_number}` : getOrderTypeLabel(order.order_type)}</span>
+                          <span>{kitchenOrder.table_number ? `Meja ${kitchenOrder.table_number}` : getOrderTypeLabel(kitchenOrder.order_type)}</span>
                           <span>•</span>
-                          <span>{getTimeSince(order.created_at || '')}</span>
+                          <span>{getTimeSince(kitchenOrder.created_at)}</span>
                         </div>
-                        {order.order_taken_by_name && (
-                          <div className="text-xs text-muted-foreground">
-                            Diambil oleh: {order.order_taken_by_name}
-                          </div>
-                        )}
-                        {order.prepared_by_name && (
+                        {kitchenOrder.assigned_to_name && (
                           <div className="text-xs font-medium text-[#58ff34]">
-                            Dimasak oleh: {order.prepared_by_name}
+                            Dimasak oleh: {kitchenOrder.assigned_to_name}
                             {isMyOrder && ' (Anda)'}
                           </div>
                         )}
                       </div>
-                      <Badge className={`${getStatusColor(order.status || '')} border`}>
-                        {getStatusLabel(order.status || '')}
+                      <Badge className={`${getStatusColor(kitchenOrder.status)} border`}>
+                        {getStatusLabel(kitchenOrder.status)}
                       </Badge>
                     </div>
                   </CardHeader>
 
                   <CardContent className="space-y-4">
-                    {/* Order Items */}
+                    {/* Order Items - ONLY FOOD ITEMS */}
                     <div className="space-y-2">
-                      {relevantItems.map((item, idx) => (
+                      {kitchenOrder.items.map((item, idx) => (
                         <div key={idx} className="flex justify-between items-start text-sm">
                           <div className="flex-1">
                             <span className="font-medium">{item.quantity}x</span>
@@ -554,31 +521,16 @@ export default function KitchenDisplayPage() {
                       ))}
                     </div>
 
-                    {order.notes && (
-                      <div className="pt-2 border-t">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Catatan Pesanan:</p>
-                        <p className="text-sm italic">{order.notes}</p>
-                      </div>
-                    )}
-
                     {/* Action Buttons */}
                     <div className="pt-2 space-y-2">
-                      {/* Unassigned orders - can claim or assign */}
-                      {isUnassigned && order.status === 'CONFIRMED' && (
+                      {/* Unassigned orders - can assign */}
+                      {isUnassigned && kitchenOrder.status === 'PENDING' && (
                         <>
-                          <Button
-                            onClick={() => handleClaimOrder(order.id!)}
-                            className="w-full gap-2 bg-[#58ff34] hover:bg-[#4de02c] text-black"
-                          >
-                            <HugeiconsIcon icon={ChefHatIcon} className="h-4 w-4" strokeWidth={2} />
-                            Ambil Pesanan
-                          </Button>
-
-                          {activeStaff.length > 1 && (
+                          {activeStaff.length > 0 && (
                             <>
-                              {assigningOrder === order.id ? (
+                              {assigningOrder === kitchenOrder.id ? (
                                 <div className="space-y-2">
-                                  <Select onValueChange={(value) => handleAssignOrder(order.id!, parseInt(value))}>
+                                  <Select onValueChange={(value) => handleAssignOrder(kitchenOrder.id, parseInt(value))}>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Pilih staf..." />
                                     </SelectTrigger>
@@ -601,12 +553,11 @@ export default function KitchenDisplayPage() {
                                 </div>
                               ) : (
                                 <Button
-                                  onClick={() => setAssigningOrder(order.id!)}
-                                  variant="outline"
-                                  className="w-full gap-2"
+                                  onClick={() => setAssigningOrder(kitchenOrder.id)}
+                                  className="w-full gap-2 bg-[#58ff34] hover:bg-[#4de02c] text-black"
                                 >
                                   <HugeiconsIcon icon={UserIcon} className="h-4 w-4" strokeWidth={2} />
-                                  Tugaskan ke Staf Lain
+                                  Tugaskan ke Staf
                                 </Button>
                               )}
                             </>
@@ -615,9 +566,9 @@ export default function KitchenDisplayPage() {
                       )}
 
                       {/* My orders - can update status */}
-                      {isMyOrder && order.status === 'CONFIRMED' && (
+                      {isMyOrder && kitchenOrder.status === 'PENDING' && (
                         <Button
-                          onClick={() => handleStatusUpdate(order.id!, 'PREPARING')}
+                          onClick={() => handleStartPreparation(kitchenOrder.id)}
                           className="w-full gap-2"
                         >
                           <HugeiconsIcon icon={ChefHatIcon} className="h-4 w-4" strokeWidth={2} />
@@ -625,9 +576,9 @@ export default function KitchenDisplayPage() {
                         </Button>
                       )}
 
-                      {isMyOrder && order.status === 'PREPARING' && (
+                      {isMyOrder && kitchenOrder.status === 'PREPARING' && (
                         <Button
-                          onClick={() => handleStatusUpdate(order.id!, 'READY')}
+                          onClick={() => handleMarkReady(kitchenOrder.id)}
                           className="w-full gap-2"
                         >
                           <HugeiconsIcon icon={CheckmarkCircle01Icon} className="h-4 w-4" strokeWidth={2} />
@@ -635,15 +586,9 @@ export default function KitchenDisplayPage() {
                         </Button>
                       )}
 
-                      {order.status === 'READY' && (
-                        <div className="text-center py-2 bg-gray-50 rounded-md border border-gray-200">
-                          <p className="text-sm font-medium text-gray-700">Menunggu diantar ke pelanggan</p>
-                        </div>
-                      )}
-
-                      {order.status === 'COMPLETED' && (
-                        <div className="text-center py-2 bg-gray-50 rounded-md border border-gray-200">
-                          <p className="text-sm font-medium text-gray-700">Pesanan sudah selesai</p>
+                      {kitchenOrder.status === 'READY' && (
+                        <div className="text-center py-2 bg-green-50 rounded-md border border-green-200">
+                          <p className="text-sm font-medium text-green-700">✓ Makanan siap disajikan</p>
                         </div>
                       )}
                     </div>

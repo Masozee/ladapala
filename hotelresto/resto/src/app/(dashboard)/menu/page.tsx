@@ -397,8 +397,8 @@ export default function MenuPage() {
           </div>
 
           {/* POS Order Sidebar - Right Side */}
-          <div className="w-96 sticky top-8 h-[calc(100vh-8rem)]">
-            <Card className="h-full flex flex-col">
+          <div className="w-96">
+            <Card className="flex flex-col">
               <CardHeader className="flex-shrink-0">
                 <CardTitle className="flex items-center gap-2">
                   <HugeiconsIcon icon={ShoppingBasket01Icon} className="h-5 w-5" strokeWidth={2} />
@@ -407,7 +407,7 @@ export default function MenuPage() {
                 <CardDescription>Buat pesanan baru untuk pelanggan</CardDescription>
               </CardHeader>
 
-              <CardContent className="flex-1 flex flex-col overflow-hidden space-y-4 p-4">
+              <CardContent className="flex-1 flex flex-col min-h-0 space-y-4 p-4">
                 {/* Order Type */}
                 <div>
                   <Label>Tipe Pesanan</Label>
@@ -471,17 +471,15 @@ export default function MenuPage() {
                 </div>
 
                 {/* Cart Items */}
-                <div className="border-t pt-4 flex-1 flex flex-col min-h-0">
+                <div className="border-t pt-4">
                   <Label className="mb-2">Item Pesanan</Label>
                   {orderItems.length === 0 ? (
-                    <div className="flex-1 flex items-center justify-center">
-                      <div className="text-center text-gray-500">
-                        <HugeiconsIcon icon={Invoice01Icon} size={48} strokeWidth={2} className="mx-auto mb-3 text-gray-300" />
-                        <p className="text-sm">Keranjang masih kosong</p>
-                      </div>
+                    <div className="text-center text-gray-500 py-8">
+                      <HugeiconsIcon icon={Invoice01Icon} size={48} strokeWidth={2} className="mx-auto mb-3 text-gray-300" />
+                      <p className="text-sm">Keranjang masih kosong</p>
                     </div>
                   ) : (
-                    <div className="flex-1 overflow-y-auto space-y-3">
+                    <div className="space-y-3 mt-3">
                       {orderItems.map(item => (
                         <div key={item.id} className="p-3 border rounded">
                           <div className="flex justify-between items-start mb-2">
@@ -578,7 +576,6 @@ export default function MenuPage() {
           </div>
         </div>
       </div>
-
     </>
   )
 }

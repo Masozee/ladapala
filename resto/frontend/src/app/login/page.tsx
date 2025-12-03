@@ -169,62 +169,19 @@ const LoginForm = () => {
 
       {/* Right Side - Features */}
       <div className="w-1/2 relative">
-        <div className="absolute inset-0 bg-[#58ff34]">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10"
+        <div className="absolute inset-0 bg-black">
+          {/* Background Image */}
+          <div className="absolute inset-0"
                style={{
-                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                 backgroundSize: '30px 30px'
+                 backgroundImage: `url("/jay-wennington-N_Y88TWmGwA-unsplash.jpg")`,
+                 backgroundSize: 'cover',
+                 backgroundPosition: 'center',
+                 opacity: 0.6
                }}>
           </div>
 
-          {/* Content */}
-          <div className="relative h-full flex flex-col justify-center p-12 text-black">
-            <div className="max-w-lg">
-              <h2 className="text-4xl font-bold mb-6">
-                Tingkatkan Operasional Restoran Anda
-              </h2>
-              <p className="text-xl text-neutral-900 mb-12">
-                Rasakan kekuatan sistem POS modern dengan Ladapala -
-                di mana efisiensi bertemu keunggulan dalam layanan kuliner.
-              </p>
-
-              {/* Features List */}
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-1">Manajemen Restoran Lengkap</h3>
-                  <p className="text-neutral-900 text-sm">Kelola menu, meja, pesanan, dan pembayaran dari satu platform terpadu</p>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold mb-1">Cepat & Efisien</h3>
-                  <p className="text-neutral-900 text-sm">Proses pesanan dengan cepat dan tingkatkan produktivitas hingga 40%</p>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold mb-1">Aman & Terpercaya</h3>
-                  <p className="text-neutral-900 text-sm">Keamanan tingkat enterprise dengan enkripsi data untuk melindungi bisnis Anda</p>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="mt-12 pt-8 border-t border-black/20">
-                <div className="grid grid-cols-3 gap-8 text-center">
-                  <div>
-                    <div className="text-3xl font-bold">40%</div>
-                    <div className="text-sm text-neutral-900">Peningkatan Efisiensi</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold">99.9%</div>
-                    <div className="text-sm text-neutral-900">Uptime</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold">24/7</div>
-                    <div className="text-sm text-neutral-900">Dukungan</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Content - Empty, just showing background image */}
+          <div className="relative h-full flex flex-col justify-center p-12 text-white">
           </div>
 
           {/* Decorative Elements */}

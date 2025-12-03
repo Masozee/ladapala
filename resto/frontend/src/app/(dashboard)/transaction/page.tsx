@@ -588,14 +588,11 @@ export default function TransactionPage() {
               }}
             >
               {pendingOrders.map(order => {
-                const statusLabel =
-                  order.status === 'COMPLETED' ? '✓ SUDAH DIANTAR - SIAP BAYAR' :
-                  order.status === 'READY' ? '🍽️ SIAP DIANTAR' :
-                  order.status === 'PREPARING' ? '⏳ SEDANG DIMASAK' :
-                  '📋 DIKONFIRMASI'
+                const tableInfo = order.table_number ? `Meja ${order.table_number}` : 'Takeaway'
+                const guestInfo = order.customer_name ? ` - ${order.customer_name}` : ''
                 return (
                   <option key={order.id} value={order.id}>
-                    {statusLabel} - {order.table_number ? `Meja ${order.table_number}` : 'Takeaway'} - {order.order_number}
+                    {tableInfo}{guestInfo}
                   </option>
                 )
               })}
@@ -1009,14 +1006,16 @@ export default function TransactionPage() {
           </Card>
         )}
 
-        {/* Status Warning for orders not yet delivered */}
+        {/* Status Info - Payment can proceed at any status */}
         {selectedOrder && selectedOrder.status !== 'COMPLETED' && (
-          <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-            <p className="text-sm text-orange-800 mb-3">
-              <strong>⚠️ Pesanan belum diantar ke pelanggan</strong>
+          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 mb-3">
+              <strong>Status Pesanan</strong>
               <br />
-              Status: {selectedOrder.status === 'READY' ? 'Siap diantar' :
-                       selectedOrder.status === 'PREPARING' ? 'Sedang dimasak' : 'Dikonfirmasi'}
+              {selectedOrder.status === 'READY' ? 'Siap diantar' :
+               selectedOrder.status === 'PREPARING' ? 'Sedang dimasak' : 'Dikonfirmasi'}
+              <br />
+              <span className="text-xs">Pembayaran dapat diproses sekarang (bayar di muka)</span>
             </p>
             {selectedOrder.status === 'READY' && (
               <Button

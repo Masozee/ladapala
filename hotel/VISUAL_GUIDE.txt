@@ -1,0 +1,242 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║              HOTEL MANAGEMENT SYSTEM - VISUAL GUIDE                  ║
+║                     Windows 11 Edition                               ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+📊 WORKFLOW DIAGRAM
+═══════════════════════════════════════════════════════════════════════
+
+                         ┌─────────────────┐
+                         │  First Time?    │
+                         │   YES / NO      │
+                         └────────┬────────┘
+                                  │
+                    ┌─────────────┴─────────────┐
+                    │                           │
+                   YES                         NO
+                    │                           │
+                    ▼                           ▼
+         ┌──────────────────────┐    ┌──────────────────────┐
+         │ SETUP_FIRST_TIME.bat │    │   START_HOTEL.bat    │
+         │  (Run once only)     │    │   (Daily launcher)   │
+         └──────────┬───────────┘    └──────────┬───────────┘
+                    │                           │
+                    │  ┌────────────────────┐   │
+                    │  │ Optional:          │   │
+                    └─▶│CREATE_SHORTCUTS.bat│◀──┘
+                       └────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │  System Running       │
+                    │  Backend:  :8000      │
+                    │  Frontend: :3000      │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │ Use Application       │
+                    │ http://localhost:3000 │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │   STOP_SERVERS.bat    │
+                    │   (When finished)     │
+                    └───────────────────────┘
+
+
+🗂️ FILE ORGANIZATION
+═══════════════════════════════════════════════════════════════════════
+
+📂 hotel/
+│
+├── 📄 START_HERE.txt ◄────────────── 👈 READ THIS FIRST!
+│
+├── 🎮 LAUNCHER SCRIPTS
+│   ├── MENU.bat ◄──────────────────── 🌟 RECOMMENDED (Menu Interface)
+│   ├── START_HOTEL.bat ◄──────────── ⚡ FASTEST (One-click)
+│   └── START_HOTEL_ADVANCED.bat ◄─── 🔧 ADVANCED (With checks)
+│
+├── ⚙️ SETUP & UTILITIES
+│   ├── SETUP_FIRST_TIME.bat ◄────── 🎯 RUN ONCE FIRST
+│   ├── CHECK_SYSTEM.bat ◄────────── 🏥 Health Check
+│   ├── BACKUP_DATABASE.bat ◄─────── 💾 Backup Data
+│   └── CREATE_SHORTCUTS.bat ◄────── 🔗 Desktop Shortcuts
+│
+├── 🎛️ CONTROL SCRIPTS
+│   ├── STOP_SERVERS.bat ◄────────── 🛑 Stop Everything
+│   └── OPEN_BROWSER.bat ◄────────── 🌐 Open in Browser
+│
+├── 📚 DOCUMENTATION
+│   ├── QUICK_START.txt ◄─────────── 📖 Quick Guide
+│   ├── README_WINDOWS.md ◄───────── 📕 Full Manual
+│   ├── SCRIPTS_OVERVIEW.md ◄─────── 📗 Script Reference
+│   ├── DEPLOYMENT_SUMMARY.md ◄──── 📘 Tech Details
+│   └── VISUAL_GUIDE.txt ◄────────── 📙 This File
+│
+├── 📂 backend/
+│   ├── .env ◄──────────────────────── 🔧 Config (License: KL-U384T)
+│   ├── .venv/ ◄─────────────────────── 🐍 Python Environment
+│   ├── db.sqlite3 ◄─────────────────── 💾 Database
+│   ├── manage.py ◄──────────────────── ⚙️ Django Manager
+│   └── media/ ◄─────────────────────── 📁 Uploads
+│
+└── 📂 frontend/
+    ├── .env ◄──────────────────────── 🔧 Config
+    ├── node_modules/ ◄──────────────── 📦 Dependencies
+    └── src/ ◄──────────────────────── 💻 App Code
+
+
+🎯 QUICK DECISION TREE
+═══════════════════════════════════════════════════════════════════════
+
+❓ What do you want to do?
+
+┌─ First time setup?
+│  └─➤ Run: SETUP_FIRST_TIME.bat
+│
+┌─ Start the system?
+│  ├─➤ Easy way: MENU.bat → Option 1
+│  ├─➤ Quick way: START_HOTEL.bat
+│  └─➤ Safe way: START_HOTEL_ADVANCED.bat
+│
+┌─ Stop the system?
+│  ├─➤ Method 1: STOP_SERVERS.bat
+│  └─➤ Method 2: Press Ctrl+C in terminals
+│
+┌─ Check if working?
+│  └─➤ Run: CHECK_SYSTEM.bat
+│
+┌─ Backup data?
+│  └─➤ Run: BACKUP_DATABASE.bat
+│
+┌─ Create shortcuts?
+│  └─➤ Run: CREATE_SHORTCUTS.bat
+│
+┌─ Open in browser?
+│  └─➤ Run: OPEN_BROWSER.bat
+│
+└─ Need help?
+   ├─➤ Quick: QUICK_START.txt
+   └─➤ Detailed: README_WINDOWS.md
+
+
+⚡ USAGE PATTERNS
+═══════════════════════════════════════════════════════════════════════
+
+Pattern 1: FIRST TIME USER
+┌────────────────────────────────────────────────────┐
+│ 1. Read START_HERE.txt                             │
+│ 2. Install Python + Node.js                        │
+│ 3. Run SETUP_FIRST_TIME.bat                        │
+│ 4. Run CREATE_SHORTCUTS.bat                        │
+│ 5. Run START_HOTEL.bat                             │
+│ 6. Open http://localhost:3000                      │
+└────────────────────────────────────────────────────┘
+
+Pattern 2: DAILY USER
+┌────────────────────────────────────────────────────┐
+│ 1. Double-click: START_HOTEL.bat                   │
+│ 2. Wait for servers to start                       │
+│ 3. Use the application                             │
+│ 4. Double-click: STOP_SERVERS.bat                  │
+└────────────────────────────────────────────────────┘
+
+Pattern 3: DESKTOP SHORTCUT USER
+┌────────────────────────────────────────────────────┐
+│ 1. Click: "Hotel - Start" (on desktop)             │
+│ 2. Click: "Hotel - Open Browser" (on desktop)      │
+│ 3. Use the application                             │
+│ 4. Click: "Hotel - Stop" (on desktop)              │
+└────────────────────────────────────────────────────┘
+
+Pattern 4: MENU-DRIVEN USER
+┌────────────────────────────────────────────────────┐
+│ 1. Double-click: MENU.bat                          │
+│ 2. Select option from menu                         │
+│ 3. Follow on-screen instructions                   │
+└────────────────────────────────────────────────────┘
+
+
+🔍 TROUBLESHOOTING FLOWCHART
+═══════════════════════════════════════════════════════════════════════
+
+                    ┌──────────────────┐
+                    │  Having Issues?  │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                ┌────────────────────────┐
+                │  Run CHECK_SYSTEM.bat  │
+                └────────┬───────────────┘
+                         │
+           ┌─────────────┴─────────────┐
+           │                           │
+      ✅ PASS                      ❌ FAIL
+           │                           │
+           ▼                           ▼
+  ┌─────────────────┐      ┌──────────────────────┐
+  │  Check Servers  │      │  Install Missing:    │
+  │  Running?       │      │  - Python 3.12+      │
+  └────────┬────────┘      │  - Node.js LTS       │
+           │               └──────────────────────┘
+     ┌─────┴─────┐
+    YES         NO
+     │           │
+     │           ▼
+     │    ┌────────────────┐
+     │    │ Run STOP then  │
+     │    │ START again    │
+     │    └────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│ Check port 3000      │
+│ in browser           │
+└──────────────────────┘
+
+
+💡 TIPS & TRICKS
+═══════════════════════════════════════════════════════════════════════
+
+✓ Keep terminal windows open - they show helpful logs
+✓ Allow Windows Firewall when prompted
+✓ Backup weekly using BACKUP_DATABASE.bat
+✓ Use MENU.bat if unsure what to do
+✓ Check START_HERE.txt for getting started
+✓ Desktop shortcuts make life easier
+✓ CHECK_SYSTEM.bat diagnoses most issues
+✓ Both servers must run for the system to work
+✓ Backend (8000) must start before frontend (3000)
+✓ Don't close terminal windows while using the system
+
+
+🎨 COLOR CODES IN TERMINALS
+═══════════════════════════════════════════════════════════════════════
+
+🟢 Green   → Success / OK
+🔴 Red     → Error / Failed
+🟡 Yellow  → Warning
+🔵 Blue    → Information
+⚪ White   → Normal text
+
+
+🔐 IMPORTANT NOTES
+═══════════════════════════════════════════════════════════════════════
+
+📌 License: KL-U384T (pre-configured)
+📌 Database: backend/db.sqlite3 (backup this!)
+📌 Media: backend/media/ (backup this too!)
+📌 Backups: Saved in backups/ folder
+📌 Ports: 3000 (frontend), 8000 (backend)
+
+
+═══════════════════════════════════════════════════════════════════════
+
+                  Ready? Start with START_HERE.txt!
+
+═══════════════════════════════════════════════════════════════════════

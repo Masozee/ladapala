@@ -1,0 +1,111 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║                  HOTEL MANAGEMENT SYSTEM                             ║
+║                    Windows 11 Edition                                ║
+║                                                                      ║
+║                     ⭐ START HERE ⭐                                  ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+👋 WELCOME!
+
+This is your Hotel Management System, ready for one-click deployment on
+Windows 11. Everything has been pre-configured for you.
+
+
+🎯 GETTING STARTED (3 Simple Steps):
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │  STEP 1: Install Prerequisites (if you haven't already)     │
+  └─────────────────────────────────────────────────────────────┘
+
+     Download and install:
+     • Python 3.12+  from  https://www.python.org/
+       (⚠️ Check "Add Python to PATH" during installation)
+
+     • Node.js LTS   from  https://nodejs.org/
+
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │  STEP 2: First Time Setup                                   │
+  └─────────────────────────────────────────────────────────────┘
+
+     Double-click:  SETUP_FIRST_TIME.bat
+
+     This will:
+     ✓ Install all dependencies
+     ✓ Set up the database
+     ✓ Ask you to create an admin user
+
+     ⏱️ Takes about 5-10 minutes
+
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │  STEP 3: Start Using the System                             │
+  └─────────────────────────────────────────────────────────────┘
+
+     Option A (Easiest):
+       Double-click:  MENU.bat
+       Select option 1 or 2
+
+     Option B (Fastest):
+       Double-click:  START_HOTEL.bat
+       Open browser to http://localhost:3000
+
+
+═══════════════════════════════════════════════════════════════════════
+
+
+📚 HELPFUL FILES:
+
+  MENU.bat                → Interactive menu for all operations
+  QUICK_START.txt        → Quick reference guide
+  README_WINDOWS.md      → Complete documentation
+  SCRIPTS_OVERVIEW.md    → All scripts explained
+
+
+🔗 ACCESS POINTS (after starting):
+
+  Main Application:  http://localhost:3000
+  Admin Panel:      http://localhost:8000/admin
+  API Backend:      http://localhost:8000
+
+
+🛑 TO STOP THE SYSTEM:
+
+  • Press Ctrl+C in the terminal windows, OR
+  • Double-click: STOP_SERVERS.bat
+
+
+💡 TIPS:
+
+  ✓ Create desktop shortcuts: Run CREATE_SHORTCUTS.bat
+  ✓ Check system health: Run CHECK_SYSTEM.bat
+  ✓ Backup your data: Run BACKUP_DATABASE.bat regularly
+  ✓ Keep terminal windows open while using the system
+
+
+⚠️ IMPORTANT:
+
+  • Your license is pre-configured: KL-U384T
+  • All data is stored in: backend\db.sqlite3
+  • Windows Firewall may ask for permission - click "Allow"
+
+
+═══════════════════════════════════════════════════════════════════════
+
+
+🆘 NEED HELP?
+
+  1. Run CHECK_SYSTEM.bat to diagnose issues
+  2. Read README_WINDOWS.md for detailed help
+  3. Check QUICK_START.txt for common tasks
+
+
+═══════════════════════════════════════════════════════════════════════
+
+                        Ready to get started?
+                    Run SETUP_FIRST_TIME.bat now!
+
+═══════════════════════════════════════════════════════════════════════

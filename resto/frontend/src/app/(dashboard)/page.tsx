@@ -482,11 +482,13 @@ export default function HomePage() {
                       </div>
                     </div>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Detail Pesanan {order.order_number}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
+                  <DialogContent className="max-w-md sm:max-w-lg h-full max-h-screen overflow-hidden p-0 fixed right-0 top-0 bottom-0 left-auto translate-x-0 translate-y-0 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right">
+                    <div className="flex flex-col h-full">
+                      <DialogHeader className="p-6 pb-4 border-b">
+                        <DialogTitle>Detail Pesanan {order.order_number}</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex-1 overflow-y-auto p-6">
+                        <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                         <div>
                           <div className="text-sm text-gray-500">Meja/Tipe</div>
@@ -609,6 +611,8 @@ export default function HomePage() {
                             <HugeiconsIcon icon={CancelCircleIcon} size={16} strokeWidth={2} className="mr-1" />
                             Batalkan
                           </Button>
+                        </div>
+                      </div>
                         </div>
                       </div>
                     </div>

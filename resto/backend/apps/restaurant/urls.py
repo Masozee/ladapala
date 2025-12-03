@@ -4,7 +4,7 @@ from .viewsets import (
     RestaurantViewSet, BranchViewSet, StaffViewSet,
     CategoryViewSet, ProductViewSet, InventoryViewSet,
     InventoryTransactionViewSet, InventoryBatchViewSet, OrderViewSet, OrderItemViewSet, PaymentViewSet,
-    TableViewSet, KitchenOrderViewSet, PromotionViewSet,
+    TableViewSet, KitchenOrderViewSet, BarOrderViewSet, PromotionViewSet,
     ScheduleViewSet, DashboardViewSet, CashierSessionViewSet, StaffSessionViewSet,
     RecipeViewSet, RecipeIngredientViewSet, PurchaseOrderViewSet, PurchaseOrderItemViewSet,
     StockTransferViewSet, VendorViewSet,
@@ -28,6 +28,7 @@ router.register(r'order-items', OrderItemViewSet)
 router.register(r'payments', PaymentViewSet)
 router.register(r'tables', TableViewSet)
 router.register(r'kitchen-orders', KitchenOrderViewSet)
+router.register(r'bar-orders', BarOrderViewSet)
 router.register(r'promotions', PromotionViewSet)
 router.register(r'schedules', ScheduleViewSet)
 router.register(r'reports', ReportViewSet, basename='reports')

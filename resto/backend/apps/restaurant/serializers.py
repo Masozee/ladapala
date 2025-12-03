@@ -4,7 +4,7 @@ from .models import (
     Restaurant, Branch, Staff, StaffRole,
     Category, Product, Inventory, InventoryTransaction, InventoryBatch,
     Order, OrderItem, Payment, Table,
-    KitchenOrder, KitchenOrderItem,
+    KitchenOrder, KitchenOrderItem, BarOrder, BarOrderItem,
     Promotion, Schedule, Report, CashierSession, StaffSession,
     Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
     StockTransfer, Vendor,
@@ -246,7 +246,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        from .models import KitchenOrder, KitchenOrderItem, Recipe
+        from .models import KitchenOrder, KitchenOrderItem, BarOrder, BarOrderItem, Recipe
 
         items_data = validated_data.pop('items')
 
@@ -295,7 +295,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             OrderItem.objects.create(order=order, **item_data)
 
-        # Create kitchen order with items after all order items are saved
+        # Separate items into food (kitchen) and drinks (bar)
         if order.order_type in ['DINE_IN', 'TAKEAWAY', 'DELIVERY']:
             priority_map = {
                 'DINE_IN': 5,
@@ -303,30 +303,44 @@ class OrderCreateSerializer(serializers.ModelSerializer):
                 'DELIVERY': 1
             }
 
-            # Create a single KitchenOrder for the order
-            kitchen_order = KitchenOrder.objects.create(
-                order=order,
-                priority=priority_map.get(order.order_type, 0),
-                status='PENDING'
-            )
+            food_items = order.get_food_items()
+            beverage_items = order.get_beverage_items()
 
-            # Add all items to the kitchen order with [BAR] prefix for beverages
-            for order_item in order.items.all():
-                # Check if product category is beverage/drink
-                is_beverage = order_item.product.category and 'minuman' in order_item.product.category.name.lower()
-
-                # Prefix notes with [BAR] for beverages
-                notes = order_item.notes or ""
-                if is_beverage:
-                    notes = f"[BAR] {notes}" if notes else "[BAR]"
-
-                KitchenOrderItem.objects.create(
-                    kitchen_order=kitchen_order,
-                    product=order_item.product,
-                    quantity=order_item.quantity,
-                    notes=notes,
+            # Create KitchenOrder only if there are food items
+            if food_items:
+                kitchen_order = KitchenOrder.objects.create(
+                    order=order,
+                    priority=priority_map.get(order.order_type, 0),
                     status='PENDING'
                 )
+
+                # Add food items to kitchen order
+                for order_item in food_items:
+                    KitchenOrderItem.objects.create(
+                        kitchen_order=kitchen_order,
+                        product=order_item.product,
+                        quantity=order_item.quantity,
+                        notes=order_item.notes or "",
+                        status='PENDING'
+                    )
+
+            # Create BarOrder only if there are beverage items
+            if beverage_items:
+                bar_order = BarOrder.objects.create(
+                    order=order,
+                    priority=priority_map.get(order.order_type, 0),
+                    status='PENDING'
+                )
+
+                # Add beverage items to bar order
+                for order_item in beverage_items:
+                    BarOrderItem.objects.create(
+                        bar_order=bar_order,
+                        product=order_item.product,
+                        quantity=order_item.quantity,
+                        notes=order_item.notes or "",
+                        status='PENDING'
+                    )
 
         return order
 
@@ -381,9 +395,30 @@ class KitchenOrderSerializer(serializers.ModelSerializer):
     order_type = serializers.CharField(source='order.order_type', read_only=True)
     table_number = serializers.CharField(source='order.table.number', read_only=True)
     assigned_to_name = serializers.CharField(source='assigned_to.user.username', read_only=True)
-    
+
     class Meta:
         model = KitchenOrder
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class BarOrderItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+
+    class Meta:
+        model = BarOrderItem
+        fields = '__all__'
+
+
+class BarOrderSerializer(serializers.ModelSerializer):
+    items = BarOrderItemSerializer(many=True, read_only=True)
+    order_number = serializers.CharField(source='order.order_number', read_only=True)
+    order_type = serializers.CharField(source='order.order_type', read_only=True)
+    table_number = serializers.CharField(source='order.table.number', read_only=True)
+    assigned_to_name = serializers.CharField(source='assigned_to.user.username', read_only=True)
+
+    class Meta:
+        model = BarOrder
         fields = '__all__'
         read_only_fields = ['created_at', 'updated_at']
 

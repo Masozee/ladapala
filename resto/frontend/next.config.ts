@@ -5,11 +5,6 @@ const nextConfig: NextConfig = {
   // Set the workspace root to the resto directory to fix lockfile warning
   outputFileTracingRoot: path.join(__dirname),
 
-  // Enable ESLint during production build
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
-
   // Allow images from backend API
   images: {
     remotePatterns: [

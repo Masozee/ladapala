@@ -671,6 +671,15 @@ class Order(models.Model):
     notes = models.TextField(blank=True)
     created_by = models.ForeignKey('Staff', on_delete=models.SET_NULL, null=True, related_name='created_orders')
 
+    # Split bill fields
+    is_split_bill = models.BooleanField(default=False, help_text='Whether this is part of a split bill')
+    parent_order = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='split_orders', help_text='Original order if this is a split')
+    split_number = models.IntegerField(null=True, blank=True, help_text='Split number (1, 2, 3, etc.)')
+    split_total = models.IntegerField(null=True, blank=True, help_text='Total number of splits')
+
+    # Merged tables field
+    merged_from_tables = models.JSONField(default=list, blank=True, help_text='List of table IDs that were merged into this table')
+
     # Staff tracking - who handled this order at each stage
     order_taken_by = models.ForeignKey(
         'Staff',
@@ -786,6 +795,92 @@ class Order(models.Model):
             return False, "; ".join(errors)
 
         return True, f"Deducted {len(deductions)} ingredients"
+
+    def has_food_items(self):
+        """Check if order contains any food items (for kitchen)"""
+        food_keywords = ['nasi', 'makanan', 'sup', 'berkuah', 'pembuka', 'camilan',
+                        'pencuci mulut', 'sarapan', 'jajanan', 'utama', 'food',
+                        'appetizer', 'dessert', 'main']
+
+        for item in self.items.all():
+            if item.product.category:
+                category_name = item.product.category.name.lower()
+                if any(keyword in category_name for keyword in food_keywords):
+                    return True
+        return False
+
+    def has_beverage_items(self):
+        """Check if order contains any beverage items (for bar)"""
+        beverage_keywords = ['minuman', 'beverage', 'drink', 'es', 'jus',
+                            'kopi', 'teh', 'juice', 'coffee', 'tea']
+
+        for item in self.items.all():
+            if item.product.category:
+                category_name = item.product.category.name.lower()
+                if any(keyword in category_name for keyword in beverage_keywords):
+                    return True
+        return False
+
+    def get_food_items(self):
+        """Get all food items in this order"""
+        food_keywords = ['nasi', 'makanan', 'sup', 'berkuah', 'pembuka', 'camilan',
+                        'pencuci mulut', 'sarapan', 'jajanan', 'utama', 'food',
+                        'appetizer', 'dessert', 'main']
+
+        food_items = []
+        for item in self.items.all():
+            if item.product.category:
+                category_name = item.product.category.name.lower()
+                if any(keyword in category_name for keyword in food_keywords):
+                    food_items.append(item)
+        return food_items
+
+    def get_beverage_items(self):
+        """Get all beverage items in this order"""
+        beverage_keywords = ['minuman', 'beverage', 'drink', 'es', 'jus',
+                            'kopi', 'teh', 'juice', 'coffee', 'tea']
+
+        beverage_items = []
+        for item in self.items.all():
+            if item.product.category:
+                category_name = item.product.category.name.lower()
+                if any(keyword in category_name for keyword in beverage_keywords):
+                    beverage_items.append(item)
+        return beverage_items
+
+    def update_order_status(self):
+        """
+        Update order status based on kitchen and bar order statuses.
+        Order is only READY when both kitchen and bar (if applicable) are READY.
+        """
+        has_kitchen = self.has_food_items()
+        has_bar = self.has_beverage_items()
+
+        # Check kitchen status
+        kitchen_ready = True
+        if has_kitchen:
+            try:
+                kitchen_ready = self.kitchen_order.status == 'READY'
+            except:
+                kitchen_ready = False
+
+        # Check bar status
+        bar_ready = True
+        if has_bar:
+            try:
+                bar_ready = self.bar_order.status == 'READY'
+            except:
+                bar_ready = False
+
+        # Update main order status
+        if kitchen_ready and bar_ready:
+            if self.status != 'READY':
+                self.status = 'READY'
+                self.save()
+        elif (has_kitchen and not kitchen_ready) or (has_bar and not bar_ready):
+            if self.status not in ['CONFIRMED', 'PREPARING']:
+                self.status = 'PREPARING'
+                self.save()
 
     def __str__(self):
         return f"Order {self.order_number} - {self.status}"
@@ -933,7 +1028,7 @@ class KitchenOrderItem(models.Model):
         ('PREPARING', 'Preparing'),
         ('READY', 'Ready'),
     ]
-    
+
     kitchen_order = models.ForeignKey(KitchenOrder, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
@@ -947,6 +1042,53 @@ class KitchenOrderItem(models.Model):
 
     class Meta:
         ordering = ['kitchen_order', 'product']
+
+
+class BarOrder(models.Model):
+    BAR_STATUS = [
+        ('PENDING', 'Pending'),
+        ('PREPARING', 'Preparing'),
+        ('READY', 'Ready'),
+        ('SERVED', 'Served'),
+    ]
+
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='bar_order')
+    status = models.CharField(max_length=20, choices=BAR_STATUS, default='PENDING')
+    priority = models.IntegerField(default=0)
+    assigned_to = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True,
+                                   limit_choices_to={'role': StaffRole.BAR})
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Bar Order for {self.order.order_number}"
+
+    class Meta:
+        ordering = ['-priority', 'created_at']
+
+
+class BarOrderItem(models.Model):
+    ITEM_STATUS = [
+        ('PENDING', 'Pending'),
+        ('PREPARING', 'Preparing'),
+        ('READY', 'Ready'),
+    ]
+
+    bar_order = models.ForeignKey(BarOrder, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    status = models.CharField(max_length=20, choices=ITEM_STATUS, default='PENDING')
+    notes = models.TextField(blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.product.name} x {self.quantity} - {self.status}"
+
+    class Meta:
+        ordering = ['bar_order', 'product']
 
 
 class Promotion(models.Model):

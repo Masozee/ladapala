@@ -27,7 +27,7 @@ export default function TablePage() {
   const [joinTables, setJoinTables] = useState<number[]>([])
   const [showMoreMenu, setShowMoreMenu] = useState<number | null>(null)
   const [showBooking, setShowBooking] = useState(false)
-  const [splitAmount, setSplitAmount] = useState(2)
+  const [processingSplit, setProcessingSplit] = useState(false)
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'occupied' | 'reserved'>('all')
   const [unpaidOrders, setUnpaidOrders] = useState<Order[]>([])
   const [processingOrders, setProcessingOrders] = useState<Order[]>([])
@@ -253,30 +253,113 @@ export default function TablePage() {
       const selectedTables = tables.filter(t => joinTables.includes(t.id))
       const tableNumbers = selectedTables.map(t => t.number).join(", ")
 
-      // Collect all orders from selected tables
-      const allOrders = selectedTables.flatMap(t => t.orders)
+      // Use the first selected table as target, rest as sources
+      const targetTableId = joinTables[0]
+      const sourceTableIds = joinTables.slice(1)
 
-      // In production, you would:
-      // 1. Create a "joined table" record in backend
-      // 2. Transfer/link all orders to the primary table
-      // For now, store in localStorage
-      const joinedTablesData = JSON.parse(localStorage.getItem('joinedTables') || '[]')
-      joinedTablesData.push({
-        tables: joinTables,
-        table_numbers: tableNumbers,
-        created_at: new Date().toISOString(),
-        total_guests: selectedTables.reduce((sum, t) => sum + t.currentGuests, 0),
-        total_orders: allOrders.length
-      })
-      localStorage.setItem('joinedTables', JSON.stringify(joinedTablesData))
+      // Call the merge tables API
+      const result = await api.mergeTables(
+        targetTableId,
+        sourceTableIds,
+        `Gabungan Meja ${tableNumbers}`
+      )
 
-      alert(`✅ Meja ${tableNumbers} berhasil digabung!\n\nTotal tamu: ${selectedTables.reduce((sum, t) => sum + t.currentGuests, 0)} orang\nTotal pesanan: ${allOrders.length}`)
+      alert(`✅ ${result.message}`)
 
       setJoinTables([])
       await fetchTablesData()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error joining tables:', error)
-      alert("Gagal menggabung meja. Silakan coba lagi.")
+      alert(error.message || "Gagal menggabung meja. Silakan coba lagi.")
+    }
+  }
+
+  const [splitCustomerName, setSplitCustomerName] = useState('')
+  const [splitItemQuantities, setSplitItemQuantities] = useState<Record<number, number>>({})
+
+  const updateSplitQuantity = (itemId: number, quantity: number, maxQuantity: number) => {
+    setSplitItemQuantities(prev => {
+      const newQty = Math.max(0, Math.min(quantity, maxQuantity))
+      if (newQty === 0) {
+        const updated = { ...prev }
+        delete updated[itemId]
+        return updated
+      }
+      return { ...prev, [itemId]: newQty }
+    })
+  }
+
+  const handleProcessSplitBill = async () => {
+    if (!currentTable) return
+
+    if (!splitCustomerName.trim()) {
+      alert('Masukkan nama pelanggan untuk bill baru')
+      return
+    }
+
+    if (Object.keys(splitItemQuantities).length === 0) {
+      alert('Pilih minimal 1 item dengan quantity untuk dipindahkan ke bill baru')
+      return
+    }
+
+    try {
+      setProcessingSplit(true)
+
+      const mainOrder = currentTable.orders[0]
+
+      if (!mainOrder) {
+        alert('Tidak ada order untuk di-split')
+        return
+      }
+
+      // Build split data with quantities
+      const newCustomerItems: Array<{ item_id: number; quantity: number }> = []
+      const mainOrderItems: Array<{ item_id: number; quantity: number }> = []
+
+      mainOrder.items?.forEach(item => {
+        const splitQty = splitItemQuantities[item.id!] || 0
+        const remainingQty = item.quantity - splitQty
+
+        if (splitQty > 0) {
+          newCustomerItems.push({ item_id: item.id!, quantity: splitQty })
+        }
+
+        if (remainingQty > 0) {
+          mainOrderItems.push({ item_id: item.id!, quantity: remainingQty })
+        }
+      })
+
+      if (mainOrderItems.length === 0) {
+        alert('Harus ada minimal 1 item yang tersisa di bill utama')
+        return
+      }
+
+      // Prepare splits with quantities
+      const splits = [
+        {
+          customer_name: splitCustomerName,
+          items: newCustomerItems
+        },
+        {
+          customer_name: mainOrder.customer_name || 'Main Order',
+          items: mainOrderItems
+        }
+      ]
+
+      // Call split bill API
+      const result = await api.splitBill(mainOrder.id!, splits)
+
+      alert(`${result.message}\n\nItem yang dipindahkan telah dibuat sebagai transaksi baru`)
+
+      setShowSplitBill(false)
+      setSplitCustomerName('')
+      setSplitItemQuantities({})
+      await fetchTablesData()
+    } catch (error: any) {
+      console.error('Error splitting bill:', error)
+      alert(error.message || 'Gagal split bill. Silakan coba lagi.')
+    } finally {
+      setProcessingSplit(false)
     }
   }
 
@@ -681,84 +764,166 @@ export default function TablePage() {
         </div>
       )}
 
-      {/* Split Bill Modal */}
+      {/* Split Bill Modal - Simple version */}
       {showSplitBill && currentTable && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-700 mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full mx-4 my-8">
+            <h3 className="text-2xl font-bold text-gray-700 mb-4">
               Split Bill - Meja {currentTable.number}
             </h3>
 
             <div className="mb-6">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-semibold text-gray-700">Total Bill:</span>
-                <span className="text-lg font-bold text-green-500">
+              <div className="flex justify-between items-center mb-4 p-3 bg-gray-50 rounded">
+                <span className="text-sm font-medium text-gray-600">Total Bill Saat Ini:</span>
+                <span className="text-xl font-bold text-green-600">
                   Rp {Math.round(currentTable.revenue).toLocaleString('id-ID')}
                 </span>
               </div>
 
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Jumlah Orang
-                  </label>
-                  <Input
-                    type="number"
-                    value={splitAmount}
-                    onChange={(e) => setSplitAmount(Math.max(2, parseInt(e.target.value) || 2))}
-                    className="w-full rounded-none"
-                    min="2"
-                    max={currentTable.capacity}
-                  />
-                </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nama Pelanggan untuk Bill Baru
+                </label>
+                <Input
+                  type="text"
+                  value={splitCustomerName}
+                  onChange={(e) => setSplitCustomerName(e.target.value)}
+                  placeholder="Contoh: Budi"
+                  className="w-full"
+                />
+              </div>
 
-                <div className="p-3 bg-green-50 rounded">
-                  <p className="text-sm text-green-800">
-                    <strong>Per orang:</strong> Rp {Math.round(currentTable.revenue / splitAmount).toLocaleString('id-ID')}
-                  </p>
-                </div>
+              <div className="mb-4">
+                <h4 className="font-semibold text-gray-700 mb-3">
+                  Masukkan Quantity untuk Bill Baru
+                </h4>
+                <p className="text-xs text-gray-500 mb-3">
+                  Sisanya akan tetap di bill utama
+                </p>
+                <div className="space-y-3 max-h-96 overflow-y-auto border rounded-lg p-3">
+                  {currentTable.orders[0]?.items?.map((item) => {
+                    const splitQty = splitItemQuantities[item.id!] || 0
+                    const remainingQty = item.quantity - splitQty
+                    const splitTotal = parseFloat(item.unit_price) * splitQty
+                    const remainingTotal = parseFloat(item.unit_price) * remainingQty
 
-                {/* Show order breakdown */}
-                <div className="border-t pt-3">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Detail Pesanan:</p>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {currentTable.orders.map((order) => (
-                      <div key={order.id} className="text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">{order.customer_name}</span>
-                          <span className="font-semibold">Rp {parseFloat(order.total_amount || '0').toLocaleString('id-ID')}</span>
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-3 rounded border bg-white border-gray-200"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <div className="font-medium">{item.product_name}</div>
+                            <div className="text-xs text-gray-500">
+                              Rp {parseFloat(item.unit_price).toLocaleString('id-ID')} per item
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-semibold text-gray-700">
+                              Total Qty: {item.quantity}
+                            </div>
+                          </div>
                         </div>
-                        <ul className="text-xs text-gray-500 ml-2">
-                          {order.items?.map((item, idx) => (
-                            <li key={idx}>• {item.product_name} x{item.quantity}</li>
-                          ))}
-                        </ul>
+
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1">
+                            <label className="text-xs text-gray-600 block mb-1">
+                              Qty untuk Bill Baru
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => updateSplitQuantity(item.id!, splitQty - 1, item.quantity)}
+                              >
+                                -
+                              </Button>
+                              <Input
+                                type="number"
+                                min="0"
+                                max={item.quantity}
+                                value={splitQty}
+                                onChange={(e) => updateSplitQuantity(item.id!, parseInt(e.target.value) || 0, item.quantity)}
+                                className="w-20 text-center"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => updateSplitQuantity(item.id!, splitQty + 1, item.quantity)}
+                              >
+                                +
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-xs text-blue-600 font-medium">
+                              Bill Baru: Rp {splitTotal.toLocaleString('id-ID')}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              Sisa: Rp {remainingTotal.toLocaleString('id-ID')}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    )
+                  }) || []}
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowSplitBill(false)}
-                className="flex-1 rounded-none"
-              >
-                Batal
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowSplitBill(false)
-                  // Redirect to transaction page with split info
-                  const perPersonAmount = Math.round(currentTable.revenue / splitAmount)
-                  window.location.href = `/transaction?tableId=${currentTable.id}&split=${splitAmount}&amount=${perPersonAmount}`
-                }}
-                className="flex-1 bg-green-600 hover:bg-green-700 rounded-none"
-              >
-                Lanjut ke Pembayaran
-              </Button>
+              {Object.keys(splitItemQuantities).length > 0 && (
+                <div className="grid grid-cols-2 gap-3 p-3 bg-blue-50 rounded border border-blue-200">
+                  <div>
+                    <div className="text-xs text-gray-600 mb-1">Bill Baru ({splitCustomerName || 'Belum diisi'})</div>
+                    <div className="text-lg font-bold text-blue-600">
+                      Rp {currentTable.orders[0]?.items
+                        ?.reduce((sum, item) => {
+                          const splitQty = splitItemQuantities[item.id!] || 0
+                          return sum + parseFloat(item.unit_price) * splitQty
+                        }, 0)
+                        .toLocaleString('id-ID')}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-600 mb-1">Bill Utama (Sisa)</div>
+                    <div className="text-lg font-bold text-gray-700">
+                      Rp {currentTable.orders[0]?.items
+                        ?.reduce((sum, item) => {
+                          const splitQty = splitItemQuantities[item.id!] || 0
+                          const remainingQty = item.quantity - splitQty
+                          return sum + parseFloat(item.unit_price) * remainingQty
+                        }, 0)
+                        .toLocaleString('id-ID')}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowSplitBill(false)
+                    setSplitCustomerName('')
+                    setSplitItemQuantities({})
+                  }}
+                  className="flex-1"
+                >
+                  Batal
+                </Button>
+                <Button
+                  onClick={handleProcessSplitBill}
+                  disabled={processingSplit || !splitCustomerName.trim() || Object.keys(splitItemQuantities).length === 0}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {processingSplit ? 'Processing...' : 'Split Bill'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

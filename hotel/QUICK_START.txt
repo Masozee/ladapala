@@ -1,0 +1,119 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║           HOTEL MANAGEMENT SYSTEM - QUICK START                ║
+║                    Windows 11 Edition                          ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+📋 FIRST TIME SETUP (Do this once):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Make sure you have installed:
+   ✓ Python 3.12+ (from python.org)
+   ✓ Node.js LTS (from nodejs.org)
+
+2. Double-click: SETUP_FIRST_TIME.bat
+   - This will install all dependencies
+   - Create an admin user when prompted
+
+3. (Optional) Double-click: CREATE_SHORTCUTS.bat
+   - This will create desktop shortcuts for easy access
+
+
+🚀 DAILY USAGE (Every time you want to use the system):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+METHOD 1 - Quick Start (Recommended):
+  → Double-click: START_HOTEL.bat
+  → Wait for both servers to start (2 windows will open)
+  → Open browser: http://localhost:3000
+
+METHOD 2 - Menu Driven:
+  → Double-click: MENU.bat
+  → Select option 1 or 2 from the menu
+
+METHOD 3 - Using Desktop Shortcuts:
+  → Click "Hotel - Start" on your desktop
+  → Click "Hotel - Open Browser" to open the app
+
+
+🌐 ACCESS POINTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Main Application:  http://localhost:3000
+Admin Panel:       http://localhost:8000/admin
+API Backend:       http://localhost:8000
+
+
+🛑 STOPPING THE SYSTEM:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+METHOD 1: Press Ctrl+C in both terminal windows
+
+METHOD 2: Double-click: STOP_SERVERS.bat
+
+METHOD 3: Use desktop shortcut "Hotel - Stop"
+
+
+🔧 USEFUL COMMANDS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MENU.bat                  → Interactive menu for all operations
+CHECK_SYSTEM.bat         → Check if everything is working
+BACKUP_DATABASE.bat      → Create a backup of your data
+CREATE_SHORTCUTS.bat     → Create desktop shortcuts
+OPEN_BROWSER.bat         → Open the app in your browser
+
+
+💾 BACKUP YOUR DATA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your data is stored in:
+  - Database: backend\db.sqlite3
+  - Uploads:  backend\media\
+
+To backup: Double-click BACKUP_DATABASE.bat
+Backups saved to: backups\ folder
+
+
+⚠️ TROUBLESHOOTING:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Problem: Can't start - Python/Node not found
+Solution: Run CHECK_SYSTEM.bat to diagnose
+          Make sure Python and Node.js are installed
+
+Problem: Port already in use
+Solution: Run STOP_SERVERS.bat first
+          Then try starting again
+
+Problem: Database errors
+Solution: Check backend\db.sqlite3 exists
+          Run migrations: cd backend → .venv\Scripts\activate
+          → python manage.py migrate
+
+For more help, see: README_WINDOWS.md
+
+
+📞 SYSTEM INFORMATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+License: KL-U384T (Pre-configured)
+Backend: Django 5.2.7 + Python 3.12+
+Frontend: Next.js 16.0 + React 19
+Database: SQLite3
+
+
+💡 TIPS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Keep terminal windows open while using the system
+✓ Allow firewall access if Windows asks
+✓ Use Chrome, Edge, or Firefox for best experience
+✓ Backup regularly using BACKUP_DATABASE.bat
+✓ Don't close terminal windows to keep servers running
+
+
+════════════════════════════════════════════════════════════════
+
+Need help? Check README_WINDOWS.md for detailed documentation

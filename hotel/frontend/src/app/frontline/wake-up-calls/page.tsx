@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl, getCsrfToken } from '@/lib/config';
@@ -43,7 +43,7 @@ interface Reservation {
   check_out_date: string;
 }
 
-export default function WakeUpCallsPage() {
+function WakeUpCallsContent() {
   const searchParams = useSearchParams();
   const [wakeUpCalls, setWakeUpCalls] = useState<WakeUpCall[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -534,5 +534,13 @@ export default function WakeUpCallsPage() {
         </div>
       )}
     </AppLayout>
+  );
+}
+
+export default function WakeUpCallsPage() {
+  return (
+    <Suspense fallback={<div className="p-8">Loading...</div>}>
+      <WakeUpCallsContent />
+    </Suspense>
   );
 }

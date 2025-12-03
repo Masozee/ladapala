@@ -25,6 +25,7 @@ charset-normalizer==3.4.4
 # Utilities
 asgiref==3.10.0
 et-xmlfile==2.0.0
+python-dotenv==1.2.1
 
 # Production Server (optional - uncomment if needed)
 # gunicorn==23.0.0

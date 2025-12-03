@@ -25,15 +25,16 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-w=swvwob)&%m-%1s7tqzl%45rxcfvgdawfvpr%#*%2(s5t+v3*'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-w=swvwob)&%m-%1s7tqzl%45rxcfvgdawfvpr%#*%2(s5t+v3*')
 
 # License Key
 LICENSE_KEY = os.environ.get('LICENSE_KEY', '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.116', '*', 'api.parlemenkita.org', 'parlemenkita.org', 'kapulaga-iota.vercel.app']
+# Parse ALLOWED_HOSTS from environment or use defaults
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.0.116,*,api.parlemenkita.org,parlemenkita.org,kapulaga-iota.vercel.app').split(',')
 
 
 # Application definition
@@ -159,17 +160,22 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:3001",
-    "http://localhost:3002", 
-    "http://localhost:3003",
-    "https://parlemenkita.org",
-    "https://www.parlemenkita.org",
-    "https://api.parlemenkita.org",
-    "https://kapulaga-iota.vercel.app",
-]
+# Parse CORS_ALLOWED_ORIGINS from environment or use defaults
+cors_origins_env = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+if cors_origins_env:
+    CORS_ALLOWED_ORIGINS = cors_origins_env.split(',')
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://localhost:3003",
+        "https://parlemenkita.org",
+        "https://www.parlemenkita.org",
+        "https://api.parlemenkita.org",
+        "https://kapulaga-iota.vercel.app",
+    ]
 
 CORS_ALLOW_CREDENTIALS = True
 

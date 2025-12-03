@@ -11,7 +11,7 @@ from .models import (
     Restaurant, Branch, Staff,
     Category, Product, Inventory, InventoryTransaction, InventoryBatch,
     Order, OrderItem, Payment, Table,
-    KitchenOrder, KitchenOrderItem,
+    KitchenOrder, KitchenOrderItem, BarOrder, BarOrderItem,
     Promotion, Schedule, Report, CashierSession, StaffSession,
     Recipe, RecipeIngredient, PurchaseOrder, PurchaseOrderItem,
     StockTransfer,
@@ -24,6 +24,7 @@ from .serializers import (
     InventoryTransactionSerializer, InventoryBatchSerializer, OrderSerializer, OrderCreateSerializer,
     OrderItemSerializer, PaymentSerializer, TableSerializer,
     KitchenOrderSerializer, KitchenOrderItemSerializer,
+    BarOrderSerializer, BarOrderItemSerializer,
     PromotionSerializer, ScheduleSerializer, ReportSerializer,
     DashboardSerializer, CashierSessionSerializer, CashierSessionOpenSerializer,
     CashierSessionCloseSerializer, StaffSessionSerializer, StaffSessionCreateSerializer,
@@ -819,6 +820,211 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['post'])
+    def split_bill(self, request, pk=None):
+        """
+        Split a bill into multiple separate orders with quantity support.
+
+        POST /api/orders/{id}/split_bill/
+        Body: {
+            "splits": [
+                {
+                    "customer_name": "Person 1",
+                    "items": [
+                        {"item_id": 1, "quantity": 2},
+                        {"item_id": 2, "quantity": 1}
+                    ]
+                },
+                {
+                    "customer_name": "Person 2",
+                    "items": [
+                        {"item_id": 1, "quantity": 1},
+                        {"item_id": 3, "quantity": 2}
+                    ]
+                }
+            ]
+        }
+        """
+        from django.db import transaction as db_transaction
+        from decimal import Decimal
+
+        parent_order = self.get_object()
+        splits = request.data.get('splits', [])
+
+        if not splits or len(splits) < 2:
+            return Response(
+                {'error': 'At least 2 splits required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            with db_transaction.atomic():
+                # Validate quantities
+                item_quantity_map = {}
+                for item in parent_order.items.all():
+                    item_quantity_map[item.id] = {'item': item, 'total_split': 0}
+
+                for split in splits:
+                    items = split.get('items', [])
+                    for item_data in items:
+                        item_id = item_data.get('item_id')
+                        quantity = item_data.get('quantity', 0)
+                        if item_id in item_quantity_map:
+                            item_quantity_map[item_id]['total_split'] += quantity
+
+                # Check quantities match
+                for item_id, data in item_quantity_map.items():
+                    if data['total_split'] != data['item'].quantity:
+                        return Response(
+                            {'error': f'Quantity mismatch for item {data["item"].product.name}. Expected {data["item"].quantity}, got {data["total_split"]}'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                # Mark parent order as split
+                parent_order.is_split_bill = True
+                parent_order.save()
+
+                split_orders = []
+                for idx, split_data in enumerate(splits, 1):
+                    items_data = split_data.get('items', [])
+
+                    # Create new order for this split
+                    split_order = Order.objects.create(
+                        branch=parent_order.branch,
+                        table=parent_order.table,
+                        order_type=parent_order.order_type,
+                        status=parent_order.status,
+                        customer_name=split_data.get('customer_name', f'Split {idx}'),
+                        customer_phone=parent_order.customer_phone,
+                        customer=parent_order.customer,
+                        delivery_address=parent_order.delivery_address,
+                        notes=f"Split dari order {parent_order.order_number}",
+                        created_by=parent_order.created_by,
+                        is_split_bill=True,
+                        parent_order=parent_order,
+                        split_number=idx,
+                        split_total=len(splits),
+                    )
+
+                    # Create items for split order
+                    for item_data in items_data:
+                        item_id = item_data.get('item_id')
+                        quantity = item_data.get('quantity', 0)
+                        original_item = item_quantity_map[item_id]['item']
+
+                        if quantity > 0:
+                            OrderItem.objects.create(
+                                order=split_order,
+                                product=original_item.product,
+                                quantity=quantity,
+                                unit_price=original_item.unit_price,
+                                discount_amount=original_item.discount_amount or 0,
+                                notes=original_item.notes
+                            )
+
+                    split_orders.append(split_order)
+
+                # Delete original order items
+                parent_order.items.all().delete()
+
+                serializer = self.get_serializer(split_orders, many=True)
+                return Response({
+                    'message': f'Bill split into {len(splits)} orders',
+                    'parent_order': parent_order.order_number,
+                    'split_orders': serializer.data
+                })
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=['post'])
+    def merge_tables(self, request):
+        """
+        Merge orders from multiple tables into one table.
+
+        POST /api/orders/merge_tables/
+        Body: {
+            "target_table_id": 5,  # Table to merge into
+            "source_table_ids": [2, 3, 4],  # Tables to merge from
+            "merged_customer_name": "Merged Group"
+        }
+        """
+        from django.db import transaction as db_transaction
+
+        target_table_id = request.data.get('target_table_id')
+        source_table_ids = request.data.get('source_table_ids', [])
+        merged_customer_name = request.data.get('merged_customer_name', 'Merged Table')
+
+        if not target_table_id or not source_table_ids:
+            return Response(
+                {'error': 'target_table_id and source_table_ids required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            with db_transaction.atomic():
+                # Get target table
+                target_table = Table.objects.get(id=target_table_id)
+
+                # Get all orders from source tables
+                source_orders = Order.objects.filter(
+                    table_id__in=source_table_ids,
+                    status__in=['CONFIRMED', 'PREPARING', 'READY']
+                ).exclude(
+                    # Exclude orders that already have completed payments
+                    payments__status='COMPLETED'
+                )
+
+                if not source_orders.exists():
+                    return Response(
+                        {'error': 'No active orders found in source tables'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Move all orders to target table
+                moved_orders = []
+                for order in source_orders:
+                    old_table_id = order.table_id
+                    order.table = target_table
+                    order.notes = f"{order.notes}\n[Merged from Table {order.table.number}]" if order.notes else f"[Merged from previous table]"
+
+                    # Store merged table info
+                    if not order.merged_from_tables:
+                        order.merged_from_tables = []
+                    if old_table_id not in order.merged_from_tables:
+                        order.merged_from_tables.append(old_table_id)
+
+                    order.save()
+                    moved_orders.append(order)
+
+                # Mark source tables as available
+                Table.objects.filter(id__in=source_table_ids).update(is_available=True)
+
+                # Mark target table as occupied
+                target_table.is_available = False
+                target_table.save()
+
+                serializer = self.get_serializer(moved_orders, many=True)
+                return Response({
+                    'message': f'Merged {len(moved_orders)} orders from {len(source_table_ids)} tables to table {target_table.number}',
+                    'target_table': target_table.number,
+                    'merged_orders': serializer.data
+                })
+
+        except Table.DoesNotExist:
+            return Response(
+                {'error': 'Target table not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
@@ -1072,11 +1278,11 @@ class KitchenOrderViewSet(viewsets.ModelViewSet):
         kitchen_order.status = 'READY'
         kitchen_order.completed_at = timezone.now()
         kitchen_order.save()
-        
-        kitchen_order.order.status = 'READY'
-        kitchen_order.order.save()
-        
-        return Response({'status': 'order marked as ready'})
+
+        # Update main order status based on both kitchen and bar
+        kitchen_order.order.update_order_status()
+
+        return Response({'status': 'kitchen order marked as ready'})
     
     @action(detail=True, methods=['get'])
     def print_ticket(self, request, pk=None):
@@ -1164,6 +1370,60 @@ class KitchenOrderViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['assign', 'start_preparation', 'mark_ready']:
             return [IsKitchenStaff()]
+        return [IsAuthenticated()]
+
+
+class BarOrderViewSet(viewsets.ModelViewSet):
+    queryset = BarOrder.objects.all()
+    serializer_class = BarOrderSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['status', 'assigned_to']
+    ordering = ['-priority', 'created_at']
+
+    @action(detail=True, methods=['post'])
+    def assign(self, request, pk=None):
+        bar_order = self.get_object()
+        staff_id = request.data.get('staff_id')
+
+        try:
+            staff = Staff.objects.get(id=staff_id, role='BAR')
+            bar_order.assigned_to = staff
+            bar_order.save()
+            return Response({'status': 'order assigned'})
+        except Staff.DoesNotExist:
+            return Response(
+                {'error': 'Bar staff not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=True, methods=['post'])
+    def start_preparation(self, request, pk=None):
+        bar_order = self.get_object()
+        bar_order.status = 'PREPARING'
+        bar_order.started_at = timezone.now()
+        bar_order.save()
+
+        # Don't update main order status yet - wait for both kitchen and bar
+        return Response({'status': 'preparation started'})
+
+    @action(detail=True, methods=['post'])
+    def mark_ready(self, request, pk=None):
+        bar_order = self.get_object()
+        bar_order.status = 'READY'
+        bar_order.completed_at = timezone.now()
+        bar_order.save()
+
+        # Update main order status based on both kitchen and bar
+        bar_order.order.update_order_status()
+
+        return Response({'status': 'bar order marked as ready'})
+
+    def get_permissions(self):
+        # Allow bar staff to assign, start, and mark ready
+        if self.action in ['assign', 'start_preparation', 'mark_ready']:
+            # Check if user is bar staff
+            return [IsAuthenticated()]
         return [IsAuthenticated()]
 
 

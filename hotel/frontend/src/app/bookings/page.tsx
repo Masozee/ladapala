@@ -47,6 +47,11 @@ interface Guest {
   email: string;
   phone: string;
   nationality: string;
+  date_of_birth?: string;
+  gender?: string;
+  id_type?: string;
+  id_number?: string;
+  address?: string;
   is_vip?: boolean;
   loyalty_points?: number;
   loyalty_level?: {

@@ -1,0 +1,307 @@
+========================================
+  LADAPALA RESTAURANT POS
+  PANDUAN INSTALASI - BAHASA INDONESIA
+========================================
+
+PERSYARATAN SISTEM
+------------------
+- Windows 10/11 (64-bit)
+- RAM: Minimal 4GB, Disarankan 8GB
+- Storage: 2GB ruang kosong
+- Port: 3000, 8000 harus tersedia (80 jika menggunakan nginx)
+- Hak akses Administrator
+
+PERSIAPAN INSTALASI
+-------------------
+Sebelum memulai instalasi, siapkan file-file berikut dalam folder "installer":
+
+1. Node.js Installer
+   Lokasi: installer/nodejs/node-v20.11.0-x64.msi
+   Download: https://nodejs.org/en/download/
+   Pilih: Windows Installer (.msi) 64-bit
+
+2. Python Installer
+   Lokasi: installer/python/python-3.11.0-amd64.exe
+   Download: https://www.python.org/downloads/
+   Pilih: Windows installer (64-bit)
+
+3. nginx (OPSIONAL - untuk akses jaringan)
+   Lokasi: installer/nginx/
+   Download: https://nginx.org/en/download.html
+   - Download versi Windows (nginx-x.xx.x.zip)
+   - Extract semua isi ke folder installer/nginx/
+
+CATATAN: Jika nginx tidak disertakan, aplikasi hanya bisa diakses dari komputer ini (localhost).
+         Jika ingin diakses dari perangkat lain (tablet, HP, komputer lain), sertakan nginx.
+
+LANGKAH INSTALASI
+-----------------
+
+LANGKAH 1: Jalankan Installer
+1. Buka folder instalasi
+2. Klik kanan pada "installer/INSTALL.bat"
+3. Pilih "Run as administrator" (Jalankan sebagai administrator)
+4. Tunggu proses instalasi selesai
+
+Installer akan secara otomatis:
+- Memeriksa persyaratan sistem
+- Menginstall Node.js (jika belum terinstall)
+- Menginstall Python (jika belum terinstall)
+- Menginstall nginx (jika tersedia - untuk akses jaringan)
+- Mendeteksi alamat IP server
+- Menginstall PM2 (Process Manager)
+- Membersihkan port 3000, 8000, dan 80
+- Menginstall dependencies backend (Django)
+- Mengkonfigurasi backend untuk akses jaringan
+- Setup database (SQLite)
+- Menginstall dependencies frontend (Next.js, React)
+- Mengkonfigurasi frontend untuk akses jaringan
+- Build frontend untuk produksi
+- Membuat konfigurasi nginx reverse proxy
+- Membuat konfigurasi PM2
+
+LANGKAH 2: Membuat Akun Admin (Opsional)
+Saat installer menanyakan "Create admin account? (y/n):"
+- Ketik: y
+- Akun admin akan dibuat dengan kredensial:
+  Email: admin@gmail.com
+  Password: 687654
+
+LANGKAH 3: Seed Data Awal (Opsional)
+Saat installer menanyakan "Seed initial data? (y/n):"
+- Ketik: y
+- Data contoh akan dimasukkan ke database
+
+LANGKAH 4: Menjalankan Aplikasi
+1. Tutup jendela installer
+2. Klik dua kali "START.bat"
+3. Aplikasi akan berjalan di background
+4. Browser akan terbuka secara otomatis
+
+MENGGUNAKAN APLIKASI
+--------------------
+
+MENJALANKAN APLIKASI
+File: START.bat
+- Menjalankan backend dan frontend
+- Menjalankan nginx (jika dikonfigurasi)
+- Berjalan di background
+- Membuka browser secara otomatis
+
+DENGAN NGINX (Akses Jaringan):
+- Akses dari perangkat manapun: http://<ip-server>
+- Contoh: http://192.168.1.100
+- IP server akan ditampilkan saat aplikasi berjalan
+
+TANPA NGINX (Localhost Saja):
+- Backend: http://localhost:8000
+- Frontend: http://localhost:3000
+
+MENGHENTIKAN APLIKASI
+File: STOP.bat
+- Menghentikan semua proses (backend, frontend, nginx)
+- Membersihkan port 3000, 8000, dan 80
+- Aman dijalankan kapan saja
+
+MENGECEK STATUS
+File: STATUS.bat
+- Menampilkan status proses PM2
+- Menampilkan status port (3000, 8000, 80)
+- Menampilkan alamat IP server
+- Menampilkan informasi akses jaringan
+- Mengecek apakah service berjalan
+
+MELIHAT LOG
+File: LOGS.bat
+- Menampilkan log real-time dari semua service
+- Tekan Ctrl+C untuk keluar
+
+KREDENSIAL DEFAULT
+------------------
+Setelah instalasi, Anda dapat login dengan:
+Email: admin@gmail.com
+Password: 687654
+
+AKSES JARINGAN (LAN)
+--------------------
+
+UNTUK AKSES DARI PERANGKAT LAIN:
+
+1. SAAT INSTALASI:
+   - Pastikan nginx sudah ditempatkan di folder installer/nginx/
+   - Installer akan otomatis mendeteksi IP server Anda
+   - nginx akan dikonfigurasi sebagai reverse proxy
+
+2. SETELAH INSTALASI:
+   - Jalankan STATUS.bat untuk melihat alamat IP server
+   - Akses dari perangkat lain: http://<ip-server>
+   - Contoh: http://192.168.1.100
+
+3. KONFIGURASI FIREWALL:
+   - Windows mungkin akan meminta izin untuk nginx
+   - Klik "Allow access" untuk mengaktifkan koneksi jaringan
+   - Atau izinkan port 80 secara manual di Windows Firewall
+
+ARSITEKTUR SISTEM:
+
+DENGAN NGINX (Akses Jaringan):
+Perangkat Client (192.168.1.x)
+    |
+nginx (Port 80) - Reverse Proxy
+    |                    |
+Frontend (Port 3000)  Backend (Port 8000)
+
+TANPA NGINX (Localhost Saja):
+Browser (localhost)
+    |
+Frontend (Port 3000) --> Backend (Port 8000)
+
+KONFIGURASI
+-----------
+
+KONFIGURASI BACKEND
+Lokasi: resto/backend/.env
+- Database: SQLite (default)
+- Port: 8000
+- Branch ID: 7
+- ALLOWED_HOSTS: Otomatis dikonfigurasi dengan IP server
+- CORS_ALLOWED_ORIGINS: Otomatis dikonfigurasi untuk akses jaringan
+
+KONFIGURASI FRONTEND
+Lokasi: resto/frontend/.env.local
+- API URL: Otomatis dikonfigurasi (http://<server-ip>/api dengan nginx)
+- Port: 3000
+- Branch ID: 7
+
+KONFIGURASI NGINX (Opsional)
+Lokasi: nginx/nginx.conf
+- Otomatis dibuat saat instalasi
+- Port: 80
+- Reverse proxy untuk frontend dan backend
+- Mengaktifkan akses jaringan dari semua perangkat di jaringan yang sama
+
+TROUBLESHOOTING (PEMECAHAN MASALAH)
+------------------------------------
+
+MASALAH: Port Sudah Digunakan
+SOLUSI: Jalankan STOP.bat untuk membersihkan semua proses, lalu jalankan START.bat lagi
+
+MASALAH: PM2 Tidak Ditemukan
+SOLUSI: Jalankan installer/INSTALL.bat lagi dengan hak administrator
+
+MASALAH: Frontend Build Gagal
+SOLUSI:
+1. Hentikan aplikasi: STOP.bat
+2. Hapus folder resto/frontend/.next
+3. Jalankan installer/INSTALL.bat lagi
+
+MASALAH: Masalah Database
+SOLUSI:
+1. Hentikan aplikasi: STOP.bat
+2. Hapus file resto/backend/db.sqlite3
+3. Jalankan migrasi:
+   cd resto\backend
+   .venv\Scripts\activate
+   python manage.py migrate
+   python manage.py seed_resto_data
+
+MASALAH: Tidak Bisa Diakses dari Perangkat Lain
+SOLUSI:
+1. Pastikan nginx sudah terinstall (cek C:\nginx)
+2. Cek firewall Windows - izinkan port 80
+3. Pastikan semua perangkat di jaringan yang sama
+4. Jalankan STATUS.bat untuk melihat IP server
+5. Gunakan IP yang benar saat mengakses dari perangkat lain
+
+MASALAH: nginx Tidak Jalan
+SOLUSI:
+1. Cek apakah nginx.exe ada di C:\nginx
+2. Cek apakah file nginx/nginx.conf ada
+3. Jalankan ulang INSTALL.bat dengan nginx di folder installer/nginx/
+
+STRUKTUR DIREKTORI
+------------------
+ladapala/
+├── installer/
+│   ├── INSTALL.bat           # Installer utama
+│   ├── nodejs/               # Node.js installer
+│   ├── python/               # Python installer
+│   └── nginx/                # nginx files (opsional)
+├── resto/
+│   ├── backend/              # Django backend
+│   │   ├── .venv/            # Python virtual environment
+│   │   ├── manage.py
+│   │   └── db.sqlite3        # Database
+│   └── frontend/             # Next.js frontend
+│       ├── .next/            # Build output
+│       └── node_modules/     # Dependencies
+├── nginx/                    # Konfigurasi nginx
+│   └── nginx.conf            # File konfigurasi
+├── logs/                     # Application logs
+├── ecosystem.config.js       # Konfigurasi PM2
+├── START.bat                 # Jalankan aplikasi
+├── STOP.bat                  # Hentikan aplikasi
+├── STATUS.bat                # Cek status
+├── LOGS.bat                  # Lihat logs
+├── PANDUAN_INSTALASI.txt     # Panduan ini
+└── PANDUAN_INSTALASI.md      # Panduan versi Markdown
+
+PERINTAH LANJUTAN (ADVANCED)
+-----------------------------
+
+PERINTAH PM2 (Jika Diperlukan):
+pm2 list              # List semua proses
+pm2 logs              # Lihat logs
+pm2 restart all       # Restart semua proses
+pm2 stop all          # Stop semua proses
+pm2 delete all        # Hapus semua proses
+pm2 save              # Simpan daftar proses
+
+MENJALANKAN MANUAL (Tanpa Installer):
+# Backend
+cd resto\backend
+.venv\Scripts\activate
+python manage.py runserver 0.0.0.0:8000
+
+# Frontend (di terminal lain)
+cd resto\frontend
+npm run start
+
+DEPLOYMENT PRODUKSI
+-------------------
+Untuk deployment produksi:
+1. Update environment variables
+2. Gunakan PostgreSQL daripada SQLite
+3. Set DEBUG=False di Django settings
+4. Konfigurasi domain dan SSL yang benar
+5. Setup Windows Service untuk PM2:
+   pm2-service-install
+   pm2 save
+
+UNINSTALL (MENGHAPUS APLIKASI)
+-------------------------------
+Untuk menghapus aplikasi:
+1. Jalankan STOP.bat
+2. Jalankan: pm2 delete all
+3. Hapus seluruh folder "ladapala"
+4. (Opsional) Uninstall Node.js dan Python dari Windows Settings
+
+DUKUNGAN
+--------
+Untuk masalah atau pertanyaan:
+1. Cek logs: LOGS.bat
+2. Cek status: STATUS.bat
+3. Lihat bagian troubleshooting di atas
+
+CATATAN PENTING
+---------------
+- Selalu jalankan INSTALL.bat dan START.bat sebagai Administrator
+- Pastikan port 3000, 8000, dan 80 (jika pakai nginx) tidak digunakan aplikasi lain
+- Untuk akses jaringan, semua perangkat harus terhubung ke jaringan WiFi/LAN yang sama
+- Backup database secara berkala (file: resto/backend/db.sqlite3)
+- Untuk performa terbaik, gunakan kabel LAN daripada WiFi
+
+========================================
+         SELAMAT MENGGUNAKAN!
+    LADAPALA RESTAURANT POS SYSTEM
+========================================
