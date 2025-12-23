@@ -4,8 +4,8 @@ module.exports = {
     {
       name: 'resto-backend',
       cwd: 'C:/ladapala/resto/backend',
-      script: '.venv/Scripts/python.exe',
-      args: 'manage.py runserver 0.0.0.0:8000 --noreload',
+      script: 'uv',
+      args: 'run python manage.py runserver 0.0.0.0:8000 --noreload',
       interpreter: 'none',
       instances: 1,
       autorestart: true,
@@ -47,8 +47,8 @@ module.exports = {
     {
       name: 'hotel-backend',
       cwd: 'C:/ladapala/hotelbase/backend',
-      script: '.venv/Scripts/python.exe',
-      args: 'manage.py runserver 0.0.0.0:8001 --noreload',
+      script: 'uv',
+      args: 'run python manage.py runserver 0.0.0.0:8001 --noreload',
       interpreter: 'none',
       instances: 1,
       autorestart: true,
