@@ -312,37 +312,37 @@ export default function TablePage() {
         return
       }
 
-      // Build split data with quantities
-      const newCustomerItems: Array<{ item_id: number; quantity: number }> = []
-      const mainOrderItems: Array<{ item_id: number; quantity: number }> = []
+      // Build split data with item IDs only (backend handles quantity split)
+      const newCustomerItemIds: number[] = []
+      const mainOrderItemIds: number[] = []
 
       mainOrder.items?.forEach(item => {
         const splitQty = splitItemQuantities[item.id!] || 0
         const remainingQty = item.quantity - splitQty
 
         if (splitQty > 0) {
-          newCustomerItems.push({ item_id: item.id!, quantity: splitQty })
+          newCustomerItemIds.push(item.id!)
         }
 
         if (remainingQty > 0) {
-          mainOrderItems.push({ item_id: item.id!, quantity: remainingQty })
+          mainOrderItemIds.push(item.id!)
         }
       })
 
-      if (mainOrderItems.length === 0) {
+      if (mainOrderItemIds.length === 0) {
         alert('Harus ada minimal 1 item yang tersisa di bill utama')
         return
       }
 
-      // Prepare splits with quantities
+      // Prepare splits
       const splits = [
         {
           customer_name: splitCustomerName,
-          items: newCustomerItems
+          item_ids: newCustomerItemIds
         },
         {
           customer_name: mainOrder.customer_name || 'Main Order',
-          items: mainOrderItems
+          item_ids: mainOrderItemIds
         }
       ]
 
