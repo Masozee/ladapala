@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from apps.hotel.models.rooms import RoomType, Room
 from apps.hotel.models.inventory import InventoryItem
+from apps.hotel.models.amenities import AmenityCategory
 from apps.hotel.models.maintenance import MaintenanceTechnician
 from apps.hotel.models.calendars import Holiday
 from decimal import Decimal
@@ -164,53 +165,78 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f'  Room already exists: {room.number}')
 
+        # Create Amenity Categories first
+        categories_data = [
+            {'name': 'Linen & Textiles', 'description': 'Bed linens, towels, and textile items'},
+            {'name': 'Toiletries & Bath', 'description': 'Personal care and bathroom amenities'},
+            {'name': 'Prayer Items', 'description': 'Islamic prayer items and accessories'},
+            {'name': 'Food & Beverage', 'description': 'Complimentary food and drink items'},
+            {'name': 'Cleaning Supplies', 'description': 'Housekeeping and cleaning materials'},
+        ]
+
+        categories = {}
+        for cat_data in categories_data:
+            cat, created = AmenityCategory.objects.get_or_create(
+                name=cat_data['name'],
+                defaults=cat_data
+            )
+            categories[cat.name] = cat
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'  Created category: {cat.name}'))
+            else:
+                self.stdout.write(f'  Category already exists: {cat.name}')
+
         # Create Inventory Items (Indonesian hotel amenities)
         inventory_data = [
             # Linen & Textiles
-            {'name': 'Sprei Putih (King)', 'category': 'AMENITIES', 'unit_price': Decimal('75000'), 'current_stock': 120, 'minimum_stock': 40, 'unit_of_measurement': 'set'},
-            {'name': 'Sprei Putih (Queen)', 'category': 'AMENITIES', 'unit_price': Decimal('60000'), 'current_stock': 150, 'minimum_stock': 50, 'unit_of_measurement': 'set'},
-            {'name': 'Sarung Bantal', 'category': 'AMENITIES', 'unit_price': Decimal('15000'), 'current_stock': 200, 'minimum_stock': 60, 'unit_of_measurement': 'pcs'},
-            {'name': 'Selimut', 'category': 'AMENITIES', 'unit_price': Decimal('85000'), 'current_stock': 100, 'minimum_stock': 30, 'unit_of_measurement': 'pcs'},
-            {'name': 'Handuk Mandi Besar', 'category': 'AMENITIES', 'unit_price': Decimal('45000'), 'current_stock': 150, 'minimum_stock': 50, 'unit_of_measurement': 'pcs'},
-            {'name': 'Handuk Tangan', 'category': 'AMENITIES', 'unit_price': Decimal('20000'), 'current_stock': 180, 'minimum_stock': 60, 'unit_of_measurement': 'pcs'},
-            {'name': 'Handuk Kaki', 'category': 'AMENITIES', 'unit_price': Decimal('25000'), 'current_stock': 120, 'minimum_stock': 40, 'unit_of_measurement': 'pcs'},
+            {'name': 'Sprei Putih (King)', 'category': 'Linen & Textiles', 'unit_price': Decimal('75000'), 'current_stock': 120, 'minimum_stock': 40, 'unit_of_measurement': 'set'},
+            {'name': 'Sprei Putih (Queen)', 'category': 'Linen & Textiles', 'unit_price': Decimal('60000'), 'current_stock': 150, 'minimum_stock': 50, 'unit_of_measurement': 'set'},
+            {'name': 'Sarung Bantal', 'category': 'Linen & Textiles', 'unit_price': Decimal('15000'), 'current_stock': 200, 'minimum_stock': 60, 'unit_of_measurement': 'pcs'},
+            {'name': 'Selimut', 'category': 'Linen & Textiles', 'unit_price': Decimal('85000'), 'current_stock': 100, 'minimum_stock': 30, 'unit_of_measurement': 'pcs'},
+            {'name': 'Handuk Mandi Besar', 'category': 'Linen & Textiles', 'unit_price': Decimal('45000'), 'current_stock': 150, 'minimum_stock': 50, 'unit_of_measurement': 'pcs'},
+            {'name': 'Handuk Tangan', 'category': 'Linen & Textiles', 'unit_price': Decimal('20000'), 'current_stock': 180, 'minimum_stock': 60, 'unit_of_measurement': 'pcs'},
+            {'name': 'Handuk Kaki', 'category': 'Linen & Textiles', 'unit_price': Decimal('25000'), 'current_stock': 120, 'minimum_stock': 40, 'unit_of_measurement': 'pcs'},
 
             # Toiletries
-            {'name': 'Shampoo Sachet 10ml', 'category': 'AMENITIES', 'unit_price': Decimal('3000'), 'current_stock': 300, 'minimum_stock': 100, 'unit_of_measurement': 'pcs'},
-            {'name': 'Sabun Batangan 50gr', 'category': 'AMENITIES', 'unit_price': Decimal('2500'), 'current_stock': 350, 'minimum_stock': 120, 'unit_of_measurement': 'pcs'},
-            {'name': 'Pasta Gigi Mini', 'category': 'AMENITIES', 'unit_price': Decimal('4000'), 'current_stock': 200, 'minimum_stock': 70, 'unit_of_measurement': 'pcs'},
-            {'name': 'Sikat Gigi', 'category': 'AMENITIES', 'unit_price': Decimal('2000'), 'current_stock': 200, 'minimum_stock': 70, 'unit_of_measurement': 'pcs'},
-            {'name': 'Sisir', 'category': 'AMENITIES', 'unit_price': Decimal('1500'), 'current_stock': 250, 'minimum_stock': 80, 'unit_of_measurement': 'pcs'},
-            {'name': 'Shower Cap', 'category': 'AMENITIES', 'unit_price': Decimal('1000'), 'current_stock': 300, 'minimum_stock': 100, 'unit_of_measurement': 'pcs'},
+            {'name': 'Shampoo Sachet 10ml', 'category': 'Toiletries & Bath', 'unit_price': Decimal('3000'), 'current_stock': 300, 'minimum_stock': 100, 'unit_of_measurement': 'pcs'},
+            {'name': 'Sabun Batangan 50gr', 'category': 'Toiletries & Bath', 'unit_price': Decimal('2500'), 'current_stock': 350, 'minimum_stock': 120, 'unit_of_measurement': 'pcs'},
+            {'name': 'Pasta Gigi Mini', 'category': 'Toiletries & Bath', 'unit_price': Decimal('4000'), 'current_stock': 200, 'minimum_stock': 70, 'unit_of_measurement': 'pcs'},
+            {'name': 'Sikat Gigi', 'category': 'Toiletries & Bath', 'unit_price': Decimal('2000'), 'current_stock': 200, 'minimum_stock': 70, 'unit_of_measurement': 'pcs'},
+            {'name': 'Sisir', 'category': 'Toiletries & Bath', 'unit_price': Decimal('1500'), 'current_stock': 250, 'minimum_stock': 80, 'unit_of_measurement': 'pcs'},
+            {'name': 'Shower Cap', 'category': 'Toiletries & Bath', 'unit_price': Decimal('1000'), 'current_stock': 300, 'minimum_stock': 100, 'unit_of_measurement': 'pcs'},
 
             # Prayer Items (Important for Indonesian hotels)
-            {'name': 'Sajadah', 'category': 'AMENITIES', 'unit_price': Decimal('35000'), 'current_stock': 80, 'minimum_stock': 30, 'unit_of_measurement': 'pcs'},
-            {'name': 'Mushaf Al-Quran', 'category': 'AMENITIES', 'unit_price': Decimal('50000'), 'current_stock': 60, 'minimum_stock': 25, 'unit_of_measurement': 'pcs'},
-            {'name': 'Mukena', 'category': 'AMENITIES', 'unit_price': Decimal('45000'), 'current_stock': 50, 'minimum_stock': 20, 'unit_of_measurement': 'set'},
-            {'name': 'Kompas Kiblat', 'category': 'AMENITIES', 'unit_price': Decimal('25000'), 'current_stock': 40, 'minimum_stock': 15, 'unit_of_measurement': 'pcs'},
+            {'name': 'Sajadah', 'category': 'Prayer Items', 'unit_price': Decimal('35000'), 'current_stock': 80, 'minimum_stock': 30, 'unit_of_measurement': 'pcs'},
+            {'name': 'Mushaf Al-Quran', 'category': 'Prayer Items', 'unit_price': Decimal('50000'), 'current_stock': 60, 'minimum_stock': 25, 'unit_of_measurement': 'pcs'},
+            {'name': 'Mukena', 'category': 'Prayer Items', 'unit_price': Decimal('45000'), 'current_stock': 50, 'minimum_stock': 20, 'unit_of_measurement': 'set'},
+            {'name': 'Kompas Kiblat', 'category': 'Prayer Items', 'unit_price': Decimal('25000'), 'current_stock': 40, 'minimum_stock': 15, 'unit_of_measurement': 'pcs'},
 
             # Food & Beverages
-            {'name': 'Kopi Kapal Api Sachet', 'category': 'FOOD', 'unit_price': Decimal('2500'), 'current_stock': 200, 'minimum_stock': 70, 'unit_of_measurement': 'pcs'},
-            {'name': 'Teh Celup Sariwangi', 'category': 'FOOD', 'unit_price': Decimal('1500'), 'current_stock': 250, 'minimum_stock': 90, 'unit_of_measurement': 'pcs'},
-            {'name': 'Gula Pasir Sachet', 'category': 'FOOD', 'unit_price': Decimal('500'), 'current_stock': 300, 'minimum_stock': 100, 'unit_of_measurement': 'pcs'},
-            {'name': 'Krimer Kental Manis', 'category': 'FOOD', 'unit_price': Decimal('1000'), 'current_stock': 200, 'minimum_stock': 70, 'unit_of_measurement': 'pcs'},
-            {'name': 'Air Mineral Aqua 600ml', 'category': 'FOOD', 'unit_price': Decimal('4000'), 'current_stock': 250, 'minimum_stock': 100, 'unit_of_measurement': 'botol'},
-            {'name': 'Air Mineral Aqua 1500ml', 'category': 'FOOD', 'unit_price': Decimal('8000'), 'current_stock': 150, 'minimum_stock': 60, 'unit_of_measurement': 'botol'},
+            {'name': 'Kopi Kapal Api Sachet', 'category': 'Food & Beverage', 'unit_price': Decimal('2500'), 'current_stock': 200, 'minimum_stock': 70, 'unit_of_measurement': 'pcs'},
+            {'name': 'Teh Celup Sariwangi', 'category': 'Food & Beverage', 'unit_price': Decimal('1500'), 'current_stock': 250, 'minimum_stock': 90, 'unit_of_measurement': 'pcs'},
+            {'name': 'Gula Pasir Sachet', 'category': 'Food & Beverage', 'unit_price': Decimal('500'), 'current_stock': 300, 'minimum_stock': 100, 'unit_of_measurement': 'pcs'},
+            {'name': 'Krimer Kental Manis', 'category': 'Food & Beverage', 'unit_price': Decimal('1000'), 'current_stock': 200, 'minimum_stock': 70, 'unit_of_measurement': 'pcs'},
+            {'name': 'Air Mineral Aqua 600ml', 'category': 'Food & Beverage', 'unit_price': Decimal('4000'), 'current_stock': 250, 'minimum_stock': 100, 'unit_of_measurement': 'botol'},
+            {'name': 'Air Mineral Aqua 1500ml', 'category': 'Food & Beverage', 'unit_price': Decimal('8000'), 'current_stock': 150, 'minimum_stock': 60, 'unit_of_measurement': 'botol'},
 
             # Cleaning Supplies
-            {'name': 'Tissue Toilet Roll', 'category': 'CLEANING', 'unit_price': Decimal('12000'), 'current_stock': 150, 'minimum_stock': 50, 'unit_of_measurement': 'roll'},
-            {'name': 'Tissue Kotak', 'category': 'CLEANING', 'unit_price': Decimal('8000'), 'current_stock': 100, 'minimum_stock': 35, 'unit_of_measurement': 'box'},
-            {'name': 'Sabun Cuci Piring Sunlight', 'category': 'CLEANING', 'unit_price': Decimal('15000'), 'current_stock': 30, 'minimum_stock': 10, 'unit_of_measurement': 'botol'},
-            {'name': 'Deterjen Rinso', 'category': 'CLEANING', 'unit_price': Decimal('25000'), 'current_stock': 40, 'minimum_stock': 15, 'unit_of_measurement': 'pack'},
-            {'name': 'Pembersih Lantai Wipol', 'category': 'CLEANING', 'unit_price': Decimal('18000'), 'current_stock': 35, 'minimum_stock': 12, 'unit_of_measurement': 'botol'},
-            {'name': 'Pewangi Ruangan', 'category': 'CLEANING', 'unit_price': Decimal('22000'), 'current_stock': 45, 'minimum_stock': 15, 'unit_of_measurement': 'botol'},
-            {'name': 'Kamper Kamar Mandi', 'category': 'CLEANING', 'unit_price': Decimal('5000'), 'current_stock': 80, 'minimum_stock': 30, 'unit_of_measurement': 'pcs'},
+            {'name': 'Tissue Toilet Roll', 'category': 'Cleaning Supplies', 'unit_price': Decimal('12000'), 'current_stock': 150, 'minimum_stock': 50, 'unit_of_measurement': 'roll'},
+            {'name': 'Tissue Kotak', 'category': 'Cleaning Supplies', 'unit_price': Decimal('8000'), 'current_stock': 100, 'minimum_stock': 35, 'unit_of_measurement': 'box'},
+            {'name': 'Sabun Cuci Piring Sunlight', 'category': 'Cleaning Supplies', 'unit_price': Decimal('15000'), 'current_stock': 30, 'minimum_stock': 10, 'unit_of_measurement': 'botol'},
+            {'name': 'Deterjen Rinso', 'category': 'Cleaning Supplies', 'unit_price': Decimal('25000'), 'current_stock': 40, 'minimum_stock': 15, 'unit_of_measurement': 'pack'},
+            {'name': 'Pembersih Lantai Wipol', 'category': 'Cleaning Supplies', 'unit_price': Decimal('18000'), 'current_stock': 35, 'minimum_stock': 12, 'unit_of_measurement': 'botol'},
+            {'name': 'Pewangi Ruangan', 'category': 'Cleaning Supplies', 'unit_price': Decimal('22000'), 'current_stock': 45, 'minimum_stock': 15, 'unit_of_measurement': 'botol'},
+            {'name': 'Kamper Kamar Mandi', 'category': 'Cleaning Supplies', 'unit_price': Decimal('5000'), 'current_stock': 80, 'minimum_stock': 30, 'unit_of_measurement': 'pcs'},
         ]
 
         for item_data in inventory_data:
+            # Get category instance
+            category_name = item_data.pop('category')
+            category_instance = categories[category_name]
+
             item, created = InventoryItem.objects.get_or_create(
                 name=item_data['name'],
-                defaults=item_data
+                defaults={**item_data, 'category': category_instance}
             )
             if created:
                 self.stdout.write(self.style.SUCCESS(f'  Created inventory: {item.name}'))
