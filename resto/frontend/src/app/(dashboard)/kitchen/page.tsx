@@ -45,7 +45,18 @@ export default function KitchenDisplayPage() {
       }
 
       // Fetch kitchen orders (only food items)
-      const kitchenOrders = await api.getKitchenOrders({})
+      const response = await api.getKitchenOrders({})
+      
+      let kitchenOrders: KitchenOrder[] = []
+      if (Array.isArray(response)) {
+        kitchenOrders = response
+      } else if (response && typeof response === 'object' && 'results' in response && Array.isArray((response as any).results)) {
+        // Handle paginated response
+        kitchenOrders = (response as any).results
+      } else {
+        console.error('Unexpected API response format:', response)
+        kitchenOrders = []
+      }
 
       setOrders(kitchenOrders)
     } catch (error) {
