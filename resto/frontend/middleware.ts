@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || ''
 
 // Routes that don't require authentication
 const publicRoutes = ['/login', '/register', '/feedback']
@@ -23,7 +24,7 @@ export async function middleware(request: NextRequest) {
 
   if (!sessionId) {
     // No session cookie, redirect to login
-    return NextResponse.redirect(new URL('/login', request.url))
+    return NextResponse.redirect(new URL(`${BASE_PATH}/login`, request.url))
   }
 
   // Verify session is valid on server
@@ -38,7 +39,7 @@ export async function middleware(request: NextRequest) {
 
     if (!response.ok) {
       // Session invalid, redirect to login
-      const url = new URL('/login', request.url)
+      const url = new URL(`${BASE_PATH}/login`, request.url)
       const redirectResponse = NextResponse.redirect(url)
       // Clear the invalid session cookie
       redirectResponse.cookies.delete('sessionid')
@@ -51,7 +52,7 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     // Error checking session, redirect to login for safety
     console.error('Session check error:', error)
-    const url = new URL('/login', request.url)
+    const url = new URL(`${BASE_PATH}/login`, request.url)
     const redirectResponse = NextResponse.redirect(url)
     redirectResponse.cookies.delete('sessionid')
     redirectResponse.cookies.delete('csrftoken')

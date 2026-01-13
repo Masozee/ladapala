@@ -46,6 +46,12 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'address']
     filterset_fields = ['is_active']
 
+    def get_permissions(self):
+        """Override permissions for specific actions"""
+        if self.action == 'public_info':
+            return [AllowAny()]
+        return super().get_permissions()
+
     @action(detail=False, methods=['get'])
     def current(self, request):
         """Get restaurant for current user"""

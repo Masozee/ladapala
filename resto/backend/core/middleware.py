@@ -24,6 +24,7 @@ class AuthenticationMiddleware:
     PUBLIC_PATHS = [
         '/api/user/login/',
         '/api/user/check-session/',
+        '/api/restaurants/public_info/',
     ]
 
     # Path prefixes that are always public
@@ -45,8 +46,10 @@ class AuthenticationMiddleware:
         if any(path.startswith(prefix) for prefix in self.PUBLIC_PREFIXES):
             return self.get_response(request)
 
-        # Allow specific public paths
-        if path in self.PUBLIC_PATHS:
+        # Allow specific public paths (check both with and without trailing slash)
+        path_normalized = path.rstrip('/')
+        public_paths_normalized = [p.rstrip('/') for p in self.PUBLIC_PATHS]
+        if path_normalized in public_paths_normalized:
             return self.get_response(request)
 
         # For all other /api/ endpoints, require authentication

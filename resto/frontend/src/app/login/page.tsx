@@ -26,7 +26,7 @@ const LoginForm = () => {
   // Fetch restaurant public information
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-    fetch(`${apiUrl}/restaurant/restaurants/public_info/`, {
+    fetch(`${apiUrl}/restaurants/public_info/`, {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -68,16 +68,16 @@ const LoginForm = () => {
           <div>
             <div className="mb-8">
               <div className="flex items-center space-x-3 mb-4">
-                {restoInfo?.logo ? (
-                  restoInfo.logo.startsWith('http') ? (
+                {restoInfo?.logo_url && restoInfo.logo_url !== '/logo.png' ? (
+                  restoInfo.logo_url.startsWith('http') ? (
                     <img
-                      src={restoInfo.logo}
+                      src={restoInfo.logo_url}
                       alt={`${restoInfo.name || 'Restaurant'} Logo`}
                       className="w-12 h-12 object-contain"
                     />
                   ) : (
                     <Image
-                      src={restoInfo.logo}
+                      src={restoInfo.logo_url}
                       alt={`${restoInfo.name || 'Restaurant'} Logo`}
                       width={48}
                       height={48}

@@ -83,7 +83,7 @@ export function OfficeSidebar() {
   // Fetch restaurant public information
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
-    fetch(`${apiUrl}/restaurant/restaurants/public_info/`, {
+    fetch(`${apiUrl}/restaurants/public_info/`, {
       credentials: 'include'
     })
       .then(res => res.json())
