@@ -33,6 +33,21 @@ class HotelSettingsViewSet(viewsets.ViewSet):
     def public_info(self, request):
         """Get public hotel information for login page (no auth required)"""
         settings = HotelSettings.load()
+
+        # Use uploaded logo if available, otherwise fallback to logo_url
+        logo_url = settings.logo_url
+        if settings.logo:
+            # Build absolute URI with /hotel base path for nginx
+            # Django's media URL doesn't include the base path, so we add it manually
+            media_url = settings.logo.url  # e.g., /media/settings/logos/file.png
+            # Check if we're behind nginx proxy (has /hotel prefix in request path)
+            if request.path.startswith('/api/hotel/'):
+                # Add /hotel prefix to media URL for nginx
+                full_url = f"/hotel{media_url}"
+            else:
+                full_url = media_url
+            logo_url = request.build_absolute_uri(full_url)
+
         return Response({
             'hotel_name': settings.hotel_name,
             'hotel_description': settings.hotel_description,
@@ -40,7 +55,7 @@ class HotelSettingsViewSet(viewsets.ViewSet):
             'phone': settings.phone,
             'email': settings.email,
             'website': settings.website,
-            'logo_url': settings.logo_url,
+            'logo_url': logo_url,
             'primary_color': settings.primary_color,
             'secondary_color': settings.secondary_color,
         })

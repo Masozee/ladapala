@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,18 @@ const LoginForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [restoInfo, setRestoInfo] = useState<any>(null);
+
+  // Fetch restaurant public information
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+    fetch(`${apiUrl}/restaurant/restaurants/public_info/`, {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => setRestoInfo(data))
+      .catch(err => console.error('Error fetching restaurant info:', err));
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -54,7 +67,30 @@ const LoginForm = () => {
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div>
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-neutral-900">Ladapala POS</h1>
+              <div className="flex items-center space-x-3 mb-4">
+                {restoInfo?.logo ? (
+                  restoInfo.logo.startsWith('http') ? (
+                    <img
+                      src={restoInfo.logo}
+                      alt={`${restoInfo.name || 'Restaurant'} Logo`}
+                      className="w-12 h-12 object-contain"
+                    />
+                  ) : (
+                    <Image
+                      src={restoInfo.logo}
+                      alt={`${restoInfo.name || 'Restaurant'} Logo`}
+                      width={48}
+                      height={48}
+                      className="object-contain"
+                    />
+                  )
+                ) : (
+                  <div className="w-12 h-12 bg-neutral-100 flex items-center justify-center">
+                    <span className="text-2xl">🍴</span>
+                  </div>
+                )}
+              </div>
+              <h1 className="text-2xl font-bold text-neutral-900">{restoInfo?.name || 'Ladapala POS'}</h1>
               <p className="text-sm text-neutral-600">Sistem Point of Sale Restoran</p>
             </div>
 

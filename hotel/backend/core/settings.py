@@ -25,20 +25,23 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=($q9)p_gi(+6+qcbu+mdit%a#)p^ml3#7s@%a!r0%*xwx1i=0'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-=($q9)p_gi(+6+qcbu+mdit%a#)p^ml3#7s@%a!r0%*xwx1i=0')
 
 # License Key
 LICENSE_KEY = os.environ.get('LICENSE_KEY', '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+    '192.168.0.105',
     'api.kapulaga.net',
     'hotel.kapulaga.net',
     'palermo.id.rapidplex.com',
+    'smkpariwisatamengiwitani.com',
+    'www.smkpariwisatamengiwitani.com',
 ]
 
 
@@ -166,11 +169,16 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:3001",  # Restaurant frontend
     "http://127.0.0.1:3001",  # Restaurant frontend
+    "http://192.168.0.105",
     "https://hotel.kapulaga.net",
     "http://hotel.kapulaga.net",
     "https://palermo.id.rapidplex.com",
     "http://palermo.id.rapidplex.com",
     "http://palermo.id.rapidplex.com:3000",
+    "https://smkpariwisatamengiwitani.com",
+    "http://smkpariwisatamengiwitani.com",
+    "https://www.smkpariwisatamengiwitani.com",
+    "http://www.smkpariwisatamengiwitani.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -196,25 +204,38 @@ CORS_ALLOW_HEADERS = [
 # For subdomain sharing (hotel.kapulaga.net <-> api.kapulaga.net)
 IS_PRODUCTION = os.environ.get('DJANGO_ENV') == 'production'
 
-SESSION_COOKIE_SAMESITE = 'Lax'  # Lax works for same-site subdomains
+SESSION_COOKIE_SAMESITE = 'None' if IS_PRODUCTION else 'Lax'  # None for cross-domain
 SESSION_COOKIE_SECURE = IS_PRODUCTION  # True in production (HTTPS), False in development
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_COOKIE_DOMAIN = '.kapulaga.net' if IS_PRODUCTION else None  # Share across subdomains in production
+SESSION_COOKIE_DOMAIN = None  # Don't set domain for cross-domain cookies
 
-CSRF_COOKIE_SAMESITE = 'Lax'  # Lax works for same-site subdomains
+CSRF_COOKIE_SAMESITE = 'None' if IS_PRODUCTION else 'Lax'  # None for cross-domain
 CSRF_COOKIE_SECURE = IS_PRODUCTION  # True in production (HTTPS), False in development
 CSRF_COOKIE_HTTPONLY = False  # Must be False for JS to read it
-CSRF_COOKIE_DOMAIN = '.kapulaga.net' if IS_PRODUCTION else None  # Share across subdomains in production
+CSRF_COOKIE_DOMAIN = None  # Don't set domain for cross-domain cookies
+
+# Security settings for production
+if IS_PRODUCTION:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",  # Restaurant frontend
     "http://127.0.0.1:3001",  # Restaurant frontend
+    "http://192.168.0.105",
     "https://hotel.kapulaga.net",
     "http://hotel.kapulaga.net",
     "https://palermo.id.rapidplex.com",
     "http://palermo.id.rapidplex.com",
+    "https://smkpariwisatamengiwitani.com",
+    "http://smkpariwisatamengiwitani.com",
+    "https://www.smkpariwisatamengiwitani.com",
+    "http://www.smkpariwisatamengiwitani.com",
 ]
 
 # Email Configuration - Gmail SMTP

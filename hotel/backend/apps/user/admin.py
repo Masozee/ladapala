@@ -88,10 +88,12 @@ class UserAdmin(BaseUserAdmin):
         """Display status badge"""
         if obj.is_active:
             return format_html(
-                '<span style="color: #198754; font-weight: 600;">● Active</span>'
+                '<span style="color: #198754; font-weight: 600;">● {}</span>',
+                'Active'
             )
         return format_html(
-            '<span style="color: #dc3545; font-weight: 600;">● Inactive</span>'
+            '<span style="color: #dc3545; font-weight: 600;">● {}</span>',
+            'Inactive'
         )
     status_badge.short_description = 'Status'
 
@@ -130,7 +132,7 @@ class UserAdmin(BaseUserAdmin):
             html += '</div>'
 
         html += '</div>'
-        return format_html(html)
+        return format_html('{}', html)
     permission_preview.short_description = 'Permissions'
 
     def save_model(self, request, obj, form, change):
@@ -180,8 +182,8 @@ class DepartmentAdmin(admin.ModelAdmin):
 
     def status_badge(self, obj):
         if obj.is_active:
-            return format_html('<span style="color: #198754;">● Active</span>')
-        return format_html('<span style="color: #dc3545;">● Inactive</span>')
+            return format_html('<span style="color: #198754;">● {}</span>', 'Active')
+        return format_html('<span style="color: #dc3545;">● {}</span>', 'Inactive')
     status_badge.short_description = 'Status'
 
     def created_short(self, obj):

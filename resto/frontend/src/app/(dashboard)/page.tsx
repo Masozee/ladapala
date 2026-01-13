@@ -58,7 +58,7 @@ export default function HomePage() {
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!authLoading && !isAuthenticated) {
-      router.push('/login')
+      router.push('/resto/login')
       return
     }
 

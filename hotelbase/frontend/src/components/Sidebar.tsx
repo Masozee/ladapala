@@ -44,6 +44,30 @@ const Sidebar = () => {
   const pathname = usePathname();
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [uncompletedComplaintsCount, setUncompletedComplaintsCount] = useState<number>(0);
+  const [logoUrl, setLogoUrl] = useState<string>('/logo.png');
+  const [hotelName, setHotelName] = useState<string>('Kapulaga Hotel');
+
+  // Fetch hotel settings for logo
+  useEffect(() => {
+    const fetchHotelSettings = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/hotel/settings/public_info/`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.logo_url) {
+            setLogoUrl(data.logo_url);
+          }
+          if (data.hotel_name) {
+            setHotelName(data.hotel_name);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching hotel settings:', error);
+      }
+    };
+
+    fetchHotelSettings();
+  }, []);
 
   // Fetch all sidebar counts from centralized API
   useEffect(() => {
@@ -104,14 +128,22 @@ const Sidebar = () => {
         <div className="flex-shrink-0 p-4">
           <div className="flex items-center justify-center">
             <div className="w-10 h-10 min-w-[2.5rem] min-h-[2.5rem] bg-white flex items-center justify-center p-1">
-              <Image
-                src="/logo.png"
-                alt="Kapulaga Hotel Logo"
-                width={32}
-                height={32}
-                className="object-contain w-full h-full"
-                priority
-              />
+              {logoUrl.startsWith('http') ? (
+                <img
+                  src={logoUrl}
+                  alt={`${hotelName} Logo`}
+                  className="object-contain w-full h-full"
+                />
+              ) : (
+                <Image
+                  src={logoUrl}
+                  alt={`${hotelName} Logo`}
+                  width={32}
+                  height={32}
+                  className="object-contain w-full h-full"
+                  priority
+                />
+              )}
             </div>
           </div>
         </div>

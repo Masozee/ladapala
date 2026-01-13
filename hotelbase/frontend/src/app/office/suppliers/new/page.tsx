@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import OfficeLayout from '@/components/OfficeLayout'
 import { ChevronLeftIcon } from '@/lib/icons'
-import { buildApiUrl } from '@/lib/config'
+import { buildApiUrl, getCsrfToken } from '@/lib/config'
 
 interface SupplierFormData {
   name: string

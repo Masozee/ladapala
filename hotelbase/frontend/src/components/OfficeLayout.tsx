@@ -52,7 +52,7 @@ export const OfficeHeaderActions = () => {
           sessionStorage.clear();
         }
         // Redirect to login page using window.location for full page reload
-        window.location.href = '/login';
+        window.location.href = '/hotel/login';
       } else {
         console.error('Logout failed:', response.status, await response.text());
         // Force logout on client side anyway
@@ -60,7 +60,7 @@ export const OfficeHeaderActions = () => {
           localStorage.clear();
           sessionStorage.clear();
         }
-        window.location.href = '/login';
+        window.location.href = '/hotel/login';
       }
     } catch (error) {
       console.error('Logout error:', error);
@@ -69,7 +69,7 @@ export const OfficeHeaderActions = () => {
         localStorage.clear();
         sessionStorage.clear();
       }
-      window.location.href = '/login';
+      window.location.href = '/hotel/login';
     }
   };
 

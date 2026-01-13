@@ -96,8 +96,13 @@ class LoginView(APIView):
 @ensure_csrf_cookie
 @permission_classes([AllowAny])
 def get_csrf_token(request):
-    """Get CSRF token cookie"""
-    return Response({'detail': 'CSRF cookie set'})
+    """Get CSRF token cookie and return it in response for cross-site requests"""
+    from django.middleware.csrf import get_token
+    csrf_token = get_token(request)
+    return Response({
+        'detail': 'CSRF cookie set',
+        'csrfToken': csrf_token
+    })
 
 
 @api_view(['POST'])

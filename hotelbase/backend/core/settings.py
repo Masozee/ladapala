@@ -36,6 +36,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+    '192.168.68.101',
     'api.kapulaga.net',
     'hotel.kapulaga.net',
     'palermo.id.rapidplex.com',
@@ -167,6 +168,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://192.168.68.101",
     "https://hotel.kapulaga.net",
     "http://hotel.kapulaga.net",
     "https://palermo.id.rapidplex.com",
@@ -210,6 +212,7 @@ CSRF_COOKIE_DOMAIN = '.kapulaga.net' if IS_PRODUCTION else None  # Share across 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://192.168.68.101",
     "https://hotel.kapulaga.net",
     "http://hotel.kapulaga.net",
     "https://palermo.id.rapidplex.com",

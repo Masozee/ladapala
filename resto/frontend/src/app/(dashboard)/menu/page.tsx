@@ -47,7 +47,7 @@ export default function MenuPage() {
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!authLoading && !staff) {
-      router.push('/login')
+      router.push('/resto/login')
       return
     }
 

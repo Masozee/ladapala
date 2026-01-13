@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import OfficeLayout from '@/components/OfficeLayout'
 import { ChevronLeftIcon } from '@/lib/icons'
-import { buildApiUrl } from '@/lib/config'
+import { buildApiUrl, getCsrfToken } from '@/lib/config'
 
 interface SupplierFormData {
   name: string
@@ -25,7 +25,6 @@ interface SupplierFormData {
 export default function NewSupplierPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
-  const [csrfToken, setCsrfToken] = useState('')
   const [formData, setFormData] = useState<SupplierFormData>({
     name: '',
     contact_person: '',
@@ -42,28 +41,6 @@ export default function NewSupplierPage() {
     notes: ''
   })
 
-  useEffect(() => {
-    fetchCSRFToken()
-  }, [])
-
-  const fetchCSRFToken = async () => {
-    try {
-      const response = await fetch(buildApiUrl('user/csrf/'), {
-        credentials: 'include',
-      })
-      if (response.ok) {
-        const csrfCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('csrftoken='))
-        if (csrfCookie) {
-          setCsrfToken(csrfCookie.split('=')[1])
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching CSRF token:', error)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -74,6 +51,7 @@ export default function NewSupplierPage() {
 
     try {
       setSaving(true)
+      const csrfToken = getCsrfToken()
       const response = await fetch(buildApiUrl('hotel/suppliers/'), {
         method: 'POST',
         headers: {

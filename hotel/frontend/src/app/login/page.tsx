@@ -12,7 +12,7 @@ import {
   UserIcon,
   UserCheckIcon
 } from '@/lib/icons';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, fetchCsrfToken } from '@/lib/config';
 
 const LoginPageContent = () => {
   const router = useRouter();
@@ -26,15 +26,19 @@ const LoginPageContent = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hotelInfo, setHotelInfo] = useState<any>(null);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
   // Get redirect path from query params
   const redirectPath = searchParams.get('redirect') || '/';
 
   // Fetch CSRF token and hotel info on mount
   useEffect(() => {
-    fetch(buildApiUrl('user/csrf/'), {
-      credentials: 'include'
-    }).catch(err => console.error('Error fetching CSRF token:', err));
+    // Fetch CSRF token from API response (for cross-site requests)
+    fetchCsrfToken().then(token => {
+      if (token) {
+        setCsrfToken(token);
+      }
+    });
 
     // Fetch hotel public information
     fetch(buildApiUrl('hotel/settings/public_info/'), {
@@ -59,12 +63,7 @@ const LoginPageContent = () => {
     setError(null);
 
     try {
-      // Get CSRF token first
-      const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
-
+      // Use the CSRF token from state (fetched from API response)
       const response = await fetch(buildApiUrl('user/login/'), {
         method: 'POST',
         headers: {
@@ -131,7 +130,7 @@ const LoginPageContent = () => {
         </svg>
       ),
       title: 'Phone',
-      value: hotelInfo?.phone || '+62-21-5555-0123'
+      value: hotelInfo?.phone || '(0361) 810111'
     },
     {
       icon: ({ className }: { className: string }) => (
@@ -150,7 +149,7 @@ const LoginPageContent = () => {
         </svg>
       ),
       title: 'Address',
-      value: hotelInfo?.address || 'Jl. Sudirman No. 123, Jakarta 10220'
+      value: hotelInfo?.address || 'Jl. Raya Denpasar - Gilimanuk No.KM.15, Mengwitani, Kec. Mengwi, Kabupaten Badung, Bali 80351'
     },
     {
       icon: ({ className }: { className: string }) => (
@@ -181,7 +180,7 @@ const LoginPageContent = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {hotelInfo?.hotel_name || 'Kapulaga'}
+                  {hotelInfo?.hotel_name || 'SMK Pariwisata Mengwitani'}
                 </h1>
                 <p className="text-sm text-gray-600">Hotel Management System</p>
               </div>
@@ -320,24 +319,20 @@ const LoginPageContent = () => {
         <div
           className="absolute inset-0 bg-gradient-to-br from-[#005357] to-[#2baf6a]"
           style={{
-            background: hotelInfo?.primary_color
-              ? `linear-gradient(to bottom right, ${hotelInfo.primary_color}, ${hotelInfo.secondary_color || hotelInfo.primary_color})`
-              : undefined
+            backgroundImage: `url('/vojtech-bruzek-Yrxr3bsPdS0-unsplash.jpg')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
           }}
         >
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10" 
-               style={{
-                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                 backgroundSize: '30px 30px'
-               }}>
-          </div>
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-black/50"></div>
 
           {/* Content */}
           <div className="relative h-full flex flex-col justify-center p-12 text-white">
             <div className="max-w-lg">
               <h2 className="text-4xl font-bold mb-6">
-                {hotelInfo?.hotel_name || 'Kapulaga Hotel'}
+                {hotelInfo?.hotel_name || 'SMK Pariwisata Mengwitani'}
               </h2>
               <p className="text-xl text-gray-100 mb-12">
                 {hotelInfo?.hotel_description || 'Premium hospitality experience in the heart of the city'}

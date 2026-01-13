@@ -272,12 +272,15 @@ const ComplaintsPage = () => {
     setFormError(null);
 
     try {
+      const csrfToken = getCsrfToken();
       // First, create the complaint
       const response = await fetch(buildApiUrl('hotel/complaints/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
+        credentials: 'include',
         body: JSON.stringify(formData)
       });
 
@@ -298,6 +301,10 @@ const ComplaintsPage = () => {
 
           await fetch(buildApiUrl('hotel/complaint-images/'), {
             method: 'POST',
+            headers: {
+              ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+            },
+            credentials: 'include',
             body: imageFormData
           });
         }

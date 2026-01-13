@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setEmployee(null);
       setProfile(null);
       setStaff(null);
-      router.push('/login');
+      router.push('/resto/login');
     } catch (error) {
       console.error('Logout failed:', error);
       // Clear state anyway on logout failure
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setEmployee(null);
       setProfile(null);
       setStaff(null);
-      router.push('/login');
+      router.push('/resto/login');
     } finally {
       setIsLoading(false);
     }

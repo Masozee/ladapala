@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   PackageIcon,
   Add01Icon,
@@ -112,34 +112,13 @@ export default function AmenitiesPage() {
     special_instructions: ''
   });
 
-  const [csrfToken, setCsrfToken] = useState('');
-
   useEffect(() => {
-    fetchCSRFToken();
     fetchRequests();
     fetchCategories();
     fetchInventoryItems();
     fetchRooms();
     fetchStats();
   }, []);
-
-  const fetchCSRFToken = async () => {
-    try {
-      const response = await fetch(buildApiUrl('user/csrf/'), {
-        credentials: 'include',
-      });
-      if (response.ok) {
-        const csrfCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('csrftoken='));
-        if (csrfCookie) {
-          setCsrfToken(csrfCookie.split('=')[1]);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching CSRF token:', error);
-    }
-  };
 
   const fetchRequests = async () => {
     try {
@@ -224,6 +203,7 @@ export default function AmenitiesPage() {
     }
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl('hotel/amenity-requests/'), {
         method: 'POST',
         headers: {
@@ -267,6 +247,7 @@ export default function AmenitiesPage() {
     }
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/amenity-requests/${selectedRequest.id}/`), {
         method: 'PATCH',
         headers: {
@@ -308,6 +289,7 @@ export default function AmenitiesPage() {
     if (!confirm(`Tandai request ${request.request_number} sebagai selesai?`)) return;
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/amenity-requests/${request.id}/mark_completed/`), {
         method: 'POST',
         headers: {
@@ -335,6 +317,7 @@ export default function AmenitiesPage() {
     if (!confirm(`Batalkan request ${request.request_number}?`)) return;
 
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/amenity-requests/${request.id}/cancel/`), {
         method: 'POST',
         headers: {

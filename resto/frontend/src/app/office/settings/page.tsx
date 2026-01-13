@@ -24,6 +24,7 @@ import {
   Building02Icon
 } from "@hugeicons/core-free-icons"
 import { api, type RestaurantSettings as APISettings } from "@/lib/api"
+import { getCsrfToken } from "@/lib/config"
 
 interface RestaurantSettings {
   name: string
@@ -71,6 +72,9 @@ export default function SettingsPage() {
   const [settingsId, setSettingsId] = useState<number | null>(null)
   const [restaurantId, setRestaurantId] = useState<number | null>(null)
   const [testingPrinter, setTestingPrinter] = useState<string | null>(null)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string>('')
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string>('')
 
   const [restaurantSettings, setRestaurantSettings] = useState<RestaurantSettings>({
     name: "",
@@ -125,12 +129,34 @@ export default function SettingsPage() {
     fetchSettings()
   }, [])
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setLogoFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const fetchSettings = async () => {
     try {
       setLoading(true)
       const data = await api.getCurrentSettings()
       setSettingsId(data.id)
       setRestaurantId(data.restaurant)
+
+      // Get restaurant data to fetch logo
+      try {
+        const restaurantData = await api.getCurrentRestaurant()
+        if (restaurantData.logo) {
+          setCurrentLogoUrl(restaurantData.logo)
+        }
+      } catch (err) {
+        console.error('Error fetching restaurant logo:', err)
+      }
 
       // Map API data to local state
       setRestaurantSettings({
@@ -199,13 +225,38 @@ export default function SettingsPage() {
       setSaving(true)
 
       // Update restaurant info
-      await api.updateRestaurant(restaurantId, {
-        name: restaurantSettings.name,
-        address: restaurantSettings.address,
-        phone: restaurantSettings.phone,
-        email: restaurantSettings.email,
-        serial_number: restaurantSettings.serialNumber
-      })
+      if (logoFile) {
+        // If there's a new logo file, use FormData
+        const formData = new FormData()
+        formData.append('name', restaurantSettings.name)
+        formData.append('address', restaurantSettings.address)
+        formData.append('phone', restaurantSettings.phone)
+        formData.append('email', restaurantSettings.email)
+        formData.append('serial_number', restaurantSettings.serialNumber)
+        formData.append('logo', logoFile)
+
+        const csrfToken = getCsrfToken()
+        const headers: HeadersInit = {}
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken
+        }
+
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/restaurant/restaurants/${restaurantId}/`, {
+          method: 'PATCH',
+          headers,
+          credentials: 'include',
+          body: formData
+        })
+      } else {
+        // No new logo, just update text fields
+        await api.updateRestaurant(restaurantId, {
+          name: restaurantSettings.name,
+          address: restaurantSettings.address,
+          phone: restaurantSettings.phone,
+          email: restaurantSettings.email,
+          serial_number: restaurantSettings.serialNumber
+        })
+      }
 
       // Map local state to API format for settings
       const updateData: Partial<APISettings> = {
@@ -264,10 +315,12 @@ export default function SettingsPage() {
 
     try {
       setTestingPrinter(printerType)
+      const csrfToken = getCsrfToken()
       const response = await fetch('http://localhost:8000/api/settings/test_printer/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
         body: JSON.stringify({ ip_address: ipAddress })
@@ -354,6 +407,33 @@ export default function SettingsPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="restaurant-logo">Logo Restoran</Label>
+                <div className="flex items-center gap-4">
+                  {(logoPreview || currentLogoUrl) && (
+                    <div className="w-20 h-20 border-2 border-gray-200 rounded-lg overflow-hidden">
+                      <img
+                        src={logoPreview || currentLogoUrl}
+                        alt="Logo Preview"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <Input
+                      id="restaurant-logo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoChange}
+                      className="cursor-pointer"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Recommended size: 200x200px. Formats: JPG, PNG, SVG
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="restaurant-name">Nama Restoran</Label>
                 <Input

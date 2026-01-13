@@ -62,7 +62,7 @@ export const HeaderActions = () => {
                 sessionStorage.clear();
               }
               // Redirect to login
-              window.location.href = '/login';
+              window.location.href = '/hotel/login';
             } else {
               console.error('Logout failed:', response.status, await response.text());
               // Force logout on client side anyway
@@ -70,7 +70,7 @@ export const HeaderActions = () => {
                 localStorage.clear();
                 sessionStorage.clear();
               }
-              window.location.href = '/login';
+              window.location.href = '/hotel/login';
             }
           } catch (error) {
             console.error('Logout error:', error);
@@ -79,7 +79,7 @@ export const HeaderActions = () => {
               localStorage.clear();
               sessionStorage.clear();
             }
-            window.location.href = '/login';
+            window.location.href = '/hotel/login';
           }
         }}
         className="p-2 hover:bg-red-100 transition-colors text-red-600"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   PackageIcon,
   Add01Icon,

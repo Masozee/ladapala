@@ -34,7 +34,7 @@ LICENSE_KEY = os.environ.get('LICENSE_KEY', '')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # Parse ALLOWED_HOSTS from environment or use defaults
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.0.116,*,api.parlemenkita.org,parlemenkita.org,kapulaga-iota.vercel.app').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.68.101,192.168.0.116,*,api.parlemenkita.org,parlemenkita.org,kapulaga-iota.vercel.app').split(',')
 
 
 # Application definition
@@ -171,6 +171,7 @@ else:
         "http://localhost:3001",
         "http://localhost:3002",
         "http://localhost:3003",
+        "http://192.168.68.101",
         "https://parlemenkita.org",
         "https://www.parlemenkita.org",
         "https://api.parlemenkita.org",
@@ -197,6 +198,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",
+    "http://192.168.68.101",
     "http://localhost:3002",
     "http://localhost:3003",
     "http://192.168.0.116:3000",

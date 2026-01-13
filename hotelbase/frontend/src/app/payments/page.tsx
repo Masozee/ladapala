@@ -158,6 +158,9 @@ const PaymentsPage = () => {
     message: string;
   }>({ show: false, type: null, message: '' });
 
+  // Hotel settings state
+  const [hotelSettings, setHotelSettings] = useState<any>(null);
+
   const paymentMethods: PaymentMethod[] = [
     { id: 'cash', name: 'Cash', icon: CreditCardIcon, enabled: true },
     { id: 'debit_credit', name: 'Debit/Credit Card', icon: CreditCardIcon, enabled: true },
@@ -198,11 +201,17 @@ const PaymentsPage = () => {
     }
   };
 
-  // Fetch CSRF token on mount
+  // Fetch CSRF token and hotel settings on mount
   useEffect(() => {
     fetch(buildApiUrl('user/csrf/'), {
       credentials: 'include'
     }).catch(err => console.error('Error fetching CSRF token:', err));
+
+    // Fetch hotel settings
+    fetch(buildApiUrl('hotel/settings/public_info/'))
+      .then(res => res.json())
+      .then(data => setHotelSettings(data))
+      .catch(err => console.error('Error fetching hotel settings:', err));
   }, []);
 
   useEffect(() => {
@@ -454,7 +463,7 @@ const PaymentsPage = () => {
             };
 
             // Generate PDF as blob
-            const pdfBlob = await pdf(<ReservationInvoicePDF booking={invoiceData} />).toBlob();
+            const pdfBlob = await pdf(<ReservationInvoicePDF booking={invoiceData} hotelSettings={hotelSettings} />).toBlob();
 
             // Convert blob to base64
             const reader = new FileReader();
@@ -1284,10 +1293,10 @@ const PaymentsPage = () => {
         {/* Print-only Receipt */}
         <div className="print-only" style={{ maxWidth: '80mm', margin: '0 auto', fontFamily: 'monospace' }}>
           <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #000', paddingBottom: '10px' }}>
-            <h1 style={{ margin: '0', fontSize: '24px', fontWeight: 'bold' }}>LADAPALA HOTEL</h1>
-            <p style={{ margin: '5px 0', fontSize: '12px' }}>Jl. Hotel Mewah No. 123</p>
-            <p style={{ margin: '5px 0', fontSize: '12px' }}>Jakarta, Indonesia</p>
-            <p style={{ margin: '5px 0', fontSize: '12px' }}>Tel: (021) 123-4567</p>
+            <h1 style={{ margin: '0', fontSize: '24px', fontWeight: 'bold' }}>{hotelSettings?.hotel_name || 'LADAPALA HOTEL'}</h1>
+            <p style={{ margin: '5px 0', fontSize: '12px' }}>{hotelSettings?.address || 'Jl. Hotel Mewah No. 123'}</p>
+            <p style={{ margin: '5px 0', fontSize: '12px' }}>Tel: {hotelSettings?.phone || '(021) 123-4567'}</p>
+            {hotelSettings?.email && <p style={{ margin: '5px 0', fontSize: '12px' }}>Email: {hotelSettings.email}</p>}
           </div>
 
           <div style={{ marginBottom: '20px', fontSize: '14px' }}>
@@ -1355,8 +1364,9 @@ const PaymentsPage = () => {
           </div>
 
           <div style={{ textAlign: 'center', marginTop: '30px', fontSize: '12px', borderTop: '2px solid #000', paddingTop: '10px' }}>
-            <p style={{ margin: '5px 0' }}>Thank you for staying with us!</p>
+            <p style={{ margin: '5px 0' }}>Thank you for staying with us at {hotelSettings?.hotel_name || 'our hotel'}!</p>
             <p style={{ margin: '5px 0' }}>Visit us again soon</p>
+            {hotelSettings?.website && <p style={{ margin: '5px 0', fontSize: '10px' }}>{hotelSettings.website}</p>}
             <p style={{ margin: '10px 0 5px 0' }}>** This is a computer-generated receipt **</p>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 import {
   PackageIcon,
   AlertCircleIcon,

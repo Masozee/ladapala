@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Package01Icon,
@@ -25,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useAuth } from "@/contexts/auth-context"
 
 interface SidebarItem {
   name: string
@@ -72,14 +74,63 @@ const officeItems: SidebarItem[] = [
 
 export function OfficeSidebar() {
   const pathname = usePathname()
+  const { logout } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [restoName, setRestoName] = useState<string>('')
+
+  // Fetch restaurant public information
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+    fetch(`${apiUrl}/restaurant/restaurants/public_info/`, {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => {
+        setLogoUrl(data.logo || null)
+        setRestoName(data.name || '')
+      })
+      .catch(err => console.error('Error fetching restaurant info:', err))
+  }, [])
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+    setIsLoggingOut(true)
+    setIsMenuOpen(false)
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      setIsLoggingOut(false)
+    }
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex h-full w-22 flex-col bg-gray-50">
         {/* Logo */}
-        <div className="flex h-22 items-center justify-center">
-          <HugeiconsIcon icon={Store01Icon} size={24} strokeWidth={2} className="text-gray-700 size-6" />
+        <div className="flex h-22 items-center justify-center p-2">
+          {logoUrl ? (
+            logoUrl.startsWith('http') ? (
+              <img
+                src={logoUrl}
+                alt={`${restoName} Logo`}
+                className="w-10 h-10 object-contain"
+              />
+            ) : (
+              <Image
+                src={logoUrl}
+                alt={`${restoName} Logo`}
+                width={40}
+                height={40}
+                className="object-contain"
+              />
+            )
+          ) : (
+            <HugeiconsIcon icon={Store01Icon} size={24} strokeWidth={2} className="text-gray-700 size-6" />
+          )}
         </div>
 
         {/* Back to Dashboard Button */}
@@ -177,14 +228,14 @@ export function OfficeSidebar() {
                 <div className="border-t border-gray-200 my-2" />
 
                 <button
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors w-full text-left"
-                  onClick={() => {
-                    setIsMenuOpen(false)
-                    console.log("Logout clicked")
-                  }}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors w-full text-left disabled:opacity-50"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
                 >
                   <HugeiconsIcon icon={Logout01Icon} size={20} strokeWidth={2} className="text-red-600 size-5" />
-                  <span className="text-sm text-red-600">Keluar</span>
+                  <span className="text-sm text-red-600">
+                    {isLoggingOut ? 'Keluar...' : 'Keluar'}
+                  </span>
                 </button>
               </div>
             </>

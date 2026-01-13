@@ -96,11 +96,17 @@ export default function EventBookingDetailPage() {
   const [paymentNotes, setPaymentNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [resendingInvoice, setResendingInvoice] = useState(false);
+  const [hotelSettings, setHotelSettings] = useState<any>(null);
 
   useEffect(() => {
     if (id) {
       fetchBooking();
     }
+    // Fetch hotel settings
+    fetch(buildApiUrl('hotel/settings/public_info/'))
+      .then(res => res.json())
+      .then(data => setHotelSettings(data))
+      .catch(err => console.error('Error fetching hotel settings:', err));
   }, [id]);
 
   const fetchBooking = async () => {
@@ -398,7 +404,7 @@ export default function EventBookingDetailPage() {
               </button>
             )}
 
-            {booking && <InvoiceDownloadButton booking={booking} />}
+            {booking && <InvoiceDownloadButton booking={booking} hotelSettings={hotelSettings} />}
           </div>
         </div>
 

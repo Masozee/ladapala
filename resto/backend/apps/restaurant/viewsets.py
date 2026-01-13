@@ -61,6 +61,47 @@ class RestaurantViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(restaurant)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def public_info(self, request):
+        """Get public restaurant info for login page and branding"""
+        try:
+            # Get the first active restaurant
+            restaurant = Restaurant.objects.filter(is_active=True).first()
+
+            if not restaurant:
+                return Response({
+                    'name': 'Ladapala Restaurant',
+                    'address': '',
+                    'phone': '',
+                    'email': '',
+                    'logo_url': '/logo.png',
+                }, status=status.HTTP_200_OK)
+
+            logo_url = '/logo.png'
+            if restaurant.logo:
+                # Build absolute URL for the logo
+                logo_url = request.build_absolute_uri(restaurant.logo.url)
+                # Add /resto prefix for nginx routing
+                if request.path.startswith('/api/restaurant/'):
+                    media_url = restaurant.logo.url
+                    logo_url = request.build_absolute_uri(f"/resto{media_url}")
+
+            return Response({
+                'name': restaurant.name,
+                'address': restaurant.address,
+                'phone': restaurant.phone,
+                'email': restaurant.email,
+                'logo_url': logo_url,
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'name': 'Ladapala Restaurant',
+                'address': '',
+                'phone': '',
+                'email': '',
+                'logo_url': '/logo.png',
+            }, status=status.HTTP_200_OK)
+
 
 class BranchViewSet(viewsets.ModelViewSet):
     queryset = Branch.objects.all()

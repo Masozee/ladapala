@@ -7,7 +7,6 @@ import SupportSidebar from './SupportSidebar';
 import DepartmentGuard from './DepartmentGuard';
 import { buildApiUrl } from '@/lib/config';
 import {
-  Notification02Icon,
   Cancel01Icon,
   ChevronRightIcon,
   Logout01Icon,
@@ -23,14 +22,6 @@ interface SupportLayoutProps {
 export const SupportHeaderActions = () => {
   return (
     <div className="flex items-center space-x-4">
-      {/* Notifications */}
-      <button className={`relative p-2 hover:bg-gray-100 transition-colors text-gray-600`}>
-        <Notification02Icon className="h-5 w-5" />
-        <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs flex items-center justify-center">
-          5
-        </span>
-      </button>
-
       {/* Logout Button */}
       <button
         onClick={async () => {

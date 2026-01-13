@@ -561,11 +561,14 @@ const BookingsPage = () => {
   // Room assignment and reservation actions
   const confirmReservation = async (reservationNumber: string) => {
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/confirm/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -582,11 +585,14 @@ const BookingsPage = () => {
 
   const cancelReservation = async (reservationNumber: string, reason: string) => {
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/cancel/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
+        credentials: 'include',
         body: JSON.stringify({ reason }),
       });
 
@@ -604,11 +610,14 @@ const BookingsPage = () => {
 
   const checkInGuest = async (reservationNumber: string) => {
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/check_in/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {

@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
 const nextConfig: NextConfig = {
+  // Configure base path for nginx reverse proxy
+  basePath: basePath,
+  assetPrefix: basePath,
+
   // Set the workspace root to the resto directory to fix lockfile warning
   outputFileTracingRoot: path.join(__dirname),
 
@@ -16,7 +22,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'http',
-        hostname: '192.168.0.116',
+        hostname: '192.168.0.105',
         port: '8000',
         pathname: '/media/**',
       },

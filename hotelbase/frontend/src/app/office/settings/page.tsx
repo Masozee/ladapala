@@ -79,6 +79,8 @@ export default function AdminPage() {
     currency: 'IDR',
     language: 'id',
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>('');
 
   // System stats state
   const [systemStats, setSystemStats] = useState({
@@ -402,36 +404,80 @@ export default function AdminPage() {
     setOpenMenuId(null);
   };
 
+  // Handle logo file change
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Save hotel information
   const handleSaveHotelInfo = async () => {
     try {
       setSavingSettings(true);
       const csrfToken = getCsrfToken();
 
-      const response = await fetch(buildApiUrl('hotel/settings/1/'), {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          hotel_name: hotelInfo.hotelName,
-          hotel_description: hotelInfo.hotelDescription,
-          address: hotelInfo.address,
-          phone: hotelInfo.phone,
-          email: hotelInfo.email,
-          website: hotelInfo.website,
-          timezone: hotelInfo.timezone,
-          currency: hotelInfo.currency,
-          language: hotelInfo.language,
-        }),
-      });
+      // Use FormData if logo is uploaded, otherwise use JSON
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append('hotel_name', hotelInfo.hotelName);
+        formData.append('hotel_description', hotelInfo.hotelDescription);
+        formData.append('address', hotelInfo.address);
+        formData.append('phone', hotelInfo.phone);
+        formData.append('email', hotelInfo.email);
+        formData.append('website', hotelInfo.website);
+        formData.append('timezone', hotelInfo.timezone);
+        formData.append('currency', hotelInfo.currency);
+        formData.append('language', hotelInfo.language);
+        formData.append('logo', logoFile);
 
-      if (response.ok) {
-        alert('Hotel information saved successfully!');
+        const response = await fetch(buildApiUrl('hotel/settings/1/'), {
+          method: 'PATCH',
+          headers: {
+            ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+          },
+          credentials: 'include',
+          body: formData,
+        });
+
+        if (response.ok) {
+          alert('Hotel information and logo saved successfully!');
+          setLogoFile(null);
+        } else {
+          alert('Failed to save hotel information');
+        }
       } else {
-        alert('Failed to save hotel information');
+        const response = await fetch(buildApiUrl('hotel/settings/1/'), {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            hotel_name: hotelInfo.hotelName,
+            hotel_description: hotelInfo.hotelDescription,
+            address: hotelInfo.address,
+            phone: hotelInfo.phone,
+            email: hotelInfo.email,
+            website: hotelInfo.website,
+            timezone: hotelInfo.timezone,
+            currency: hotelInfo.currency,
+            language: hotelInfo.language,
+          }),
+        });
+
+        if (response.ok) {
+          alert('Hotel information saved successfully!');
+        } else {
+          alert('Failed to save hotel information');
+        }
       }
     } catch (error) {
       console.error('Error saving hotel info:', error);
@@ -541,6 +587,29 @@ export default function AdminPage() {
                 </div>
                 <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Logo Upload */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Logo Hotel</label>
+                      <div className="flex items-center space-x-4">
+                        {logoPreview && (
+                          <div className="relative w-24 h-24 border-2 border-gray-300 rounded-lg overflow-hidden">
+                            <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-[#4E61D3] focus:border-[#4E61D3]"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Upload logo hotel (Recommended: 200x200px, PNG/JPG)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Nama Hotel</label>
                       <input

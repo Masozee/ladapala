@@ -177,6 +177,18 @@ interface Payment {
   status: string;
 }
 
+interface HotelSettings {
+  hotel_name: string;
+  hotel_description: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  logo_url: string;
+  primary_color: string;
+  secondary_color: string;
+}
+
 interface EventInvoicePDFProps {
   booking: {
     booking_number: string;
@@ -209,6 +221,7 @@ interface EventInvoicePDFProps {
     setup_notes?: string;
     special_requests?: string;
   };
+  hotelSettings?: HotelSettings;
 }
 
 const formatCurrency = (value: string | number) => {
@@ -229,21 +242,36 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const EventInvoicePDF: React.FC<EventInvoicePDFProps> = ({ booking }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      {/* Header with Logo */}
-      <View style={styles.header}>
-        <Image
-          src="/logo.png"
-          style={styles.logo}
-        />
-        <View style={styles.headerText}>
-          <Text style={styles.hotelName}>Hotel Kapulaga</Text>
-          <Text style={styles.hotelInfo}>Jl. Contoh No. 123, Jakarta 12345</Text>
-          <Text style={styles.hotelInfo}>Telp: (021) 1234-5678 | Email: info@hotelkapulaga.com</Text>
+const EventInvoicePDF: React.FC<EventInvoicePDFProps> = ({ booking, hotelSettings }) => {
+  const settings = hotelSettings || {
+    hotel_name: 'Kapulaga Hotel',
+    address: 'Jl. Contoh No. 123, Jakarta 12345',
+    phone: '(021) 1234-5678',
+    email: 'info@hotelkapulaga.com',
+    logo_url: '/logo.png',
+    primary_color: '#005357',
+    secondary_color: '#2baf6a',
+    hotel_description: '',
+    website: ''
+  };
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header with Logo */}
+        <View style={styles.header}>
+          {settings.logo_url && (
+            <Image
+              src={settings.logo_url}
+              style={styles.logo}
+            />
+          )}
+          <View style={styles.headerText}>
+            <Text style={styles.hotelName}>{settings.hotel_name}</Text>
+            <Text style={styles.hotelInfo}>{settings.address}</Text>
+            <Text style={styles.hotelInfo}>Telp: {settings.phone} | Email: {settings.email}</Text>
+          </View>
         </View>
-      </View>
 
       {/* Title */}
       <Text style={styles.title}>Bukti Pembayaran</Text>
@@ -472,11 +500,12 @@ const EventInvoicePDF: React.FC<EventInvoicePDFProps> = ({ booking }) => (
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text>Terima kasih atas kepercayaan Anda menggunakan layanan Hotel Kapulaga</Text>
+        <Text>Terima kasih atas kepercayaan Anda menggunakan layanan {settings.hotel_name}</Text>
         <Text>Bukti pembayaran ini dicetak otomatis oleh sistem dan sah tanpa tanda tangan</Text>
       </View>
     </Page>
   </Document>
-);
+  );
+};
 
 export default EventInvoicePDF;

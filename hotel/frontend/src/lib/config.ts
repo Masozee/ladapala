@@ -24,10 +24,14 @@ export const buildApiUrl = (endpoint: string): string => {
   return `${API_CONFIG.BASE_URL}/${cleanEndpoint}`;
 };
 
-// Get CSRF token from cookies
-export const getCsrfToken = (): string | null => {
-  if (typeof document === 'undefined') return null;
+// CSRF token storage for cross-site requests
+let csrfTokenCache: string | null = null;
 
+// Get CSRF token from cookies (for same-origin) or cache (for cross-site)
+export const getCsrfToken = (): string | null => {
+  if (typeof document === 'undefined') return csrfTokenCache;
+
+  // Try to get from cookie first (same-origin)
   const name = 'csrftoken';
   const cookies = document.cookie.split(';');
 
@@ -36,6 +40,30 @@ export const getCsrfToken = (): string | null => {
     if (cookie.startsWith(name + '=')) {
       return decodeURIComponent(cookie.substring(name.length + 1));
     }
+  }
+
+  // Fallback to cached token (cross-site)
+  return csrfTokenCache;
+};
+
+// Set CSRF token for cross-site requests
+export const setCsrfToken = (token: string) => {
+  csrfTokenCache = token;
+};
+
+// Fetch and cache CSRF token from API
+export const fetchCsrfToken = async (): Promise<string | null> => {
+  try {
+    const response = await fetch(buildApiUrl('user/csrf/'), {
+      credentials: 'include'
+    });
+    const data = await response.json();
+    if (data.csrfToken) {
+      setCsrfToken(data.csrfToken);
+      return data.csrfToken;
+    }
+  } catch (err) {
+    console.error('Error fetching CSRF token:', err);
   }
   return null;
 };

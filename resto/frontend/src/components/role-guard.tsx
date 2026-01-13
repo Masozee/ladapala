@@ -43,7 +43,7 @@ export function RoleGuard({ children, allowedRoles, requireStaff = true, fallbac
           </CardHeader>
           <CardContent>
             <p className="mb-4">Anda harus login untuk mengakses halaman ini.</p>
-            <Button onClick={() => router.push('/login')} className="bg-red-600 hover:bg-red-700">
+            <Button onClick={() => router.push('/resto/login')} className="bg-red-600 hover:bg-red-700">
               Login
             </Button>
           </CardContent>

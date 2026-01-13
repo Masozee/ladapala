@@ -22,6 +22,18 @@ const styles = StyleSheet.create({
   footer: { position: 'absolute', bottom: 30, left: 40, right: 40, textAlign: 'center', fontSize: 8, color: '#666' }
 });
 
+interface HotelSettings {
+  hotel_name: string;
+  hotel_description: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  logo_url: string;
+  primary_color: string;
+  secondary_color: string;
+}
+
 interface ReservationInvoicePDFProps {
   booking: {
     reservation_number: string;
@@ -39,6 +51,7 @@ interface ReservationInvoicePDFProps {
     created_at: string;
     rooms?: any[];
   };
+  hotelSettings?: HotelSettings;
 }
 
 const formatCurrency = (value: number) => {
@@ -57,16 +70,29 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const ReservationInvoicePDF: React.FC<ReservationInvoicePDFProps> = ({ booking }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.hotelName}>Hotel Kapulaga</Text>
-          <Text style={{ fontSize: 8, color: '#666' }}>Jl. Example No. 123, Jakarta</Text>
-          <Text style={{ fontSize: 8, color: '#666' }}>Tel: +62 812 3456 7890</Text>
+const ReservationInvoicePDF: React.FC<ReservationInvoicePDFProps> = ({ booking, hotelSettings }) => {
+  const settings = hotelSettings || {
+    hotel_name: 'Kapulaga Hotel',
+    address: 'Jl. Example No. 123, Jakarta',
+    phone: '+62 812 3456 7890',
+    email: 'info@kapulaga.net',
+    logo_url: '/logo.png',
+    primary_color: '#005357',
+    secondary_color: '#2baf6a',
+    hotel_description: '',
+    website: ''
+  };
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.hotelName}>{settings.hotel_name}</Text>
+            <Text style={{ fontSize: 8, color: '#666' }}>{settings.address}</Text>
+            <Text style={{ fontSize: 8, color: '#666' }}>Tel: {settings.phone}</Text>
+          </View>
         </View>
-      </View>
 
       <Text style={styles.title}>BOOKING CONFIRMATION</Text>
 
@@ -144,14 +170,15 @@ const ReservationInvoicePDF: React.FC<ReservationInvoicePDFProps> = ({ booking }
         <Text style={{ fontSize: 8, marginBottom: 2 }}>• Check-in time: 2:00 PM</Text>
         <Text style={{ fontSize: 8, marginBottom: 2 }}>• Check-out time: 12:00 PM</Text>
         <Text style={{ fontSize: 8, marginBottom: 2 }}>• Please bring a valid ID for check-in</Text>
-        <Text style={{ fontSize: 8 }}>• For inquiries: info@kapulaga.net or +62 812 3456 7890</Text>
+        <Text style={{ fontSize: 8 }}>• For inquiries: {settings.email} or {settings.phone}</Text>
       </View>
 
       <Text style={styles.footer}>
-        Thank you for choosing Hotel Kapulaga. We look forward to welcoming you!
+        Thank you for choosing {settings.hotel_name}. We look forward to welcoming you!
       </Text>
     </Page>
   </Document>
-);
+  );
+};
 
 export default ReservationInvoicePDF;

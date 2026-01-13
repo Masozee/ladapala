@@ -12,7 +12,7 @@ import {
   UserIcon,
   UserCheckIcon
 } from '@/lib/icons';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, getCsrfToken } from '@/lib/config';
 
 const LoginPageContent = () => {
   const router = useRouter();
@@ -171,13 +171,22 @@ const LoginPageContent = () => {
           <div>
             <div className="flex items-center space-x-3 mb-8">
               <div className="w-12 h-12 bg-gray-50 flex items-center justify-center p-1">
-                <Image
-                  src={hotelInfo?.logo_url || '/logo.png'}
-                  alt={`${hotelInfo?.hotel_name || 'Hotel'} Logo`}
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                />
+                {hotelInfo?.logo_url && hotelInfo.logo_url.startsWith('http') ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={hotelInfo.logo_url}
+                    alt={`${hotelInfo?.hotel_name || 'Hotel'} Logo`}
+                    className="w-10 h-10 object-contain"
+                  />
+                ) : (
+                  <Image
+                    src={hotelInfo?.logo_url || '/logo.png'}
+                    alt={`${hotelInfo?.hotel_name || 'Hotel'} Logo`}
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
+                )}
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">

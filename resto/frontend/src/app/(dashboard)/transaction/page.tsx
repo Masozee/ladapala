@@ -60,7 +60,7 @@ export default function TransactionPage() {
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!authLoading && !staff) {
-      router.push('/login')
+      router.push('/resto/login')
       return
     }
 
@@ -162,7 +162,7 @@ export default function TransactionPage() {
       // Check if it's an authentication error
       if (error?.message?.includes('logged in') || error?.message?.includes('authentication')) {
         console.log('Authentication error detected, redirecting to login...')
-        router.push('/login')
+        router.push('/resto/login')
         return
       }
 

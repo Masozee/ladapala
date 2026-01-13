@@ -30,6 +30,30 @@ const SupportSidebar = () => {
   const [maintenanceCount, setMaintenanceCount] = useState<number>(0);
   const [housekeepingCount, setHousekeepingCount] = useState<number>(0);
   const [amenitiesCount, setAmenitiesCount] = useState<number>(0);
+  const [logoUrl, setLogoUrl] = useState<string>('/logo.png');
+  const [hotelName, setHotelName] = useState<string>('Kapulaga Hotel');
+
+  // Fetch hotel settings for logo
+  useEffect(() => {
+    const fetchHotelSettings = async () => {
+      try {
+        const response = await fetch(buildApiUrl('hotel/settings/public_info/'));
+        if (response.ok) {
+          const data = await response.json();
+          if (data.logo_url) {
+            setLogoUrl(data.logo_url);
+          }
+          if (data.hotel_name) {
+            setHotelName(data.hotel_name);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching hotel settings:', error);
+      }
+    };
+
+    fetchHotelSettings();
+  }, []);
 
   useEffect(() => {
     // Fetch all sidebar counts from centralized API
@@ -93,13 +117,21 @@ const SupportSidebar = () => {
         <div className="flex-shrink-0 p-4">
           <Link href="/" className="flex items-center justify-center group">
             <div className="w-10 h-10 bg-white flex items-center justify-center p-1 transition-transform group-hover:scale-110">
-              <Image
-                src="/logo.png"
-                alt="Kapulaga Hotel Logo"
-                width={32}
-                height={32}
-                className="object-contain"
-              />
+              {logoUrl.startsWith('http') ? (
+                <img
+                  src={logoUrl}
+                  alt={`${hotelName} Logo`}
+                  className="object-contain w-full h-full"
+                />
+              ) : (
+                <Image
+                  src={logoUrl}
+                  alt={`${hotelName} Logo`}
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                />
+              )}
             </div>
           </Link>
         </div>

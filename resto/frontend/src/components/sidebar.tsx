@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -81,6 +82,22 @@ export function Sidebar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [hasActiveSession, setHasActiveSession] = useState(false)
   const [isCheckingSession, setIsCheckingSession] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [restoName, setRestoName] = useState<string>('')
+
+  // Fetch restaurant public information
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+    fetch(`${apiUrl}/restaurant/restaurants/public_info/`, {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => {
+        setLogoUrl(data.logo || null)
+        setRestoName(data.name || '')
+      })
+      .catch(err => console.error('Error fetching restaurant info:', err))
+  }, [])
 
   // Check for active cashier session
   useEffect(() => {
@@ -124,8 +141,26 @@ export function Sidebar() {
     <TooltipProvider delayDuration={0}>
       <div className="flex h-full w-22 min-w-[5.5rem] max-w-[5.5rem] flex-col bg-gray-50">
         {/* Logo */}
-        <div className="flex h-22 min-h-[5.5rem] items-center justify-center">
-          <HugeiconsIcon icon={Store01Icon} size={24} strokeWidth={2} className="text-gray-700 size-6 min-w-[1.5rem] min-h-[1.5rem]" />
+        <div className="flex h-22 min-h-[5.5rem] items-center justify-center p-2">
+          {logoUrl ? (
+            logoUrl.startsWith('http') ? (
+              <img
+                src={logoUrl}
+                alt={`${restoName} Logo`}
+                className="w-10 h-10 object-contain"
+              />
+            ) : (
+              <Image
+                src={logoUrl}
+                alt={`${restoName} Logo`}
+                width={40}
+                height={40}
+                className="object-contain"
+              />
+            )
+          ) : (
+            <HugeiconsIcon icon={Store01Icon} size={24} strokeWidth={2} className="text-gray-700 size-6 min-w-[1.5rem] min-h-[1.5rem]" />
+          )}
         </div>
 
         {/* Main Navigation */}

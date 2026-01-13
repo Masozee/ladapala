@@ -322,6 +322,7 @@ const BookingDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [showInvoice, setShowInvoice] = useState(false);
   const [resendingInvoice, setResendingInvoice] = useState(false);
+  const [hotelSettings, setHotelSettings] = useState<any>(null);
 
   const transformApiData = (apiData: any): Reservation => {
     // Parse amenities from string to array
@@ -432,7 +433,20 @@ const BookingDetailPage = () => {
       setLoading(false);
     };
 
+    const loadHotelSettings = async () => {
+      try {
+        const response = await fetch(buildApiUrl('hotel/settings/public_info/'));
+        if (response.ok) {
+          const data = await response.json();
+          setHotelSettings(data);
+        }
+      } catch (error) {
+        console.error('Error loading hotel settings:', error);
+      }
+    };
+
     loadBooking();
+    loadHotelSettings();
   }, [params.reservation_number]);
 
   const formatDate = (dateString: string) => {
@@ -470,7 +484,7 @@ const BookingDetailPage = () => {
       const ReservationInvoicePDF = (await import('@/components/ReservationInvoicePDF')).default;
 
       // Generate PDF as blob
-      const pdfBlob = await pdf(<ReservationInvoicePDF booking={booking} />).toBlob();
+      const pdfBlob = await pdf(<ReservationInvoicePDF booking={booking} hotelSettings={hotelSettings} />).toBlob();
 
       // Convert blob to base64
       const reader = new FileReader();
@@ -1175,12 +1189,12 @@ const BookingDetailPage = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-[#005357]">Kapulaga Hotel</div>
+                      <div className="text-2xl font-bold text-[#005357]">{hotelSettings?.hotel_name || 'Kapulaga Hotel'}</div>
                       <div className="text-sm text-gray-600 mt-2">
-                        <p>123 Hotel Street</p>
-                        <p>City, State 12345</p>
-                        <p>Phone: +1 (555) 123-4567</p>
-                        <p>Email: info@kapulaga.com</p>
+                        <p>{hotelSettings?.address || '123 Hotel Street, City, State 12345'}</p>
+                        <p>Phone: {hotelSettings?.phone || '+1 (555) 123-4567'}</p>
+                        <p>Email: {hotelSettings?.email || 'info@kapulaga.com'}</p>
+                        {hotelSettings?.website && <p>Website: {hotelSettings.website}</p>}
                       </div>
                     </div>
                   </div>
@@ -1319,7 +1333,7 @@ const BookingDetailPage = () => {
 
                   {/* Footer */}
                   <div className="text-center pt-6 border-t">
-                    <p className="text-sm text-gray-600">Thank you for choosing Kapulaga Hotel!</p>
+                    <p className="text-sm text-gray-600">Thank you for choosing {hotelSettings?.hotel_name || 'Kapulaga Hotel'}!</p>
                     <p className="text-xs text-gray-500 mt-2">This is a computer generated invoice.</p>
                   </div>
                 </div>
