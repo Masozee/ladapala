@@ -2,6 +2,7 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect, csrf_exempt
 from django.utils.decorators import method_decorator
@@ -55,6 +56,9 @@ class LoginView(APIView):
         # Login user (creates session)
         django_login(request, user)
 
+        # Generate or get auth token for API authentication
+        token, _ = Token.objects.get_or_create(user=user)
+
         # Get employee info if available
         employee_info = None
         if hasattr(user, 'employee'):
@@ -76,6 +80,7 @@ class LoginView(APIView):
 
         return Response({
             'message': 'Login successful',
+            'token': token.key,  # Auth token for API requests
             'user': {
                 'id': user.id,
                 'email': user.email,
