@@ -1,13 +1,33 @@
 import type { NextConfig } from "next";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-
 const nextConfig: NextConfig = {
-  // Configure base path for nginx reverse proxy
-  basePath: basePath,
-  assetPrefix: basePath,
+  // Vercel-optimized settings
+  reactStrictMode: true,
+  poweredByHeader: false,
 
-  // Configure headers for better security and API compatibility
+  // Image optimization for Vercel
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.smkpariwisatamengwitani.com',
+      },
+    ],
+  },
+
+  // Handle @react-pdf/renderer for SSR (client-only component)
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.resolve = config.resolve || {};
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@react-pdf/renderer': false,
+      };
+    }
+    return config;
+  },
+
+  // Security headers
   async headers() {
     return [
       {

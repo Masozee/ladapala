@@ -1,7 +1,10 @@
 {
-  "framework": null,
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "outputDirectory": ".next"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "regions": ["sin1"],
+  "functions": {
+    "app/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
 }

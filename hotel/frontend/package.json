@@ -3,18 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build --webpack",
-    "start": "NODE_ENV=production node server.js",
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
     "preview": "npm run build && npm run start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
-    "deploy": "./deploy.sh",
-    "production:install": "npm ci --only=production",
-    "production:build": "NODE_ENV=production npm run build",
     "clean": "rm -rf .next && rm -rf out",
     "analyze": "ANALYZE=true npm run build",
+    "cpanel:start": "NODE_ENV=production node server.js",
     "cpanel:package": "node scripts/create-cpanel-package.js",
     "cpanel:deploy": "npm run build && npm run cpanel:package"
   },
@@ -50,22 +48,22 @@
     "@radix-ui/react-toolbar": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-pdf/renderer": "^4.3.2",
-    "@tailwindcss/postcss": "^4.1.18",
-    "@types/node": "^20.19.27",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
     "date-fns": "^4.1.0",
     "next": "^16.1.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "recharts": "^3.6.0",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^20.19.27",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "baseline-browser-mapping": "^2.9.11",
     "eslint": "^9.39.2",
-    "eslint-config-next": "^16.1.1"
+    "eslint-config-next": "^16.1.1",
+    "typescript": "^5.9.3"
   }
 }
