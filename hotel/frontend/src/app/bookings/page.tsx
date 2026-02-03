@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { getAuthToken } from '@/lib/auth';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   Calendar01Icon,
@@ -561,11 +562,13 @@ const BookingsPage = () => {
   // Room assignment and reservation actions
   const confirmReservation = async (reservationNumber: string) => {
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/confirm/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
@@ -585,11 +588,13 @@ const BookingsPage = () => {
 
   const cancelReservation = async (reservationNumber: string, reason: string) => {
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/cancel/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
@@ -610,11 +615,13 @@ const BookingsPage = () => {
 
   const checkInGuest = async (reservationNumber: string) => {
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/check_in/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
@@ -635,12 +642,14 @@ const BookingsPage = () => {
 
   const checkOutGuest = async (reservationNumber: string) => {
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/check_out/`), {
         method: 'PATCH',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken })
         },
       });
@@ -661,12 +670,14 @@ const BookingsPage = () => {
 
   const requestLateCheckout = async (reservationNumber: string, requestedTime: string, notes: string = '') => {
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/request_late_checkout/`), {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken })
         },
         body: JSON.stringify({
@@ -695,12 +706,14 @@ const BookingsPage = () => {
     notes?: string
   ) => {
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/approve_late_checkout/`), {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken })
         },
         body: JSON.stringify({
@@ -756,6 +769,7 @@ const BookingsPage = () => {
     }>;
   }) => {
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
 
       // First create or get the guest
@@ -763,6 +777,7 @@ const BookingsPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
@@ -775,6 +790,9 @@ const BookingsPage = () => {
       } else {
         // Guest might already exist, try to find by email
         const existingGuestResponse = await fetch(buildApiUrl(`hotel/guests/?email=${reservationData.guest.email}`), {
+          headers: {
+            ...(authToken && { 'Authorization': `Token ${authToken}` }),
+          },
           credentials: 'include',
         });
         if (existingGuestResponse.ok) {
@@ -803,6 +821,7 @@ const BookingsPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
@@ -832,12 +851,14 @@ const BookingsPage = () => {
     room_type?: number;
   }) => {
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
 
       const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',

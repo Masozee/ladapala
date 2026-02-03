@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { getAuthToken } from '@/lib/auth';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   ChevronLeftIcon,
@@ -481,7 +482,8 @@ const BookingDetailPage = () => {
         const base64data = reader.result as string;
         const base64Content = base64data.split(',')[1]; // Remove data:application/pdf;base64, prefix
 
-        // Get CSRF token
+        // Get auth and CSRF tokens
+        const authToken = getAuthToken();
         const csrfToken = getCsrfToken();
 
         // Send to backend
@@ -489,6 +491,7 @@ const BookingDetailPage = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(authToken && { 'Authorization': `Token ${authToken}` }),
             'X-CSRFToken': csrfToken || '',
           },
           credentials: 'include',
