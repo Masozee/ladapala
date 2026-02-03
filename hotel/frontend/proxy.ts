@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow login page, customer booking pages, and public assets
-  if (pathname === '/login' ||
+  // Allow all public paths without auth check
+  if (pathname === '/' ||
+      pathname === '/login' ||
       pathname.startsWith('/customers') ||
       pathname.startsWith('/_next/') ||
       pathname.startsWith('/api/') ||
@@ -25,7 +26,8 @@ export function middleware(request: NextRequest) {
 
   // If no session cookie, redirect to login
   if (!sessionCookie) {
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/login';
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
