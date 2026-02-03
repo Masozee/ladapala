@@ -21,18 +21,18 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for session cookie (Django session)
-  const sessionCookie = request.cookies.get('sessionid');
+  // Check for frontend auth cookie (set by login page on this domain)
+  const authCookie = request.cookies.get('auth-token');
 
-  // If no session cookie, redirect to login
-  if (!sessionCookie) {
+  // If no auth cookie, redirect to login
+  if (!authCookie) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = '/login';
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Session exists - proceed with the request
+  // Auth cookie exists - proceed with the request
   return NextResponse.next();
 }
 

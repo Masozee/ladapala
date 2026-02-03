@@ -88,6 +88,8 @@ export function logout(): void {
   localStorage.removeItem('authUser');
   localStorage.removeItem('authEmployee');
   localStorage.removeItem('authAccess');
+  // Clear auth cookie for proxy
+  document.cookie = 'auth-token=; path=/; max-age=0; SameSite=Lax; Secure';
 }
 
 export function getAuthHeaders(): HeadersInit {

@@ -93,6 +93,10 @@ const LoginPageContent = () => {
         localStorage.setItem('authAccess', JSON.stringify(data.access));
       }
 
+      // Set auth cookie for proxy authentication (same domain as frontend)
+      const maxAge = formData.rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60; // 30 days or 1 day
+      document.cookie = `auth-token=${data.token}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
+
       // Redirect based on access level or original page
       if (redirectPath !== '/') {
         router.push(redirectPath);
