@@ -15,16 +15,15 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Handle @react-pdf/renderer for SSR (client-only component)
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.resolve = config.resolve || {};
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        '@react-pdf/renderer': false,
-      };
-    }
-    return config;
+  // Exclude @react-pdf/renderer from server bundling (client-only)
+  serverExternalPackages: ['@react-pdf/renderer'],
+
+  // Turbopack configuration
+  turbopack: {
+    resolveAlias: {
+      // Stub out @react-pdf/renderer on server to prevent SSR issues
+      '@react-pdf/renderer': '@react-pdf/renderer',
+    },
   },
 
   // Security headers
