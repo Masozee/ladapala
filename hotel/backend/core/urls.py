@@ -24,10 +24,15 @@ router = routers.DefaultRouter()
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # API endpoints (without api/ prefix since cPanel serves from /api/ subdirectory)
+    path('user/', include('apps.user.urls')),
+    path('hotel/', include('apps.hotel.urls')),
+    path('', include('apps.hotel.urls_public')),  # Public hotel API endpoints
+    path('api-auth/', include('rest_framework.urls')),
+    # Legacy paths with api/ prefix for local development
     path('api/user/', include('apps.user.urls')),
     path('api/hotel/', include('apps.hotel.urls')),
-    path('api/', include('apps.hotel.urls_public')),  # Public hotel API endpoints
-    path('api-auth/', include('rest_framework.urls')),
+    path('api/', include('apps.hotel.urls_public')),
 ]
 
 # Serve media files during development
