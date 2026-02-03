@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { getAuthToken } from '@/lib/auth';
 
 // Add print styles
 const printStyles = `
@@ -189,7 +190,13 @@ const PaymentsPage = () => {
   const loadTransactions = async () => {
     setLoadingTransactions(true);
     try {
-      const response = await fetch(buildApiUrl('hotel/payments/today_payments/'));
+      const authToken = getAuthToken();
+      const response = await fetch(buildApiUrl('hotel/payments/today_payments/'), {
+        headers: {
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
+        },
+        credentials: 'include',
+      });
       if (response.ok) {
         const data = await response.json();
         setTransactions(data.payments || []);
@@ -220,8 +227,13 @@ const PaymentsPage = () => {
     if (resId) {
       setReservationId(resId);
 
+      const authToken = getAuthToken();
+      const headers: HeadersInit = {
+        ...(authToken && { 'Authorization': `Token ${authToken}` }),
+      };
+
       // First fetch to get reservation_number
-      fetch(buildApiUrl('hotel/reservations/'))
+      fetch(buildApiUrl('hotel/reservations/'), { headers, credentials: 'include' })
         .then(res => res.json())
         .then(data => {
           const reservation = data.results?.find((r: any) => r.id === parseInt(resId));
@@ -231,7 +243,7 @@ const PaymentsPage = () => {
               fetchGuestLoyaltyPoints(reservation.guest);
             }
             // Fetch full details with payment info
-            return fetch(buildApiUrl(`hotel/reservations/${reservation.reservation_number}/`));
+            return fetch(buildApiUrl(`hotel/reservations/${reservation.reservation_number}/`), { headers, credentials: 'include' });
           }
         })
         .then(res => res?.json())
@@ -325,7 +337,13 @@ const PaymentsPage = () => {
   // Fetch guest loyalty points
   const fetchGuestLoyaltyPoints = async (guestId: number) => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/guests/${guestId}/`));
+      const authToken = getAuthToken();
+      const response = await fetch(buildApiUrl(`hotel/guests/${guestId}/`), {
+        headers: {
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
+        },
+        credentials: 'include',
+      });
       if (response.ok) {
         const data = await response.json();
         setAvailablePoints(data.loyalty_points || 0);
@@ -344,11 +362,13 @@ const PaymentsPage = () => {
     setVoucherError('');
 
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl('hotel/payments/calculate/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
@@ -416,10 +436,17 @@ const PaymentsPage = () => {
       // Generate PDF invoice before payment to send with email
       let pdfBase64Content = null;
       let reservationNumber = null;
+      const pdfAuthToken = getAuthToken();
+      const pdfHeaders: HeadersInit = {
+        ...(pdfAuthToken && { 'Authorization': `Token ${pdfAuthToken}` }),
+      };
       if (reservationId) {
         try {
           // First fetch reservation to get reservation_number
-          const reservationListResponse = await fetch(buildApiUrl(`hotel/reservations/?id=${reservationId}`));
+          const reservationListResponse = await fetch(buildApiUrl(`hotel/reservations/?id=${reservationId}`), {
+            headers: pdfHeaders,
+            credentials: 'include',
+          });
           if (reservationListResponse.ok) {
             const listData = await reservationListResponse.json();
             const reservation = listData.results?.[0];
@@ -433,7 +460,10 @@ const PaymentsPage = () => {
             console.warn('Could not find reservation_number for reservationId:', reservationId);
           }
           const reservationResponse = reservationNumber
-            ? await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/`))
+            ? await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/`), {
+                headers: pdfHeaders,
+                credentials: 'include',
+              })
             : null;
           if (reservationResponse && reservationResponse.ok) {
             const reservationData = await reservationResponse.json();
@@ -500,11 +530,13 @@ const PaymentsPage = () => {
           pdf_content: pdfBase64Content, // Include PDF for email
         };
 
+        const authToken = getAuthToken();
         const csrfToken = getCsrfToken();
         response = await fetch(buildApiUrl('hotel/payments/process_with_promotions/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(authToken && { 'Authorization': `Token ${authToken}` }),
             ...(csrfToken && { 'X-CSRFToken': csrfToken }),
           },
           credentials: 'include',
@@ -548,12 +580,14 @@ const PaymentsPage = () => {
           notes: notes,
         };
 
-        const csrfToken = getCsrfToken();
+        const authTokenStd = getAuthToken();
+        const csrfTokenStd = getCsrfToken();
         response = await fetch(buildApiUrl('hotel/payments/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+            ...(authTokenStd && { 'Authorization': `Token ${authTokenStd}` }),
+            ...(csrfTokenStd && { 'X-CSRFToken': csrfTokenStd }),
           },
           credentials: 'include',
           body: JSON.stringify(paymentData),
@@ -570,11 +604,14 @@ const PaymentsPage = () => {
         // Send invoice email for standard payment if PDF was generated
         if (pdfBase64Content && reservationNumber) {
           try {
+            const authTokenEmail = getAuthToken();
+            const csrfTokenEmail = getCsrfToken();
             const emailResponse = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/resend_invoice/`), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                ...(csrfToken && { 'X-CSRFToken': csrfToken }),
+                ...(authTokenEmail && { 'Authorization': `Token ${authTokenEmail}` }),
+                ...(csrfTokenEmail && { 'X-CSRFToken': csrfTokenEmail }),
               },
               credentials: 'include',
               body: JSON.stringify({ pdf_content: pdfBase64Content }),
@@ -724,11 +761,16 @@ const PaymentsPage = () => {
       // Proceed with voiding the transaction
       if (!pendingVoidTransaction) return;
 
+      const voidAuthToken = getAuthToken();
+      const voidCsrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/payments/${pendingVoidTransaction.id}/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...(voidAuthToken && { 'Authorization': `Token ${voidAuthToken}` }),
+          ...(voidCsrfToken && { 'X-CSRFToken': voidCsrfToken }),
         },
+        credentials: 'include',
         body: JSON.stringify({
           status: 'CANCELLED',
           notes: `${pendingVoidTransaction.notes}\n[VOIDED on ${new Date().toLocaleString('id-ID')} by ${authData.employee.full_name}]\nReason: ${voidReason}`
