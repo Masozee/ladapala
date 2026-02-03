@@ -19,9 +19,12 @@ const printStyles = `
     }
     .print-only {
       position: absolute;
-      left: 0;
+      left: 50%;
       top: 0;
+      transform: translateX(-50%);
       width: 100%;
+      max-width: 400px;
+      padding: 20px;
     }
     body {
       margin: 0;
@@ -29,8 +32,8 @@ const printStyles = `
       background: white;
     }
     @page {
-      size: 80mm auto;
-      margin: 0mm;
+      size: A4;
+      margin: 15mm;
     }
     * {
       -webkit-print-color-adjust: exact !important;
@@ -155,6 +158,9 @@ const PaymentsPage = () => {
   const [applyingVoucher, setApplyingVoucher] = useState(false);
   const [voucherError, setVoucherError] = useState('');
 
+  // Hotel settings for receipt
+  const [hotelInfo, setHotelInfo] = useState<any>(null);
+
   // Email notification states
   const [emailNotification, setEmailNotification] = useState<{
     show: boolean;
@@ -208,11 +214,19 @@ const PaymentsPage = () => {
     }
   };
 
-  // Fetch CSRF token on mount
+  // Fetch CSRF token and hotel info on mount
   useEffect(() => {
     fetch(buildApiUrl('user/csrf/'), {
       credentials: 'include'
     }).catch(err => console.error('Error fetching CSRF token:', err));
+
+    // Fetch hotel settings for receipt
+    fetch(buildApiUrl('hotel/settings/public_info/'), {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => setHotelInfo(data))
+      .catch(err => console.error('Error fetching hotel info:', err));
   }, []);
 
   useEffect(() => {
@@ -1474,44 +1488,69 @@ const PaymentsPage = () => {
         )}
 
         {/* Print-only Receipt */}
-        <div className="print-only" style={{ maxWidth: '80mm', margin: '0 auto', fontFamily: 'monospace' }}>
-          <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #000', paddingBottom: '10px' }}>
-            <h1 style={{ margin: '0', fontSize: '24px', fontWeight: 'bold' }}>LADAPALA HOTEL</h1>
-            <p style={{ margin: '5px 0', fontSize: '12px' }}>Jl. Hotel Mewah No. 123</p>
-            <p style={{ margin: '5px 0', fontSize: '12px' }}>Jakarta, Indonesia</p>
-            <p style={{ margin: '5px 0', fontSize: '12px' }}>Tel: (021) 123-4567</p>
+        <div className="print-only" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px', borderBottom: '2px solid #000', paddingBottom: '16px' }}>
+            {hotelInfo?.logo_url && (
+              <img
+                src={hotelInfo.logo_url}
+                alt={hotelInfo?.hotel_name || 'Hotel'}
+                style={{ maxHeight: '60px', marginBottom: '12px' }}
+              />
+            )}
+            <h1 style={{ margin: '0', fontSize: '22px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+              {hotelInfo?.hotel_name || 'Hotel'}
+            </h1>
+            <p style={{ margin: '6px 0', fontSize: '13px', color: '#444' }}>{hotelInfo?.address || ''}</p>
+            <p style={{ margin: '4px 0', fontSize: '13px', color: '#444' }}>Tel: {hotelInfo?.phone || ''}</p>
+            {hotelInfo?.email && <p style={{ margin: '4px 0', fontSize: '13px', color: '#444' }}>{hotelInfo.email}</p>}
           </div>
 
-          <div style={{ marginBottom: '20px', fontSize: '14px' }}>
-            <p style={{ margin: '5px 0' }}><strong>PAYMENT RECEIPT</strong></p>
-            <p style={{ margin: '5px 0' }}>Date: {new Date().toLocaleDateString('id-ID')}</p>
-            <p style={{ margin: '5px 0' }}>Time: {new Date().toLocaleTimeString('id-ID')}</p>
-            <p style={{ margin: '5px 0' }}>Receipt #: {reservationId}</p>
+          <div style={{ marginBottom: '20px', fontSize: '14px', textAlign: 'center' }}>
+            <p style={{ margin: '8px 0', fontSize: '16px', fontWeight: 'bold' }}>PAYMENT RECEIPT</p>
+            <p style={{ margin: '4px 0', color: '#555' }}>Date: {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <p style={{ margin: '4px 0', color: '#555' }}>Time: {new Date().toLocaleTimeString('id-ID')}</p>
+            <p style={{ margin: '4px 0', color: '#555' }}>Receipt #: {reservationId}</p>
           </div>
 
-          <div style={{ marginBottom: '20px', borderTop: '1px dashed #000', paddingTop: '10px', fontSize: '14px' }}>
-            <p style={{ margin: '5px 0' }}><strong>Guest:</strong> {guestName}</p>
-            <p style={{ margin: '5px 0' }}><strong>Room:</strong> {roomNumber}</p>
-            <p style={{ margin: '5px 0' }}><strong>Check-in:</strong> {checkInDate}</p>
-            <p style={{ margin: '5px 0' }}><strong>Check-out:</strong> {checkOutDate}</p>
+          <div style={{ marginBottom: '20px', borderTop: '1px dashed #666', borderBottom: '1px dashed #666', padding: '12px 0', fontSize: '14px' }}>
+            <table style={{ width: '100%' }}>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '4px 0', color: '#666', width: '100px' }}>Guest</td>
+                  <td style={{ padding: '4px 0', fontWeight: '500' }}>: {guestName}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '4px 0', color: '#666' }}>Room</td>
+                  <td style={{ padding: '4px 0', fontWeight: '500' }}>: {roomNumber}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '4px 0', color: '#666' }}>Check-in</td>
+                  <td style={{ padding: '4px 0', fontWeight: '500' }}>: {checkInDate}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '4px 0', color: '#666' }}>Check-out</td>
+                  <td style={{ padding: '4px 0', fontWeight: '500' }}>: {checkOutDate}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <div style={{ marginBottom: '20px', borderTop: '1px dashed #000', paddingTop: '10px' }}>
-            <table style={{ width: '100%', fontSize: '14px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid #000' }}>
-                  <th style={{ textAlign: 'left', padding: '5px 0' }}>Item</th>
-                  <th style={{ textAlign: 'right', padding: '5px 0' }}>Amount</th>
+                <tr style={{ borderBottom: '2px solid #000' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', fontWeight: '600' }}>Item</th>
+                  <th style={{ textAlign: 'right', padding: '8px 0', fontWeight: '600' }}>Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {lineItems.map((item) => (
-                  <tr key={item.id}>
-                    <td style={{ padding: '5px 0' }}>
+                  <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: '8px 0' }}>
                       {item.name}
-                      {item.quantity > 1 && ` x${item.quantity}`}
+                      {item.quantity > 1 && <span style={{ color: '#666' }}> x{item.quantity}</span>}
                     </td>
-                    <td style={{ textAlign: 'right', padding: '5px 0' }}>
+                    <td style={{ textAlign: 'right', padding: '8px 0' }}>
                       {formatCurrency(item.total)}
                     </td>
                   </tr>
@@ -1520,60 +1559,75 @@ const PaymentsPage = () => {
             </table>
           </div>
 
-          <div style={{ borderTop: '1px solid #000', paddingTop: '10px', marginBottom: '20px', fontSize: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-              <span>Subtotal:</span>
+          <div style={{ borderTop: '2px solid #000', paddingTop: '12px', marginBottom: '20px', fontSize: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ color: '#555' }}>Subtotal</span>
               <span>{formatCurrency(subtotal)}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-              <span>Tax (11%):</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ color: '#555' }}>Tax (11%)</span>
               <span>{formatCurrency(taxAmount)}</span>
             </div>
             {calculationResult && calculationResult.voucher?.discount && parseFloat(calculationResult.voucher.discount) > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', color: '#16a34a' }}>
-                <span>Voucher ({calculationResult.voucher.code}):</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', color: '#16a34a' }}>
+                <span>Voucher ({calculationResult.voucher.code})</span>
                 <span>-{formatCurrency(parseFloat(calculationResult.voucher.discount))}</span>
               </div>
             )}
             {calculationResult && calculationResult.auto_discount?.discount && parseFloat(calculationResult.auto_discount.discount) > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', color: '#9333ea' }}>
-                <span>Discount ({calculationResult.auto_discount.name}):</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', color: '#7c3aed' }}>
+                <span>Discount ({calculationResult.auto_discount.name})</span>
                 <span>-{formatCurrency(parseFloat(calculationResult.auto_discount.discount))}</span>
               </div>
             )}
             {calculationResult && calculationResult.loyalty_points?.value && parseFloat(calculationResult.loyalty_points.value) > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', color: '#ca8a04' }}>
-                <span>Points ({calculationResult.loyalty_points.redeemed}):</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', color: '#ca8a04' }}>
+                <span>Points ({calculationResult.loyalty_points.redeemed.toLocaleString()})</span>
                 <span>-{formatCurrency(parseFloat(calculationResult.loyalty_points.value))}</span>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '18px', fontWeight: 'bold', borderTop: '2px solid #000', paddingTop: '10px' }}>
-              <span>TOTAL:</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', fontSize: '18px', fontWeight: 'bold', borderTop: '2px solid #000' }}>
+              <span>TOTAL</span>
               <span>{formatCurrency(calculationResult ? parseFloat(calculationResult.final_amount) : totalAmount)}</span>
             </div>
             {calculationResult && getPointsToEarn() > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px', fontSize: '12px', color: '#2563eb' }}>
-                <span>Points Earned{paymentType !== 'FULL' ? ` (${paymentType.toLowerCase()})` : ''}:</span>
-                <span>+{getPointsToEarn().toLocaleString()} pts</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '13px', color: '#2563eb', background: '#eff6ff', padding: '8px', borderRadius: '4px' }}>
+                <span>Points Earned{paymentType !== 'FULL' ? ` (${paymentType.toLowerCase()})` : ''}</span>
+                <span style={{ fontWeight: '600' }}>+{getPointsToEarn().toLocaleString()} pts</span>
               </div>
             )}
           </div>
 
-          <div style={{ marginBottom: '20px', fontSize: '14px', borderTop: '1px dashed #000', paddingTop: '10px' }}>
-            <p style={{ margin: '5px 0' }}><strong>Payment Method:</strong> {selectedPaymentMethod.replace('_', ' ').toUpperCase()}</p>
+          <div style={{ marginBottom: '24px', fontSize: '14px', background: '#f9fafb', padding: '12px', borderRadius: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ color: '#555' }}>Payment Method</span>
+              <span style={{ fontWeight: '500' }}>{selectedPaymentMethod.replace('_', ' ').toUpperCase()}</span>
+            </div>
             {selectedPaymentMethod === 'cash' && cashReceived > 0 && (
               <>
-                <p style={{ margin: '5px 0' }}><strong>Cash Received:</strong> {formatCurrency(cashReceived)}</p>
-                <p style={{ margin: '5px 0' }}><strong>Change:</strong> {formatCurrency(calculateChange())}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#555' }}>Cash Received</span>
+                  <span style={{ fontWeight: '500' }}>{formatCurrency(cashReceived)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#555' }}>Change</span>
+                  <span style={{ fontWeight: '500' }}>{formatCurrency(calculateChange())}</span>
+                </div>
               </>
             )}
-            <p style={{ margin: '5px 0' }}><strong>Status:</strong> PAID</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#555' }}>Status</span>
+              <span style={{ fontWeight: '600', color: '#16a34a' }}>PAID</span>
+            </div>
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '30px', fontSize: '12px', borderTop: '2px solid #000', paddingTop: '10px' }}>
-            <p style={{ margin: '5px 0' }}>Thank you for staying with us!</p>
-            <p style={{ margin: '5px 0' }}>Visit us again soon</p>
-            <p style={{ margin: '10px 0 5px 0' }}>** This is a computer-generated receipt **</p>
+          <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px dashed #ccc' }}>
+            <p style={{ margin: '6px 0', fontSize: '14px', fontWeight: '500' }}>Thank you for staying with us!</p>
+            <p style={{ margin: '6px 0', fontSize: '13px', color: '#666' }}>We hope to see you again soon</p>
+            <p style={{ margin: '16px 0 8px 0', fontSize: '11px', color: '#999' }}>This is a computer-generated receipt</p>
+            {hotelInfo?.website && (
+              <p style={{ margin: '4px 0', fontSize: '12px', color: '#666' }}>{hotelInfo.website}</p>
+            )}
           </div>
         </div>
       </div>
