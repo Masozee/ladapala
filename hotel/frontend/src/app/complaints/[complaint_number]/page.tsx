@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
 import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { getAuthToken } from '@/lib/auth';
 import {
   ChevronLeftIcon,
   AlertCircleIcon,
@@ -280,11 +281,13 @@ const ComplaintDetailPage = () => {
     setResponseSuccess(null);
 
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/complaints/${complaint.id}/add_response/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
@@ -331,11 +334,13 @@ const ComplaintDetailPage = () => {
     setStatusSuccess(null);
 
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/complaints/${complaint.id}/`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include',
@@ -407,9 +412,13 @@ const ComplaintDetailPage = () => {
       }
       formData.append('is_evidence', isEvidence.toString());
 
-      // Get CSRF token
+      // Get auth token and CSRF token
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const headers: HeadersInit = {};
+      if (authToken) {
+        headers['Authorization'] = `Token ${authToken}`;
+      }
       if (csrfToken) {
         headers['X-CSRFToken'] = csrfToken;
       }
@@ -459,10 +468,12 @@ const ComplaintDetailPage = () => {
     if (!confirm('Are you sure you want to delete this image?')) return;
 
     try {
+      const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
       const response = await fetch(buildApiUrl(`hotel/complaint-images/${imageId}/`), {
         method: 'DELETE',
         headers: {
+          ...(authToken && { 'Authorization': `Token ${authToken}` }),
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
         },
         credentials: 'include'

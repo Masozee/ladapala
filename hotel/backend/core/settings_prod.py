@@ -34,13 +34,8 @@ LICENSE_KEY = os.environ.get('LICENSE_KEY', '')
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '192.168.0.105',
     'api.kapulaga.net',
     'hotel.kapulaga.net',
-    'palermo.id.rapidplex.com',
-    'api.smkpariwisatamengwitani.com',
     'smkpariwisatamengwitani.com',
     'www.smkpariwisatamengwitani.com',
 ]
@@ -172,14 +167,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:3001",  # Restaurant frontend
     "http://127.0.0.1:3001",  # Restaurant frontend
-    "http://192.168.0.105",
     "https://hotel.kapulaga.net",
     "http://hotel.kapulaga.net",
     "https://palermo.id.rapidplex.com",
     "http://palermo.id.rapidplex.com",
     "http://palermo.id.rapidplex.com:3000",
-    "https://api.smkpariwisatamengwitani.com",
-    "http://api.smkpariwisatamengwitani.com",
     "https://smkpariwisatamengwitani.com",
     "http://smkpariwisatamengwitani.com",
     "https://www.smkpariwisatamengwitani.com",
@@ -232,13 +224,10 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:3001",  # Restaurant frontend
     "http://127.0.0.1:3001",  # Restaurant frontend
-    "http://192.168.0.105",
     "https://hotel.kapulaga.net",
     "http://hotel.kapulaga.net",
     "https://palermo.id.rapidplex.com",
     "http://palermo.id.rapidplex.com",
-    "https://api.smkpariwisatamengwitani.com",
-    "http://api.smkpariwisatamengwitani.com",
     "https://smkpariwisatamengwitani.com",
     "http://smkpariwisatamengwitani.com",
     "https://www.smkpariwisatamengwitani.com",
