@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import { getAuthToken } from '@/lib/auth';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
@@ -419,7 +419,7 @@ const BookingDetailPage = () => {
       setLoading(true);
       try {
         // Fetch reservation directly by ID from URL
-        const response = await fetch(buildApiUrl(`hotel/reservations/${params.reservation_number}/`));
+        const response = await apiFetch(`hotel/reservations/${params.reservation_number}/`);
         if (response.ok) {
           const data = await response.json();
           const transformedData = transformApiData(data);
@@ -487,7 +487,7 @@ const BookingDetailPage = () => {
         const csrfToken = getCsrfToken();
 
         // Send to backend
-        const response = await fetch(buildApiUrl(`hotel/reservations/${booking.reservation_number}/resend_invoice/`), {
+        const response = await apiFetch(`hotel/reservations/${booking.reservation_number}/resend_invoice/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

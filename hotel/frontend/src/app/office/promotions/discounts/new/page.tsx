@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
 import Link from 'next/link';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import { ChevronLeftIcon } from '@/lib/icons';
 
 interface DiscountFormData {
@@ -82,7 +82,7 @@ export default function NewDiscountPage() {
         payload.applicable_days = formData.applicable_days;
       }
 
-      const response = await fetch(buildApiUrl('hotel/discounts/'), {
+      const response = await apiFetch('hotel/discounts/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

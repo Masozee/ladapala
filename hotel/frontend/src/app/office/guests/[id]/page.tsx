@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   Search02Icon,
   UserMultipleIcon,
@@ -185,7 +185,7 @@ const GuestDetailPage = () => {
     const fetchGuest = async () => {
       try {
         // Fetch guest details
-        const response = await fetch(buildApiUrl(`hotel/guests/${params.id}/`), {
+        const response = await apiFetch(`hotel/guests/${params.id}/`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -200,8 +200,7 @@ const GuestDetailPage = () => {
         const data = await response.json();
 
         // Fetch guest's reservation history (without date filter to get all history)
-        const reservationsResponse = await fetch(
-          buildApiUrl(`hotel/reservations/?guest=${params.id}&page_size=100&check_in_date__gte=2000-01-01`),
+        const reservationsResponse = await apiFetch(`hotel/reservations/?guest=${params.id}&page_size=100&check_in_date__gte=2000-01-01`,
           {
             method: 'GET',
             headers: {

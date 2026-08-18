@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   ChevronLeftIcon,
   UserIcon,
@@ -65,7 +65,7 @@ export default function EmployeeDetailPage({ params }: EmployeeDetailPageProps) 
   const fetchEmployee = async () => {
     try {
       setLoading(true);
-      const response = await fetch(buildApiUrl(`user/employees/?employee_id=${resolvedParams.id}`), {
+      const response = await apiFetch(`user/employees/?employee_id=${resolvedParams.id}`, {
         credentials: 'include',
       });
 

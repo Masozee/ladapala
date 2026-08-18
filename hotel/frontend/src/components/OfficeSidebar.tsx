@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/config';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -45,7 +46,7 @@ const OfficeSidebar = () => {
   useEffect(() => {
     const fetchSidebarCounts = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/hotel/sidebar-counts/`, {
+        const response = await apiFetch(`hotel/sidebar-counts/`, {
           credentials: 'include',
         });
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   PackageIcon,
   Add01Icon,
@@ -123,7 +123,7 @@ export default function AmenitiesPage() {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await fetch(buildApiUrl('hotel/amenity-requests/'), {
+      const response = await apiFetch('hotel/amenity-requests/', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -139,7 +139,7 @@ export default function AmenitiesPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/amenity-categories/'), {
+      const response = await apiFetch('hotel/amenity-categories/', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -153,7 +153,7 @@ export default function AmenitiesPage() {
 
   const fetchInventoryItems = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/amenity-requests/inventory_items/'), {
+      const response = await apiFetch('hotel/amenity-requests/inventory_items/', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -170,7 +170,7 @@ export default function AmenitiesPage() {
 
   const fetchRooms = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/rooms/?page_size=1000'), {
+      const response = await apiFetch('hotel/rooms/?page_size=1000', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -184,7 +184,7 @@ export default function AmenitiesPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/amenity-requests/stats/'), {
+      const response = await apiFetch('hotel/amenity-requests/stats/', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -204,7 +204,7 @@ export default function AmenitiesPage() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('hotel/amenity-requests/'), {
+      const response = await apiFetch('hotel/amenity-requests/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -248,7 +248,7 @@ export default function AmenitiesPage() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/amenity-requests/${selectedRequest.id}/`), {
+      const response = await apiFetch(`hotel/amenity-requests/${selectedRequest.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -290,7 +290,7 @@ export default function AmenitiesPage() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/amenity-requests/${request.id}/mark_completed/`), {
+      const response = await apiFetch(`hotel/amenity-requests/${request.id}/mark_completed/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -318,7 +318,7 @@ export default function AmenitiesPage() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/amenity-requests/${request.id}/cancel/`), {
+      const response = await apiFetch(`hotel/amenity-requests/${request.id}/cancel/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -15,7 +15,7 @@ import {
   Mail01Icon,
   Cancel01Icon
 } from '@/lib/icons'
-import { buildApiUrl } from '@/lib/config'
+import { buildApiUrl, apiFetch } from '@/lib/config'
 
 interface Supplier {
   id: number
@@ -75,7 +75,7 @@ export default function SuppliersPage() {
       if (statusFilter) params.append('status', statusFilter)
       params.append('ordering', '-created_at')
 
-      const response = await fetch(buildApiUrl(`hotel/suppliers/?${params.toString()}`), {
+      const response = await apiFetch(`hotel/suppliers/?${params.toString()}`, {
         credentials: 'include',
       })
 

@@ -14,7 +14,7 @@ import {
   CreditCardIcon,
   Clock01Icon
 } from '@/lib/icons'
-import { buildApiUrl } from '@/lib/config'
+import { buildApiUrl, apiFetch } from '@/lib/config'
 
 interface Supplier {
   id: number
@@ -50,7 +50,7 @@ export default function SupplierDetailPage() {
   const fetchSupplier = async () => {
     try {
       setLoading(true)
-      const response = await fetch(buildApiUrl(`hotel/suppliers/${params.id}/`), {
+      const response = await apiFetch(`hotel/suppliers/${params.id}/`, {
         credentials: 'include',
       })
 

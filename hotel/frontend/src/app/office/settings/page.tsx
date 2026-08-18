@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   Shield01Icon,
   UserMultipleIcon,
@@ -246,7 +246,7 @@ export default function AdminPage() {
   useEffect(() => {
     const fetchSystemStats = async () => {
       try {
-        const response = await fetch(buildApiUrl('hotel/system/stats/'));
+        const response = await apiFetch('hotel/system/stats/');
         if (response.ok) {
           const data = await response.json();
           setSystemStats(prevStats => ({
@@ -280,7 +280,7 @@ export default function AdminPage() {
 
       try {
         setLoadingUsers(true);
-        const response = await fetch(buildApiUrl('user/users/'), {
+        const response = await apiFetch('user/users/', {
           credentials: 'include',
         });
         if (response.ok) {
@@ -304,7 +304,7 @@ export default function AdminPage() {
 
       try {
         setLoadingSettings(true);
-        const response = await fetch(buildApiUrl('hotel/settings/'), {
+        const response = await apiFetch('hotel/settings/', {
           credentials: 'include',
         });
         if (response.ok) {
@@ -337,7 +337,7 @@ export default function AdminPage() {
       setSavingSettings(true);
       const csrfToken = getCsrfToken();
 
-      const response = await fetch(buildApiUrl('hotel/settings/1/'), {
+      const response = await apiFetch('hotel/settings/1/', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -1,3 +1,5 @@
+import { getAuthToken } from './auth';
+
 // API Configuration
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api',
@@ -54,7 +56,7 @@ export const setCsrfToken = (token: string) => {
 // Fetch and cache CSRF token from API
 export const fetchCsrfToken = async (): Promise<string | null> => {
   try {
-    const response = await fetch(buildApiUrl('user/csrf/'), {
+    const response = await apiFetch('user/csrf/', {
       credentials: 'include'
     });
     const data = await response.json();
@@ -69,13 +71,23 @@ export const fetchCsrfToken = async (): Promise<string | null> => {
 };
 
 // Default headers for API requests
-export const getDefaultHeaders = (): HeadersInit => {
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+export const getDefaultHeaders = (includeContentType: boolean = true): Record<string, string> => {
+  const headers: Record<string, string> = {
     'Accept': 'application/json',
   };
 
-  // Add CSRF token if available
+  if (includeContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  // Token authentication — DRF TokenAuthentication runs before
+  // SessionAuthentication, which skips the CSRF check entirely
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Token ${token}`;
+  }
+
+  // Add CSRF token if available (fallback for session-authenticated requests)
   const csrfToken = getCsrfToken();
   if (csrfToken) {
     headers['X-CSRFToken'] = csrfToken;
@@ -87,14 +99,21 @@ export const getDefaultHeaders = (): HeadersInit => {
 // Helper function for API fetch requests with proper headers
 export const apiFetch = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
   const url = buildApiUrl(endpoint);
-  const defaultHeaders = getDefaultHeaders();
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
+  const headers: Record<string, string> = {
+    ...getDefaultHeaders(!isFormData),
+    ...(options.headers as Record<string, string> | undefined),
+  };
+
+  // Never set Content-Type for FormData — the browser must add the multipart boundary
+  if (isFormData) {
+    delete headers['Content-Type'];
+  }
 
   const config: RequestInit = {
     ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
+    headers,
     credentials: 'include', // Include cookies for session authentication
   };
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
 import Link from 'next/link';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import { ChevronLeftIcon } from '@/lib/icons';
 
 interface VoucherFormData {
@@ -58,7 +58,7 @@ export default function EditVoucherPage() {
 
   const fetchVoucher = async () => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/vouchers/${params.id}/`), {
+      const response = await apiFetch(`hotel/vouchers/${params.id}/`, {
         credentials: 'include',
       });
       const data = await response.json();
@@ -124,7 +124,7 @@ export default function EditVoucherPage() {
         payload.usage_limit = parseInt(formData.usage_limit);
       }
 
-      const response = await fetch(buildApiUrl(`hotel/vouchers/${params.id}/`), {
+      const response = await apiFetch(`hotel/vouchers/${params.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

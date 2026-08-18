@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   ChevronLeftIcon,
   Calendar01Icon,
@@ -134,7 +134,7 @@ export default function NewEventBookingPage() {
 
   const fetchInitialGuests = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/guests/?page_size=1000'), { credentials: 'include' });
+      const response = await apiFetch('hotel/guests/?page_size=1000', { credentials: 'include' });
       const data = await response.json();
       setGuests(data.results || data);
     } catch (error) {
@@ -145,8 +145,7 @@ export default function NewEventBookingPage() {
   const searchGuests = async (query: string) => {
     try {
       // Use Django REST framework search parameter - searches ALL guests in database
-      const response = await fetch(
-        buildApiUrl(`hotel/guests/?search=${encodeURIComponent(query)}&page_size=1000`),
+      const response = await apiFetch(`hotel/guests/?search=${encodeURIComponent(query)}&page_size=1000`,
         { credentials: 'include' }
       );
       const data = await response.json();
@@ -160,9 +159,9 @@ export default function NewEventBookingPage() {
     setLoading(true);
     try {
       const [venuesRes, packagesRes, foodRes] = await Promise.all([
-        fetch(buildApiUrl('hotel/rooms/?page_size=100'), { credentials: 'include' }),
-        fetch(buildApiUrl('hotel/event-packages/?is_active=true'), { credentials: 'include' }),
-        fetch(buildApiUrl('hotel/food-packages/?is_active=true'), { credentials: 'include' }),
+        apiFetch('hotel/rooms/?page_size=100', { credentials: 'include' }),
+        apiFetch('hotel/event-packages/?is_active=true', { credentials: 'include' }),
+        apiFetch('hotel/food-packages/?is_active=true', { credentials: 'include' }),
       ]);
 
       const [venuesData, packagesData, foodData] = await Promise.all([
@@ -260,7 +259,7 @@ export default function NewEventBookingPage() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('hotel/guests/'), {
+      const response = await apiFetch('hotel/guests/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -328,7 +327,7 @@ export default function NewEventBookingPage() {
       };
 
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('hotel/event-bookings/'), {
+      const response = await apiFetch('hotel/event-bookings/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

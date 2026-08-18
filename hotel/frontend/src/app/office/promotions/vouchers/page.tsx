@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
 import Link from 'next/link';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   SparklesIcon,
   Add01Icon,
@@ -49,7 +49,7 @@ export default function VouchersPage() {
 
   const fetchVouchers = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/vouchers/'), {
+      const response = await apiFetch('hotel/vouchers/', {
         credentials: 'include',
       });
       const data = await response.json();

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
 import Link from 'next/link';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   ChevronLeftIcon,
   PencilEdit02Icon,
@@ -51,7 +51,7 @@ export default function VoucherDetailPage() {
 
   const fetchVoucher = async () => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/vouchers/${params.id}/`), {
+      const response = await apiFetch(`hotel/vouchers/${params.id}/`, {
         credentials: 'include',
       });
       const data = await response.json();

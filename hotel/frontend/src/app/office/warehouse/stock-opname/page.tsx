@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   Add01Icon,
   Search02Icon,
@@ -64,7 +64,7 @@ export default function StockOpnamePage() {
         url += '?' + params.toString();
       }
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         credentials: 'include',
       });
 

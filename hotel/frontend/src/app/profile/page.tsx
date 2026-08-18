@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   UserIcon,
   Mail01Icon,
@@ -117,7 +117,7 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch(buildApiUrl('user/active-session/'), {
+        const response = await apiFetch('user/active-session/', {
           credentials: 'include',
         });
 
@@ -156,7 +156,7 @@ const ProfilePage = () => {
       setSaving(true);
 
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('user/profile/'), {
+      const response = await apiFetch('user/profile/', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

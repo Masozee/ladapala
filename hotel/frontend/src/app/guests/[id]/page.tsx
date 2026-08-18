@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   UserIcon,
   Mail01Icon,
@@ -80,7 +80,7 @@ export default function GuestDetailPage() {
         setError(null);
 
         // Fetch guest details
-        const guestResponse = await fetch(buildApiUrl(`hotel/guests/${guestId}/`), {
+        const guestResponse = await apiFetch(`hotel/guests/${guestId}/`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -94,8 +94,7 @@ export default function GuestDetailPage() {
         setGuest(guestData);
 
         // Fetch guest reservations
-        const reservationsResponse = await fetch(
-          buildApiUrl(`hotel/reservations/?guest=${guestId}`),
+        const reservationsResponse = await apiFetch(`hotel/reservations/?guest=${guestId}`,
           {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   PackageIcon,
   Add01Icon,
@@ -58,7 +58,7 @@ export default function NewPurchaseOrderPage() {
 
   const fetchInventoryItems = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/inventory/?page_size=1000'), {
+      const response = await apiFetch('hotel/inventory/?page_size=1000', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -72,7 +72,7 @@ export default function NewPurchaseOrderPage() {
 
   const fetchSuppliers = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/suppliers/?status=ACTIVE'), {
+      const response = await apiFetch('hotel/suppliers/?status=ACTIVE', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -154,7 +154,7 @@ export default function NewPurchaseOrderPage() {
       const csrfToken = getCsrfToken();
 
       // Create PO
-      const poResponse = await fetch(buildApiUrl('hotel/purchase-orders/'), {
+      const poResponse = await apiFetch('hotel/purchase-orders/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -176,8 +176,7 @@ export default function NewPurchaseOrderPage() {
 
       // Add items to PO
       for (const item of items) {
-        const itemResponse = await fetch(
-          buildApiUrl(`hotel/purchase-orders/${poData.id}/add_item/`),
+        const itemResponse = await apiFetch(`hotel/purchase-orders/${poData.id}/add_item/`,
           {
             method: 'POST',
             headers: {
@@ -202,8 +201,7 @@ export default function NewPurchaseOrderPage() {
 
       // Submit if requested
       if (submitStatus === 'SUBMITTED') {
-        const submitResponse = await fetch(
-          buildApiUrl(`hotel/purchase-orders/${poData.id}/submit/`),
+        const submitResponse = await apiFetch(`hotel/purchase-orders/${poData.id}/submit/`,
           {
             method: 'POST',
             headers: {

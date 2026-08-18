@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   CreditCardIcon,
   ArrowUp01Icon,
@@ -117,7 +117,7 @@ export default function FinancialPage() {
 
       try {
         const url = buildApiUrl(`hotel/financial/overview/?period=${selectedPeriod}`);
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
           credentials: 'include',
         });
 
@@ -157,7 +157,7 @@ export default function FinancialPage() {
         }
 
         const url = buildApiUrl(`hotel/financial/transactions/?${params.toString()}`);
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
           credentials: 'include',
         });
 
@@ -197,7 +197,7 @@ export default function FinancialPage() {
         }
 
         const url = buildApiUrl(`hotel/financial/invoices/?${params.toString()}`);
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
           credentials: 'include',
         });
 

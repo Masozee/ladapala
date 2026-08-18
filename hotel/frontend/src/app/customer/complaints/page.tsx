@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   AlertCircleIcon,
   Cancel01Icon,
@@ -67,7 +67,7 @@ const CustomerComplaintPage = () => {
 
     try {
       // Create the complaint
-      const response = await fetch(buildApiUrl('hotel/complaints/'), {
+      const response = await apiFetch('hotel/complaints/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ const CustomerComplaintPage = () => {
           imageFormData.append('image', image);
           imageFormData.append('complaint', newComplaint.id.toString());
 
-          await fetch(buildApiUrl('hotel/complaint-images/'), {
+          await apiFetch('hotel/complaint-images/', {
             method: 'POST',
             body: imageFormData
           });

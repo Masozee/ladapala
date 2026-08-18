@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import SupportLayout from '@/components/SupportLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   BedIcon,
   Clock01Icon,
@@ -96,7 +96,7 @@ const HousekeepingPage = () => {
       params.append('ordering', '-created_at');
 
       const url = buildApiUrl(`hotel/housekeeping-tasks/?${params.toString()}`);
-      const response = await fetch(url, { credentials: 'include' });
+      const response = await apiFetch(url, { credentials: 'include' });
 
       if (response.ok) {
         const data = await response.json();
@@ -112,7 +112,7 @@ const HousekeepingPage = () => {
   // Fetch statistics
   const fetchStatistics = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/housekeeping-tasks/statistics/'), {
+      const response = await apiFetch('hotel/housekeeping-tasks/statistics/', {
         credentials: 'include'
       });
 
@@ -128,7 +128,7 @@ const HousekeepingPage = () => {
   // Fetch rooms
   const fetchRooms = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/rooms/'), { credentials: 'include' });
+      const response = await apiFetch('hotel/rooms/', { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         setRooms(Array.isArray(data) ? data : (data.results || []));
@@ -149,7 +149,7 @@ const HousekeepingPage = () => {
       setFormLoading(true);
       const csrfToken = getCsrfToken();
 
-      const response = await fetch(buildApiUrl('hotel/housekeeping-tasks/'), {
+      const response = await apiFetch('hotel/housekeeping-tasks/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ const HousekeepingPage = () => {
   const handleStartTask = async (taskId: number) => {
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/housekeeping-tasks/${taskId}/start_task/`), {
+      const response = await apiFetch(`hotel/housekeeping-tasks/${taskId}/start_task/`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -279,8 +279,7 @@ const HousekeepingPage = () => {
 
     try {
       // Fetch suggested items
-      const response = await fetch(
-        buildApiUrl(`hotel/housekeeping-tasks/${task.id}/suggested_items/`),
+      const response = await apiFetch(`hotel/housekeeping-tasks/${task.id}/suggested_items/`,
         { credentials: 'include' }
       );
 
@@ -312,8 +311,7 @@ const HousekeepingPage = () => {
       setFormLoading(true);
       const csrfToken = getCsrfToken();
 
-      const response = await fetch(
-        buildApiUrl(`hotel/housekeeping-tasks/${completingTask.id}/complete_task/`),
+      const response = await apiFetch(`hotel/housekeeping-tasks/${completingTask.id}/complete_task/`,
         {
           method: 'POST',
           credentials: 'include',
@@ -356,7 +354,7 @@ const HousekeepingPage = () => {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/housekeeping-tasks/${taskId}/pass_inspection/`), {
+      const response = await apiFetch(`hotel/housekeeping-tasks/${taskId}/pass_inspection/`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -400,7 +398,7 @@ const HousekeepingPage = () => {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/housekeeping-tasks/${taskId}/fail_inspection/`), {
+      const response = await apiFetch(`hotel/housekeeping-tasks/${taskId}/fail_inspection/`, {
         method: 'POST',
         credentials: 'include',
         headers: {

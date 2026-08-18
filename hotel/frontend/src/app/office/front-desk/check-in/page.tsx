@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   Calendar01Icon,
@@ -91,7 +91,7 @@ export default function CheckInPage() {
         url += `&status=${statusFilter}`;
       }
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         credentials: 'include',
       });
       const data = await response.json();
@@ -105,8 +105,7 @@ export default function CheckInPage() {
 
   const fetchAvailableRooms = async (roomTypeId: number, checkIn: string, checkOut: string) => {
     try {
-      const response = await fetch(
-        buildApiUrl(`hotel/rooms/?room_type=${roomTypeId}&status=AVAILABLE`),
+      const response = await apiFetch(`hotel/rooms/?room_type=${roomTypeId}&status=AVAILABLE`,
         {
           credentials: 'include',
         }
@@ -139,8 +138,7 @@ export default function CheckInPage() {
       const csrfToken = getCsrfToken();
 
       // Update reservation with room assignment
-      const response = await fetch(
-        buildApiUrl(`hotel/reservations/${selectedReservation.id}/`),
+      const response = await apiFetch(`hotel/reservations/${selectedReservation.id}/`,
         {
           method: 'PATCH',
           headers: {

@@ -12,7 +12,7 @@ import {
   UserIcon,
   UserCheckIcon
 } from '@/lib/icons';
-import { buildApiUrl, fetchCsrfToken } from '@/lib/config';
+import { buildApiUrl, fetchCsrfToken, apiFetch } from '@/lib/config';
 
 const LoginPageContent = () => {
   const router = useRouter();
@@ -41,7 +41,7 @@ const LoginPageContent = () => {
     });
 
     // Fetch hotel public information
-    fetch(buildApiUrl('hotel/settings/public_info/'), {
+    apiFetch('hotel/settings/public_info/', {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -64,7 +64,7 @@ const LoginPageContent = () => {
 
     try {
       // Use the CSRF token from state (fetched from API response)
-      const response = await fetch(buildApiUrl('user/login/'), {
+      const response = await apiFetch('user/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

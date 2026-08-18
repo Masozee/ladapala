@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   Search02Icon,
   FilterIcon,
@@ -74,7 +74,7 @@ export default function WarehouseAuditPage() {
         url += '?' + params.toString();
       }
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         credentials: 'include',
       });
 

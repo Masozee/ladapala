@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   PackageIcon,
   Search02Icon,
@@ -47,7 +47,7 @@ export default function PurchaseOrdersPage() {
   const fetchPurchaseOrders = async () => {
     try {
       setLoading(true);
-      const response = await fetch(buildApiUrl('hotel/purchase-orders/'), {
+      const response = await apiFetch('hotel/purchase-orders/', {
         credentials: 'include',
       });
 

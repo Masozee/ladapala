@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   Search02Icon,
   Calendar01Icon,
@@ -103,7 +103,7 @@ const fetchRoomTypes = async (checkIn?: string, checkOut?: string): Promise<Room
 
     console.log('Fetching room types from:', buildApiUrl(url));
 
-    const response = await fetch(buildApiUrl(url), {
+    const response = await apiFetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -279,7 +279,7 @@ const RoomsPage = () => {
     try {
       setFormLoading(true);
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('hotel/room-types/'), {
+      const response = await apiFetch('hotel/room-types/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -327,7 +327,7 @@ const RoomsPage = () => {
     try {
       setFormLoading(true);
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('hotel/rooms/'), {
+      const response = await apiFetch('hotel/rooms/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -476,7 +476,7 @@ const RoomsPage = () => {
       let url: string | null = 'hotel/rooms/?page_size=100'; // Get up to 100 rooms per page
 
       while (url) {
-        const response: Response = await fetch(buildApiUrl(url), {
+        const response: Response = await apiFetch(url, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -575,7 +575,7 @@ const RoomsPage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(buildApiUrl('hotel/amenity-categories/'), {
+        const response = await apiFetch('hotel/amenity-categories/', {
           credentials: 'include',
         });
         if (response.ok) {
@@ -589,7 +589,7 @@ const RoomsPage = () => {
 
     const fetchInventoryItems = async () => {
       try {
-        const response = await fetch(buildApiUrl('hotel/amenity-requests/inventory_items/'), {
+        const response = await apiFetch('hotel/amenity-requests/inventory_items/', {
           credentials: 'include',
         });
         if (response.ok) {
@@ -609,7 +609,7 @@ const RoomsPage = () => {
   const handleUpdateRoomStatus = async (roomId: number, newStatus: string) => {
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/rooms/${roomId}/update_status/`), {
+      const response = await apiFetch(`hotel/rooms/${roomId}/update_status/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -692,7 +692,7 @@ const RoomsPage = () => {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('hotel/amenity-requests/'), {
+      const response = await apiFetch('hotel/amenity-requests/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

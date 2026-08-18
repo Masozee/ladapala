@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   PieChartIcon,
   Calendar01Icon,
@@ -75,13 +75,13 @@ const fetchDailyReport = async (date?: string): Promise<DailyReport> => {
     ? buildApiUrl(`hotel/reports/daily/?date=${date}`)
     : buildApiUrl('hotel/reports/daily/');
   
-  const response = await fetch(url);
+  const response = await apiFetch(url);
   if (!response.ok) throw new Error('Failed to fetch daily report');
   return response.json();
 };
 
 const fetchDailyReportsRange = async (days: number = 7): Promise<DailyReport[]> => {
-  const response = await fetch(buildApiUrl(`hotel/reports/daily-range/?days=${days}`));
+  const response = await apiFetch(`hotel/reports/daily-range/?days=${days}`);
   if (!response.ok) throw new Error('Failed to fetch daily reports range');
   return response.json();
 };
@@ -92,7 +92,7 @@ const fetchMonthlyReport = async (month?: number, year?: number): Promise<Monthl
     endpoint += `?month=${month}&year=${year}`;
   }
   
-  const response = await fetch(buildApiUrl(endpoint));
+  const response = await apiFetch(endpoint);
   if (!response.ok) throw new Error('Failed to fetch monthly report');
   return response.json();
 };

@@ -12,7 +12,7 @@ import {
   Clock01Icon,
   Calendar01Icon
 } from '@/lib/icons';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import { useRouter } from 'next/navigation';
 
 interface OfficeLayoutProps {
@@ -35,7 +35,7 @@ export const OfficeHeaderActions = () => {
 
       const csrfToken = getCookie('csrftoken');
 
-      const response = await fetch(buildApiUrl('user/logout/'), {
+      const response = await apiFetch('user/logout/', {
         method: 'POST',
         credentials: 'include',
         headers: {

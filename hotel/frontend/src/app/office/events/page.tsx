@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   Calendar01Icon,
   Add01Icon,
@@ -91,7 +91,7 @@ export default function EventBookingsPage() {
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const response = await fetch(buildApiUrl('hotel/event-bookings/'), {
+      const response = await apiFetch('hotel/event-bookings/', {
         credentials: 'include',
       });
       const data = await response.json();

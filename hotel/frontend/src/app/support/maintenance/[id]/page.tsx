@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import SupportLayout from '@/components/SupportLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   ChevronLeftIcon,
   Wrench01Icon,
@@ -148,7 +148,7 @@ const MaintenanceDetailPage = () => {
         }
 
         console.log('Fetching from endpoint:', buildApiUrl(endpoint));
-        const response = await fetch(buildApiUrl(endpoint));
+        const response = await apiFetch(endpoint);
 
         if (response.ok) {
           const data = await response.json();
@@ -172,7 +172,7 @@ const MaintenanceDetailPage = () => {
   useEffect(() => {
     const fetchWarehouseItems = async () => {
       try {
-        const response = await fetch(buildApiUrl('hotel/warehouse-items/?is_active=true'));
+        const response = await apiFetch('hotel/warehouse-items/?is_active=true');
         if (response.ok) {
           const data = await response.json();
           setWarehouseItems(data);
@@ -312,7 +312,7 @@ const MaintenanceDetailPage = () => {
         ? `${request.technician_notes}\n\n${logEntry}`
         : logEntry;
 
-      const response = await fetch(buildApiUrl(endpoint), {
+      const response = await apiFetch(endpoint, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -426,7 +426,7 @@ const MaintenanceDetailPage = () => {
         updateData.parts_needed = parts.map(p => `${p.name} (${p.quantity}x) - ${p.source === 'warehouse' ? 'Warehouse' : `Vendor: ${p.vendor_name}`}`);
       }
 
-      const response = await fetch(buildApiUrl(endpoint), {
+      const response = await apiFetch(endpoint, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

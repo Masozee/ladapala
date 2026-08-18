@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   Archive03Icon,
   Location01Icon,
@@ -99,7 +99,7 @@ export default function LostFoundDetailPage() {
 
   const fetchItem = async () => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/lost-and-found/${id}/`), {
+      const response = await apiFetch(`hotel/lost-and-found/${id}/`, {
         credentials: 'include'
       });
 
@@ -116,7 +116,7 @@ export default function LostFoundDetailPage() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/employees/'), {
+      const response = await apiFetch('hotel/employees/', {
         credentials: 'include'
       });
       if (response.ok) {
@@ -130,7 +130,7 @@ export default function LostFoundDetailPage() {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch(buildApiUrl('user/me/'), {
+      const response = await apiFetch('user/me/', {
         credentials: 'include'
       });
       if (response.ok) {
@@ -148,8 +148,7 @@ export default function LostFoundDetailPage() {
     setSaving(true);
     try {
       const csrfToken = await getCsrfToken();
-      const response = await fetch(
-        buildApiUrl(`hotel/lost-and-found/${id}/update_status/`),
+      const response = await apiFetch(`hotel/lost-and-found/${id}/update_status/`,
         {
           method: 'PATCH',
           headers: {

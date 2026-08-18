@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import OfficeLayout from '@/components/OfficeLayout'
 import { ChevronLeftIcon } from '@/lib/icons'
-import { buildApiUrl } from '@/lib/config'
+import { buildApiUrl, apiFetch } from '@/lib/config'
 
 interface SupplierFormData {
   name: string
@@ -53,7 +53,7 @@ export default function EditSupplierPage() {
 
   const fetchCSRFToken = async () => {
     try {
-      const response = await fetch(buildApiUrl('user/csrf/'), {
+      const response = await apiFetch('user/csrf/', {
         credentials: 'include',
       })
       if (response.ok) {
@@ -72,7 +72,7 @@ export default function EditSupplierPage() {
   const fetchSupplier = async () => {
     try {
       setLoading(true)
-      const response = await fetch(buildApiUrl(`hotel/suppliers/${params.id}/`), {
+      const response = await apiFetch(`hotel/suppliers/${params.id}/`, {
         credentials: 'include',
       })
 
@@ -114,7 +114,7 @@ export default function EditSupplierPage() {
 
     try {
       setSaving(true)
-      const response = await fetch(buildApiUrl(`hotel/suppliers/${params.id}/`), {
+      const response = await apiFetch(`hotel/suppliers/${params.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

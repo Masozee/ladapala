@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   Wrench01Icon,
   BedIcon,
@@ -77,7 +77,7 @@ export default function SupportDashboard() {
 
   const fetchMaintenanceData = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/maintenance-requests/'), {
+      const response = await apiFetch('hotel/maintenance-requests/', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -126,7 +126,7 @@ export default function SupportDashboard() {
 
   const fetchHousekeepingData = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/housekeeping-tasks/'), {
+      const response = await apiFetch('hotel/housekeeping-tasks/', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -174,7 +174,7 @@ export default function SupportDashboard() {
 
   const fetchAmenityData = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/amenity-requests/'), {
+      const response = await apiFetch('hotel/amenity-requests/', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -221,7 +221,7 @@ export default function SupportDashboard() {
 
   const fetchTeamMembers = async () => {
     try {
-      const response = await fetch(buildApiUrl('user/employees/team_status/'), {
+      const response = await apiFetch('user/employees/team_status/', {
         credentials: 'include',
       });
       if (response.ok) {

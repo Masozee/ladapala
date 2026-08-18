@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   ArrowUp01Icon,
   ArrowDown01Icon,
@@ -69,7 +69,7 @@ export default function OfficePage() {
     const loadAnalytics = async () => {
       try {
         setLoading(true);
-        const response = await fetch(buildApiUrl('hotel/analytics/dashboard/'));
+        const response = await apiFetch('hotel/analytics/dashboard/');
         if (response.ok) {
           const data = await response.json();
           setAnalytics(data);

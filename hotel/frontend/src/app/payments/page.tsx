@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import { getAuthToken } from '@/lib/auth';
 
 // Add print styles
@@ -197,7 +197,7 @@ const PaymentsPage = () => {
     setLoadingTransactions(true);
     try {
       const authToken = getAuthToken();
-      const response = await fetch(buildApiUrl('hotel/payments/today_payments/'), {
+      const response = await apiFetch('hotel/payments/today_payments/', {
         headers: {
           ...(authToken && { 'Authorization': `Token ${authToken}` }),
         },
@@ -216,12 +216,12 @@ const PaymentsPage = () => {
 
   // Fetch CSRF token and hotel info on mount
   useEffect(() => {
-    fetch(buildApiUrl('user/csrf/'), {
+    apiFetch('user/csrf/', {
       credentials: 'include'
     }).catch(err => console.error('Error fetching CSRF token:', err));
 
     // Fetch hotel settings for receipt
-    fetch(buildApiUrl('hotel/settings/public_info/'), {
+    apiFetch('hotel/settings/public_info/', {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -247,7 +247,7 @@ const PaymentsPage = () => {
       };
 
       // First fetch to get reservation_number
-      fetch(buildApiUrl('hotel/reservations/'), { headers, credentials: 'include' })
+      apiFetch('hotel/reservations/', { headers, credentials: 'include' })
         .then(res => res.json())
         .then(data => {
           const reservation = data.results?.find((r: any) => r.id === parseInt(resId));
@@ -257,7 +257,7 @@ const PaymentsPage = () => {
               fetchGuestLoyaltyPoints(reservation.guest);
             }
             // Fetch full details with payment info
-            return fetch(buildApiUrl(`hotel/reservations/${reservation.reservation_number}/`), { headers, credentials: 'include' });
+            return apiFetch(`hotel/reservations/${reservation.reservation_number}/`, { headers, credentials: 'include' });
           }
         })
         .then(res => res?.json())
@@ -352,7 +352,7 @@ const PaymentsPage = () => {
   const fetchGuestLoyaltyPoints = async (guestId: number) => {
     try {
       const authToken = getAuthToken();
-      const response = await fetch(buildApiUrl(`hotel/guests/${guestId}/`), {
+      const response = await apiFetch(`hotel/guests/${guestId}/`, {
         headers: {
           ...(authToken && { 'Authorization': `Token ${authToken}` }),
         },
@@ -378,7 +378,7 @@ const PaymentsPage = () => {
     try {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('hotel/payments/calculate/'), {
+      const response = await apiFetch('hotel/payments/calculate/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -457,7 +457,7 @@ const PaymentsPage = () => {
       if (reservationId) {
         try {
           // First fetch reservation to get reservation_number
-          const reservationListResponse = await fetch(buildApiUrl(`hotel/reservations/?id=${reservationId}`), {
+          const reservationListResponse = await apiFetch(`hotel/reservations/?id=${reservationId}`, {
             headers: pdfHeaders,
             credentials: 'include',
           });
@@ -474,7 +474,7 @@ const PaymentsPage = () => {
             console.warn('Could not find reservation_number for reservationId:', reservationId);
           }
           const reservationResponse = reservationNumber
-            ? await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/`), {
+            ? await apiFetch(`hotel/reservations/${reservationNumber}/`, {
                 headers: pdfHeaders,
                 credentials: 'include',
               })
@@ -546,7 +546,7 @@ const PaymentsPage = () => {
 
         const authToken = getAuthToken();
         const csrfToken = getCsrfToken();
-        response = await fetch(buildApiUrl('hotel/payments/process_with_promotions/'), {
+        response = await apiFetch('hotel/payments/process_with_promotions/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -596,7 +596,7 @@ const PaymentsPage = () => {
 
         const authTokenStd = getAuthToken();
         const csrfTokenStd = getCsrfToken();
-        response = await fetch(buildApiUrl('hotel/payments/'), {
+        response = await apiFetch('hotel/payments/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -620,7 +620,7 @@ const PaymentsPage = () => {
           try {
             const authTokenEmail = getAuthToken();
             const csrfTokenEmail = getCsrfToken();
-            const emailResponse = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/resend_invoice/`), {
+            const emailResponse = await apiFetch(`hotel/reservations/${reservationNumber}/resend_invoice/`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -741,7 +741,7 @@ const PaymentsPage = () => {
         ?.split('=')[1];
 
       // Authenticate manager
-      const authResponse = await fetch(buildApiUrl('user/login/'), {
+      const authResponse = await apiFetch('user/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -777,7 +777,7 @@ const PaymentsPage = () => {
 
       const voidAuthToken = getAuthToken();
       const voidCsrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/payments/${pendingVoidTransaction.id}/`), {
+      const response = await apiFetch(`hotel/payments/${pendingVoidTransaction.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   PackageIcon,
   AlertCircleIcon,
@@ -127,7 +127,7 @@ export default function WarehousePage() {
 
   const fetchCSRFToken = async () => {
     try {
-      const response = await fetch(buildApiUrl('user/csrf/'), {
+      const response = await apiFetch('user/csrf/', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -158,7 +158,7 @@ export default function WarehousePage() {
       params.append('page', currentPage.toString());
       params.append('ordering', 'name');
 
-      const response = await fetch(buildApiUrl(`hotel/inventory/?${params.toString()}`), {
+      const response = await apiFetch(`hotel/inventory/?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +189,7 @@ export default function WarehousePage() {
 
   const fetchSuppliers = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/suppliers/?status=ACTIVE'), {
+      const response = await apiFetch('hotel/suppliers/?status=ACTIVE', {
         credentials: 'include',
       });
 
@@ -206,7 +206,7 @@ export default function WarehousePage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/amenity-categories/'), {
+      const response = await apiFetch('hotel/amenity-categories/', {
         credentials: 'include',
       });
 
@@ -228,7 +228,7 @@ export default function WarehousePage() {
     }
 
     try {
-      const response = await fetch(buildApiUrl('hotel/inventory/'), {
+      const response = await apiFetch('hotel/inventory/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -277,7 +277,7 @@ export default function WarehousePage() {
     }
 
     try {
-      const response = await fetch(buildApiUrl(`hotel/inventory/${editingItem.id}/`), {
+      const response = await apiFetch(`hotel/inventory/${editingItem.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

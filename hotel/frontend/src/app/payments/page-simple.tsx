@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   CreditCardIcon,
   File01Icon,
@@ -119,7 +119,7 @@ const PaymentWithPromotionsPage = () => {
   const fetchGuestLoyaltyPoints = async (resId: string) => {
     try {
       // First get guest ID from reservation
-      const resResponse = await fetch(buildApiUrl(`hotel/reservations/?id=${resId}`), {
+      const resResponse = await apiFetch(`hotel/reservations/?id=${resId}`, {
         credentials: 'include',
       });
       const resData = await resResponse.json();
@@ -127,8 +127,7 @@ const PaymentWithPromotionsPage = () => {
 
       if (reservation?.guest) {
         // Fetch loyalty points for this guest
-        const pointsResponse = await fetch(
-          buildApiUrl(`hotel/loyalty-points/by_guest/?guest_id=${reservation.guest}`),
+        const pointsResponse = await apiFetch(`hotel/loyalty-points/by_guest/?guest_id=${reservation.guest}`,
           { credentials: 'include' }
         );
         if (pointsResponse.ok) {
@@ -149,7 +148,7 @@ const PaymentWithPromotionsPage = () => {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('hotel/payments/calculate/'), {
+      const response = await apiFetch('hotel/payments/calculate/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,7 +185,7 @@ const PaymentWithPromotionsPage = () => {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('hotel/payments/process_with_promotions/'), {
+      const response = await apiFetch('hotel/payments/process_with_promotions/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

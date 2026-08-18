@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   PackageIcon,
   ChevronLeftIcon,
@@ -65,7 +65,7 @@ export default function PurchaseOrderDetailPage() {
   const fetchPO = async () => {
     try {
       setLoading(true);
-      const response = await fetch(buildApiUrl(`hotel/purchase-orders/${params.id}/`), {
+      const response = await apiFetch(`hotel/purchase-orders/${params.id}/`, {
         credentials: 'include',
       });
 
@@ -95,7 +95,7 @@ export default function PurchaseOrderDetailPage() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/purchase-orders/${po.id}/submit/`), {
+      const response = await apiFetch(`hotel/purchase-orders/${po.id}/submit/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ export default function PurchaseOrderDetailPage() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/purchase-orders/${po.id}/cancel/`), {
+      const response = await apiFetch(`hotel/purchase-orders/${po.id}/cancel/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -158,7 +158,7 @@ export default function PurchaseOrderDetailPage() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/purchase-orders/${po.id}/receive/`), {
+      const response = await apiFetch(`hotel/purchase-orders/${po.id}/receive/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

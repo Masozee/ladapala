@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   Calendar01Icon,
   ChevronLeftIcon,
@@ -84,7 +84,7 @@ const CalendarPage = () => {
       if (month) params.append('month', month.toString());
       if (year) params.append('year', year.toString());
       
-      const response = await fetch(buildApiUrl(`hotel/events/?${params}`));
+      const response = await apiFetch(`hotel/events/?${params}`);
       if (!response.ok) {
         // Events endpoint might not exist yet, return empty array
         console.warn('Events endpoint not available yet');
@@ -105,7 +105,7 @@ const CalendarPage = () => {
       const params = new URLSearchParams();
       if (year) params.append('year', year.toString());
 
-      const response = await fetch(buildApiUrl(`hotel/holidays/?${params}`));
+      const response = await apiFetch(`hotel/holidays/?${params}`);
       if (!response.ok) throw new Error('Failed to fetch holidays');
 
       const data = await response.json();
@@ -119,7 +119,7 @@ const CalendarPage = () => {
   // Fetch event bookings and transform to calendar events
   const fetchEventBookings = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/event-bookings/'), {
+      const response = await apiFetch('hotel/event-bookings/', {
         credentials: 'include',
       });
       if (!response.ok) {

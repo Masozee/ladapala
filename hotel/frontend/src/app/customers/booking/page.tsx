@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { format, addDays } from 'date-fns';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   Calendar01Icon,
   UserMultipleIcon,
@@ -95,8 +95,7 @@ export default function CustomerBookingPage() {
 
     try {
       setLoading(true);
-      const response = await fetch(
-        buildApiUrl(`hotel/room-types/?check_in=${checkInDate}&check_out=${checkOutDate}`),
+      const response = await apiFetch(`hotel/room-types/?check_in=${checkInDate}&check_out=${checkOutDate}`,
         {
           credentials: 'include',
         }
@@ -138,7 +137,7 @@ export default function CustomerBookingPage() {
       const csrfToken = getCsrfToken();
 
       // Create guest
-      const guestResponse = await fetch(buildApiUrl('hotel/guests/'), {
+      const guestResponse = await apiFetch('hotel/guests/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -159,8 +158,7 @@ export default function CustomerBookingPage() {
         guest = await guestResponse.json();
       } else {
         // Try to find existing guest
-        const existingResponse = await fetch(
-          buildApiUrl(`hotel/guests/?email=${guestInfo.email}`),
+        const existingResponse = await apiFetch(`hotel/guests/?email=${guestInfo.email}`,
           { credentials: 'include' }
         );
         if (existingResponse.ok) {
@@ -171,7 +169,7 @@ export default function CustomerBookingPage() {
       }
 
       // Create reservation
-      const reservationResponse = await fetch(buildApiUrl('hotel/reservations/'), {
+      const reservationResponse = await apiFetch('hotel/reservations/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

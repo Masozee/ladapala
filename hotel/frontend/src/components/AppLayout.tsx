@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
 import DepartmentGuard from './DepartmentGuard';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   ChevronRightIcon,
   UserCheckIcon,
@@ -37,7 +37,7 @@ export const HeaderActions = () => {
             const csrfToken = getCookie('csrftoken');
 
             // Call logout API
-            const response = await fetch(buildApiUrl('user/logout/'), {
+            const response = await apiFetch('user/logout/', {
               method: 'POST',
               credentials: 'include',
               headers: {

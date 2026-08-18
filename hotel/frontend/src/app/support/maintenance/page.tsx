@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import SupportLayout from '@/components/SupportLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   Wrench01Icon,
   Search02Icon,
@@ -113,7 +113,7 @@ const MaintenancePage = () => {
     const fetchMaintenanceRequests = async () => {
       try {
         setLoading(true);
-        const response = await fetch(buildApiUrl('hotel/maintenance-requests/'));
+        const response = await apiFetch('hotel/maintenance-requests/');
         if (response.ok) {
           const data = await response.json();
           // Handle nested results structure from combined maintenance + complaints
@@ -134,7 +134,7 @@ const MaintenancePage = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch(buildApiUrl('hotel/rooms/'));
+        const response = await apiFetch('hotel/rooms/');
         if (response.ok) {
           const data = await response.json();
           setRooms(data.results || data || []);
@@ -149,7 +149,7 @@ const MaintenancePage = () => {
   // Refresh requests
   const refreshRequests = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/maintenance-requests/'));
+      const response = await apiFetch('hotel/maintenance-requests/');
       if (response.ok) {
         const data = await response.json();
         // Handle nested results structure from combined maintenance + complaints
@@ -188,7 +188,7 @@ const MaintenancePage = () => {
         requestData.estimated_cost = parseFloat(newRequest.estimated_cost);
       }
 
-      const response = await fetch(buildApiUrl('hotel/maintenance-requests/'), {
+      const response = await apiFetch('hotel/maintenance-requests/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -239,8 +239,7 @@ const MaintenancePage = () => {
         endpoint = `hotel/maintenance-requests/${requestId}/${action}/`;
       }
 
-      const response = await fetch(
-        buildApiUrl(endpoint),
+      const response = await apiFetch(endpoint,
         {
           method: 'PATCH',
           headers: {

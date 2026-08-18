@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   Calendar01Icon,
   Building03Icon,
@@ -98,7 +98,7 @@ export default function OccupancyPage() {
   const fetchOccupancyData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(buildApiUrl(`hotel/analytics/occupancy/?period=${period}`), {
+      const response = await apiFetch(`hotel/analytics/occupancy/?period=${period}`, {
         credentials: 'include',
       });
       const result = await response.json();

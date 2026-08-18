@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SupportLayout from '@/components/SupportLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   File01Icon,
   Wrench01Icon,
@@ -77,7 +77,7 @@ export default function SupportReportsPage() {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await fetch(buildApiUrl('hotel/support/analytics/'), {
+      const response = await apiFetch('hotel/support/analytics/', {
         credentials: 'include',
       });
       if (response.ok) {

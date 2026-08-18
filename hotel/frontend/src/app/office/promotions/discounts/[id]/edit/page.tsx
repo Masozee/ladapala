@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
 import Link from 'next/link';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import { ChevronLeftIcon } from '@/lib/icons';
 
 interface DiscountFormData {
@@ -56,7 +56,7 @@ export default function EditDiscountPage() {
 
   const fetchDiscount = async () => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/discounts/${params.id}/`), {
+      const response = await apiFetch(`hotel/discounts/${params.id}/`, {
         credentials: 'include',
       });
       const data = await response.json();
@@ -122,7 +122,7 @@ export default function EditDiscountPage() {
         payload.applicable_days = formData.applicable_days;
       }
 
-      const response = await fetch(buildApiUrl(`hotel/discounts/${params.id}/`), {
+      const response = await apiFetch(`hotel/discounts/${params.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

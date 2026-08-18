@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout, { HeaderActions } from '@/components/AppLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import { getAuthToken } from '@/lib/auth';
 import {
   ChevronLeftIcon,
@@ -184,7 +184,7 @@ const ComplaintDetailPage = () => {
     const loadComplaint = async () => {
       try {
         setLoading(true);
-        const response = await fetch(buildApiUrl(`hotel/complaints/by-number/${params.complaint_number}/`), {
+        const response = await apiFetch(`hotel/complaints/by-number/${params.complaint_number}/`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -283,7 +283,7 @@ const ComplaintDetailPage = () => {
     try {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/complaints/${complaint.id}/add_response/`), {
+      const response = await apiFetch(`hotel/complaints/${complaint.id}/add_response/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -304,7 +304,7 @@ const ComplaintDetailPage = () => {
       }
 
       // Reload the complaint to get updated data
-      const complaintResponse = await fetch(buildApiUrl(`hotel/complaints/by-number/${complaint.complaint_number}/`), {
+      const complaintResponse = await apiFetch(`hotel/complaints/by-number/${complaint.complaint_number}/`, {
         credentials: 'include'
       });
       if (complaintResponse.ok) {
@@ -336,7 +336,7 @@ const ComplaintDetailPage = () => {
     try {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/complaints/${complaint.id}/`), {
+      const response = await apiFetch(`hotel/complaints/${complaint.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -423,7 +423,7 @@ const ComplaintDetailPage = () => {
         headers['X-CSRFToken'] = csrfToken;
       }
 
-      const response = await fetch(buildApiUrl('hotel/complaint-images/'), {
+      const response = await apiFetch('hotel/complaint-images/', {
         method: 'POST',
         headers: headers,
         credentials: 'include',
@@ -444,7 +444,7 @@ const ComplaintDetailPage = () => {
       setImageUploadSuccess('Image uploaded successfully!');
 
       // Reload complaint data
-      const complaintResponse = await fetch(buildApiUrl(`hotel/complaints/by-number/${complaint.complaint_number}/`), {
+      const complaintResponse = await apiFetch(`hotel/complaints/by-number/${complaint.complaint_number}/`, {
         credentials: 'include'
       });
       if (complaintResponse.ok) {
@@ -470,7 +470,7 @@ const ComplaintDetailPage = () => {
     try {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/complaint-images/${imageId}/`), {
+      const response = await apiFetch(`hotel/complaint-images/${imageId}/`, {
         method: 'DELETE',
         headers: {
           ...(authToken && { 'Authorization': `Token ${authToken}` }),
@@ -484,7 +484,7 @@ const ComplaintDetailPage = () => {
       }
 
       // Reload complaint data
-      const complaintResponse = await fetch(buildApiUrl(`hotel/complaints/by-number/${complaint.complaint_number}/`), {
+      const complaintResponse = await apiFetch(`hotel/complaints/by-number/${complaint.complaint_number}/`, {
         credentials: 'include'
       });
       if (complaintResponse.ok) {

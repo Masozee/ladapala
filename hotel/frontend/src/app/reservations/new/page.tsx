@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   Search02Icon,
   Add01Icon,
@@ -162,7 +162,7 @@ export default function NewReservationPage() {
       setLoading(true);
       const url = buildApiUrl(`hotel/guests/?search=${encodeURIComponent(query)}`);
 
-      const response = await fetch(url);
+      const response = await apiFetch(url);
 
       if (response.ok) {
         const data = await response.json();
@@ -210,7 +210,7 @@ export default function NewReservationPage() {
         emergency_contact_relation: formData.guest.emergency_contact_relation || null,
       };
 
-      const response = await fetch(buildApiUrl('hotel/guests/'), {
+      const response = await apiFetch('hotel/guests/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -259,7 +259,7 @@ export default function NewReservationPage() {
       }
 
       // Fetch all rooms
-      const response = await fetch(buildApiUrl('hotel/rooms/'));
+      const response = await apiFetch('hotel/rooms/');
       if (response.ok) {
         const data = await response.json();
         const rooms = data.results || data;
@@ -323,7 +323,7 @@ export default function NewReservationPage() {
         notes: formData.notes
       };
 
-      const response = await fetch(buildApiUrl('hotel/reservations/'), {
+      const response = await apiFetch('hotel/reservations/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

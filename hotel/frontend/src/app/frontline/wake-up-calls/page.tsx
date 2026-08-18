@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import { Clock01Icon, Add01Icon, CheckmarkCircle02Icon, Cancel01Icon, Alert01Icon, BedIcon, UserIcon } from '@/lib/icons';
 
 interface WakeUpCall {
@@ -91,7 +91,7 @@ function WakeUpCallsContent() {
 
   const fetchRoomIdByNumber = async (roomNumber: string): Promise<string> => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/rooms/?number=${roomNumber}`), {
+      const response = await apiFetch(`hotel/rooms/?number=${roomNumber}`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -118,7 +118,7 @@ function WakeUpCallsContent() {
         endpoint = `hotel/wake-up-calls/?status=${filterStatus}`;
       }
 
-      const response = await fetch(buildApiUrl(endpoint), {
+      const response = await apiFetch(endpoint, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -135,7 +135,7 @@ function WakeUpCallsContent() {
   const fetchReservations = async () => {
     try {
       // Fetch current checked-in reservations
-      const response = await fetch(buildApiUrl('hotel/reservations/?status=CHECKED_IN'), {
+      const response = await apiFetch('hotel/reservations/?status=CHECKED_IN', {
         credentials: 'include'
       });
       if (response.ok) {
@@ -188,7 +188,7 @@ function WakeUpCallsContent() {
         room: parseInt(formData.room),
       };
 
-      const response = await fetch(buildApiUrl('hotel/wake-up-calls/'), {
+      const response = await apiFetch('hotel/wake-up-calls/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -223,7 +223,7 @@ function WakeUpCallsContent() {
   const markCompleted = async (id: number) => {
     try {
       const csrfToken = await getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/wake-up-calls/${id}/mark_completed/`), {
+      const response = await apiFetch(`hotel/wake-up-calls/${id}/mark_completed/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -247,7 +247,7 @@ function WakeUpCallsContent() {
   const markMissed = async (id: number) => {
     try {
       const csrfToken = await getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/wake-up-calls/${id}/mark_missed/`), {
+      const response = await apiFetch(`hotel/wake-up-calls/${id}/mark_missed/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

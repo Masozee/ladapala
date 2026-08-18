@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   Search02Icon,
   UserMultipleIcon,
@@ -170,7 +170,7 @@ interface ReservationResponse {
 // Fetch guest reservations
 const fetchGuestReservations = async (guestId: number): Promise<GuestStay[]> => {
   try {
-    const response = await fetch(buildApiUrl(`hotel/reservations/?guest=${guestId}`), {
+    const response = await apiFetch(`hotel/reservations/?guest=${guestId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -217,7 +217,7 @@ const mapReservationStatus = (status: string): 'completed' | 'cancelled' | 'no_s
 const fetchGuests = async (page: number = 1, limit: number = 20): Promise<{ guests: Guest[], count: number }> => {
   try {
     const offset = (page - 1) * limit;
-    const response = await fetch(buildApiUrl(`hotel/guests/?limit=${limit}&offset=${offset}`), {
+    const response = await apiFetch(`hotel/guests/?limit=${limit}&offset=${offset}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -662,7 +662,7 @@ const GuestsPage = () => {
         headers['X-CSRFToken'] = csrfToken;
       }
 
-      const response = await fetch(buildApiUrl('hotel/guests/'), {
+      const response = await apiFetch('hotel/guests/', {
         method: 'POST',
         headers,
         credentials: 'include',

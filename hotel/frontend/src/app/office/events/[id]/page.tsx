@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 
 // Dynamically import PDF button (client-side only)
 const InvoiceDownloadButton = dynamic(() => import('@/components/InvoiceDownloadButton'), {
@@ -106,7 +106,7 @@ export default function EventBookingDetailPage() {
   const fetchBooking = async () => {
     setLoading(true);
     try {
-      const response = await fetch(buildApiUrl(`hotel/event-bookings/${id}/`), {
+      const response = await apiFetch(`hotel/event-bookings/${id}/`, {
         credentials: 'include',
       });
 
@@ -133,7 +133,7 @@ export default function EventBookingDetailPage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(buildApiUrl(`hotel/event-bookings/${booking.id}/record_payment/`), {
+      const response = await apiFetch(`hotel/event-bookings/${booking.id}/record_payment/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,7 +168,7 @@ export default function EventBookingDetailPage() {
     if (!booking || !confirm('Konfirmasi booking ini?')) return;
 
     try {
-      const response = await fetch(buildApiUrl(`hotel/event-bookings/${booking.id}/confirm/`), {
+      const response = await apiFetch(`hotel/event-bookings/${booking.id}/confirm/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': getCsrfToken() || '',
@@ -193,7 +193,7 @@ export default function EventBookingDetailPage() {
     if (!booking || !confirm('Batalkan booking ini?')) return;
 
     try {
-      const response = await fetch(buildApiUrl(`hotel/event-bookings/${booking.id}/cancel/`), {
+      const response = await apiFetch(`hotel/event-bookings/${booking.id}/cancel/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': getCsrfToken() || '',
@@ -242,7 +242,7 @@ export default function EventBookingDetailPage() {
       const pdfBase64 = await base64Promise;
 
       // Send PDF to backend
-      const response = await fetch(buildApiUrl(`hotel/event-bookings/${booking.id}/resend_invoice/`), {
+      const response = await apiFetch(`hotel/event-bookings/${booking.id}/resend_invoice/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

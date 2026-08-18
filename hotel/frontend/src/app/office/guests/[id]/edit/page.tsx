@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   UserIcon,
   Cancel01Icon,
@@ -65,7 +65,7 @@ export default function EditGuestPage() {
     const fetchGuest = async () => {
       try {
         setLoading(true);
-        const response = await fetch(buildApiUrl(`hotel/guests/${guestId}/`), {
+        const response = await apiFetch(`hotel/guests/${guestId}/`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -116,7 +116,7 @@ export default function EditGuestPage() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/guests/${guestId}/`), {
+      const response = await apiFetch(`hotel/guests/${guestId}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

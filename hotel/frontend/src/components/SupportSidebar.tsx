@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import * as Separator from '@radix-ui/react-separator';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   Wrench01Icon,
   CircleArrowReload01Icon,
@@ -34,8 +34,7 @@ const SupportSidebar = () => {
     // Fetch all sidebar counts from centralized API
     const fetchSidebarCounts = async () => {
       try {
-        const response = await fetch(
-          buildApiUrl('hotel/sidebar-counts/'),
+        const response = await apiFetch('hotel/sidebar-counts/',
           {
             credentials: 'include',
           }

@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   ChevronLeftIcon,
   Cancel01Icon,
@@ -57,7 +57,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
 
   const fetchDepartments = async () => {
     try {
-      const response = await fetch(buildApiUrl('user/departments-manage/'), {
+      const response = await apiFetch('user/departments-manage/', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -74,7 +74,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
   const fetchEmployee = async () => {
     try {
       setLoading(true);
-      const response = await fetch(buildApiUrl(`user/employees/?employee_id=${resolvedParams.id}`), {
+      const response = await apiFetch(`user/employees/?employee_id=${resolvedParams.id}`, {
         credentials: 'include',
       });
 
@@ -131,7 +131,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
       setSaving(true);
 
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`user/employees/${employeeDbId}/`), {
+      const response = await apiFetch(`user/employees/${employeeDbId}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

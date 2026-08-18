@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   ChevronLeftIcon,
   Add01Icon,
@@ -31,7 +31,7 @@ export default function CreateStockOpnamePage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(buildApiUrl('hotel/stock-opnames/'), {
+      const response = await apiFetch('hotel/stock-opnames/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

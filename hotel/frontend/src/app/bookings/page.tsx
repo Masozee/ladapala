@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import { getAuthToken } from '@/lib/auth';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
@@ -396,7 +396,7 @@ const BookingsPage = () => {
   const handleNavigateToPayment = async (reservation: Reservation) => {
     try {
       // Fetch full reservation details to get financial information
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservation.reservation_number}/`));
+      const response = await apiFetch(`hotel/reservations/${reservation.reservation_number}/`);
       if (!response.ok) {
         throw new Error('Failed to fetch reservation details');
       }
@@ -438,7 +438,7 @@ const BookingsPage = () => {
       });
 
       const url = buildApiUrl(`hotel/reservations/?${params}`);
-      const response = await fetch(url);
+      const response = await apiFetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch reservations');
       }
@@ -498,7 +498,7 @@ const BookingsPage = () => {
         ordering: 'number' // Order rooms by room number
       });
       
-      const response = await fetch(buildApiUrl(`hotel/rooms/?${params}`));
+      const response = await apiFetch(`hotel/rooms/?${params}`);
       if (!response.ok) {
         throw new Error('Failed to fetch rooms');
       }
@@ -545,8 +545,7 @@ const BookingsPage = () => {
 
       // Load all reservations without date filtering
       // This ensures calendar can show bookings across all date ranges as users navigate
-      const response = await fetch(
-        buildApiUrl(`hotel/reservations/?page_size=2000`)
+      const response = await apiFetch(`hotel/reservations/?page_size=2000`
       );
 
       if (response.ok) {
@@ -564,7 +563,7 @@ const BookingsPage = () => {
     try {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/confirm/`), {
+      const response = await apiFetch(`hotel/reservations/${reservationNumber}/confirm/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -590,7 +589,7 @@ const BookingsPage = () => {
     try {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/cancel/`), {
+      const response = await apiFetch(`hotel/reservations/${reservationNumber}/cancel/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -617,7 +616,7 @@ const BookingsPage = () => {
     try {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/check_in/`), {
+      const response = await apiFetch(`hotel/reservations/${reservationNumber}/check_in/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -644,7 +643,7 @@ const BookingsPage = () => {
     try {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/check_out/`), {
+      const response = await apiFetch(`hotel/reservations/${reservationNumber}/check_out/`, {
         method: 'PATCH',
         credentials: 'include',
         headers: {
@@ -672,7 +671,7 @@ const BookingsPage = () => {
     try {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/request_late_checkout/`), {
+      const response = await apiFetch(`hotel/reservations/${reservationNumber}/request_late_checkout/`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -708,7 +707,7 @@ const BookingsPage = () => {
     try {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/approve_late_checkout/`), {
+      const response = await apiFetch(`hotel/reservations/${reservationNumber}/approve_late_checkout/`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -773,7 +772,7 @@ const BookingsPage = () => {
       const csrfToken = getCsrfToken();
 
       // First create or get the guest
-      const guestResponse = await fetch(buildApiUrl('hotel/guests/'), {
+      const guestResponse = await apiFetch('hotel/guests/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -789,7 +788,7 @@ const BookingsPage = () => {
         guest = await guestResponse.json();
       } else {
         // Guest might already exist, try to find by email
-        const existingGuestResponse = await fetch(buildApiUrl(`hotel/guests/?email=${reservationData.guest.email}`), {
+        const existingGuestResponse = await apiFetch(`hotel/guests/?email=${reservationData.guest.email}`, {
           headers: {
             ...(authToken && { 'Authorization': `Token ${authToken}` }),
           },
@@ -817,7 +816,7 @@ const BookingsPage = () => {
         status: 'CONFIRMED',
       };
 
-      const response = await fetch(buildApiUrl('hotel/reservations/'), {
+      const response = await apiFetch('hotel/reservations/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -854,7 +853,7 @@ const BookingsPage = () => {
       const authToken = getAuthToken();
       const csrfToken = getCsrfToken();
 
-      const response = await fetch(buildApiUrl(`hotel/reservations/${reservationNumber}/`), {
+      const response = await apiFetch(`hotel/reservations/${reservationNumber}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -970,7 +969,7 @@ const BookingsPage = () => {
 
       // Fetch room TYPES instead of individual rooms
       console.log('Fetching room types from API...');
-      const response = await fetch(buildApiUrl(`hotel/room-types/?check_in=${checkInDate}&check_out=${checkOutDate}`));
+      const response = await apiFetch(`hotel/room-types/?check_in=${checkInDate}&check_out=${checkOutDate}`);
       if (!response.ok) {
         console.error('Failed to fetch room types:', response.status, response.statusText);
         throw new Error('Failed to fetch room types');

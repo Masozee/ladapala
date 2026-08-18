@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
 import Link from 'next/link';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import { ChevronLeftIcon } from '@/lib/icons';
 
 interface VoucherFormData {
@@ -83,7 +83,7 @@ export default function NewVoucherPage() {
         payload.usage_limit = parseInt(formData.usage_limit);
       }
 
-      const response = await fetch(buildApiUrl('hotel/vouchers/'), {
+      const response = await apiFetch('hotel/vouchers/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

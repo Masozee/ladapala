@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   ChevronLeftIcon,
   Cancel01Icon,
@@ -47,7 +47,7 @@ export default function NewEmployeePage() {
 
   const fetchDepartments = async () => {
     try {
-      const response = await fetch(buildApiUrl('user/departments-manage/'), {
+      const response = await apiFetch('user/departments-manage/', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -85,7 +85,7 @@ export default function NewEmployeePage() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl('user/users/'), {
+      const response = await apiFetch('user/users/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -168,6 +168,7 @@ REST_FRAMEWORK = {
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
+    "https://ladapala.vercel.app",  # Vercel default domain
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",  # Restaurant frontend
@@ -228,6 +229,8 @@ if IS_PRODUCTION:
     SECURE_HSTS_PRELOAD = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_TRUSTED_ORIGINS = [
+    "https://ladapala.vercel.app",  # Vercel default domain
+    "https://*.vercel.app",  # Vercel preview deployments (production domain is smkpariwisatamengwitani.com)
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",  # Restaurant frontend

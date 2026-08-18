@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import OfficeLayout from '@/components/OfficeLayout'
 import { ChevronLeftIcon } from '@/lib/icons'
-import { buildApiUrl, getCsrfToken } from '@/lib/config'
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config'
 
 interface SupplierFormData {
   name: string
@@ -52,7 +52,7 @@ export default function NewSupplierPage() {
     try {
       setSaving(true)
       const csrfToken = getCsrfToken()
-      const response = await fetch(buildApiUrl('hotel/suppliers/'), {
+      const response = await apiFetch('hotel/suppliers/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

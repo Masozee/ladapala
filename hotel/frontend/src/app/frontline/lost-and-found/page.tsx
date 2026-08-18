@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/config';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AppLayout from '@/components/AppLayout';
@@ -73,7 +74,7 @@ export default function FrontlineLostAndFoundPage() {
 
   const fetchItems = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/hotel/lost-and-found/', {
+      const response = await apiFetch('hotel/lost-and-found/', {
         credentials: 'include',
       });
       const data = await response.json();

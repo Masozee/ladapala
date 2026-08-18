@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   Search02Icon,
   Add01Icon,
@@ -87,8 +87,7 @@ export default function LostAndFoundPage() {
       if (reportTypeFilter !== 'all') params.append('report_type', reportTypeFilter);
       if (showValuableOnly) params.append('is_valuable', 'true');
 
-      const response = await fetch(
-        buildApiUrl(`hotel/lost-and-found/?${params.toString()}`),
+      const response = await apiFetch(`hotel/lost-and-found/?${params.toString()}`,
         { credentials: 'include' }
       );
 

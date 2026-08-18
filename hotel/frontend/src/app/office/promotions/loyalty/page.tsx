@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
 import Link from 'next/link';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   Search02Icon,
   UserMultipleIcon,
@@ -60,7 +60,7 @@ export default function LoyaltyProgramPage() {
   const fetchData = async () => {
     try {
       // Fetch active program
-      const programResponse = await fetch(buildApiUrl('hotel/loyalty-program/active/'), {
+      const programResponse = await apiFetch('hotel/loyalty-program/active/', {
         credentials: 'include',
       });
       if (programResponse.ok) {
@@ -69,14 +69,14 @@ export default function LoyaltyProgramPage() {
       }
 
       // Fetch guest accounts
-      const accountsResponse = await fetch(buildApiUrl('hotel/loyalty-points/'), {
+      const accountsResponse = await apiFetch('hotel/loyalty-points/', {
         credentials: 'include',
       });
       const accountsData = await accountsResponse.json();
       setGuestAccounts(accountsData.results || accountsData);
 
       // Fetch recent transactions
-      const transactionsResponse = await fetch(buildApiUrl('hotel/loyalty-transactions/?limit=50'), {
+      const transactionsResponse = await apiFetch('hotel/loyalty-transactions/?limit=50', {
         credentials: 'include',
       });
       const transactionsData = await transactionsResponse.json();

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   Cancel01Icon,
   UserCheckIcon,
@@ -54,7 +54,7 @@ export default function EditRoomTypePage() {
     const fetchRoomType = async () => {
       try {
         setLoading(true);
-        const response = await fetch(buildApiUrl(`hotel/room-types/${id}/`), {
+        const response = await apiFetch(`hotel/room-types/${id}/`, {
           credentials: 'include',
         });
 
@@ -114,7 +114,7 @@ export default function EditRoomTypePage() {
       const csrfToken = getCsrfToken();
 
       // First, update the room type data
-      const response = await fetch(buildApiUrl(`hotel/room-types/${id}/`), {
+      const response = await apiFetch(`hotel/room-types/${id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export default function EditRoomTypePage() {
         console.log('Number of files:', imageFiles.length);
         console.log('CSRF Token:', csrfToken ? 'Present' : 'Missing');
 
-        const imageResponse = await fetch(buildApiUrl(`hotel/room-types/${id}/upload_images/`), {
+        const imageResponse = await apiFetch(`hotel/room-types/${id}/upload_images/`, {
           method: 'POST',
           headers: {
             ...(csrfToken && { 'X-CSRFToken': csrfToken }),
@@ -175,7 +175,7 @@ export default function EditRoomTypePage() {
 
       // Delete removed images if any
       if (deletedImages.length > 0) {
-        await fetch(buildApiUrl(`hotel/room-types/${id}/delete_images/`), {
+        await apiFetch(`hotel/room-types/${id}/delete_images/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   UserMultipleIcon,
   Search02Icon,
@@ -95,7 +95,7 @@ function ScheduleTable() {
     try {
       setLoading(true);
       // Get employees first
-      const employeesRes = await fetch(buildApiUrl('user/employees/'), {
+      const employeesRes = await apiFetch('user/employees/', {
         credentials: 'include',
       });
 
@@ -117,7 +117,7 @@ function ScheduleTable() {
       let nextUrl: string | null = buildApiUrl(`user/shifts-manage/?from_date=${startDate}&to_date=${endDate}`);
 
       while (nextUrl) {
-        const shiftsRes: Response = await fetch(nextUrl, { credentials: 'include' });
+        const shiftsRes: Response = await apiFetch(nextUrl, { credentials: 'include' });
 
         if (!shiftsRes.ok) {
           console.error('Failed to fetch shifts:', shiftsRes.status);
@@ -226,7 +226,7 @@ function ScheduleTable() {
       };
       console.log('[AddShift] Payload:', payload);
 
-      const response = await fetch(buildApiUrl('user/shifts-manage/'), {
+      const response = await apiFetch('user/shifts-manage/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -305,7 +305,7 @@ function ScheduleTable() {
       };
       console.log('[EditShift] Payload:', payload);
 
-      const response = await fetch(buildApiUrl(`user/shifts-manage/${selectedShift.id}/`), {
+      const response = await apiFetch(`user/shifts-manage/${selectedShift.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -347,7 +347,7 @@ function ScheduleTable() {
 
     try {
       const csrfToken = getCsrfToken();
-      const response = await fetch(buildApiUrl(`user/shifts-manage/${shiftId}/`), {
+      const response = await apiFetch(`user/shifts-manage/${shiftId}/`, {
         method: 'DELETE',
         headers: {
           ...(csrfToken && { 'X-CSRFToken': csrfToken }),
@@ -828,7 +828,7 @@ export default function EmployeesPage() {
       const url = buildApiUrl('user/employees/');
       console.log('Fetching employees from:', url);
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         credentials: 'include',
       });
 
@@ -859,7 +859,7 @@ export default function EmployeesPage() {
 
   const fetchStatistics = async () => {
     try {
-      const response = await fetch(buildApiUrl('user/employees/statistics/'), {
+      const response = await apiFetch('user/employees/statistics/', {
         credentials: 'include',
       });
       if (response.ok) {

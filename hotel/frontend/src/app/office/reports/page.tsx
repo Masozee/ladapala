@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/config';
 import dynamic from 'next/dynamic';
 import OfficeLayout from '@/components/OfficeLayout';
 import {
@@ -34,7 +35,16 @@ const PDFViewer = dynamic(
   { ssr: false }
 );
 
-import { OccupancyReportPDF, RevenueReportPDF, TaxReportPDF, GuestAnalyticsPDF, SatisfactionReportPDF, MaintenanceReportPDF, InventoryReportPDF, FullReportPDF, GenericReportPDF } from '@/components/reports';
+// Dynamically import report components that use @react-pdf/renderer
+const OccupancyReportPDF = dynamic(() => import('@/components/reports').then(m => ({ default: m.OccupancyReportPDF })), { ssr: false });
+const RevenueReportPDF = dynamic(() => import('@/components/reports').then(m => ({ default: m.RevenueReportPDF })), { ssr: false });
+const TaxReportPDF = dynamic(() => import('@/components/reports').then(m => ({ default: m.TaxReportPDF })), { ssr: false });
+const GuestAnalyticsPDF = dynamic(() => import('@/components/reports').then(m => ({ default: m.GuestAnalyticsPDF })), { ssr: false });
+const SatisfactionReportPDF = dynamic(() => import('@/components/reports').then(m => ({ default: m.SatisfactionReportPDF })), { ssr: false });
+const MaintenanceReportPDF = dynamic(() => import('@/components/reports').then(m => ({ default: m.MaintenanceReportPDF })), { ssr: false });
+const InventoryReportPDF = dynamic(() => import('@/components/reports').then(m => ({ default: m.InventoryReportPDF })), { ssr: false });
+const FullReportPDF = dynamic(() => import('@/components/reports').then(m => ({ default: m.FullReportPDF })), { ssr: false });
+const GenericReportPDF = dynamic(() => import('@/components/reports').then(m => ({ default: m.GenericReportPDF })), { ssr: false });
 
 // TypeScript interfaces for API responses
 interface ReportSummary {
@@ -81,7 +91,7 @@ export default function ReportsPage() {
 
       try {
         // Fetch summary
-        const summaryResponse = await fetch(
+        const summaryResponse = await apiFetch(
           `${API_BASE_URL}/reports/summary/?period=${selectedPeriod}`,
           {
             credentials: 'include',
@@ -108,7 +118,7 @@ export default function ReportsPage() {
         });
 
         // Fetch available reports
-        const reportsResponse = await fetch(
+        const reportsResponse = await apiFetch(
           `${API_BASE_URL}/reports/available/`,
           {
             credentials: 'include',
@@ -204,7 +214,7 @@ export default function ReportsPage() {
     setGeneratingReports(prev => new Set(prev).add(`${reportId}-pdf`));
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}`,
         {
           credentials: 'include',
@@ -254,7 +264,7 @@ export default function ReportsPage() {
     setGeneratingReports(prev => new Set(prev).add(`${reportId}-xlsx`));
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_BASE_URL}/reports/${reportId}/?period=${selectedPeriod}&download_format=xlsx`,
         {
           credentials: 'include',
@@ -333,7 +343,7 @@ export default function ReportsPage() {
     try {
       // Use the summary endpoint with today's date for comprehensive daily report
       const today = new Date().toISOString().split('T')[0];
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_BASE_URL}/reports/summary/?period=${today}`,
         {
           credentials: 'include',
@@ -378,10 +388,10 @@ export default function ReportsPage() {
     try {
       // Fetch multiple reports in parallel
       const [occupancy, revenue, guestAnalytics, satisfaction] = await Promise.all([
-        fetch(`${API_BASE_URL}/reports/occupancy/?period=${selectedPeriod}`, { credentials: 'include' }),
-        fetch(`${API_BASE_URL}/reports/revenue/?period=${selectedPeriod}`, { credentials: 'include' }),
-        fetch(`${API_BASE_URL}/reports/guest-analytics/?period=${selectedPeriod}`, { credentials: 'include' }),
-        fetch(`${API_BASE_URL}/reports/satisfaction/?period=${selectedPeriod}`, { credentials: 'include' })
+        apiFetch(`${API_BASE_URL}/reports/occupancy/?period=${selectedPeriod}`, { credentials: 'include' }),
+        apiFetch(`${API_BASE_URL}/reports/revenue/?period=${selectedPeriod}`, { credentials: 'include' }),
+        apiFetch(`${API_BASE_URL}/reports/guest-analytics/?period=${selectedPeriod}`, { credentials: 'include' }),
+        apiFetch(`${API_BASE_URL}/reports/satisfaction/?period=${selectedPeriod}`, { credentials: 'include' })
       ]);
 
       const executiveData = {
@@ -419,7 +429,7 @@ export default function ReportsPage() {
     try {
       // Fetch all available reports in parallel
       const reportPromises = filteredReports.map(report =>
-        fetch(`${API_BASE_URL}/reports/${report.id}/?period=${selectedPeriod}`, { credentials: 'include' })
+        apiFetch(`${API_BASE_URL}/reports/${report.id}/?period=${selectedPeriod}`, { credentials: 'include' })
           .then(res => res.json())
           .then(data => ({ reportId: report.id, data }))
           .catch(err => {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   ChevronLeftIcon,
   PlayIcon,
@@ -69,7 +69,7 @@ export default function StockOpnameDetailPage() {
   const fetchOpname = async () => {
     setLoading(true);
     try {
-      const response = await fetch(buildApiUrl(`hotel/stock-opnames/${id}/`), {
+      const response = await apiFetch(`hotel/stock-opnames/${id}/`, {
         credentials: 'include',
       });
 
@@ -92,7 +92,7 @@ export default function StockOpnameDetailPage() {
     if (!opname || !confirm('Mulai perhitungan stock opname?')) return;
 
     try {
-      const response = await fetch(buildApiUrl(`hotel/stock-opnames/${opname.id}/start/`), {
+      const response = await apiFetch(`hotel/stock-opnames/${opname.id}/start/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': getCsrfToken() || '',
@@ -126,7 +126,7 @@ export default function StockOpnameDetailPage() {
     if (!confirm('Selesaikan stock opname dan terapkan penyesuaian stok?')) return;
 
     try {
-      const response = await fetch(buildApiUrl(`hotel/stock-opnames/${opname.id}/complete/`), {
+      const response = await apiFetch(`hotel/stock-opnames/${opname.id}/complete/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': getCsrfToken() || '',
@@ -152,7 +152,7 @@ export default function StockOpnameDetailPage() {
     if (!opname || !confirm('Batalkan stock opname ini?')) return;
 
     try {
-      const response = await fetch(buildApiUrl(`hotel/stock-opnames/${opname.id}/cancel/`), {
+      const response = await apiFetch(`hotel/stock-opnames/${opname.id}/cancel/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': getCsrfToken() || '',
@@ -183,7 +183,7 @@ export default function StockOpnameDetailPage() {
 
   const handleSaveCount = async (itemId: number) => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/stock-opname-items/${itemId}/`), {
+      const response = await apiFetch(`hotel/stock-opname-items/${itemId}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

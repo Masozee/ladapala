@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
 import Link from 'next/link';
-import { buildApiUrl } from '@/lib/config';
+import { buildApiUrl, apiFetch } from '@/lib/config';
 import {
   Add01Icon,
   Search02Icon,
@@ -43,7 +43,7 @@ export default function DiscountsPage() {
 
   const fetchDiscounts = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/discounts/'), {
+      const response = await apiFetch('hotel/discounts/', {
         credentials: 'include',
       });
       const data = await response.json();

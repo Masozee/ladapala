@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import OfficeLayout from '@/components/OfficeLayout';
+import { apiFetch } from '@/lib/config';
 import {
   PackageIcon,
   ArrowDown01Icon,
@@ -58,16 +59,10 @@ export default function DepartmentBuffersPage() {
   const [transferQuantity, setTransferQuantity] = useState('');
   const [transferNotes, setTransferNotes] = useState('');
 
-  const buildApiUrl = (endpoint: string) => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
-    return `${baseUrl}/hotel/${endpoint}`;
-  };
-
   const fetchDepartmentBuffers = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        buildApiUrl(`department-inventory/?department=${encodeURIComponent(selectedDepartment)}`),
+      const response = await apiFetch(`hotel/department-inventory/?department=${encodeURIComponent(selectedDepartment)}`,
         { credentials: 'include' }
       );
       if (response.ok) {
@@ -83,7 +78,7 @@ export default function DepartmentBuffersPage() {
 
   const fetchWarehouseItems = async () => {
     try {
-      const response = await fetch(buildApiUrl('inventory/'), { credentials: 'include' });
+      const response = await apiFetch('hotel/inventory/', { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         setWarehouseItems(data.results || data || []);
@@ -102,8 +97,7 @@ export default function DepartmentBuffersPage() {
     if (!selectedBuffer || !transferQuantity) return;
 
     try {
-      const response = await fetch(
-        buildApiUrl(`department-inventory/${selectedBuffer.id}/transfer_from_warehouse/`),
+      const response = await apiFetch(`hotel/department-inventory/${selectedBuffer.id}/transfer_from_warehouse/`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

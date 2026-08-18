@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OfficeLayout from '@/components/OfficeLayout';
-import { buildApiUrl, getCsrfToken } from '@/lib/config';
+import { buildApiUrl, getCsrfToken, apiFetch } from '@/lib/config';
 import {
   Archive03Icon,
   ArrowLeft01Icon,
@@ -64,7 +64,7 @@ export default function NewLostFoundItemPage() {
 
   const fetchRooms = async () => {
     try {
-      const response = await fetch(buildApiUrl('hotel/rooms/?page_size=500'), {
+      const response = await apiFetch('hotel/rooms/?page_size=500', {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch rooms');
@@ -77,7 +77,7 @@ export default function NewLostFoundItemPage() {
 
   const searchGuests = async (query: string) => {
     try {
-      const response = await fetch(buildApiUrl(`hotel/guests/?search=${query}`), {
+      const response = await apiFetch(`hotel/guests/?search=${query}`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to search guests');
@@ -120,7 +120,7 @@ export default function NewLostFoundItemPage() {
       if (formData.estimated_value) submitData.estimated_value = parseFloat(formData.estimated_value);
 
       const csrfToken = await getCsrfToken();
-      const response = await fetch(buildApiUrl('hotel/lost-and-found/'), {
+      const response = await apiFetch('hotel/lost-and-found/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
