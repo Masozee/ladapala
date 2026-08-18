@@ -1,9 +1,15 @@
+/// <reference types="node" />
 import type { NextConfig } from "next";
 import path from "path";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 const nextConfig: NextConfig = {
+  // Force webpack instead of Turbopack for production builds
+  webpack: (config) => {
+    return config;
+  },
+
   // Configure base path for nginx reverse proxy
   basePath: basePath,
   assetPrefix: basePath,

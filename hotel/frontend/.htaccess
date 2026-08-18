@@ -1,0 +1,14 @@
+# Force HTTPS (if needed)
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Don't rewrite for Node.js app
+# Let Node.js handle all requests
+RewriteRule ^(.*)$ - [L]
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Set default charset
+AddDefaultCharset UTF-8
