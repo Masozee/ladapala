@@ -51,9 +51,9 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-pdf/renderer": "^4.3.1",
     "date-fns": "^4.1.0",
-    "next": "^16.1.6",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "next": "^16.3.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "recharts": "^3.1.2",
     "typescript": "^5"
   },
@@ -61,10 +61,10 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "eslint": "^9",
-    "eslint-config-next": "^16.0.0",
+    "eslint-config-next": "^16.3.1",
     "tailwindcss": "^4"
   }
 }
